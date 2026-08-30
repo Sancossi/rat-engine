@@ -1,0 +1,11 @@
+/build/
+/out/
+/cmake-build-*/
+/.vs/
+/.idea/
+/CMakeUserPresets.json
+compile_commands.json
+*.user
+*.suo
+*.VC.db
+.DS_Store
