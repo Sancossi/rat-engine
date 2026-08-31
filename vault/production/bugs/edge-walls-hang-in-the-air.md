@@ -1,7 +1,7 @@
 ---
 type: bug
 area: Engine
-status: Investigating
+status: Fixed
 severity: Medium
 sprint: Sprint 6
 tags: [bug]
@@ -27,3 +27,9 @@ Walls on edges look suspended — a gap between the quad and the terrain.
 ## Notes
 
 Likely `build_edge_barrier_faces` uses a single `owner_top` from the tile center for both edge ends (`y0_lo`/`y1_lo`), so the fence does not follow the two edge corners. Height-grid **outer** shared edges also skip `build_terrain_side_faces` (only east/south *internal* neighbours), so a cube on the grid border has a floating top.
+
+## Resolution
+
+`build_edge_barrier_faces` ставит низ забора на два угла owner-edge, верх = угол + `edge.height`. `build_terrain_side_faces` рисует внешние границы height-grid против implied height 0, если клетка выше 0. Проверка: `[terrain]` в `rat_tests`; greybox `grey_yard` — забор и бок куба на краю сетки без щели.
+
+Bugs found: none.
