@@ -1,7 +1,7 @@
 ---
 type: task
 area: Engine
-status: In progress
+status: In review
 task_type: Feature
 sprint: Sprint 5
 due:
@@ -20,6 +20,8 @@ Depends: [[feat: Terrain wall cubes]]. Next: [[feat: Edit and greybox edge walls
 
 Schema v2 `edge_barriers` `{tile, direction, height}` (no v3). Loader last-wins on `(tile, direction)`, drops ramp tiles / OOB / `height <= 0`. Walk blocked below `owner_top + height`; 0.45 jumpable, 1.6 not, with default JumpTuning. Edges are not support. Verify: `.\build\tests\rat_tests.exe "[map]"` and `"[edge]"`.
 
-Bugs found: none.
-
 Follow-up: [[feat: Edit and greybox edge walls]]
+
+## Bugs found
+
+none.
