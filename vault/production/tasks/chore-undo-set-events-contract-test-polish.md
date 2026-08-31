@@ -1,7 +1,7 @@
 ---
 type: task
 area: Engine
-status: In review
+status: Done
 task_type: Chore
 sprint: Sprint 4
 due:
@@ -18,7 +18,7 @@ Origin: [[feat: Edit undo/redo command stack]]
 
 ## Resolution
 
-`[events]` now calls `set_events` while `active_message` is still `"Hello"` (no acknowledge). Asserts message and autorun lock are wiped; `set_blockers` still keeps both. Product `EventRuntime::set_events` already cleared them — no product change. After wipe, autorun may fire again on the next `update`.
+`[events]` now calls `set_events` while `active_message` is still `"Hello"` (no acknowledge). Asserts message and autorun lock are wiped; `set_blockers` still keeps both. Product `EventRuntime::set_events` already cleared them — no product change. After wipe, autorun may fire again on the next `update`. Review: Approved.
 
 Verify: `.\build\tests\rat_tests.exe "[events]"`.
 
