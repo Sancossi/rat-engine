@@ -7,7 +7,7 @@ alwaysApply: true
 
 Applies to **any** task, bug, chore, or research — any area, any sprint, including a one-file fix. Outcome must live on **that note**, not only in chat or a subagent report.
 
-When the card hits `Done` / `Fixed` (same commit as the work if possible):
+When the card hits `Done` / `Fixed` (**after** review Approved, not in the implementer's first commit):
 
 ## Resolution
 

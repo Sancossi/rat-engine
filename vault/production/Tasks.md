@@ -14,7 +14,7 @@ Type: `Feature` | `Bug` | `Chore` | `Research`.
 Канбан: [[Task board]] (виды **Current sprint** / **In progress** / Board / Sprints / Table).
 
 - **Current sprint** — канбан `sprint: Sprint 4` (колонки Not started / In progress / Done). При смене `current: true` обновить фильтр `sprint == "Sprint N"` в `Task board.base`.
-- **In progress** — только карточки `status: In progress` (то, что сейчас в работе).
+- **In progress** — только карточки `status: In progress` (implementer и ещё не Approved review). Пока агент работает, статус не `Done`.
 
 Правка свойства в Base пишет YAML заметки.
 

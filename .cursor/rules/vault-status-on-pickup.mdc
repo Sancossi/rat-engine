@@ -7,9 +7,8 @@ alwaysApply: true
 
 **Before** writing code, dispatching an implementer, or starting **any** vault card: set that card's `status: In progress` and **commit it**. The board must show In progress while work happens.
 
-- One current card: `In progress`. Do not leave it `Not started`.
-- When acceptance is met: `Done` in the same commit as the implementation (or immediately after).
-- Parallel GPP cards: each gets `In progress` when its implementer starts, not earlier.
+- One current **implementer** card: `In progress` before dispatch. A card still in **review** stays `In progress` too — the board may show two In progress (implementer + previous review).
+- Do **not** set `Done` in the implementation commit. Keep `In progress` until the task reviewer is **Approved** (or no review for a status-only/wiki-only change). Then `Done` + Resolution in that commit.
 - When `current: true` moves to a new sprint, update the **Current sprint** view filter in `vault/production/Task board.base` (`sprint == "Sprint N"`).
 
 Do not skip this because the slice is “small” or the subagent will flip Done later.
