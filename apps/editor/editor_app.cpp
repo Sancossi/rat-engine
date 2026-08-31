@@ -69,7 +69,26 @@ bool EditorApp::init() {
   events_.load(loaded.map);
   game_state_.set_map_id(loaded.map.id);
   engine_->set_blockers(loaded.map.blockers);
+
+  std::vector<Vec3> markers;
+  markers.reserve(loaded.map.events.size());
+  for (const auto& event : loaded.map.events) {
+    if (event.tile.has_value()) {
+      markers.push_back({static_cast<float>(event.tile->x) * loaded.map.tile_size, 0.0f,
+                         static_cast<float>(event.tile->z) * loaded.map.tile_size});
+    } else if (event.volume.has_value()) {
+      markers.push_back({(event.volume->min_x + event.volume->max_x) * 0.5f, 0.0f,
+                         (event.volume->min_z + event.volume->max_z) * 0.5f});
+    }
+  }
+  engine_->set_event_markers(std::move(markers));
+
+  // Spawn near the foreman for the sample quest path.
   player_ = engine_->player();
+  player_.x = -1.5f;
+  player_.z = 1.5f;
+  game_state_.set_player_position(player_.x, player_.y, player_.z);
+  engine_->set_player(player_);
 
   IMGUI_CHECKVERSION();
   ImGui::CreateContext();
@@ -267,8 +286,9 @@ void EditorApp::draw_ui() {
   ImGui::End();
 
   ImGui::Begin("Inspector");
-  ImGui::TextUnformatted("WASD / arrows: move");
-  ImGui::TextUnformatted("E / Space: interact / advance text");
+  ImGui::TextUnformatted("Quest: ask foreman (cyan) for a rusty cog,");
+  ImGui::TextUnformatted("loot scrap east of crates, return.");
+  ImGui::TextUnformatted("WASD / arrows: move | E / Space: interact");
   if (ImGui::Button("Snap player to grid")) {
     const auto snapped = snap_to_grid(player_.x, player_.y, player_.z, 1.0f);
     player_.x = snapped.x;
@@ -278,8 +298,10 @@ void EditorApp::draw_ui() {
     engine_->set_player(player_);
   }
   ImGui::Separator();
-  ImGui::Text("Switch1: %s", game_state_.get_switch(1) ? "ON" : "OFF");
-  ImGui::Text("Var0: %d", game_state_.get_variable(0));
+  ImGui::Text("Quest accepted (sw1): %s", game_state_.get_switch(1) ? "ON" : "OFF");
+  ImGui::Text("Quest done (sw2): %s", game_state_.get_switch(2) ? "ON" : "OFF");
+  ImGui::Text("Scrap looted (sw3): %s", game_state_.get_switch(3) ? "ON" : "OFF");
+  ImGui::Text("Intro var0: %d", game_state_.get_variable(0));
   ImGui::Text("rusty_cog: %d", game_state_.item_quantity("rusty_cog"));
   ImGui::End();
 

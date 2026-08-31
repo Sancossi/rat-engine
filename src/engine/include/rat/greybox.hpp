@@ -29,6 +29,7 @@ class GreyboxScene {
     has_player_ = true;
   }
   void set_blockers(std::span<const Aabb2> blockers);
+  void set_event_markers(std::span<const Vec3> markers);
 
   void draw(bgfx::ViewId view_id = 0);
 
@@ -46,6 +47,7 @@ class GreyboxScene {
   OrthoCamera camera_{};
   PlayerBody player_{};
   std::vector<Aabb2> blockers_;
+  std::vector<Vec3> event_markers_;
 
   bgfx::ProgramHandle program_ = BGFX_INVALID_HANDLE;
   bgfx::VertexLayout layout_;

@@ -84,6 +84,10 @@ void GreyboxScene::set_blockers(std::span<const Aabb2> blockers) {
   blockers_.assign(blockers.begin(), blockers.end());
 }
 
+void GreyboxScene::set_event_markers(std::span<const Vec3> markers) {
+  event_markers_.assign(markers.begin(), markers.end());
+}
+
 void GreyboxScene::rebuild_camera() {
   camera_ = build_ortho_three_quarter(width_, height_, params_);
 
@@ -191,6 +195,24 @@ void GreyboxScene::draw(bgfx::ViewId view_id) {
         {b.min_x, 0.04f, b.max_z, blocker_color},
     };
     submit_tris(verts, 4, quad_indices, 6);
+  }
+
+  // Cyan pillars mark interactive events (NPC / scrap).
+  const std::uint32_t event_color = 0xffe0c040;
+  for (const Vec3& m : event_markers_) {
+    const float h = 0.35f;
+    const ColorVertex base[4] = {
+        {m.x - h, 0.06f, m.z - h, event_color},
+        {m.x + h, 0.06f, m.z - h, event_color},
+        {m.x + h, 0.06f, m.z + h, event_color},
+        {m.x - h, 0.06f, m.z + h, event_color},
+    };
+    submit_tris(base, 4, quad_indices, 6);
+    const ColorVertex stem[2] = {
+        {m.x, 0.06f, m.z, 0xffffe080},
+        {m.x, 1.4f, m.z, 0xffffe080},
+    };
+    submit_lines(stem, 2);
   }
 
   if (has_player_) {

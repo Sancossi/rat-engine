@@ -29,6 +29,7 @@ class Engine {
 
   void set_player(const PlayerBody& player);
   void set_blockers(std::vector<Aabb2> blockers);
+  void set_event_markers(std::vector<Vec3> markers);
   [[nodiscard]] const PlayerBody& player() const { return player_; }
   [[nodiscard]] const std::vector<Aabb2>& blockers() const { return blockers_; }
 

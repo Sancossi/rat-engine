@@ -58,6 +58,10 @@ void Engine::set_blockers(std::vector<Aabb2> blockers) {
   greybox_.set_blockers(blockers_);
 }
 
+void Engine::set_event_markers(std::vector<Vec3> markers) {
+  greybox_.set_event_markers(markers);
+}
+
 void Engine::begin_frame() {
   if (!initialized_) {
     return;
