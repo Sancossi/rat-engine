@@ -166,6 +166,12 @@ Command parse_command(const json& node) {
     command.item_id = node.at("id").get<std::string>();
     command.item_delta = node.at("delta").get<int>();
     command.key_item = node.value("key_item", false);
+  } else if (op == "play_se") {
+    command.op = CommandOp::PlaySE;
+    command.text = node.at("id").get<std::string>();
+    if (command.text.empty()) {
+      throw std::runtime_error("play_se id must not be empty");
+    }
   } else if (op == "comment") {
     command.op = CommandOp::Comment;
     command.text = node.value("text", "");
@@ -467,6 +473,8 @@ json dump_command(const Command& command) {
                   {"id", command.item_id},
                   {"delta", command.item_delta},
                   {"key_item", command.key_item}};
+    case CommandOp::PlaySE:
+      return json{{"op", "play_se"}, {"id", command.text}};
     case CommandOp::Comment:
       return json{{"op", "comment"}, {"text", command.text}};
   }

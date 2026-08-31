@@ -117,6 +117,7 @@ Discriminated by `op`:
 | `wait` | `frames` (int ≥ 0) |
 | `transfer_player` | `map_id` (string), `x`, `y`, `z` (numbers) |
 | `change_items` | `id` (string), `delta` (int), optional `key_item` (bool) |
+| `play_se` | `id` (string, required, non-empty cue id; stored in `Command::text`) |
 | `comment` | `text` (string) |
 
 Nested `parallel` start from a Parallel page is **not** allowed at runtime (ADR-008); the loader still accepts the command list shape for later validation in the event VM.

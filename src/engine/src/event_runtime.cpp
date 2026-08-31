@@ -1,5 +1,6 @@
 #include "rat/event_runtime.hpp"
 
+#include "rat/audio.hpp"
 #include "rat/event_edit.hpp"
 
 #include <algorithm>
@@ -35,6 +36,10 @@ void EventRuntime::load(MapData map) {
   clear();
   map_ = std::move(map);
   surface_query_ = std::make_unique<SurfaceQuery>(map_);
+}
+
+void EventRuntime::set_audio(Audio* audio) {
+  audio_ = audio;
 }
 
 void EventRuntime::set_blockers(std::vector<BlockerDef> blockers) {
@@ -423,6 +428,11 @@ bool EventRuntime::exec_command(Interpreter& interp, GameState& state, const Com
       return true;
     case CommandOp::ChangeItems:
       state.add_item(command.item_id, command.item_delta, command.key_item);
+      return true;
+    case CommandOp::PlaySE:
+      if (audio_ != nullptr) {
+        audio_->play_sfx(command.text);
+      }
       return true;
     case CommandOp::Comment:
       return true;

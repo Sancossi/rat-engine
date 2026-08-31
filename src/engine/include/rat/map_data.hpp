@@ -42,6 +42,7 @@ enum class CommandOp {
   Wait,
   TransferPlayer,
   ChangeItems,
+  PlaySE,
   Comment,
 };
 

@@ -650,6 +650,7 @@ bool EditorApp::init() {
   logger_ = std::make_unique<Logger>(*tee_log_);
   audio_sink_ = std::make_unique<LogAudioSink>(*logger_);
   audio_ = std::make_unique<QueuedAudio>(*audio_sink_);
+  events_.set_audio(audio_.get());
   if (file_log_->ok()) {
     log(*logger_, LogLevel::Info, "editor", std::string("log file ") + file_log_->path());
   } else {

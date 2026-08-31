@@ -17,6 +17,8 @@
 
 namespace rat {
 
+class Audio;
+
 inline constexpr int kMaxParallelEvents = 8;
 inline constexpr int kMaxParallelCommandsPerFrame = 32;
 
@@ -45,6 +47,7 @@ struct InterpreterDebug {
 class EventRuntime {
  public:
   void load(MapData map);
+  void set_audio(Audio* audio);  // nullable; not owned
   void set_blockers(std::vector<BlockerDef> blockers);
   void set_events(std::vector<EventDef> events);
   [[nodiscard]] HeightEditResult set_tile_elevation(int tile_x, int tile_z, float ground_y);
@@ -115,6 +118,7 @@ class EventRuntime {
   [[nodiscard]] InterpreterDebug to_debug(const Interpreter& interp) const;
 
   MapData map_;
+  Audio* audio_ = nullptr;
   std::optional<Interpreter> foreground_;  // autorun / action / touch (blocking)
   std::vector<Interpreter> parallels_;
   std::optional<std::string> active_message_;

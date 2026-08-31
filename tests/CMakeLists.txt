@@ -20,6 +20,7 @@ add_executable(rat_tests
   map_loader_test.cpp
   player_jump_test.cpp
   player_test.cpp
+  play_se_test.cpp
   surface_query_test.cpp
   terrain_geometry_test.cpp
 )
