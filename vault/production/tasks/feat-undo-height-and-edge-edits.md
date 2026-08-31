@@ -1,7 +1,7 @@
 ---
 type: task
 area: Engine
-status: In review
+status: Done
 task_type: Feature
 sprint: Sprint 6
 due:
@@ -17,3 +17,13 @@ Acceptance: Place cube / `upsert_map_ramp` / upsert+remove `edge_barriers` ид�
 Origin: [[feat: Edit and greybox edge walls]]
 
 Depends: none. Next: [[feat: Mouse viewport terrain edit]]. Взято в [[Sprint 6 — Viewport map edit]].
+
+## Resolution
+
+Elevation snapshot commands on `EditHistory` (`make_place_map_tile_cube_command`, ramp/edge upsert/remove, step/set ground_y). `EditApplyResult::mutates_elevation` copies `schema_version` / `height_grid` / `ramps` / `edge_barriers` and rebuilds greybox via `apply_edited_map`. Failed `HeightEditResult` does not push undo and restores the before snapshot (legacy schema upgrade must not stick). Play does not write the stack. Review: Approved.
+
+Verify: `.\build\tests\rat_tests.exe "[edit]"`; Ctrl+Z after Place cube / Mini fence in Edit.
+
+## Bugs found
+
+none.
