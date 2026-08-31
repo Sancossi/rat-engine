@@ -218,10 +218,68 @@ TerrainRenderPolicy choose_terrain_render_policy(const MapData& map) {
   return TerrainRenderPolicy::HeightTerrain;
 }
 
+bool terrain_fill_quad_count_fits_u16(std::size_t tile_count, std::size_t side_face_count) {
+  // 4 vertices per fill quad (top or side), indices addressed by uint16.
+  constexpr std::size_t kMaxQuadCount = static_cast<std::size_t>(65535u / 4u);
+  if (tile_count > kMaxQuadCount) {
+    return false;
+  }
+  return side_face_count <= kMaxQuadCount - tile_count;
+}
+
 bool terrain_tile_count_fits_u16(std::size_t tile_count) {
-  // 4 vertices per tile, indices addressed by uint16.
-  constexpr std::size_t kMaxTileCount = static_cast<std::size_t>(65535u / 4u);
-  return tile_count <= kMaxTileCount;
+  return terrain_fill_quad_count_fits_u16(tile_count, 0);
+}
+
+std::vector<TerrainSideFace> build_terrain_side_faces(const TerrainGeometry& geometry) {
+  std::vector<TerrainSideFace> out;
+  if (geometry.width <= 0 || geometry.height <= 0 || geometry.tiles.empty()) {
+    return out;
+  }
+  const std::size_t expected =
+      static_cast<std::size_t>(geometry.width) * static_cast<std::size_t>(geometry.height);
+  if (geometry.tiles.size() != expected) {
+    return out;
+  }
+
+  auto tile_at = [&](int x, int z) -> const TerrainTileQuad& {
+    return geometry.tiles[static_cast<std::size_t>(z) * static_cast<std::size_t>(geometry.width) +
+                          static_cast<std::size_t>(x)];
+  };
+
+  auto maybe_push = [&](float x0, float z0, float y0_a, float y0_b, float x1, float z1, float y1_a,
+                        float y1_b) {
+    if (y0_a == y0_b && y1_a == y1_b) {
+      return;
+    }
+    TerrainSideFace face;
+    face.x0 = x0;
+    face.z0 = z0;
+    face.y0_lo = std::min(y0_a, y0_b);
+    face.y0_hi = std::max(y0_a, y0_b);
+    face.x1 = x1;
+    face.z1 = z1;
+    face.y1_lo = std::min(y1_a, y1_b);
+    face.y1_hi = std::max(y1_a, y1_b);
+    out.push_back(face);
+  };
+
+  for (int z = 0; z < geometry.height; ++z) {
+    for (int x = 0; x < geometry.width; ++x) {
+      const TerrainTileQuad& tile = tile_at(x, z);
+      if (x + 1 < geometry.width) {
+        const TerrainTileQuad& east = tile_at(x + 1, z);
+        maybe_push(tile.max_x, tile.min_z, tile.y_ne, east.y_nw, tile.max_x, tile.max_z, tile.y_se,
+                   east.y_sw);
+      }
+      if (z + 1 < geometry.height) {
+        const TerrainTileQuad& south = tile_at(x, z + 1);
+        maybe_push(tile.min_x, tile.max_z, tile.y_sw, south.y_nw, tile.max_x, tile.max_z, tile.y_se,
+                   south.y_ne);
+      }
+    }
+  }
+  return out;
 }
 
 }  // namespace rat

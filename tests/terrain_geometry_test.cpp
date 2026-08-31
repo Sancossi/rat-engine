@@ -202,3 +202,137 @@ TEST_CASE("Terrain tile-count guard protects uint16 index range", "[unit][terrai
   REQUIRE(rat::terrain_tile_count_fits_u16(16383));
   REQUIRE_FALSE(rat::terrain_tile_count_fits_u16(16384));
 }
+
+TEST_CASE("Terrain fill mesh rejects extra side faces that overflow uint16", "[unit][terrain]") {
+  REQUIRE(rat::terrain_fill_quad_count_fits_u16(16383, 0));
+  REQUIRE_FALSE(rat::terrain_fill_quad_count_fits_u16(16383, 1));
+  REQUIRE(rat::terrain_fill_quad_count_fits_u16(16382, 1));
+  REQUIRE_FALSE(rat::terrain_fill_quad_count_fits_u16(16384, 0));
+}
+
+TEST_CASE("Terrain side faces skip equal-height shared edges", "[unit][terrain]") {
+  rat::HeightGrid grid;
+  grid.origin_x = 0;
+  grid.origin_z = 0;
+  grid.width = 2;
+  grid.height = 2;
+  grid.ground_y = {0.0f, 0.0f, 0.0f, 0.0f};
+
+  const rat::TerrainGeometry geometry = rat::build_terrain_geometry(grid, {}, 1.0f);
+  const auto faces = rat::build_terrain_side_faces(geometry);
+  REQUIRE(faces.empty());
+}
+
+TEST_CASE("Terrain side faces emit one wall for a flat 0 vs 1 neighbor", "[unit][terrain]") {
+  rat::HeightGrid grid;
+  grid.origin_x = 0;
+  grid.origin_z = 0;
+  grid.width = 2;
+  grid.height = 1;
+  grid.ground_y = {0.0f, 1.0f};
+
+  const rat::TerrainGeometry geometry = rat::build_terrain_geometry(grid, {}, 1.0f);
+  const auto faces = rat::build_terrain_side_faces(geometry);
+  REQUIRE(faces.size() == 1);
+
+  const rat::TerrainSideFace& face = faces[0];
+  REQUIRE(face.x0 == Catch::Approx(1.0f));
+  REQUIRE(face.x1 == Catch::Approx(1.0f));
+  REQUIRE(face.z0 == Catch::Approx(0.0f));
+  REQUIRE(face.z1 == Catch::Approx(1.0f));
+  REQUIRE(face.y0_lo == Catch::Approx(0.0f));
+  REQUIRE(face.y0_hi == Catch::Approx(1.0f));
+  REQUIRE(face.y1_lo == Catch::Approx(0.0f));
+  REQUIRE(face.y1_hi == Catch::Approx(1.0f));
+}
+
+TEST_CASE("Terrain side faces pair only east and south so walls are not duplicated",
+          "[unit][terrain]") {
+  rat::HeightGrid grid;
+  grid.origin_x = 0;
+  grid.origin_z = 0;
+  grid.width = 1;
+  grid.height = 2;
+  grid.ground_y = {0.0f, 1.0f};
+
+  const rat::TerrainGeometry geometry = rat::build_terrain_geometry(grid, {}, 1.0f);
+  const auto faces = rat::build_terrain_side_faces(geometry);
+  REQUIRE(faces.size() == 1);
+
+  const rat::TerrainSideFace& face = faces[0];
+  REQUIRE(face.z0 == Catch::Approx(1.0f));
+  REQUIRE(face.z1 == Catch::Approx(1.0f));
+  REQUIRE(face.x0 == Catch::Approx(0.0f));
+  REQUIRE(face.x1 == Catch::Approx(1.0f));
+  REQUIRE(face.y0_lo == Catch::Approx(0.0f));
+  REQUIRE(face.y0_hi == Catch::Approx(1.0f));
+  REQUIRE(face.y1_lo == Catch::Approx(0.0f));
+  REQUIRE(face.y1_hi == Catch::Approx(1.0f));
+}
+
+TEST_CASE("Terrain side faces surround an interior raised cube", "[unit][terrain]") {
+  rat::HeightGrid grid;
+  grid.origin_x = 0;
+  grid.origin_z = 0;
+  grid.width = 3;
+  grid.height = 3;
+  grid.ground_y = {
+      0.0f, 0.0f, 0.0f,
+      0.0f, 1.0f, 0.0f,
+      0.0f, 0.0f, 0.0f,
+  };
+
+  const rat::TerrainGeometry geometry = rat::build_terrain_geometry(grid, {}, 1.0f);
+  const auto faces = rat::build_terrain_side_faces(geometry);
+  REQUIRE(faces.size() == 4);
+}
+
+TEST_CASE("Terrain side faces use shared-edge ramp corners as a trapezoid", "[unit][terrain]") {
+  rat::HeightGrid grid;
+  grid.origin_x = 0;
+  grid.origin_z = 0;
+  grid.width = 2;
+  grid.height = 1;
+  grid.ground_y = {0.0f, 0.0f};
+  const std::vector<rat::RampDef> ramps = {
+      rat::RampDef{.tile = rat::TileCoord{0, 0},
+                   .direction = rat::RampDirection::North,
+                   .low_y = 0.0f,
+                   .high_y = 2.0f},
+  };
+
+  const rat::TerrainGeometry geometry = rat::build_terrain_geometry(grid, ramps, 1.0f);
+  const auto faces = rat::build_terrain_side_faces(geometry);
+  REQUIRE(faces.size() == 1);
+
+  const rat::TerrainSideFace& face = faces[0];
+  REQUIRE(face.x0 == Catch::Approx(1.0f));
+  REQUIRE(face.x1 == Catch::Approx(1.0f));
+  REQUIRE(face.z0 == Catch::Approx(0.0f));
+  REQUIRE(face.z1 == Catch::Approx(1.0f));
+  REQUIRE(face.y0_lo == Catch::Approx(0.0f));
+  REQUIRE(face.y0_hi == Catch::Approx(2.0f));
+  REQUIRE(face.y1_lo == Catch::Approx(0.0f));
+  REQUIRE(face.y1_hi == Catch::Approx(0.0f));
+}
+
+TEST_CASE("Terrain side faces honor origin and tile_size", "[unit][terrain]") {
+  rat::HeightGrid grid;
+  grid.origin_x = 10;
+  grid.origin_z = -2;
+  grid.width = 2;
+  grid.height = 1;
+  grid.ground_y = {0.0f, 1.0f};
+
+  const rat::TerrainGeometry geometry = rat::build_terrain_geometry(grid, {}, 2.0f);
+  const auto faces = rat::build_terrain_side_faces(geometry);
+  REQUIRE(faces.size() == 1);
+
+  const rat::TerrainSideFace& face = faces[0];
+  REQUIRE(face.x0 == Catch::Approx(22.0f));
+  REQUIRE(face.x1 == Catch::Approx(22.0f));
+  REQUIRE(face.z0 == Catch::Approx(-4.0f));
+  REQUIRE(face.z1 == Catch::Approx(-2.0f));
+  REQUIRE(face.y0_hi - face.y0_lo == Catch::Approx(1.0f));
+  REQUIRE(face.y1_hi - face.y1_lo == Catch::Approx(1.0f));
+}

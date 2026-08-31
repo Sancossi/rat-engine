@@ -48,6 +48,17 @@ struct TerrainLineSegment {
   TerrainLineVertex b{};
 };
 
+struct TerrainSideFace {
+  float x0 = 0.0f;
+  float z0 = 0.0f;
+  float y0_lo = 0.0f;
+  float y0_hi = 0.0f;
+  float x1 = 0.0f;
+  float z1 = 0.0f;
+  float y1_lo = 0.0f;
+  float y1_hi = 0.0f;
+};
+
 [[nodiscard]] TerrainGeometry build_terrain_geometry(const HeightGrid& grid,
                                                      std::span<const RampDef> ramps,
                                                      float tile_size);
@@ -60,5 +71,9 @@ struct TerrainLineSegment {
     const TerrainGeometry& geometry, float line_offset = 0.03f);
 [[nodiscard]] TerrainRenderPolicy choose_terrain_render_policy(const MapData& map);
 [[nodiscard]] bool terrain_tile_count_fits_u16(std::size_t tile_count);
+[[nodiscard]] bool terrain_fill_quad_count_fits_u16(std::size_t tile_count,
+                                                    std::size_t side_face_count);
+[[nodiscard]] std::vector<TerrainSideFace> build_terrain_side_faces(
+    const TerrainGeometry& geometry);
 
 }  // namespace rat

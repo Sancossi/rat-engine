@@ -91,6 +91,19 @@ HeightEditResult EventRuntime::adjust_tile_elevation(int tile_x, int tile_z, flo
   return edited;
 }
 
+HeightEditResult EventRuntime::place_tile_cube(int tile_x, int tile_z) {
+  MapData candidate = map_;
+  const HeightEditResult edited = place_map_tile_cube(candidate, tile_x, tile_z);
+  if (!edited.ok) {
+    return edited;
+  }
+  map_.schema_version = candidate.schema_version;
+  map_.height_grid = std::move(candidate.height_grid);
+  map_.ramps = std::move(candidate.ramps);
+  rebuild_surface_query_for_elevation();
+  return edited;
+}
+
 HeightEditResult EventRuntime::upsert_ramp_elevation(const RampDef& ramp) {
   MapData candidate = map_;
   const HeightEditResult edited = upsert_map_ramp(candidate, ramp);

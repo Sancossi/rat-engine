@@ -102,7 +102,12 @@ void GreyboxScene::set_terrain_map(const MapData& map) {
     return;
   }
   terrain_geometry_ = build_terrain_geometry(map.height_grid, map.ramps, map.tile_size);
-  if (terrain_geometry_.tiles.empty() || !terrain_tile_count_fits_u16(terrain_geometry_.tiles.size())) {
+  if (terrain_geometry_.tiles.empty()) {
+    terrain_geometry_ = {};
+    return;
+  }
+  const std::vector<TerrainSideFace> side_faces = build_terrain_side_faces(terrain_geometry_);
+  if (!terrain_fill_quad_count_fits_u16(terrain_geometry_.tiles.size(), side_faces.size())) {
     // Safe fallback: keep legacy floor/grid if geometry is invalid or exceeds uint16 indexing.
     terrain_geometry_ = {};
     return;
@@ -120,15 +125,16 @@ void GreyboxScene::set_terrain_map(const MapData& map) {
   constexpr float kLineOffset = 0.03f;
 
   if (!terrain_geometry_.tiles.empty()) {
-    terrain_vertex_data_.reserve(terrain_geometry_.tiles.size() * 4);
-    terrain_indices_.reserve(terrain_geometry_.tiles.size() * 6);
+    const std::size_t quad_count = terrain_geometry_.tiles.size() + side_faces.size();
+    terrain_vertex_data_.reserve(quad_count * 4);
+    terrain_indices_.reserve(quad_count * 6);
     std::uint32_t base_vertex = 0;
-    for (const TerrainTileQuad& tile : terrain_geometry_.tiles) {
-      push_vertex(terrain_vertex_data_, tile.min_x, tile.y_nw, tile.min_z, terrain_color);
-      push_vertex(terrain_vertex_data_, tile.max_x, tile.y_ne, tile.min_z, terrain_color);
-      push_vertex(terrain_vertex_data_, tile.max_x, tile.y_se, tile.max_z, terrain_color);
-      push_vertex(terrain_vertex_data_, tile.min_x, tile.y_sw, tile.max_z, terrain_color);
-      // Keep winding consistent for upward-facing quads.
+    auto push_fill_quad = [&](float x0, float y0, float z0, float x1, float y1, float z1, float x2,
+                              float y2, float z2, float x3, float y3, float z3) {
+      push_vertex(terrain_vertex_data_, x0, y0, z0, terrain_color);
+      push_vertex(terrain_vertex_data_, x1, y1, z1, terrain_color);
+      push_vertex(terrain_vertex_data_, x2, y2, z2, terrain_color);
+      push_vertex(terrain_vertex_data_, x3, y3, z3, terrain_color);
       terrain_indices_.push_back(static_cast<std::uint16_t>(base_vertex + 0));
       terrain_indices_.push_back(static_cast<std::uint16_t>(base_vertex + 2));
       terrain_indices_.push_back(static_cast<std::uint16_t>(base_vertex + 1));
@@ -136,6 +142,14 @@ void GreyboxScene::set_terrain_map(const MapData& map) {
       terrain_indices_.push_back(static_cast<std::uint16_t>(base_vertex + 3));
       terrain_indices_.push_back(static_cast<std::uint16_t>(base_vertex + 2));
       base_vertex += 4;
+    };
+    for (const TerrainTileQuad& tile : terrain_geometry_.tiles) {
+      push_fill_quad(tile.min_x, tile.y_nw, tile.min_z, tile.max_x, tile.y_ne, tile.min_z, tile.max_x,
+                     tile.y_se, tile.max_z, tile.min_x, tile.y_sw, tile.max_z);
+    }
+    for (const TerrainSideFace& face : side_faces) {
+      push_fill_quad(face.x0, face.y0_lo, face.z0, face.x0, face.y0_hi, face.z0, face.x1, face.y1_hi,
+                     face.z1, face.x1, face.y1_lo, face.z1);
     }
 
     const auto lines = build_terrain_grid_lines(terrain_geometry_, kLineOffset);

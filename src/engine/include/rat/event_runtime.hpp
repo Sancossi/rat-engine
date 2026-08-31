@@ -58,6 +58,7 @@ class EventRuntime {
   void set_events(std::vector<EventDef> events);
   [[nodiscard]] HeightEditResult set_tile_elevation(int tile_x, int tile_z, float ground_y);
   [[nodiscard]] HeightEditResult adjust_tile_elevation(int tile_x, int tile_z, float delta_y);
+  [[nodiscard]] HeightEditResult place_tile_cube(int tile_x, int tile_z);
   [[nodiscard]] HeightEditResult upsert_ramp_elevation(const RampDef& ramp);
   [[nodiscard]] HeightEditResult remove_ramp_elevation(TileCoord tile);
   void clear();

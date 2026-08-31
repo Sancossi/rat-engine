@@ -411,6 +411,16 @@ void EditorApp::draw_height_edit_ui() {
       }
     }
   }
+  ImGui::SameLine();
+  if (ImGui::Button("Place cube")) {
+    if (apply_result(events_.place_tile_cube(height_tile_x_, height_tile_z_))) {
+      const HeightGetResult updated =
+          get_tile_ground_y(events_.map().height_grid, height_tile_x_, height_tile_z_);
+      if (updated.ok) {
+        height_set_y_ = updated.value;
+      }
+    }
+  }
   if (tile_has_ramp) {
     ImGui::EndDisabled();
   }

@@ -34,10 +34,13 @@ struct HeightGetResult {
                                                    const RampDef& ramp);
 [[nodiscard]] bool remove_ramp_by_tile(std::vector<RampDef>& ramps, TileCoord tile);
 
+inline constexpr float kPlaceCubeDeltaY = 1.0f;
+
 [[nodiscard]] HeightEditResult set_map_tile_ground_y(MapData& map, int tile_x, int tile_z,
                                                      float ground_y);
 [[nodiscard]] HeightEditResult adjust_map_tile_ground_y(MapData& map, int tile_x, int tile_z,
                                                         float delta_y);
+[[nodiscard]] HeightEditResult place_map_tile_cube(MapData& map, int tile_x, int tile_z);
 [[nodiscard]] HeightEditResult upsert_map_ramp(MapData& map, const RampDef& ramp);
 [[nodiscard]] HeightEditResult remove_map_ramp(MapData& map, TileCoord tile);
 

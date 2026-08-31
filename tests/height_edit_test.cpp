@@ -1,3 +1,4 @@
+#include <rat/event_runtime.hpp>
 #include <rat/height_edit.hpp>
 #include <rat/map_data.hpp>
 
@@ -188,6 +189,58 @@ TEST_CASE("Height edit replace removes duplicate tile ramps", "[unit][height_edi
   REQUIRE(map.ramps[0].direction == rat::RampDirection::West);
   REQUIRE(map.ramps[0].low_y == Approx(5.0f));
   REQUIRE(map.ramps[0].high_y == Approx(7.0f));
+}
+
+TEST_CASE("Place cube raises selected flat tile by exactly 1.0", "[unit][height_edit]") {
+  rat::MapData map = make_v2_map();
+  const auto before = rat::get_tile_ground_y(map.height_grid, -2, 3);
+  REQUIRE(before.ok);
+  REQUIRE(before.value == Approx(1.0f));
+  REQUIRE(map.ramps.empty());
+
+  const auto placed = rat::place_map_tile_cube(map, -2, 3);
+  REQUIRE(placed.ok);
+  REQUIRE(rat::get_tile_ground_y(map.height_grid, -2, 3).value == Approx(2.0f));
+  REQUIRE(map.ramps.empty());
+
+  const auto stacked = rat::place_map_tile_cube(map, -2, 3);
+  REQUIRE(stacked.ok);
+  REQUIRE(rat::get_tile_ground_y(map.height_grid, -2, 3).value == Approx(3.0f));
+  REQUIRE(map.ramps.empty());
+}
+
+TEST_CASE("Place cube rejects ramp tile without mutation", "[unit][height_edit]") {
+  rat::MapData map = make_v2_map();
+  rat::RampDef ramp;
+  ramp.tile = rat::TileCoord{-2, 3};
+  ramp.direction = rat::RampDirection::East;
+  ramp.low_y = 2.0f;
+  ramp.high_y = 4.0f;
+  REQUIRE(rat::upsert_map_ramp(map, ramp).ok);
+
+  const auto before_grid = map.height_grid.ground_y;
+  const auto before_ramps = map.ramps;
+  const auto placed = rat::place_map_tile_cube(map, -2, 3);
+  REQUIRE_FALSE(placed.ok);
+  REQUIRE_FALSE(placed.error.empty());
+  REQUIRE(map.height_grid.ground_y == before_grid);
+  REQUIRE(map.ramps.size() == before_ramps.size());
+  REQUIRE(map.ramps[0].tile.x == before_ramps[0].tile.x);
+  REQUIRE(map.ramps[0].tile.z == before_ramps[0].tile.z);
+  REQUIRE(map.ramps[0].direction == before_ramps[0].direction);
+  REQUIRE(map.ramps[0].low_y == Approx(before_ramps[0].low_y));
+  REQUIRE(map.ramps[0].high_y == Approx(before_ramps[0].high_y));
+}
+
+TEST_CASE("EventRuntime place_tile_cube raises flat tile by 1.0", "[unit][height_edit]") {
+  rat::MapData map = make_v2_map();
+  rat::EventRuntime runtime;
+  runtime.load(map);
+
+  const auto result = runtime.place_tile_cube(-1, 4);
+  REQUIRE(result.ok);
+  REQUIRE(rat::get_tile_ground_y(runtime.map().height_grid, -1, 4).value == Approx(5.0f));
+  REQUIRE(runtime.map().ramps.empty());
 }
 
 TEST_CASE("Height edit schema upgrade keeps existing values", "[unit][height_edit]") {

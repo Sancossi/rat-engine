@@ -249,6 +249,10 @@ HeightEditResult adjust_map_tile_ground_y(MapData& map, int tile_x, int tile_z, 
   return adjust_tile_ground_y(map.height_grid, tile_x, tile_z, delta_y);
 }
 
+HeightEditResult place_map_tile_cube(MapData& map, int tile_x, int tile_z) {
+  return adjust_map_tile_ground_y(map, tile_x, tile_z, kPlaceCubeDeltaY);
+}
+
 HeightEditResult upsert_map_ramp(MapData& map, const RampDef& ramp) {
   const HeightEditResult upgraded = upgrade_map_schema_for_elevation(map);
   if (!upgraded.ok) {
