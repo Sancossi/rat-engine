@@ -1,7 +1,7 @@
 ---
 type: task
 area: Engine
-status: In review
+status: Done
 task_type: Chore
 sprint: Sprint 4
 due:
@@ -18,7 +18,9 @@ Origin: [[feat: why-not ok should match start locks]]
 
 ## Resolution
 
-`[why]` now requires `ok` for a startable Parallel under the cap (before `update`) and for PlayerTouch on the rising edge (overlapping, before the first `update`). Wiki `why_not(event_id)` lists `autorun_lock` / `foreground_busy` / `parallel_limit` / `already_inside` with the existing codes. Verify: `rat_tests.exe "[why]"`. Start-lock predicates unchanged.
+`[why]` now requires `ok` for a startable Parallel under the cap (before `update`) and for PlayerTouch on the rising edge (overlapping, before the first `update`). Wiki `why_not(event_id)` lists `autorun_lock` / `foreground_busy` / `parallel_limit` / `already_inside` with the existing codes. Start-lock predicates unchanged. Review: Approved.
+
+Verify: `.\build\tests\rat_tests.exe "[why]"`.
 
 ## Bugs found
 
