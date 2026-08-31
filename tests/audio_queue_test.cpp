@@ -1,7 +1,24 @@
 #include <rat/audio.hpp>
-#include <rat/log.hpp>
+#include <rat/log.hpp>  // LogAudioSink case; FIFO / Null / nested drain use audio.hpp only
 
 #include <catch2/catch_test_macros.hpp>
+
+namespace {
+
+struct NestedPlaySink : rat::AudioSink {
+  rat::QueuedAudio* audio = nullptr;
+  std::vector<rat::AudioCommand> applied;
+
+  void apply(const rat::AudioCommand& command) override {
+    applied.push_back(command);
+    if (audio != nullptr && command.kind == rat::AudioCommandKind::PlaySfx &&
+        command.id == "jump") {
+      audio->play_sfx("nested");
+    }
+  }
+};
+
+}  // namespace
 
 TEST_CASE("play commands stay queued until drain then apply FIFO", "[unit][audio]") {
   rat::RecordingAudioSink sink;
@@ -47,6 +64,25 @@ TEST_CASE("NullAudioSink does not crash on drain", "[unit][audio]") {
   audio.stop();
   audio.drain();
   audio.drain();
+}
+
+TEST_CASE("drain applies snapped batch only; nested play waits for next drain",
+          "[unit][audio]") {
+  NestedPlaySink sink;
+  rat::QueuedAudio audio(sink);
+  sink.audio = &audio;
+
+  audio.play_sfx("jump");
+  audio.drain();
+
+  REQUIRE(sink.applied.size() == 1);
+  CHECK(sink.applied[0].id == "jump");
+
+  audio.drain();
+
+  REQUIRE(sink.applied.size() == 2);
+  CHECK(sink.applied[1].kind == rat::AudioCommandKind::PlaySfx);
+  CHECK(sink.applied[1].id == "nested");
 }
 
 TEST_CASE("LogAudioSink writes kind and id on channel audio", "[unit][audio]") {

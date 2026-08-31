@@ -1,12 +1,12 @@
 #pragma once
 
-#include "rat/log.hpp"
-
 #include <string>
 #include <string_view>
 #include <vector>
 
 namespace rat {
+
+class Logger;
 
 enum class AudioCommandKind { PlaySfx, PlayMusic, Stop };
 
@@ -59,6 +59,7 @@ class QueuedAudio : public Audio {
   void play_sfx(std::string_view id) override;
   void play_music(std::string_view id) override;
   void stop(std::string_view id = {}) override;
+  // Posts from apply() stay on queue_ for the next drain(); this call does not loop until empty.
   void drain() override;
 
  private:

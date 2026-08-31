@@ -1,4 +1,7 @@
 #include "rat/audio.hpp"
+#include "rat/log.hpp"
+
+#include <utility>
 
 namespace rat {
 
@@ -55,12 +58,12 @@ void QueuedAudio::stop(std::string_view id) {
 }
 
 void QueuedAudio::drain() {
-  for (const AudioCommand& command : queue_) {
+  std::vector<AudioCommand> batch = std::move(queue_);
+  for (const AudioCommand& command : batch) {
     if (sink_ != nullptr) {
       sink_->apply(command);
     }
   }
-  queue_.clear();
 }
 
 }  // namespace rat
