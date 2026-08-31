@@ -23,7 +23,8 @@ Schema v2 `edge_barriers` `{tile, direction, height}` (no v3). Loader last-wins 
 Verify: `.\build\tests\rat_tests.exe "[map]"` and `"[edge]"`.
 
 Follow-up: [[feat: Edit and greybox edge walls]]
+Follow-up: [[edge-walls-passable-from-adjacent-side]]
 
 ## Bugs found
 
-none.
+[[edge-walls-passable-from-adjacent-side]]

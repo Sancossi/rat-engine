@@ -19,6 +19,7 @@ Depends: [[feat: Grid edge barriers]]. Взято в [[Sprint 5 — Terrain and 
 Follow-up: [[feat: Undo height-grid and edge edits]]
 Follow-up: [[feat: Mouse viewport terrain edit]]
 Follow-up: [[edge-walls-hang-in-the-air]]
+Follow-up: [[edge-walls-passable-from-adjacent-side]]
 
 ## Resolution
 
@@ -29,3 +30,4 @@ Verify: `.\build\tests\rat_tests.exe "[height_edit]"`, `"[terrain]"`, `"[map]"`.
 ## Bugs found
 
 [[edge-walls-hang-in-the-air]]
+[[edge-walls-passable-from-adjacent-side]]
