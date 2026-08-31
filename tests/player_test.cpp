@@ -403,3 +403,29 @@ TEST_CASE("Legacy integrate_player flat movement remains", "[unit][player]") {
   REQUIRE(player.x == Approx(2.0f));
   REQUIRE(player.z == Approx(0.0f));
 }
+
+TEST_CASE("Walk into a 0.45 east fence blocks X like a too-high step-up",
+          "[unit][player][surface][edge]") {
+  rat::MapData map = make_surface_map(2, 1, {0.0f, 0.0f});
+  map.edge_barriers.push_back({
+      .tile = rat::TileCoord{0, 0},
+      .direction = rat::RampDirection::East,
+      .height = 0.45f,
+  });
+  const rat::SurfaceQuery query(map);
+
+  rat::PlayerBody player;
+  player.x = 0.5f;
+  player.y = 0.0f;
+  player.z = 0.5f;
+  player.speed = 4.0f;
+
+  rat::MoveInput input{1.0f, 0.0f};
+  for (int i = 0; i < 30; ++i) {
+    player = rat::integrate_player_surface(player, input, 1.0f / 60.0f, {}, query, 0.35f,
+                                           map.edge_barriers);
+  }
+
+  REQUIRE(player.x < 1.0f);
+  REQUIRE(player.y == Approx(0.0f));
+}

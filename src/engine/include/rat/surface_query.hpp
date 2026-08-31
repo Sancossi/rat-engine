@@ -26,6 +26,7 @@ class SurfaceQuery {
   SurfaceQuery& operator=(const SurfaceQuery&) = delete;
 
   [[nodiscard]] SurfaceSample sample(float world_x, float world_z) const;
+  [[nodiscard]] float tile_size() const;
 
  private:
   struct Impl;

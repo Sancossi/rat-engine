@@ -25,6 +25,63 @@ bool overlaps_any(const Aabb2& box, std::span<const BlockerDef> blockers, float 
   return false;
 }
 
+bool ranges_overlap(float min_a, float max_a, float min_b, float max_b) {
+  return min_a < max_b && max_a > min_b;
+}
+
+bool blocked_by_edge_barriers(float old_x, float old_z, float new_x, float new_z, float feet_y,
+                              float half_extent, std::span<const EdgeBarrierDef> barriers,
+                              const SurfaceQuery& query) {
+  if (barriers.empty()) {
+    return false;
+  }
+  const float ts = query.tile_size() > 0.0f ? query.tile_size() : 1.0f;
+  const float z_lo = std::min(old_z, new_z) - half_extent;
+  const float z_hi = std::max(old_z, new_z) + half_extent;
+  const float x_lo = std::min(old_x, new_x) - half_extent;
+  const float x_hi = std::max(old_x, new_x) + half_extent;
+
+  for (const EdgeBarrierDef& edge : barriers) {
+    if (edge.height <= 0.0f) {
+      continue;
+    }
+    const float tile_x0 = static_cast<float>(edge.tile.x) * ts;
+    const float tile_z0 = static_cast<float>(edge.tile.z) * ts;
+    const float tile_x1 = tile_x0 + ts;
+    const float tile_z1 = tile_z0 + ts;
+    const float owner_top = query.sample(tile_x0 + 0.5f * ts, tile_z0 + 0.5f * ts).y;
+    if (feet_y + kFeetClearanceEpsilon >= owner_top + edge.height) {
+      continue;
+    }
+
+    switch (edge.direction) {
+      case RampDirection::East:
+      case RampDirection::West: {
+        const float edge_x = edge.direction == RampDirection::East ? tile_x1 : tile_x0;
+        if ((old_x < edge_x) == (new_x < edge_x)) {
+          break;
+        }
+        if (!ranges_overlap(z_lo, z_hi, tile_z0, tile_z1)) {
+          break;
+        }
+        return true;
+      }
+      case RampDirection::North:
+      case RampDirection::South: {
+        const float edge_z = edge.direction == RampDirection::South ? tile_z1 : tile_z0;
+        if ((old_z < edge_z) == (new_z < edge_z)) {
+          break;
+        }
+        if (!ranges_overlap(x_lo, x_hi, tile_x0, tile_x1)) {
+          break;
+        }
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
 bool surface_step_allowed(const SurfaceSample& from, const SurfaceSample& to, float max_step_up) {
   const float rise = to.y - from.y;
   if (rise <= 0.0f) {
@@ -72,7 +129,9 @@ MoveInput world_aligned_move(float screen_x, float screen_z) {
 }
 
 PlayerBody integrate_player(PlayerBody player, MoveInput input, float dt,
-                            std::span<const BlockerDef> blockers) {
+                            std::span<const BlockerDef> blockers,
+                            std::span<const EdgeBarrierDef> edge_barriers,
+                            const SurfaceQuery* surface_query) {
   float ix = input.axis_x;
   float iz = input.axis_z;
   const float len = std::sqrt(ix * ix + iz * iz);
@@ -92,13 +151,19 @@ PlayerBody integrate_player(PlayerBody player, MoveInput input, float dt,
   for (int i = 0; i < steps; ++i) {
     const float old_x = player.x;
     player.x += step_dx;
-    if (overlaps_any(player_bounds(player), blockers, player.y)) {
+    if (overlaps_any(player_bounds(player), blockers, player.y) ||
+        (surface_query != nullptr &&
+         blocked_by_edge_barriers(old_x, player.z, player.x, player.z, player.y, player.half_extent,
+                                  edge_barriers, *surface_query))) {
       player.x = old_x;
     }
 
     const float old_z = player.z;
     player.z += step_dz;
-    if (overlaps_any(player_bounds(player), blockers, player.y)) {
+    if (overlaps_any(player_bounds(player), blockers, player.y) ||
+        (surface_query != nullptr &&
+         blocked_by_edge_barriers(player.x, old_z, player.x, player.z, player.y, player.half_extent,
+                                  edge_barriers, *surface_query))) {
       player.z = old_z;
     }
   }
@@ -108,7 +173,8 @@ PlayerBody integrate_player(PlayerBody player, MoveInput input, float dt,
 
 PlayerBody integrate_player_surface(PlayerBody player, MoveInput input, float dt,
                                     std::span<const BlockerDef> blockers,
-                                    const SurfaceQuery& surface_query, float max_step_up) {
+                                    const SurfaceQuery& surface_query, float max_step_up,
+                                    std::span<const EdgeBarrierDef> edge_barriers) {
   float ix = input.axis_x;
   float iz = input.axis_z;
   const float len = std::sqrt(ix * ix + iz * iz);
@@ -133,7 +199,9 @@ PlayerBody integrate_player_surface(PlayerBody player, MoveInput input, float dt
     if (std::abs(step_dx) > 1e-6f) {
       const float old_x = player.x;
       player.x += step_dx;
-      if (overlaps_any(player_bounds(player), blockers, player.y)) {
+      if (overlaps_any(player_bounds(player), blockers, player.y) ||
+          blocked_by_edge_barriers(old_x, player.z, player.x, player.z, player.y, player.half_extent,
+                                   edge_barriers, surface_query)) {
         player.x = old_x;
       } else {
         const SurfaceSample sample = surface_query.sample(player.x, player.z);
@@ -150,7 +218,9 @@ PlayerBody integrate_player_surface(PlayerBody player, MoveInput input, float dt
     if (std::abs(step_dz) > 1e-6f) {
       const float old_z = player.z;
       player.z += step_dz;
-      if (overlaps_any(player_bounds(player), blockers, player.y)) {
+      if (overlaps_any(player_bounds(player), blockers, player.y) ||
+          blocked_by_edge_barriers(player.x, old_z, player.x, player.z, player.y, player.half_extent,
+                                   edge_barriers, surface_query)) {
         player.z = old_z;
       } else {
         const SurfaceSample sample = surface_query.sample(player.x, player.z);

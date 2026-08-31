@@ -284,7 +284,8 @@ PlayerFrameResult integrate_player_frame_surface(PlayerBody player, JumpState ju
                                                  const PlayerFrameInput& input, float dt,
                                                  std::span<const BlockerDef> blockers,
                                                  const SurfaceQuery& surface_query,
-                                                 const JumpTuning& tuning, float max_step_up) {
+                                                 const JumpTuning& tuning, float max_step_up,
+                                                 std::span<const EdgeBarrierDef> edge_barriers) {
   const float safe_dt = std::max(0.0f, dt);
   const float max_substep = std::max(1e-4f, tuning.max_substep_seconds);
   const int substeps =
@@ -342,9 +343,10 @@ PlayerFrameResult integrate_player_frame_surface(PlayerBody player, JumpState ju
 
     if (jump.grounded) {
       if (support_before.has_value()) {
-        player = integrate_player(player, input.move, step_dt, blockers);
+        player = integrate_player(player, input.move, step_dt, blockers, edge_barriers, &surface_query);
       } else {
-        player = integrate_player_surface(player, input.move, step_dt, blockers, surface_query, max_step_up);
+        player = integrate_player_surface(player, input.move, step_dt, blockers, surface_query,
+                                          max_step_up, edge_barriers);
       }
     } else {
       float ix = input.move.axis_x;
@@ -361,7 +363,8 @@ PlayerFrameResult integrate_player_frame_surface(PlayerBody player, JumpState ju
       if (std::abs(ix) > 1e-6f) {
         const PlayerBody before_x = player;
         const MoveInput move_x{ix > 0.0f ? 1.0f : -1.0f, 0.0f};
-        player = integrate_player(player, move_x, step_dt * std::abs(ix), blockers);
+        player = integrate_player(player, move_x, step_dt * std::abs(ix), blockers, edge_barriers,
+                                  &surface_query);
         const SurfaceSample candidate_x = surface_query.sample(player.x, player.z);
         if (candidate_x.y > feet_world_before + kFeetPenetrationEpsilon) {
           player = before_x;
@@ -371,7 +374,8 @@ PlayerFrameResult integrate_player_frame_surface(PlayerBody player, JumpState ju
       if (std::abs(iz) > 1e-6f) {
         const PlayerBody before_z = player;
         const MoveInput move_z{0.0f, iz > 0.0f ? 1.0f : -1.0f};
-        player = integrate_player(player, move_z, step_dt * std::abs(iz), blockers);
+        player = integrate_player(player, move_z, step_dt * std::abs(iz), blockers, edge_barriers,
+                                  &surface_query);
         const SurfaceSample candidate_z = surface_query.sample(player.x, player.z);
         if (candidate_z.y > feet_world_before + kFeetPenetrationEpsilon) {
           player = before_z;

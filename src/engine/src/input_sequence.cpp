@@ -64,7 +64,8 @@ InputSequenceResult run_input_sequence(const MapData& map, PlayerBody start_play
         frame_input.jump_held = false;
       }
       const PlayerFrameResult integrated = integrate_player_frame_surface(
-          result.player, result.jump, frame_input, dt, map.blockers, surface, config.jump_tuning);
+          result.player, result.jump, frame_input, dt, map.blockers, surface, config.jump_tuning,
+          0.35f, map.edge_barriers);
       result.player = integrated.body;
       result.jump = integrated.jump;
       result.state.set_player_position(result.player.x, result.player.y, result.player.z);

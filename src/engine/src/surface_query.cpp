@@ -52,6 +52,13 @@ SurfaceQuery::~SurfaceQuery() = default;
 SurfaceQuery::SurfaceQuery(SurfaceQuery&&) noexcept = default;
 SurfaceQuery& SurfaceQuery::operator=(SurfaceQuery&&) noexcept = default;
 
+float SurfaceQuery::tile_size() const {
+  if (!impl_) {
+    return 1.0f;
+  }
+  return impl_->tile_size;
+}
+
 SurfaceSample SurfaceQuery::sample(float world_x, float world_z) const {
   SurfaceSample out;
   if (!impl_) {

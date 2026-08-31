@@ -6,6 +6,7 @@
 #include <fstream>
 #include <sstream>
 #include <stdexcept>
+#include <vector>
 
 namespace rat {
 namespace {
@@ -221,6 +222,56 @@ BlockerDef parse_blocker(const json& node) {
   return blocker;
 }
 
+bool edge_tile_in_grid(const HeightGrid& grid, int tile_x, int tile_z) {
+  const int local_x = tile_x - grid.origin_x;
+  const int local_z = tile_z - grid.origin_z;
+  return local_x >= 0 && local_z >= 0 && local_x < grid.width && local_z < grid.height;
+}
+
+bool edge_tile_has_ramp(const std::vector<RampDef>& ramps, int tile_x, int tile_z) {
+  for (const RampDef& ramp : ramps) {
+    if (ramp.tile.x == tile_x && ramp.tile.z == tile_z) {
+      return true;
+    }
+  }
+  return false;
+}
+
+void canonicalize_edge_barriers(MapData& map) {
+  std::vector<EdgeBarrierDef> unique;
+  unique.reserve(map.edge_barriers.size());
+  for (const EdgeBarrierDef& incoming : map.edge_barriers) {
+    bool replaced = false;
+    for (EdgeBarrierDef& existing : unique) {
+      if (existing.tile.x == incoming.tile.x && existing.tile.z == incoming.tile.z &&
+          existing.direction == incoming.direction) {
+        existing = incoming;
+        replaced = true;
+        break;
+      }
+    }
+    if (!replaced) {
+      unique.push_back(incoming);
+    }
+  }
+
+  std::vector<EdgeBarrierDef> kept;
+  kept.reserve(unique.size());
+  for (const EdgeBarrierDef& edge : unique) {
+    if (edge.height <= 0.0f) {
+      continue;
+    }
+    if (!edge_tile_in_grid(map.height_grid, edge.tile.x, edge.tile.z)) {
+      continue;
+    }
+    if (edge_tile_has_ramp(map.ramps, edge.tile.x, edge.tile.z)) {
+      continue;
+    }
+    kept.push_back(edge);
+  }
+  map.edge_barriers = std::move(kept);
+}
+
 EventPage parse_page(const json& node) {
   EventPage page;
   page.trigger = parse_trigger(node.at("trigger").get<std::string>());
@@ -310,6 +361,17 @@ MapData parse_map(const json& root) {
         map.ramps.push_back(out);
       }
     }
+    if (root.contains("edge_barriers")) {
+      for (const auto& node : root.at("edge_barriers")) {
+        EdgeBarrierDef out;
+        const auto& tile = node.at("tile");
+        out.tile = TileCoord{tile.at("x").get<int>(), tile.at("z").get<int>()};
+        out.direction = parse_ramp_direction(node.at("direction").get<std::string>());
+        out.height = node.at("height").get<float>();
+        map.edge_barriers.push_back(out);
+      }
+    }
+    canonicalize_edge_barriers(map);
   }
   if (root.contains("blockers")) {
     for (const auto& blocker : root.at("blockers")) {
@@ -536,6 +598,12 @@ MapSerializeResult serialize_map_to_string(const MapData& map) {
                                       {"direction", ramp_direction_to_string(ramp.direction)},
                                       {"low_y", ramp.low_y},
                                       {"high_y", ramp.high_y}});
+      }
+      root["edge_barriers"] = json::array();
+      for (const EdgeBarrierDef& edge : map.edge_barriers) {
+        root["edge_barriers"].push_back(json{{"tile", {{"x", edge.tile.x}, {"z", edge.tile.z}}},
+                                             {"direction", ramp_direction_to_string(edge.direction)},
+                                             {"height", edge.height}});
       }
     }
     for (const BlockerDef& blocker : map.blockers) {

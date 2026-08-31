@@ -1447,3 +1447,65 @@ TEST_CASE("Jumpable blocker acts as elevated slab: inside range blocks",
   }
   REQUIRE(body.x < 1.0f);
 }
+
+TEST_CASE("Jump hold across a 0.45 east fence reaches the far tile",
+          "[unit][player][jump][edge]") {
+  rat::MapData map = make_surface_map(3, 1, {0.0f, 0.0f, 0.0f});
+  map.edge_barriers.push_back({
+      .tile = rat::TileCoord{0, 0},
+      .direction = rat::RampDirection::East,
+      .height = 0.45f,
+  });
+  const rat::SurfaceQuery query(map);
+
+  rat::PlayerBody body;
+  body.x = 0.5f;
+  body.z = 0.5f;
+  body.speed = 5.0f;
+  rat::JumpState jump = rat::make_grounded_jump_state();
+
+  for (int frame_i = 0; frame_i < 180; ++frame_i) {
+    rat::PlayerFrameInput input;
+    input.move = rat::MoveInput{1.0f, 0.0f};
+    input.jump_pressed = frame_i == 0;
+    input.jump_held = true;
+    const rat::PlayerFrameResult frame = rat::integrate_player_frame_surface(
+        body, jump, input, 1.0f / 120.0f, {}, query, {}, 0.35f, map.edge_barriers);
+    body = frame.body;
+    jump = frame.jump;
+  }
+
+  REQUIRE(body.x >= 1.0f);
+  REQUIRE(jump.support_blocker_index == -1);
+}
+
+TEST_CASE("Jump hold across a 1.6 east fence never reaches the far tile",
+          "[unit][player][jump][edge]") {
+  rat::MapData map = make_surface_map(3, 1, {0.0f, 0.0f, 0.0f});
+  map.edge_barriers.push_back({
+      .tile = rat::TileCoord{0, 0},
+      .direction = rat::RampDirection::East,
+      .height = 1.6f,
+  });
+  const rat::SurfaceQuery query(map);
+
+  rat::PlayerBody body;
+  body.x = 0.5f;
+  body.z = 0.5f;
+  body.speed = 5.0f;
+  rat::JumpState jump = rat::make_grounded_jump_state();
+
+  for (int frame_i = 0; frame_i < 180; ++frame_i) {
+    rat::PlayerFrameInput input;
+    input.move = rat::MoveInput{1.0f, 0.0f};
+    input.jump_pressed = frame_i == 0;
+    input.jump_held = true;
+    const rat::PlayerFrameResult frame = rat::integrate_player_frame_surface(
+        body, jump, input, 1.0f / 120.0f, {}, query, {}, 0.35f, map.edge_barriers);
+    body = frame.body;
+    jump = frame.jump;
+  }
+
+  REQUIRE(body.x < 1.0f);
+  REQUIRE(jump.support_blocker_index == -1);
+}

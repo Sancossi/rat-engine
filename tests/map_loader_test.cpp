@@ -590,3 +590,198 @@ TEST_CASE("Loader rejects partial vertical fields when non-jumpable", "[unit][ma
   const auto result = rat::load_map_from_string(kJson);
   REQUIRE_FALSE(result.ok);
 }
+
+TEST_CASE("Map loader v2 parses edge_barriers and roundtrips", "[unit][map]") {
+  constexpr const char* kJson = R"({
+    "schema_version": 2,
+    "id": "edge_map",
+    "width": 2,
+    "height": 2,
+    "height_grid": {
+      "origin_x": 0,
+      "origin_z": 0,
+      "width": 2,
+      "height": 2,
+      "ground_y": [0.0, 0.0, 0.0, 0.0]
+    },
+    "edge_barriers": [
+      { "tile": { "x": 0, "z": 0 }, "direction": "east", "height": 0.45 }
+    ],
+    "events": []
+  })";
+
+  const auto loaded = rat::load_map_from_string(kJson);
+  REQUIRE(loaded.ok);
+  REQUIRE(loaded.map.schema_version == 2);
+  REQUIRE(loaded.map.edge_barriers.size() == 1);
+  REQUIRE(loaded.map.edge_barriers[0].tile.x == 0);
+  REQUIRE(loaded.map.edge_barriers[0].tile.z == 0);
+  REQUIRE(loaded.map.edge_barriers[0].direction == rat::RampDirection::East);
+  REQUIRE(loaded.map.edge_barriers[0].height == Catch::Approx(0.45f));
+
+  const auto serialized = rat::serialize_map_to_string(loaded.map);
+  REQUIRE(serialized.ok);
+  REQUIRE(serialized.json_text.find("\"edge_barriers\"") != std::string::npos);
+
+  const auto again = rat::load_map_from_string(serialized.json_text);
+  REQUIRE(again.ok);
+  REQUIRE(again.map.edge_barriers.size() == 1);
+  REQUIRE(again.map.edge_barriers[0].tile.x == 0);
+  REQUIRE(again.map.edge_barriers[0].tile.z == 0);
+  REQUIRE(again.map.edge_barriers[0].direction == rat::RampDirection::East);
+  REQUIRE(again.map.edge_barriers[0].height == Catch::Approx(0.45f));
+}
+
+TEST_CASE("Map loader edge_barriers last wins on tile and direction", "[unit][map]") {
+  constexpr const char* kJson = R"({
+    "schema_version": 2,
+    "id": "edge_dup",
+    "width": 2,
+    "height": 2,
+    "height_grid": {
+      "origin_x": 0,
+      "origin_z": 0,
+      "width": 2,
+      "height": 2,
+      "ground_y": [0.0, 0.0, 0.0, 0.0]
+    },
+    "edge_barriers": [
+      { "tile": { "x": 0, "z": 0 }, "direction": "east", "height": 0.45 },
+      { "tile": { "x": 0, "z": 0 }, "direction": "east", "height": 1.6 }
+    ],
+    "events": []
+  })";
+
+  const auto loaded = rat::load_map_from_string(kJson);
+  REQUIRE(loaded.ok);
+  REQUIRE(loaded.map.edge_barriers.size() == 1);
+  REQUIRE(loaded.map.edge_barriers[0].height == Catch::Approx(1.6f));
+}
+
+TEST_CASE("Map loader drops edge_barriers on ramp tiles", "[unit][map]") {
+  constexpr const char* kJson = R"({
+    "schema_version": 2,
+    "id": "edge_ramp",
+    "width": 2,
+    "height": 2,
+    "height_grid": {
+      "origin_x": 0,
+      "origin_z": 0,
+      "width": 2,
+      "height": 2,
+      "ground_y": [0.0, 0.0, 0.0, 0.0]
+    },
+    "ramps": [
+      { "tile": { "x": 0, "z": 0 }, "direction": "east", "low_y": 0.0, "high_y": 1.0 }
+    ],
+    "edge_barriers": [
+      { "tile": { "x": 0, "z": 0 }, "direction": "north", "height": 0.45 },
+      { "tile": { "x": 1, "z": 0 }, "direction": "west", "height": 0.45 }
+    ],
+    "events": []
+  })";
+
+  const auto loaded = rat::load_map_from_string(kJson);
+  REQUIRE(loaded.ok);
+  REQUIRE(loaded.map.edge_barriers.size() == 1);
+  REQUIRE(loaded.map.edge_barriers[0].tile.x == 1);
+  REQUIRE(loaded.map.edge_barriers[0].tile.z == 0);
+  REQUIRE(loaded.map.edge_barriers[0].direction == rat::RampDirection::West);
+}
+
+TEST_CASE("Map loader drops out-of-grid and non-positive edge_barriers", "[unit][map]") {
+  constexpr const char* kJson = R"({
+    "schema_version": 2,
+    "id": "edge_drop",
+    "width": 2,
+    "height": 2,
+    "height_grid": {
+      "origin_x": 0,
+      "origin_z": 0,
+      "width": 2,
+      "height": 2,
+      "ground_y": [0.0, 0.0, 0.0, 0.0]
+    },
+    "edge_barriers": [
+      { "tile": { "x": 99, "z": 0 }, "direction": "east", "height": 0.45 },
+      { "tile": { "x": 0, "z": 0 }, "direction": "south", "height": 0.0 },
+      { "tile": { "x": 0, "z": 1 }, "direction": "west", "height": -1.0 },
+      { "tile": { "x": 1, "z": 1 }, "direction": "north", "height": 0.45 }
+    ],
+    "events": []
+  })";
+
+  const auto loaded = rat::load_map_from_string(kJson);
+  REQUIRE(loaded.ok);
+  REQUIRE(loaded.map.edge_barriers.size() == 1);
+  REQUIRE(loaded.map.edge_barriers[0].tile.x == 1);
+  REQUIRE(loaded.map.edge_barriers[0].tile.z == 1);
+  REQUIRE(loaded.map.edge_barriers[0].direction == rat::RampDirection::North);
+  REQUIRE(loaded.map.edge_barriers[0].height == Catch::Approx(0.45f));
+}
+
+TEST_CASE("Map loader keeps opposite-encoding edge_barriers as separate edges", "[unit][map]") {
+  constexpr const char* kJson = R"({
+    "schema_version": 2,
+    "id": "edge_opposite",
+    "width": 2,
+    "height": 1,
+    "height_grid": {
+      "origin_x": 0,
+      "origin_z": 0,
+      "width": 2,
+      "height": 1,
+      "ground_y": [0.0, 0.0]
+    },
+    "edge_barriers": [
+      { "tile": { "x": 0, "z": 0 }, "direction": "east", "height": 0.45 },
+      { "tile": { "x": 1, "z": 0 }, "direction": "west", "height": 1.6 }
+    ],
+    "events": []
+  })";
+
+  const auto loaded = rat::load_map_from_string(kJson);
+  REQUIRE(loaded.ok);
+  REQUIRE(loaded.map.edge_barriers.size() == 2);
+  REQUIRE(loaded.map.edge_barriers[0].tile.x == 0);
+  REQUIRE(loaded.map.edge_barriers[0].direction == rat::RampDirection::East);
+  REQUIRE(loaded.map.edge_barriers[0].height == Catch::Approx(0.45f));
+  REQUIRE(loaded.map.edge_barriers[1].tile.x == 1);
+  REQUIRE(loaded.map.edge_barriers[1].direction == rat::RampDirection::West);
+  REQUIRE(loaded.map.edge_barriers[1].height == Catch::Approx(1.6f));
+}
+
+TEST_CASE("Map loader v1 ignores edge_barriers key", "[unit][map]") {
+  constexpr const char* kJson = R"({
+    "schema_version": 1,
+    "id": "legacy_edges",
+    "width": 2,
+    "height": 2,
+    "edge_barriers": [
+      { "tile": { "x": 0, "z": 0 }, "direction": "east", "height": 0.45 }
+    ],
+    "events": []
+  })";
+
+  const auto loaded = rat::load_map_from_string(kJson);
+  REQUIRE(loaded.ok);
+  REQUIRE(loaded.map.schema_version == 1);
+  REQUIRE(loaded.map.edge_barriers.empty());
+}
+
+TEST_CASE("Serializer keeps v1 payload free of edge_barriers", "[unit][map]") {
+  rat::MapData map;
+  map.schema_version = 1;
+  map.id = "legacy_edges_save";
+  map.width = 2;
+  map.height = 2;
+  map.edge_barriers.push_back({
+      .tile = rat::TileCoord{0, 0},
+      .direction = rat::RampDirection::East,
+      .height = 0.45f,
+  });
+
+  const auto serialized = rat::serialize_map_to_string(map);
+  REQUIRE(serialized.ok);
+  REQUIRE(serialized.json_text.find("\"edge_barriers\"") == std::string::npos);
+}

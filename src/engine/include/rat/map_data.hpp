@@ -73,6 +73,12 @@ struct RampDef {
   float high_y = 0.0f;
 };
 
+struct EdgeBarrierDef {
+  TileCoord tile;
+  RampDirection direction = RampDirection::East;
+  float height = 0.0f;
+};
+
 struct BlockerDef {
   Aabb2 bounds{};
   std::optional<float> base_y{};
@@ -150,6 +156,7 @@ struct MapData {
   float tile_size = 1.0f;
   HeightGrid height_grid;
   std::vector<RampDef> ramps;
+  std::vector<EdgeBarrierDef> edge_barriers;
   std::vector<BlockerDef> blockers;
   std::vector<EventDef> events;
 };

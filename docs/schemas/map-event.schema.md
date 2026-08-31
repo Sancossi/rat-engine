@@ -13,6 +13,7 @@ Human-readable schema for map/event data. Files live under `data/maps/<id>.json`
 | `tile_size` | number | no | World units per tile (default `1`) |
 | `height_grid` | object | v2 only | Elevation grid, required for schema `2` |
 | `ramps` | array | v2 only | Optional ramp definitions for schema `2` |
+| `edge_barriers` | array | v2 only | Optional tile-edge fences for schema `2` |
 | `blockers` | array | no | Static blockers on XZ (legacy full walls + optional height-aware jumpables) |
 | `events` | array | no | Event definitions |
 
@@ -27,6 +28,29 @@ Human-readable schema for map/event data. Files live under `data/maps/<id>.json`
 | `ground_y` | array<number> | yes | Row-major tile ground heights, length `width * height` |
 
 `ground_y` index: `index = (z - origin_z) * width + (x - origin_x)`.
+
+### EdgeBarrierDef (v2)
+
+Optional fence on one edge of a height-grid tile, sitting on that tile's `ground_y`. The edge is collision only — not standable support.
+
+| Field | Type | Required | Notes |
+|-------|------|----------|-------|
+| `tile` | object | yes | `{ "x": int, "z": int }` owner tile |
+| `direction` | string | yes | `north`, `east`, `south`, `west` (same strings as ramps) |
+| `height` | number | yes | Fence height above owner `ground_y`; must be `> 0` |
+
+```json
+{ "tile": { "x": 0, "z": 0 }, "direction": "east", "height": 0.45 }
+```
+
+Loader canonicalize (after parse, schema v2):
+
+- Unique key `(tile, direction)`: last wins.
+- Drop barriers whose tile has a ramp.
+- Drop out-of-grid tiles and `height <= 0` (do not fail the map).
+- Do not merge opposite encodings (east of A and west of the neighbor stay separate).
+
+Walk across the edge is blocked while feet are below `owner_top + height`. Mini `0.45` is jumpable with default `JumpTuning`; full `1.6` is not.
 
 ### RampDef (v2)
 
@@ -132,5 +156,6 @@ See `data/maps/grey_yard.json`.
   - `origin_x = 0`, `origin_z = 0`
   - `width = map.width`, `height = map.height`
   - every `ground_y` value is `0`
-- Loader accepts `schema_version: 2` and reads explicit `height_grid` + optional `ramps`.
+- Loader accepts `schema_version: 2` and reads explicit `height_grid` + optional `ramps` + optional `edge_barriers`.
+- For `schema_version: 1`, `edge_barriers` is ignored if present.
 - For `schema_version: 2`, invalid `ground_y` length (not equal to `width * height`) is rejected.

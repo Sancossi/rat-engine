@@ -15,3 +15,11 @@ Intent: забор на ребре клетки `{tile, direction, height}` на
 Acceptance: schema v2 `edge_barriers` (без bump v3); лоадер канонизирует дубликаты и режет ramp-клетки; ходьба через ребро блокируется; 0.45 перепрыгивается; 1.6 нет даже с полным hold.
 
 Depends: [[feat: Terrain wall cubes]]. Next: [[feat: Edit and greybox edge walls]]. Взято в [[Sprint 5 — Terrain and edge walls]].
+
+## Resolution
+
+Schema v2 `edge_barriers` `{tile, direction, height}` (no v3). Loader last-wins on `(tile, direction)`, drops ramp tiles / OOB / `height <= 0`. Walk blocked below `owner_top + height`; 0.45 jumpable, 1.6 not, with default JumpTuning. Edges are not support. Verify: `.\build\tests\rat_tests.exe "[map]"` and `"[edge]"`.
+
+Bugs found: none.
+
+Follow-up: [[feat: Edit and greybox edge walls]]
