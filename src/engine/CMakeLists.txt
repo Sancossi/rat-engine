@@ -1,4 +1,5 @@
 add_library(rat_core
+  src/camera.cpp
   src/game_state.cpp
 )
 
@@ -17,14 +18,27 @@ endif()
 
 add_library(rat_engine
   src/engine.cpp
+  src/greybox.cpp
   src/renderer.cpp
 )
 
 add_library(rat::engine ALIAS rat_engine)
 
+set(_rat_debugdraw_shader_out "${CMAKE_CURRENT_BINARY_DIR}/generated_shaders")
+file(MAKE_DIRECTORY "${_rat_debugdraw_shader_out}")
+file(COPY
+  "${RAT_BGFX_DEBUGDRAW_SHADER_DIR}/vs_debugdraw_lines.bin.h"
+  "${RAT_BGFX_DEBUGDRAW_SHADER_DIR}/fs_debugdraw_lines.bin.h"
+  "${RAT_BGFX_DEBUGDRAW_SHADER_DIR}/vs_debugdraw_fill.bin.h"
+  "${RAT_BGFX_DEBUGDRAW_SHADER_DIR}/fs_debugdraw_fill.bin.h"
+  DESTINATION "${_rat_debugdraw_shader_out}"
+)
+
 target_include_directories(rat_engine
   PUBLIC
     "${CMAKE_CURRENT_SOURCE_DIR}/include"
+  PRIVATE
+    "${_rat_debugdraw_shader_out}"
 )
 
 target_link_libraries(rat_engine

@@ -41,7 +41,8 @@ bool Renderer::init(const RendererConfig& config) {
   }
 
   bgfx::setDebug(BGFX_DEBUG_TEXT);
-  bgfx::setViewClear(0, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, 0x1a1a2eff, 1.0f, 0);
+  // Cool grey backdrop behind the greybox floor.
+  bgfx::setViewClear(0, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, 0x2a2c30ff, 1.0f, 0);
   bgfx::setViewRect(0, 0, 0, static_cast<uint16_t>(width_), static_cast<uint16_t>(height_));
 
   initialized_ = true;

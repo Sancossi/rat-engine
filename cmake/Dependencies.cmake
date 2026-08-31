@@ -61,6 +61,8 @@ endif()
 # Embedded imgui shaders shipped with bgfx examples (for imgui_bgfx).
 set(RAT_BGFX_IMGUI_SHADER_DIR "${bgfx_cmake_SOURCE_DIR}/bgfx/examples/common/imgui"
     CACHE INTERNAL "bgfx imgui shader headers")
+set(RAT_BGFX_DEBUGDRAW_SHADER_DIR "${bgfx_cmake_SOURCE_DIR}/bgfx/examples/common/debugdraw"
+    CACHE INTERNAL "bgfx debugdraw shader headers")
 
 if(RAT_BUILD_TESTS)
   set(CATCH_INSTALL_DOCS OFF CACHE BOOL "" FORCE)

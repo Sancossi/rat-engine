@@ -1,4 +1,5 @@
 add_executable(rat_tests
+  camera_test.cpp
   game_state_test.cpp
   headless_mechanics_stub_test.cpp
 )
