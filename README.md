@@ -9,6 +9,7 @@ Game engine bootstrap: **bgfx** renderer + **GLFW** window + **Dear ImGui** mini
 | `src/engine` | `rat_core` (logic) + `rat_engine` (bgfx present) |
 | `apps/editor` | `rat-editor` — GLFW shell, ImGui docks, bgfx present |
 | `data/maps` | JSON maps / events (schema in `docs/schemas/`) |
+| `docs/sprint1-acceptance.md` | Sprint 1 playthrough checklist |
 | `tests` | Catch2 unit + headless mechanics tests |
 | `cmake/Dependencies.cmake` | FetchContent: bgfx.cmake, GLFW, ImGui, Catch2, nlohmann/json |
 | `docs/superpowers/specs/` | Design notes |
