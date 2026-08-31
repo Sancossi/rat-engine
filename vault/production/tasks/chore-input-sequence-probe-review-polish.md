@@ -1,7 +1,7 @@
 ---
 type: task
 area: Engine
-status: In progress
+status: Done
 task_type: Chore
 sprint: Sprint 4
 due:
@@ -18,10 +18,8 @@ Origin: [[feat: Headless input sequence probe]]
 
 ## Resolution
 
-`InputSequenceResult` now has `snapshots_written` and `snapshot_error`. Failed `create_directories` / `write_debug_snapshot` set the error and leave the count at 0 instead of looking successful. Probe snapshot tests use a unique temp path and `remove_all` in teardown. Edit mode: documented as no snap-to-ground (Play default; editor-only snap).
+`InputSequenceResult` now has `snapshots_written` and `snapshot_error`. Failed `create_directories` / `write_debug_snapshot` set the error (helper does not throw); later dumps in that run are skipped. Count is successful writes only — 0 if mkdir/write fails before any dump. Probe snapshot tests use a unique temp path and `remove_all` in teardown. Edit mode: documented as no snap-to-ground (Play default; editor-only snap). Review: Approved.
 
 ## Bugs found
 
 none.
-
-Verify: `.\build\tests\rat_tests.exe "[probe]"`
