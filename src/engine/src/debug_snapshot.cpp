@@ -163,7 +163,8 @@ DebugSnapshot load_snapshot(const json& root) {
 
 DebugSnapshot make_debug_snapshot(std::uint64_t sim_frame, AppMode mode, const PlayerBody& player,
                                   const JumpState& jump, const EventRuntime& events,
-                                  const GameState& state, bool interact_pressed) {
+                                  const GameState& state, bool interact_pressed,
+                                  std::string_view selected_event_id) {
   DebugSnapshot snapshot;
   snapshot.sim_frame = sim_frame;
   snapshot.app_mode = app_mode_name(mode);
@@ -191,16 +192,23 @@ DebugSnapshot make_debug_snapshot(std::uint64_t sim_frame, AppMode mode, const P
         events.why_not_fired(event.id, state, player, interact_pressed);
     snapshot.event_why_not.push_back(EventWhyNotEntry{event.id, event_why_not_name(reason)});
   }
-  if (!snapshot.overlapping_event_ids.empty()) {
-    const std::string& primary_id = snapshot.overlapping_event_ids.front();
+
+  const auto set_reason_for_id = [&](std::string_view id) -> bool {
     for (const EventWhyNotEntry& entry : snapshot.event_why_not) {
-      if (entry.id == primary_id) {
+      if (entry.id == id) {
         snapshot.event_why_not_reason = entry.reason;
-        break;
+        return true;
       }
     }
-  } else if (!snapshot.event_why_not.empty()) {
-    snapshot.event_why_not_reason = snapshot.event_why_not.front().reason;
+    return false;
+  };
+
+  if (selected_event_id.empty() || !set_reason_for_id(selected_event_id)) {
+    if (!snapshot.overlapping_event_ids.empty()) {
+      set_reason_for_id(snapshot.overlapping_event_ids.front());
+    } else if (!snapshot.event_why_not.empty()) {
+      snapshot.event_why_not_reason = snapshot.event_why_not.front().reason;
+    }
   }
   return snapshot;
 }

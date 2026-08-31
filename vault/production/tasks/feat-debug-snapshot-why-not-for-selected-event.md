@@ -15,3 +15,11 @@ Intent: F3/`make_debug_snapshot` пишет `event_why_not_reason` для **вы
 Acceptance: `make_debug_snapshot` принимает optional `selected_event_id`; editor передаёт selection; тест на фикстуре с двумя events.
 
 Origin: [[feat: Event why-not-fired]]
+
+## Resolution
+
+`make_debug_snapshot` takes optional `selected_event_id` (default empty = first overlapping, else first on map). When the id is in `event_why_not`, primary `event_why_not_reason` is that entry; the full list is unchanged. Unknown id keeps the fallback. F3 passes `selected_event_` id when the index is valid. Verify: `rat_tests.exe "[debug]"` / `"[why]"`.
+
+## Bugs found
+
+none.

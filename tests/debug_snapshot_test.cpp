@@ -91,3 +91,82 @@ TEST_CASE("write_debug_snapshot round-trips a headless fixture", "[unit][debug]"
 
   std::filesystem::remove(path, ec);
 }
+
+TEST_CASE("make_debug_snapshot primary why-not follows selected_event_id", "[unit][debug][why]") {
+  constexpr const char* kJson = R"({
+    "schema_version": 2,
+    "id": "snap_selected_why",
+    "width": 4,
+    "height": 4,
+    "tile_size": 1.0,
+    "height_grid": {
+      "origin_x": 0,
+      "origin_z": 0,
+      "width": 4,
+      "height": 4,
+      "ground_y": [
+        0, 0, 0, 0,
+        0, 0, 0, 0,
+        0, 0, 3, 0,
+        0, 0, 0, 0
+      ]
+    },
+    "events": [
+      {
+        "id": "sign",
+        "tile": { "x": 2, "z": 2 },
+        "pages": [
+          {
+            "trigger": "action",
+            "commands": [{ "op": "control_switch", "id": 11, "value": true }]
+          }
+        ]
+      },
+      {
+        "id": "gated",
+        "tile": { "x": 0, "z": 0 },
+        "pages": [
+          {
+            "trigger": "action",
+            "conditions": [{ "type": "switch", "id": 1, "value": true }],
+            "commands": [{ "op": "control_switch", "id": 2, "value": true }]
+          }
+        ]
+      }
+    ]
+  })";
+
+  const auto loaded = rat::load_map_from_string(kJson);
+  REQUIRE(loaded.ok);
+
+  rat::GameState state;
+  rat::EventRuntime runtime;
+  runtime.load(loaded.map);
+
+  rat::PlayerBody player;
+  player.x = 2.5f;
+  player.y = 0.0f;
+  player.z = 2.5f;
+
+  const rat::DebugSnapshot fallback = rat::make_debug_snapshot(
+      1, rat::AppMode::Play, player, rat::make_grounded_jump_state(), runtime, state, true);
+  REQUIRE(fallback.event_why_not.size() == 2);
+  CHECK(fallback.event_why_not[0].id == "sign");
+  CHECK(fallback.event_why_not[0].reason == "height");
+  CHECK(fallback.event_why_not[1].id == "gated");
+  CHECK(fallback.event_why_not[1].reason == "conditions");
+  CHECK(fallback.event_why_not_reason == "height");
+
+  const rat::DebugSnapshot selected = rat::make_debug_snapshot(
+      1, rat::AppMode::Play, player, rat::make_grounded_jump_state(), runtime, state, true, "gated");
+  REQUIRE(selected.event_why_not.size() == 2);
+  CHECK(selected.event_why_not[0].id == "sign");
+  CHECK(selected.event_why_not[1].id == "gated");
+  CHECK(selected.event_why_not_reason == "conditions");
+  CHECK(selected.event_why_not_reason != fallback.event_why_not_reason);
+
+  const rat::DebugSnapshot unknown = rat::make_debug_snapshot(
+      1, rat::AppMode::Play, player, rat::make_grounded_jump_state(), runtime, state, true, "missing");
+  CHECK(unknown.event_why_not_reason == fallback.event_why_not_reason);
+  REQUIRE(unknown.event_why_not.size() == 2);
+}

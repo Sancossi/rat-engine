@@ -25,6 +25,7 @@
 #include <iostream>
 #include <memory>
 #include <string>
+#include <string_view>
 #include <utility>
 #include <vector>
 
@@ -955,9 +956,14 @@ void EditorApp::update_simulation(float dt) {
   }
 
   if (input.debug_snapshot_pressed) {
+    std::string_view selected_id{};
+    const auto& event_list = events_.map().events;
+    if (selected_event_ >= 0 && selected_event_ < static_cast<int>(event_list.size())) {
+      selected_id = event_list[static_cast<std::size_t>(selected_event_)].id;
+    }
     const DebugSnapshot snapshot =
         make_debug_snapshot(sim_frame_, app_mode_, player_, jump_state_, events_, game_state_,
-                            input.interact_pressed);
+                            input.interact_pressed, selected_id);
     const std::string path = default_debug_snapshot_path();
     if (write_debug_snapshot(path, snapshot)) {
       if (logger_ != nullptr) {

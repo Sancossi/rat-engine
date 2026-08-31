@@ -48,7 +48,8 @@ struct DebugSnapshot {
 [[nodiscard]] DebugSnapshot make_debug_snapshot(std::uint64_t sim_frame, AppMode mode,
                                                 const PlayerBody& player, const JumpState& jump,
                                                 const EventRuntime& events, const GameState& state,
-                                                bool interact_pressed = false);
+                                                bool interact_pressed = false,
+                                                std::string_view selected_event_id = {});
 
 [[nodiscard]] bool write_debug_snapshot(std::string_view path, const DebugSnapshot& snapshot);
 [[nodiscard]] std::optional<DebugSnapshot> read_debug_snapshot(std::string_view path);
