@@ -111,12 +111,20 @@ void EditorApp::apply_edited_map(MapData map, EditApplyResult mutation) {
   }
 }
 
+void EditorApp::discard_field_edit_origins() {
+  blocker_field_origin_.reset();
+  blocker_field_origin_index_ = -1;
+  event_field_origin_.reset();
+  event_field_origin_index_ = -1;
+}
+
 void EditorApp::draw_blocker_edit_ui() {
   ImGui::Separator();
   ImGui::TextUnformatted("Blockers (Edit)");
   const float tile = events_.map().tile_size > 0.0f ? events_.map().tile_size : 1.0f;
   auto blockers = events_.map().blockers;
   auto run_history = [&](std::unique_ptr<EditCommand> command) {
+    discard_field_edit_origins();
     MapData map = events_.map();
     const EditApplyResult result = edit_history_.execute(map, std::move(command));
     apply_edited_map(std::move(map), result);
@@ -449,6 +457,7 @@ void EditorApp::draw_event_edit_ui() {
   const float tile = events_.map().tile_size > 0.0f ? events_.map().tile_size : 1.0f;
   auto event_list = events_.map().events;
   auto run_history = [&](std::unique_ptr<EditCommand> command) {
+    discard_field_edit_origins();
     MapData map = events_.map();
     const EditApplyResult result = edit_history_.execute(map, std::move(command));
     apply_edited_map(std::move(map), result);
@@ -712,6 +721,7 @@ bool EditorApp::hot_apply_map_path(const std::string& path, bool preserve_player
   fixed_accumulator_ = 0.0f;
   snap_player_to_ground_clear_jump();
   edit_history_.clear();
+  discard_field_edit_origins();
   return true;
 }
 
@@ -919,6 +929,7 @@ void EditorApp::set_app_mode(AppMode next_mode) {
   if (app_mode_ == next_mode) {
     return;
   }
+  discard_field_edit_origins();
   const AppMode prev_mode = app_mode_;
   app_mode_ = next_mode;
   refresh_mode_banner();
