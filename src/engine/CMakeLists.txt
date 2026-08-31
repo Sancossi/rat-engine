@@ -37,8 +37,6 @@ file(MAKE_DIRECTORY "${_rat_debugdraw_shader_out}")
 file(COPY
   "${RAT_BGFX_DEBUGDRAW_SHADER_DIR}/vs_debugdraw_lines.bin.h"
   "${RAT_BGFX_DEBUGDRAW_SHADER_DIR}/fs_debugdraw_lines.bin.h"
-  "${RAT_BGFX_DEBUGDRAW_SHADER_DIR}/vs_debugdraw_fill.bin.h"
-  "${RAT_BGFX_DEBUGDRAW_SHADER_DIR}/fs_debugdraw_fill.bin.h"
   DESTINATION "${_rat_debugdraw_shader_out}"
 )
 

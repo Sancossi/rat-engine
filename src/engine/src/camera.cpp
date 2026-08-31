@@ -27,19 +27,20 @@ Vec3 normalize(Vec3 v) {
 }
 
 Mat4 look_at(Vec3 eye, Vec3 at, Vec3 up) {
+  // Column-major view matrix (bgfx / OpenGL style): columns are basis vectors.
   const Vec3 f = normalize(sub(at, eye));
   const Vec3 s = normalize(cross(f, up));
   const Vec3 u = cross(s, f);
 
   Mat4 out{};
   out.m[0] = s.x;
-  out.m[4] = s.y;
-  out.m[8] = s.z;
-  out.m[1] = u.x;
+  out.m[1] = s.y;
+  out.m[2] = s.z;
+  out.m[4] = u.x;
   out.m[5] = u.y;
-  out.m[9] = u.z;
-  out.m[2] = -f.x;
-  out.m[6] = -f.y;
+  out.m[6] = u.z;
+  out.m[8] = -f.x;
+  out.m[9] = -f.y;
   out.m[10] = -f.z;
   out.m[12] = -dot(s, eye);
   out.m[13] = -dot(u, eye);

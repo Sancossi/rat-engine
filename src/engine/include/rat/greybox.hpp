@@ -47,10 +47,8 @@ class GreyboxScene {
   PlayerBody player_{};
   std::vector<Aabb2> blockers_;
 
-  bgfx::ProgramHandle program_lines_ = BGFX_INVALID_HANDLE;
-  bgfx::ProgramHandle program_fill_ = BGFX_INVALID_HANDLE;
-  bgfx::VertexLayout layout_lines_;
-  bgfx::VertexLayout layout_fill_;
+  bgfx::ProgramHandle program_ = BGFX_INVALID_HANDLE;
+  bgfx::VertexLayout layout_;
 };
 
 }  // namespace rat

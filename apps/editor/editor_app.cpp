@@ -174,42 +174,53 @@ void EditorApp::update_simulation(float dt) {
   }
 
   const ImGuiIO& io = ImGui::GetIO();
-  const bool interact_down =
-      !io.WantCaptureKeyboard &&
-      (glfwGetKey(window_, GLFW_KEY_E) == GLFW_PRESS ||
-       glfwGetKey(window_, GLFW_KEY_SPACE) == GLFW_PRESS);
-  const bool interact_pressed = interact_down && !interact_was_down_;
+
+  // Raw edge from GLFW — never gate on ImGui WantCaptureKeyboard.
+  // Dialog windows / Nav otherwise swallow Space and drop edges intermittently.
+  const bool interact_down = glfwGetKey(window_, GLFW_KEY_E) == GLFW_PRESS ||
+                             glfwGetKey(window_, GLFW_KEY_SPACE) == GLFW_PRESS;
+  const bool interact_edge = interact_down && !interact_was_down_;
   interact_was_down_ = interact_down;
 
-  if (events_.active_message().has_value() && interact_pressed) {
+  bool consumed_for_dialog = false;
+  if (events_.active_message().has_value() && interact_edge) {
     events_.acknowledge_message();
+    consumed_for_dialog = true;
   }
 
   MoveInput input;
   if (!io.WantCaptureKeyboard && !events_.player_input_blocked()) {
+    float screen_x = 0.0f;
+    float screen_z = 0.0f;
     if (glfwGetKey(window_, GLFW_KEY_W) == GLFW_PRESS ||
         glfwGetKey(window_, GLFW_KEY_UP) == GLFW_PRESS) {
-      input.axis_z -= 1.0f;
+      screen_z += 1.0f;
     }
     if (glfwGetKey(window_, GLFW_KEY_S) == GLFW_PRESS ||
         glfwGetKey(window_, GLFW_KEY_DOWN) == GLFW_PRESS) {
-      input.axis_z += 1.0f;
+      screen_z -= 1.0f;
     }
     if (glfwGetKey(window_, GLFW_KEY_A) == GLFW_PRESS ||
         glfwGetKey(window_, GLFW_KEY_LEFT) == GLFW_PRESS) {
-      input.axis_x -= 1.0f;
+      screen_x -= 1.0f;
     }
     if (glfwGetKey(window_, GLFW_KEY_D) == GLFW_PRESS ||
         glfwGetKey(window_, GLFW_KEY_RIGHT) == GLFW_PRESS) {
-      input.axis_x += 1.0f;
+      screen_x += 1.0f;
     }
+    const auto& cam = engine_->greybox().camera();
+    input = camera_relative_move(screen_x, screen_z, cam.eye,
+                                 {player_.x, 0.0f, player_.z});
   }
 
   player_ = integrate_player(player_, input, dt, engine_->blockers());
   game_state_.set_player_position(player_.x, player_.y, player_.z);
   engine_->set_player(player_);
 
-  events_.update(game_state_, player_, interact_pressed, dt);
+  // Same key edge that closes dialog must not also fire Action triggers.
+  const bool gameplay_interact =
+      interact_edge && !consumed_for_dialog && !io.WantCaptureKeyboard;
+  events_.update(game_state_, player_, gameplay_interact, dt);
 
   // Transfer stub: sync player body if an event moved GameState.
   player_.x = game_state_.player_x();
@@ -293,13 +304,17 @@ void EditorApp::draw_ui() {
     ImGui::SetNextWindowBgAlpha(0.92f);
     ImGui::Begin("Dialog", nullptr,
                  ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse |
-                     ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoTitleBar);
+                     ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoTitleBar |
+                     ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoNavInputs |
+                     ImGuiWindowFlags_NoFocusOnAppearing);
     ImGui::TextUnformatted("Dialog");
     ImGui::Separator();
     ImGui::Spacing();
     ImGui::TextWrapped("%s", events_.active_message()->c_str());
-    ImGui::SetCursorPosY(ImGui::GetWindowHeight() - 28.0f);
-    ImGui::TextDisabled("E / Space — continue");
+    ImGui::SetCursorPosY(ImGui::GetWindowHeight() - 36.0f);
+    if (ImGui::Button("Continue (E / Space)")) {
+      events_.acknowledge_message();
+    }
     ImGui::End();
   }
 

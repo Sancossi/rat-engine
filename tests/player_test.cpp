@@ -3,6 +3,7 @@
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
 
+#include <cmath>
 #include <vector>
 
 using Catch::Approx;
@@ -52,7 +53,26 @@ TEST_CASE("Player AABB slides along blockers instead of sticking", "[unit][playe
 }
 
 TEST_CASE("snap_to_grid is optional helper and does not force step move", "[unit][player]") {
+  // Cell [1,2) x [3,4) → center (1.5, 3.5) for tile_size 1.
   const auto snapped = rat::snap_to_grid(1.2f, 0.0f, 3.7f, 1.0f);
-  REQUIRE(snapped.x == Approx(1.0f));
-  REQUIRE(snapped.z == Approx(4.0f));
+  REQUIRE(snapped.x == Approx(1.5f));
+  REQUIRE(snapped.z == Approx(3.5f));
+
+  const auto origin_cell = rat::snap_to_grid(-0.1f, 0.0f, 0.2f, 1.0f);
+  REQUIRE(origin_cell.x == Approx(-0.5f));
+  REQUIRE(origin_cell.z == Approx(0.5f));
+}
+
+TEST_CASE("Camera-relative WASD aligns with ortho 3/4 view", "[unit][player]") {
+  // Camera sits in +X+Z; look toward origin. W (screen forward) should move -X-Z.
+  const rat::Vec3 eye{16.0f, 20.0f, 16.0f};
+  const rat::Vec3 focus{0.0f, 0.0f, 0.0f};
+
+  const auto forward = rat::camera_relative_move(0.0f, 1.0f, eye, focus);
+  REQUIRE(forward.axis_x == Approx(-std::sqrt(0.5f)).margin(0.01f));
+  REQUIRE(forward.axis_z == Approx(-std::sqrt(0.5f)).margin(0.01f));
+
+  const auto right = rat::camera_relative_move(1.0f, 0.0f, eye, focus);
+  REQUIRE(right.axis_x == Approx(-std::sqrt(0.5f)).margin(0.01f));
+  REQUIRE(right.axis_z == Approx(std::sqrt(0.5f)).margin(0.01f));
 }

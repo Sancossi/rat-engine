@@ -26,6 +26,28 @@ bool aabb_overlap(const Aabb2& a, const Aabb2& b) {
   return a.min_x < b.max_x && a.max_x > b.min_x && a.min_z < b.max_z && a.max_z > b.min_z;
 }
 
+MoveInput camera_relative_move(float screen_x, float screen_z, Vec3 eye, Vec3 focus) {
+  // Ground-projected look direction (away from camera, into the scene).
+  float fx = focus.x - eye.x;
+  float fz = focus.z - eye.z;
+  const float flen = std::sqrt(fx * fx + fz * fz);
+  if (flen <= 1e-6f) {
+    fx = 0.0f;
+    fz = -1.0f;
+  } else {
+    fx /= flen;
+    fz /= flen;
+  }
+  // Screen-right on XZ: rotate look 90° clockwise when viewed from +Y.
+  const float rx = fz;
+  const float rz = -fx;
+
+  MoveInput out;
+  out.axis_x = fx * screen_z + rx * screen_x;
+  out.axis_z = fz * screen_z + rz * screen_x;
+  return out;
+}
+
 PlayerBody integrate_player(PlayerBody player, MoveInput input, float dt,
                             std::span<const Aabb2> blockers) {
   float ix = input.axis_x;
@@ -63,8 +85,9 @@ PlayerBody integrate_player(PlayerBody player, MoveInput input, float dt,
 
 Vec3 snap_to_grid(float x, float y, float z, float tile_size) {
   const float t = std::max(1e-6f, tile_size);
-  auto snap = [t](float v) { return std::round(v / t) * t; };
-  return {snap(x), y, snap(z)};
+  // Snap to cell centers (…, -0.5, 0.5, 1.5, …), not grid-line intersections.
+  auto snap_center = [t](float v) { return std::floor(v / t) * t + 0.5f * t; };
+  return {snap_center(x), y, snap_center(z)};
 }
 
 }  // namespace rat

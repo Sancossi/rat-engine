@@ -22,9 +22,13 @@ struct PlayerBody {
 };
 
 struct MoveInput {
-  float axis_x = 0.0f;  // A/D, world X
-  float axis_z = 0.0f;  // W/S, world Z (W = -Z)
+  float axis_x = 0.0f;  // world X delta weight (after camera remap)
+  float axis_z = 0.0f;  // world Z delta weight (after camera remap)
 };
+
+// Screen WASD → world XZ for ortho 3/4: screen_x = A/D (-1..1), screen_z = S/W (-1..1, W=+1).
+[[nodiscard]] MoveInput camera_relative_move(float screen_x, float screen_z, Vec3 eye,
+                                             Vec3 focus);
 
 [[nodiscard]] PlayerBody integrate_player(PlayerBody player, MoveInput input, float dt,
                                           std::span<const Aabb2> blockers);
