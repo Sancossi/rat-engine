@@ -7,7 +7,9 @@ void GameplayNotifyBus::subscribe(Handler handler) {
 }
 
 void GameplayNotifyBus::post(const GameplayNotify& notify) {
-  for (const Handler& handler : handlers_) {
+  // Snapshot so subscribe during this post cannot invalidate iteration or run this turn.
+  const std::vector<Handler> snapshot = handlers_;
+  for (const Handler& handler : snapshot) {
     handler(notify);
   }
 }

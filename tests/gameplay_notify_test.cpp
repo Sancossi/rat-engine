@@ -45,6 +45,31 @@ TEST_CASE("GameplayNotifyBus posts subscribed handlers in FIFO order", "[unit][n
   CHECK(recorded[1].id.empty());
 }
 
+TEST_CASE("two subscribers receive one post in subscribe order", "[unit][notify]") {
+  rat::GameplayNotifyBus bus;
+  std::vector<char> order;
+  bus.subscribe([&order](const rat::GameplayNotify&) { order.push_back('A'); });
+  bus.subscribe([&order](const rat::GameplayNotify&) { order.push_back('B'); });
+
+  bus.post({rat::GameplayNotifyKind::ItemPicked, "cog"});
+
+  REQUIRE(order.size() == 2);
+  CHECK(order[0] == 'A');
+  CHECK(order[1] == 'B');
+}
+
+TEST_CASE("subscribe during post is not invoked for this notify", "[unit][notify]") {
+  rat::GameplayNotifyBus bus;
+  int late_calls = 0;
+  bus.subscribe([&bus, &late_calls](const rat::GameplayNotify&) {
+    bus.subscribe([&late_calls](const rat::GameplayNotify&) { ++late_calls; });
+  });
+
+  bus.post({rat::GameplayNotifyKind::DialogShown, {}});
+
+  REQUIRE(late_calls == 0);
+}
+
 TEST_CASE("Autorun ShowText then ChangeItems posts both notifies and still mutates GameState",
           "[unit][notify]") {
   constexpr const char* kJson = R"({

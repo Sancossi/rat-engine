@@ -58,7 +58,7 @@ struct PlayerFrameInput {
 struct PlayerFrameResult {
   PlayerBody body{};
   JumpState jump{};
-  bool landed = false;  // true iff this frame transitions airborne to grounded
+  bool landed = false;  // true if any substep goes airborne→grounded; stays true if they take off later this frame
 };
 
 [[nodiscard]] JumpState make_grounded_jump_state();

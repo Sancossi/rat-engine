@@ -616,7 +616,7 @@ PlayerFrameResult integrate_player_frame_surface(PlayerBody player, JumpState ju
     }
 
     if (!was_grounded && jump.grounded) {
-      landed = true;
+      landed = true;  // sticky for the frame; a later substep takeoff does not clear this
     }
   }
 

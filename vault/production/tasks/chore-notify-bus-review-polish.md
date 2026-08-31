@@ -15,3 +15,11 @@ Intent: minor из ревью [[feat: Gameplay notify observer]] (Approved): т�
 Acceptance: `[notify]` ломается, если второй handler вызывается первым; подписка из handler не UB.
 
 Origin: [[feat: Gameplay notify observer]]
+
+## Resolution
+
+`GameplayNotifyBus::post()` copies `handlers_` then iterates the snapshot, FIFO. Subscribe during `post` is not invoked for that notify (same contract as audio drain). `[notify]` covers two subscribers / one post (order vector) and subscribe-during-post. `PlayerFrameResult::landed` stays sticky if a later substep takes off; jump physics unchanged. Review pending.
+
+## Bugs found
+
+none.

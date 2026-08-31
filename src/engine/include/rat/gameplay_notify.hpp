@@ -29,7 +29,7 @@ class GameplayNotifyBus {
  public:
   using Handler = std::function<void(const GameplayNotify&)>;
   void subscribe(Handler handler);
-  void post(const GameplayNotify& notify);  // call all handlers, FIFO subscribe order
+  void post(const GameplayNotify& notify);  // snapshot, then call FIFO; subscribe during this post waits
 
  private:
   std::vector<Handler> handlers_;
