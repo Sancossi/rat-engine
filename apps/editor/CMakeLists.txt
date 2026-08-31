@@ -31,6 +31,7 @@ target_link_libraries(rat-editor
 target_compile_definitions(rat-editor
   PRIVATE
     GLFW_INCLUDE_NONE
+    RAT_DATA_DIR="${CMAKE_SOURCE_DIR}/data"
 )
 
 if(WIN32)

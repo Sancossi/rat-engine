@@ -1,5 +1,7 @@
 #pragma once
 
+#include <rat/event_runtime.hpp>
+#include <rat/game_state.hpp>
 #include <rat/player.hpp>
 
 struct GLFWwindow;
@@ -22,7 +24,7 @@ class EditorApp {
  private:
   void shutdown();
   void on_framebuffer_resize(int width, int height);
-  void update_player(float dt);
+  void update_simulation(float dt);
   void draw_ui();
 
   static void framebuffer_size_callback(GLFWwindow* window, int width, int height);
@@ -30,9 +32,12 @@ class EditorApp {
   GLFWwindow* window_ = nullptr;
   Engine* engine_ = nullptr;
   PlayerBody player_{};
+  GameState game_state_{};
+  EventRuntime events_{};
   int width_ = 1280;
   int height_ = 720;
   bool running_ = false;
+  bool interact_was_down_ = false;
   double last_time_ = 0.0;
 };
 
