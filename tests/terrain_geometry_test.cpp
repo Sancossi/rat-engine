@@ -234,13 +234,17 @@ TEST_CASE("Terrain side faces emit one wall for a flat 0 vs 1 neighbor", "[unit]
 
   const rat::TerrainGeometry geometry = rat::build_terrain_geometry(grid, {}, 1.0f);
   const auto faces = rat::build_terrain_side_faces(geometry);
-  REQUIRE(faces.size() == 1);
 
-  const rat::TerrainSideFace& face = faces[0];
-  REQUIRE(face.x0 == Catch::Approx(1.0f));
-  REQUIRE(face.x1 == Catch::Approx(1.0f));
-  REQUIRE(face.z0 == Catch::Approx(0.0f));
-  REQUIRE(face.z1 == Catch::Approx(1.0f));
+  const rat::TerrainSideFace* found = nullptr;
+  for (const rat::TerrainSideFace& face : faces) {
+    if (face.x0 == Catch::Approx(1.0f) && face.x1 == Catch::Approx(1.0f) &&
+        face.z0 == Catch::Approx(0.0f) && face.z1 == Catch::Approx(1.0f)) {
+      found = &face;
+      break;
+    }
+  }
+  REQUIRE(found != nullptr);
+  const rat::TerrainSideFace& face = *found;
   REQUIRE(face.y0_lo == Catch::Approx(0.0f));
   REQUIRE(face.y0_hi == Catch::Approx(1.0f));
   REQUIRE(face.y1_lo == Catch::Approx(0.0f));
@@ -258,13 +262,19 @@ TEST_CASE("Terrain side faces pair only east and south so walls are not duplicat
 
   const rat::TerrainGeometry geometry = rat::build_terrain_geometry(grid, {}, 1.0f);
   const auto faces = rat::build_terrain_side_faces(geometry);
-  REQUIRE(faces.size() == 1);
 
-  const rat::TerrainSideFace& face = faces[0];
-  REQUIRE(face.z0 == Catch::Approx(1.0f));
-  REQUIRE(face.z1 == Catch::Approx(1.0f));
-  REQUIRE(face.x0 == Catch::Approx(0.0f));
-  REQUIRE(face.x1 == Catch::Approx(1.0f));
+  int internal_south_count = 0;
+  const rat::TerrainSideFace* found = nullptr;
+  for (const rat::TerrainSideFace& face : faces) {
+    if (face.z0 == Catch::Approx(1.0f) && face.z1 == Catch::Approx(1.0f) &&
+        face.x0 == Catch::Approx(0.0f) && face.x1 == Catch::Approx(1.0f)) {
+      ++internal_south_count;
+      found = &face;
+    }
+  }
+  REQUIRE(internal_south_count == 1);
+  REQUIRE(found != nullptr);
+  const rat::TerrainSideFace& face = *found;
   REQUIRE(face.y0_lo == Catch::Approx(0.0f));
   REQUIRE(face.y0_hi == Catch::Approx(1.0f));
   REQUIRE(face.y1_lo == Catch::Approx(0.0f));
@@ -304,13 +314,17 @@ TEST_CASE("Terrain side faces use shared-edge ramp corners as a trapezoid", "[un
 
   const rat::TerrainGeometry geometry = rat::build_terrain_geometry(grid, ramps, 1.0f);
   const auto faces = rat::build_terrain_side_faces(geometry);
-  REQUIRE(faces.size() == 1);
 
-  const rat::TerrainSideFace& face = faces[0];
-  REQUIRE(face.x0 == Catch::Approx(1.0f));
-  REQUIRE(face.x1 == Catch::Approx(1.0f));
-  REQUIRE(face.z0 == Catch::Approx(0.0f));
-  REQUIRE(face.z1 == Catch::Approx(1.0f));
+  const rat::TerrainSideFace* found = nullptr;
+  for (const rat::TerrainSideFace& face : faces) {
+    if (face.x0 == Catch::Approx(1.0f) && face.x1 == Catch::Approx(1.0f) &&
+        face.z0 == Catch::Approx(0.0f) && face.z1 == Catch::Approx(1.0f)) {
+      found = &face;
+      break;
+    }
+  }
+  REQUIRE(found != nullptr);
+  const rat::TerrainSideFace& face = *found;
   REQUIRE(face.y0_lo == Catch::Approx(0.0f));
   REQUIRE(face.y0_hi == Catch::Approx(2.0f));
   REQUIRE(face.y1_lo == Catch::Approx(0.0f));
@@ -327,13 +341,17 @@ TEST_CASE("Terrain side faces honor origin and tile_size", "[unit][terrain]") {
 
   const rat::TerrainGeometry geometry = rat::build_terrain_geometry(grid, {}, 2.0f);
   const auto faces = rat::build_terrain_side_faces(geometry);
-  REQUIRE(faces.size() == 1);
 
-  const rat::TerrainSideFace& face = faces[0];
-  REQUIRE(face.x0 == Catch::Approx(22.0f));
-  REQUIRE(face.x1 == Catch::Approx(22.0f));
-  REQUIRE(face.z0 == Catch::Approx(-4.0f));
-  REQUIRE(face.z1 == Catch::Approx(-2.0f));
+  const rat::TerrainSideFace* found = nullptr;
+  for (const rat::TerrainSideFace& face : faces) {
+    if (face.x0 == Catch::Approx(22.0f) && face.x1 == Catch::Approx(22.0f) &&
+        face.z0 == Catch::Approx(-4.0f) && face.z1 == Catch::Approx(-2.0f)) {
+      found = &face;
+      break;
+    }
+  }
+  REQUIRE(found != nullptr);
+  const rat::TerrainSideFace& face = *found;
   REQUIRE(face.y0_hi - face.y0_lo == Catch::Approx(1.0f));
   REQUIRE(face.y1_hi - face.y1_lo == Catch::Approx(1.0f));
 }
@@ -455,4 +473,92 @@ TEST_CASE("Terrain fill mesh rejects extra fence faces that overflow uint16", "[
   REQUIRE_FALSE(rat::terrain_fill_quad_count_fits_u16(16382, 1, 1));
   REQUIRE(rat::terrain_fill_quad_count_fits_u16(16381, 1, 1));
   REQUIRE_FALSE(rat::terrain_fill_quad_count_fits_u16(16383, 0, 1));
+}
+
+TEST_CASE("Edge barrier faces sit on raised tile edge corners, not a center sample",
+          "[unit][terrain]") {
+  rat::HeightGrid grid;
+  grid.origin_x = 0;
+  grid.origin_z = 0;
+  grid.width = 1;
+  grid.height = 1;
+  grid.ground_y = {1.0f};
+
+  const rat::TerrainGeometry geometry = rat::build_terrain_geometry(grid, {}, 1.0f);
+  REQUIRE(geometry.tiles.size() == 1);
+  const rat::TerrainTileQuad& tile = geometry.tiles[0];
+
+  const std::vector<rat::EdgeBarrierDef> barriers = {
+      {.tile = {0, 0},
+       .direction = rat::RampDirection::East,
+       .height = rat::kEdgeBarrierMiniHeight},
+  };
+  const auto faces = rat::build_edge_barrier_faces(geometry, barriers);
+  REQUIRE(faces.size() == 1);
+
+  const rat::TerrainSideFace& face = faces[0];
+  REQUIRE(face.y0_lo == Catch::Approx(tile.y_ne));
+  REQUIRE(face.y1_lo == Catch::Approx(tile.y_se));
+  REQUIRE(face.y0_hi == Catch::Approx(tile.y_ne + rat::kEdgeBarrierMiniHeight));
+  REQUIRE(face.y1_hi == Catch::Approx(tile.y_se + rat::kEdgeBarrierMiniHeight));
+}
+
+TEST_CASE("Edge barrier faces use both owner-edge corners when those Y differ",
+          "[unit][terrain]") {
+  rat::TerrainGeometry geometry;
+  geometry.origin_x = 0;
+  geometry.origin_z = 0;
+  geometry.width = 1;
+  geometry.height = 1;
+  geometry.tile_size = 1.0f;
+  rat::TerrainTileQuad tile;
+  tile.min_x = 0.0f;
+  tile.max_x = 1.0f;
+  tile.min_z = 0.0f;
+  tile.max_z = 1.0f;
+  tile.y_nw = 4.0f;
+  tile.y_ne = 1.0f;
+  tile.y_se = 2.0f;
+  tile.y_sw = 3.0f;
+  geometry.tiles.push_back(tile);
+
+  const std::vector<rat::EdgeBarrierDef> barriers = {
+      {.tile = {0, 0},
+       .direction = rat::RampDirection::East,
+       .height = rat::kEdgeBarrierMiniHeight},
+  };
+  const auto faces = rat::build_edge_barrier_faces(geometry, barriers);
+  REQUIRE(faces.size() == 1);
+
+  const rat::TerrainSideFace& face = faces[0];
+  REQUIRE(face.y0_lo == Catch::Approx(1.0f));
+  REQUIRE(face.y1_lo == Catch::Approx(2.0f));
+  REQUIRE(face.y0_hi == Catch::Approx(1.0f + rat::kEdgeBarrierMiniHeight));
+  REQUIRE(face.y1_hi == Catch::Approx(2.0f + rat::kEdgeBarrierMiniHeight));
+}
+
+TEST_CASE("Terrain side faces emit an outer east wall down to implied height 0",
+          "[unit][terrain]") {
+  rat::HeightGrid grid;
+  grid.origin_x = 0;
+  grid.origin_z = 0;
+  grid.width = 1;
+  grid.height = 1;
+  grid.ground_y = {1.0f};
+
+  const rat::TerrainGeometry geometry = rat::build_terrain_geometry(grid, {}, 1.0f);
+  const auto faces = rat::build_terrain_side_faces(geometry);
+
+  bool found_east = false;
+  for (const rat::TerrainSideFace& face : faces) {
+    if (face.x0 == Catch::Approx(1.0f) && face.x1 == Catch::Approx(1.0f) &&
+        face.z0 == Catch::Approx(0.0f) && face.z1 == Catch::Approx(1.0f)) {
+      REQUIRE(face.y0_lo == Catch::Approx(0.0f));
+      REQUIRE(face.y0_hi == Catch::Approx(1.0f));
+      REQUIRE(face.y1_lo == Catch::Approx(0.0f));
+      REQUIRE(face.y1_hi == Catch::Approx(1.0f));
+      found_east = true;
+    }
+  }
+  REQUIRE(found_east);
 }

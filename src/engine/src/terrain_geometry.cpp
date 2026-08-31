@@ -276,11 +276,21 @@ std::vector<TerrainSideFace> build_terrain_side_faces(const TerrainGeometry& geo
         const TerrainTileQuad& east = tile_at(x + 1, z);
         maybe_push(tile.max_x, tile.min_z, tile.y_ne, east.y_nw, tile.max_x, tile.max_z, tile.y_se,
                    east.y_sw);
+      } else {
+        maybe_push(tile.max_x, tile.min_z, tile.y_ne, 0.0f, tile.max_x, tile.max_z, tile.y_se, 0.0f);
+      }
+      if (x == 0) {
+        maybe_push(tile.min_x, tile.min_z, tile.y_nw, 0.0f, tile.min_x, tile.max_z, tile.y_sw, 0.0f);
       }
       if (z + 1 < geometry.height) {
         const TerrainTileQuad& south = tile_at(x, z + 1);
         maybe_push(tile.min_x, tile.max_z, tile.y_sw, south.y_nw, tile.max_x, tile.max_z, tile.y_se,
                    south.y_ne);
+      } else {
+        maybe_push(tile.min_x, tile.max_z, tile.y_sw, 0.0f, tile.max_x, tile.max_z, tile.y_se, 0.0f);
+      }
+      if (z == 0) {
+        maybe_push(tile.min_x, tile.min_z, tile.y_nw, 0.0f, tile.max_x, tile.min_z, tile.y_ne, 0.0f);
       }
     }
   }
@@ -312,43 +322,50 @@ std::vector<TerrainSideFace> build_edge_barrier_faces(const TerrainGeometry& geo
     const TerrainTileQuad& tile =
         geometry.tiles[static_cast<std::size_t>(local_z) * static_cast<std::size_t>(geometry.width) +
                        static_cast<std::size_t>(local_x)];
-    const float owner_top = sample_terrain_height(
-        geometry, 0.5f * (tile.min_x + tile.max_x), 0.5f * (tile.min_z + tile.max_z));
-    const float top_y = owner_top + edge.height;
 
     TerrainSideFace face;
+    float y0_lo = 0.0f;
+    float y1_lo = 0.0f;
     switch (edge.direction) {
       case RampDirection::East:
         face.x0 = tile.max_x;
         face.z0 = tile.min_z;
         face.x1 = tile.max_x;
         face.z1 = tile.max_z;
+        y0_lo = tile.y_ne;
+        y1_lo = tile.y_se;
         break;
       case RampDirection::West:
         face.x0 = tile.min_x;
         face.z0 = tile.min_z;
         face.x1 = tile.min_x;
         face.z1 = tile.max_z;
+        y0_lo = tile.y_nw;
+        y1_lo = tile.y_sw;
         break;
       case RampDirection::South:
         face.x0 = tile.min_x;
         face.z0 = tile.max_z;
         face.x1 = tile.max_x;
         face.z1 = tile.max_z;
+        y0_lo = tile.y_sw;
+        y1_lo = tile.y_se;
         break;
       case RampDirection::North:
         face.x0 = tile.min_x;
         face.z0 = tile.min_z;
         face.x1 = tile.max_x;
         face.z1 = tile.min_z;
+        y0_lo = tile.y_nw;
+        y1_lo = tile.y_ne;
         break;
       default:
         continue;
     }
-    face.y0_lo = owner_top;
-    face.y0_hi = top_y;
-    face.y1_lo = owner_top;
-    face.y1_hi = top_y;
+    face.y0_lo = y0_lo;
+    face.y0_hi = y0_lo + edge.height;
+    face.y1_lo = y1_lo;
+    face.y1_hi = y1_lo + edge.height;
     out.push_back(face);
   }
   return out;
