@@ -4,6 +4,7 @@ add_executable(rat_tests
   event_runtime_test.cpp
   game_state_test.cpp
   headless_mechanics_stub_test.cpp
+  hot_apply_test.cpp
   map_loader_test.cpp
   player_test.cpp
 )

@@ -3,6 +3,7 @@ add_library(rat_core
   src/camera.cpp
   src/event_runtime.cpp
   src/game_state.cpp
+  src/hot_apply.cpp
   src/map_loader.cpp
   src/player.cpp
 )

@@ -5,6 +5,8 @@
 #include <rat/game_state.hpp>
 #include <rat/player.hpp>
 
+#include <string>
+
 struct GLFWwindow;
 
 namespace rat {
@@ -28,6 +30,7 @@ class EditorApp {
   void update_simulation(float dt);
   void draw_ui();
   void refresh_mode_banner();
+  bool hot_apply_map_path(const std::string& path, bool preserve_player);
 
   static void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 
@@ -37,12 +40,15 @@ class EditorApp {
   GameState game_state_{};
   EventRuntime events_{};
   AppMode app_mode_ = AppMode::Play;
+  std::string map_path_;
+  std::string last_apply_error_;
   int width_ = 1280;
   int height_ = 720;
   bool running_ = false;
   bool interact_was_down_ = false;
   bool camera_toggle_was_down_ = false;
   bool mode_toggle_was_down_ = false;
+  bool hot_apply_was_down_ = false;
   double last_time_ = 0.0;
 };
 

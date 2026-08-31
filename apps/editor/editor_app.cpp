@@ -3,7 +3,7 @@
 #include "imgui_bgfx.hpp"
 
 #include <rat/engine.hpp>
-#include <rat/map_loader.hpp>
+#include <rat/hot_apply.hpp>
 
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
@@ -14,11 +14,39 @@
 
 #include <cstdio>
 #include <string>
+#include <vector>
 
 namespace rat {
 
 EditorApp::~EditorApp() {
   shutdown();
+}
+
+bool EditorApp::hot_apply_map_path(const std::string& path, bool preserve_player) {
+  if (engine_ == nullptr) {
+    last_apply_error_ = "engine not ready";
+    return false;
+  }
+
+  std::vector<Aabb2> blockers;
+  std::vector<Vec3> markers;
+  HotApplyTargets targets{events_, game_state_, player_, blockers, markers};
+  HotApplyOptions options;
+  options.preserve_player_position = preserve_player;
+
+  const HotApplyResult result = hot_apply_map_from_file(path, targets, options);
+  if (!result.ok) {
+    last_apply_error_ = result.error;
+    std::fprintf(stderr, "hot-apply failed (%s): %s\n", path.c_str(), result.error.c_str());
+    return false;
+  }
+
+  last_apply_error_.clear();
+  map_path_ = path;
+  engine_->set_blockers(std::move(blockers));
+  engine_->set_event_markers(std::move(markers));
+  engine_->set_player(player_);
+  return true;
 }
 
 bool EditorApp::init() {
@@ -60,31 +88,14 @@ bool EditorApp::init() {
 #error RAT_DATA_DIR must be defined
 #endif
   const std::string map_path = std::string(RAT_DATA_DIR) + "/maps/grey_yard.json";
-  const auto loaded = load_map_from_file(map_path);
-  if (!loaded.ok) {
-    std::fprintf(stderr, "Failed to load map %s: %s\n", map_path.c_str(), loaded.error.c_str());
+  if (!hot_apply_map_path(map_path, false)) {
+    std::fprintf(stderr, "Failed to load map %s: %s\n", map_path.c_str(),
+                 last_apply_error_.c_str());
     shutdown();
     return false;
   }
-  events_.load(loaded.map);
-  game_state_.set_map_id(loaded.map.id);
-  engine_->set_blockers(loaded.map.blockers);
-
-  std::vector<Vec3> markers;
-  markers.reserve(loaded.map.events.size());
-  for (const auto& event : loaded.map.events) {
-    if (event.tile.has_value()) {
-      markers.push_back({static_cast<float>(event.tile->x) * loaded.map.tile_size, 0.0f,
-                         static_cast<float>(event.tile->z) * loaded.map.tile_size});
-    } else if (event.volume.has_value()) {
-      markers.push_back({(event.volume->min_x + event.volume->max_x) * 0.5f, 0.0f,
-                         (event.volume->min_z + event.volume->max_z) * 0.5f});
-    }
-  }
-  engine_->set_event_markers(std::move(markers));
 
   // Spawn near the foreman for the sample quest path.
-  player_ = engine_->player();
   player_.x = -1.5f;
   player_.z = 1.5f;
   game_state_.set_player_position(player_.x, player_.y, player_.z);
@@ -213,6 +224,14 @@ void EditorApp::update_simulation(float dt) {
   }
   mode_toggle_was_down_ = mode_down;
 
+  // F5 hot-applies current map JSON (preserves player). Works in Play and Edit.
+  const bool hot_apply_down = glfwGetKey(window_, GLFW_KEY_F5) == GLFW_PRESS;
+  if (hot_apply_down && !hot_apply_was_down_ && !events_.active_message().has_value() &&
+      !map_path_.empty()) {
+    hot_apply_map_path(map_path_, true);
+  }
+  hot_apply_was_down_ = hot_apply_down;
+
   // Raw edge from GLFW — never gate on ImGui WantCaptureKeyboard.
   // Dialog windows / Nav otherwise swallow Space and drop edges intermittently.
   const bool interact_down = glfwGetKey(window_, GLFW_KEY_E) == GLFW_PRESS ||
@@ -327,10 +346,25 @@ void EditorApp::draw_ui() {
     ImGui::TextUnformatted("Quest: ask foreman (cyan) for a rusty cog,");
     ImGui::TextUnformatted("loot scrap east of crates, return.");
   }
-  ImGui::TextUnformatted("WASD move | E/Space interact | C camera | F2 Play/Edit");
+  ImGui::TextUnformatted("WASD move | E/Space interact | C camera | F2 Play/Edit | F5 hot-apply");
   if (ImGui::Button(app_mode_ == AppMode::Play ? "Enter Edit (F2)" : "Enter Play (F2)")) {
     app_mode_ = toggle_app_mode(app_mode_);
     refresh_mode_banner();
+  }
+  if (!map_path_.empty() && ImGui::Button("Hot-apply map (F5, keep pos)")) {
+    hot_apply_map_path(map_path_, true);
+  }
+  if (!map_path_.empty() && ImGui::Button("Reload map (reset player)")) {
+    if (hot_apply_map_path(map_path_, false)) {
+      player_.x = -1.5f;
+      player_.z = 1.5f;
+      game_state_.set_player_position(player_.x, player_.y, player_.z);
+      engine_->set_player(player_);
+    }
+  }
+  if (!last_apply_error_.empty()) {
+    ImGui::TextColored(ImVec4(1.0f, 0.35f, 0.35f, 1.0f), "Apply error: %s",
+                       last_apply_error_.c_str());
   }
   {
     int mode = 0;
