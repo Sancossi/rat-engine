@@ -84,6 +84,10 @@ TEST_CASE("write_debug_snapshot round-trips a headless fixture", "[unit][debug]"
   CHECK(read->items[0].id == "rusty_cog");
   REQUIRE(read->active_message.has_value());
   CHECK(*read->active_message == "Hello");
+  REQUIRE(read->event_why_not.size() == 1);
+  CHECK(read->event_why_not[0].id == "intro");
+  CHECK(read->event_why_not[0].reason == "already_running");
+  CHECK(read->event_why_not_reason == "already_running");
 
   std::filesystem::remove(path, ec);
 }

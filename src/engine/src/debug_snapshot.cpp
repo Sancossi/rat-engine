@@ -89,6 +89,12 @@ json dump_snapshot(const DebugSnapshot& snapshot) {
     root["active_message"] = nullptr;
   }
   root["warnings"] = snapshot.warnings;
+  root["event_why_not_reason"] = snapshot.event_why_not_reason;
+  json why_not = json::array();
+  for (const EventWhyNotEntry& entry : snapshot.event_why_not) {
+    why_not.push_back(json{{"id", entry.id}, {"reason", entry.reason}});
+  }
+  root["event_why_not"] = why_not;
   return root;
 }
 
@@ -138,6 +144,18 @@ DebugSnapshot load_snapshot(const json& root) {
   if (root.contains("warnings") && root["warnings"].is_array()) {
     snapshot.warnings = root["warnings"].get<std::vector<std::string>>();
   }
+  snapshot.event_why_not_reason = root.value("event_why_not_reason", std::string{});
+  if (root.contains("event_why_not") && root["event_why_not"].is_array()) {
+    for (const json& item : root["event_why_not"]) {
+      if (!item.is_object()) {
+        continue;
+      }
+      snapshot.event_why_not.push_back(EventWhyNotEntry{
+          item.value("id", std::string{}),
+          item.value("reason", std::string{}),
+      });
+    }
+  }
   return snapshot;
 }
 
@@ -145,7 +163,7 @@ DebugSnapshot load_snapshot(const json& root) {
 
 DebugSnapshot make_debug_snapshot(std::uint64_t sim_frame, AppMode mode, const PlayerBody& player,
                                   const JumpState& jump, const EventRuntime& events,
-                                  const GameState& state) {
+                                  const GameState& state, bool interact_pressed) {
   DebugSnapshot snapshot;
   snapshot.sim_frame = sim_frame;
   snapshot.app_mode = app_mode_name(mode);
@@ -168,6 +186,22 @@ DebugSnapshot make_debug_snapshot(std::uint64_t sim_frame, AppMode mode, const P
   snapshot.items = state.inventory();
   snapshot.active_message = events.active_message();
   snapshot.warnings = events.warnings();
+  for (const EventDef& event : events.map().events) {
+    const EventWhyNot reason =
+        events.why_not_fired(event.id, state, player, interact_pressed);
+    snapshot.event_why_not.push_back(EventWhyNotEntry{event.id, event_why_not_name(reason)});
+  }
+  if (!snapshot.overlapping_event_ids.empty()) {
+    const std::string& primary_id = snapshot.overlapping_event_ids.front();
+    for (const EventWhyNotEntry& entry : snapshot.event_why_not) {
+      if (entry.id == primary_id) {
+        snapshot.event_why_not_reason = entry.reason;
+        break;
+      }
+    }
+  } else if (!snapshot.event_why_not.empty()) {
+    snapshot.event_why_not_reason = snapshot.event_why_not.front().reason;
+  }
   return snapshot;
 }
 

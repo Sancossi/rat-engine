@@ -591,4 +591,88 @@ std::vector<InterpreterDebug> EventRuntime::parallel_debug() const {
   return out;
 }
 
+const char* event_why_not_name(EventWhyNot reason) {
+  switch (reason) {
+    case EventWhyNot::Ok:
+      return "ok";
+    case EventWhyNot::WrongPage:
+      return "wrong_page";
+    case EventWhyNot::Conditions:
+      return "conditions";
+    case EventWhyNot::Height:
+      return "height";
+    case EventWhyNot::NotOverlapping:
+      return "not_overlapping";
+    case EventWhyNot::OutOfActionRange:
+      return "out_of_action_range";
+    case EventWhyNot::InputBlocked:
+      return "input_blocked";
+    case EventWhyNot::AlreadyRunning:
+      return "already_running";
+  }
+  return "not_overlapping";
+}
+
+EventWhyNot EventRuntime::why_not_fired(std::string_view event_id, const GameState& state,
+                                         const PlayerBody& player, bool interact_pressed) const {
+  const EventDef* event = nullptr;
+  for (const EventDef& candidate : map_.events) {
+    if (candidate.id == event_id) {
+      event = &candidate;
+      break;
+    }
+  }
+  if (event == nullptr) {
+    return EventWhyNot::NotOverlapping;
+  }
+
+  if (foreground_.has_value() && foreground_->event_id == event_id) {
+    return EventWhyNot::AlreadyRunning;
+  }
+  for (const Interpreter& interp : parallels_) {
+    if (interp.event_id == event_id) {
+      return EventWhyNot::AlreadyRunning;
+    }
+  }
+
+  const int page_index = select_page(*event, state);
+  if (page_index < 0) {
+    return EventWhyNot::Conditions;
+  }
+
+  const TriggerKind trigger = event->pages[static_cast<std::size_t>(page_index)].trigger;
+  const bool action_or_touch =
+      trigger == TriggerKind::Action || trigger == TriggerKind::PlayerTouch;
+  if (trigger == TriggerKind::EventTouch) {
+    return EventWhyNot::WrongPage;
+  }
+
+  if (action_or_touch && player_input_blocked()) {
+    return EventWhyNot::InputBlocked;
+  }
+
+  const bool has_place = event->tile.has_value() || event->volume.has_value();
+  if (action_or_touch && has_place && !event_height_matches_player(*event, player)) {
+    return EventWhyNot::Height;
+  }
+
+  if (action_or_touch && !player_overlaps(*event, player)) {
+    return EventWhyNot::NotOverlapping;
+  }
+
+  if (trigger == TriggerKind::Action) {
+    if (!action_in_range(*event, player) || !interact_pressed) {
+      return EventWhyNot::OutOfActionRange;
+    }
+  }
+
+  return EventWhyNot::Ok;
+}
+
+EventWhyNot event_why_not_fired(const EventRuntime& runtime, std::string_view event_id,
+                                 const GameState& state, const PlayerBody& player,
+                                 bool interact_pressed) {
+  return runtime.why_not_fired(event_id, state, player, interact_pressed);
+}
+
 }  // namespace rat

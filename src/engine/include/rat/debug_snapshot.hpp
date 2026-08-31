@@ -22,6 +22,11 @@ struct DebugInterpreter {
   bool waiting_message = false;
 };
 
+struct EventWhyNotEntry {
+  std::string id;
+  std::string reason;
+};
+
 struct DebugSnapshot {
   std::uint64_t sim_frame = 0;
   std::string app_mode;
@@ -36,11 +41,14 @@ struct DebugSnapshot {
   std::vector<InventoryItem> items;
   std::optional<std::string> active_message;
   std::vector<std::string> warnings;
+  std::string event_why_not_reason;
+  std::vector<EventWhyNotEntry> event_why_not;
 };
 
 [[nodiscard]] DebugSnapshot make_debug_snapshot(std::uint64_t sim_frame, AppMode mode,
                                                 const PlayerBody& player, const JumpState& jump,
-                                                const EventRuntime& events, const GameState& state);
+                                                const EventRuntime& events, const GameState& state,
+                                                bool interact_pressed = false);
 
 [[nodiscard]] bool write_debug_snapshot(std::string_view path, const DebugSnapshot& snapshot);
 [[nodiscard]] std::optional<DebugSnapshot> read_debug_snapshot(std::string_view path);

@@ -440,6 +440,8 @@ void EditorApp::draw_event_edit_ui() {
     EventDef event = event_list[static_cast<std::size_t>(selected_event_)];
     ImGui::Text("id: %s", event.id.c_str());
     ImGui::Text("pages: %zu", event.pages.size());
+    ImGui::Text("Why not: %s",
+                event_why_not_name(events_.why_not_fired(event.id, game_state_, player_, false)));
 
     if (!event.tile.has_value() && !event.volume.has_value()) {
       if (ImGui::Button("Place on tile (0,0)")) {
@@ -893,7 +895,8 @@ void EditorApp::update_simulation(float dt) {
 
   if (input.debug_snapshot_pressed) {
     const DebugSnapshot snapshot =
-        make_debug_snapshot(sim_frame_, app_mode_, player_, jump_state_, events_, game_state_);
+        make_debug_snapshot(sim_frame_, app_mode_, player_, jump_state_, events_, game_state_,
+                            input.interact_pressed);
     const std::string path = default_debug_snapshot_path();
     if (write_debug_snapshot(path, snapshot)) {
       if (logger_ != nullptr) {

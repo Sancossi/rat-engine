@@ -10,6 +10,7 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <string_view>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
@@ -18,6 +19,19 @@ namespace rat {
 
 inline constexpr int kMaxParallelEvents = 8;
 inline constexpr int kMaxParallelCommandsPerFrame = 32;
+
+enum class EventWhyNot {
+  Ok,
+  WrongPage,
+  Conditions,
+  Height,
+  NotOverlapping,
+  OutOfActionRange,
+  InputBlocked,
+  AlreadyRunning,
+};
+
+[[nodiscard]] const char* event_why_not_name(EventWhyNot reason);
 
 struct InterpreterDebug {
   std::string event_id;
@@ -56,6 +70,8 @@ class EventRuntime {
   [[nodiscard]] std::vector<std::string> overlapping_event_ids(const PlayerBody& player) const;
   [[nodiscard]] std::optional<InterpreterDebug> foreground_debug() const;
   [[nodiscard]] std::vector<InterpreterDebug> parallel_debug() const;
+  [[nodiscard]] EventWhyNot why_not_fired(std::string_view event_id, const GameState& state,
+                                            const PlayerBody& player, bool interact_pressed) const;
 
  private:
   struct StackFrame {
@@ -110,5 +126,9 @@ class EventRuntime {
   std::vector<std::string> warnings_;
   std::unique_ptr<SurfaceQuery> surface_query_;
 };
+
+[[nodiscard]] EventWhyNot event_why_not_fired(const EventRuntime& runtime,
+                                               std::string_view event_id, const GameState& state,
+                                               const PlayerBody& player, bool interact_pressed);
 
 }  // namespace rat
