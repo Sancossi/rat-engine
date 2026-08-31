@@ -243,6 +243,153 @@ TEST_CASE("EventRuntime place_tile_cube raises flat tile by 1.0", "[unit][height
   REQUIRE(runtime.map().ramps.empty());
 }
 
+TEST_CASE("Upsert mini edge barrier last-wins on tile and direction", "[unit][height_edit]") {
+  rat::MapData map = make_v2_map();
+  rat::EdgeBarrierDef edge;
+  edge.tile = {-2, 3};
+  edge.direction = rat::RampDirection::East;
+  edge.height = rat::kEdgeBarrierMiniHeight;
+
+  const auto first = rat::upsert_map_edge_barrier(map, edge);
+  REQUIRE(first.ok);
+  REQUIRE(map.edge_barriers.size() == 1);
+  REQUIRE(map.edge_barriers[0].tile.x == -2);
+  REQUIRE(map.edge_barriers[0].tile.z == 3);
+  REQUIRE(map.edge_barriers[0].direction == rat::RampDirection::East);
+  REQUIRE(map.edge_barriers[0].height == Approx(rat::kEdgeBarrierMiniHeight));
+
+  edge.height = rat::kEdgeBarrierFullHeight;
+  const auto replaced = rat::upsert_map_edge_barrier(map, edge);
+  REQUIRE(replaced.ok);
+  REQUIRE(map.edge_barriers.size() == 1);
+  REQUIRE(map.edge_barriers[0].height == Approx(rat::kEdgeBarrierFullHeight));
+
+  rat::EdgeBarrierDef other = edge;
+  other.direction = rat::RampDirection::North;
+  other.height = rat::kEdgeBarrierMiniHeight;
+  REQUIRE(rat::upsert_map_edge_barrier(map, other).ok);
+  REQUIRE(map.edge_barriers.size() == 2);
+}
+
+TEST_CASE("Upsert edge barrier rejects ramp tile without mutation", "[unit][height_edit]") {
+  rat::MapData map = make_v2_map();
+  rat::RampDef ramp;
+  ramp.tile = rat::TileCoord{-2, 3};
+  ramp.direction = rat::RampDirection::East;
+  ramp.low_y = 2.0f;
+  ramp.high_y = 4.0f;
+  REQUIRE(rat::upsert_map_ramp(map, ramp).ok);
+
+  const auto before_edges = map.edge_barriers;
+  const auto before_ramps = map.ramps;
+  rat::EdgeBarrierDef edge;
+  edge.tile = {-2, 3};
+  edge.direction = rat::RampDirection::North;
+  edge.height = rat::kEdgeBarrierMiniHeight;
+  const auto result = rat::upsert_map_edge_barrier(map, edge);
+  REQUIRE_FALSE(result.ok);
+  REQUIRE_FALSE(result.error.empty());
+  REQUIRE(map.edge_barriers.size() == before_edges.size());
+  REQUIRE(map.ramps.size() == before_ramps.size());
+  REQUIRE(map.ramps[0].tile.x == before_ramps[0].tile.x);
+  REQUIRE(map.ramps[0].tile.z == before_ramps[0].tile.z);
+}
+
+TEST_CASE("Remove edge barrier drops matching tile and direction", "[unit][height_edit]") {
+  rat::MapData map = make_v2_map();
+  rat::EdgeBarrierDef east;
+  east.tile = {-2, 3};
+  east.direction = rat::RampDirection::East;
+  east.height = rat::kEdgeBarrierMiniHeight;
+  rat::EdgeBarrierDef north = east;
+  north.direction = rat::RampDirection::North;
+  north.height = rat::kEdgeBarrierFullHeight;
+  REQUIRE(rat::upsert_map_edge_barrier(map, east).ok);
+  REQUIRE(rat::upsert_map_edge_barrier(map, north).ok);
+  REQUIRE(map.edge_barriers.size() == 2);
+
+  const auto removed = rat::remove_map_edge_barrier(map, east.tile, rat::RampDirection::East);
+  REQUIRE(removed.ok);
+  REQUIRE(map.edge_barriers.size() == 1);
+  REQUIRE(map.edge_barriers[0].direction == rat::RampDirection::North);
+  REQUIRE(map.edge_barriers[0].height == Approx(rat::kEdgeBarrierFullHeight));
+
+  const auto missing = rat::remove_map_edge_barrier(map, east.tile, rat::RampDirection::East);
+  REQUIRE_FALSE(missing.ok);
+  REQUIRE_FALSE(missing.error.empty());
+  REQUIRE(map.edge_barriers.size() == 1);
+}
+
+TEST_CASE("Upsert ramp drops edge barriers on that tile", "[unit][height_edit]") {
+  rat::MapData map = make_v2_map();
+  rat::EdgeBarrierDef keep;
+  keep.tile = {-1, 4};
+  keep.direction = rat::RampDirection::West;
+  keep.height = rat::kEdgeBarrierMiniHeight;
+  rat::EdgeBarrierDef drop_a;
+  drop_a.tile = {-2, 3};
+  drop_a.direction = rat::RampDirection::East;
+  drop_a.height = rat::kEdgeBarrierMiniHeight;
+  rat::EdgeBarrierDef drop_b = drop_a;
+  drop_b.direction = rat::RampDirection::South;
+  drop_b.height = rat::kEdgeBarrierFullHeight;
+  REQUIRE(rat::upsert_map_edge_barrier(map, keep).ok);
+  REQUIRE(rat::upsert_map_edge_barrier(map, drop_a).ok);
+  REQUIRE(rat::upsert_map_edge_barrier(map, drop_b).ok);
+  REQUIRE(map.edge_barriers.size() == 3);
+
+  rat::RampDef ramp;
+  ramp.tile = rat::TileCoord{-2, 3};
+  ramp.direction = rat::RampDirection::East;
+  ramp.low_y = 1.0f;
+  ramp.high_y = 2.0f;
+  REQUIRE(rat::upsert_map_ramp(map, ramp).ok);
+  REQUIRE(map.edge_barriers.size() == 1);
+  REQUIRE(map.edge_barriers[0].tile.x == -1);
+  REQUIRE(map.edge_barriers[0].tile.z == 4);
+  REQUIRE(map.edge_barriers[0].direction == rat::RampDirection::West);
+}
+
+TEST_CASE("EventRuntime upsert and remove edge barrier", "[unit][height_edit]") {
+  rat::MapData map = make_v2_map();
+  rat::EventRuntime runtime;
+  runtime.load(map);
+
+  rat::EdgeBarrierDef edge;
+  edge.tile = {-1, 4};
+  edge.direction = rat::RampDirection::South;
+  edge.height = rat::kEdgeBarrierMiniHeight;
+  const auto upserted = runtime.upsert_edge_barrier(edge);
+  REQUIRE(upserted.ok);
+  REQUIRE(runtime.map().edge_barriers.size() == 1);
+  REQUIRE(runtime.map().edge_barriers[0].height == Approx(rat::kEdgeBarrierMiniHeight));
+
+  const auto removed = runtime.remove_edge_barrier(edge.tile, edge.direction);
+  REQUIRE(removed.ok);
+  REQUIRE(runtime.map().edge_barriers.empty());
+}
+
+TEST_CASE("EventRuntime upsert_ramp_elevation drops fences on that tile", "[unit][height_edit]") {
+  rat::MapData map = make_v2_map();
+  rat::EventRuntime runtime;
+  runtime.load(map);
+
+  rat::EdgeBarrierDef edge;
+  edge.tile = {-2, 3};
+  edge.direction = rat::RampDirection::North;
+  edge.height = rat::kEdgeBarrierFullHeight;
+  REQUIRE(runtime.upsert_edge_barrier(edge).ok);
+  REQUIRE(runtime.map().edge_barriers.size() == 1);
+
+  rat::RampDef ramp;
+  ramp.tile = edge.tile;
+  ramp.direction = rat::RampDirection::West;
+  ramp.low_y = 0.5f;
+  ramp.high_y = 1.5f;
+  REQUIRE(runtime.upsert_ramp_elevation(ramp).ok);
+  REQUIRE(runtime.map().edge_barriers.empty());
+}
+
 TEST_CASE("Height edit schema upgrade keeps existing values", "[unit][height_edit]") {
   rat::MapData map;
   map.schema_version = 1;

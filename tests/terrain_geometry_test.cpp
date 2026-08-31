@@ -1,3 +1,4 @@
+#include <rat/height_edit.hpp>
 #include <rat/terrain_geometry.hpp>
 
 #include <catch2/catch_approx.hpp>
@@ -335,4 +336,123 @@ TEST_CASE("Terrain side faces honor origin and tile_size", "[unit][terrain]") {
   REQUIRE(face.z1 == Catch::Approx(-2.0f));
   REQUIRE(face.y0_hi - face.y0_lo == Catch::Approx(1.0f));
   REQUIRE(face.y1_hi - face.y1_lo == Catch::Approx(1.0f));
+}
+
+TEST_CASE("Edge barrier faces emit east fence from owner top to mini height", "[unit][terrain]") {
+  rat::HeightGrid grid;
+  grid.origin_x = 0;
+  grid.origin_z = 0;
+  grid.width = 1;
+  grid.height = 1;
+  grid.ground_y = {0.0f};
+
+  const rat::TerrainGeometry geometry = rat::build_terrain_geometry(grid, {}, 1.0f);
+  const std::vector<rat::EdgeBarrierDef> barriers = {
+      {.tile = {0, 0},
+       .direction = rat::RampDirection::East,
+       .height = rat::kEdgeBarrierMiniHeight},
+  };
+  const auto faces = rat::build_edge_barrier_faces(geometry, barriers);
+  REQUIRE(faces.size() == 1);
+
+  const rat::TerrainSideFace& face = faces[0];
+  REQUIRE(face.x0 == Catch::Approx(1.0f));
+  REQUIRE(face.x1 == Catch::Approx(1.0f));
+  REQUIRE(face.z0 == Catch::Approx(0.0f));
+  REQUIRE(face.z1 == Catch::Approx(1.0f));
+  REQUIRE(face.y0_lo == Catch::Approx(0.0f));
+  REQUIRE(face.y0_hi == Catch::Approx(rat::kEdgeBarrierMiniHeight));
+  REQUIRE(face.y1_lo == Catch::Approx(0.0f));
+  REQUIRE(face.y1_hi == Catch::Approx(rat::kEdgeBarrierMiniHeight));
+}
+
+TEST_CASE("Edge barrier faces emit north fence from raised owner top", "[unit][terrain]") {
+  rat::HeightGrid grid;
+  grid.origin_x = 0;
+  grid.origin_z = 0;
+  grid.width = 1;
+  grid.height = 1;
+  grid.ground_y = {1.0f};
+
+  const rat::TerrainGeometry geometry = rat::build_terrain_geometry(grid, {}, 1.0f);
+  const std::vector<rat::EdgeBarrierDef> barriers = {
+      {.tile = {0, 0},
+       .direction = rat::RampDirection::North,
+       .height = rat::kEdgeBarrierFullHeight},
+  };
+  const auto faces = rat::build_edge_barrier_faces(geometry, barriers);
+  REQUIRE(faces.size() == 1);
+
+  const rat::TerrainSideFace& face = faces[0];
+  REQUIRE(face.z0 == Catch::Approx(0.0f));
+  REQUIRE(face.z1 == Catch::Approx(0.0f));
+  REQUIRE(face.x0 == Catch::Approx(0.0f));
+  REQUIRE(face.x1 == Catch::Approx(1.0f));
+  REQUIRE(face.y0_lo == Catch::Approx(1.0f));
+  REQUIRE(face.y0_hi == Catch::Approx(1.0f + rat::kEdgeBarrierFullHeight));
+  REQUIRE(face.y1_lo == Catch::Approx(1.0f));
+  REQUIRE(face.y1_hi == Catch::Approx(1.0f + rat::kEdgeBarrierFullHeight));
+}
+
+TEST_CASE("Edge barrier faces honor origin, tile_size, west and south", "[unit][terrain]") {
+  rat::HeightGrid grid;
+  grid.origin_x = 10;
+  grid.origin_z = -2;
+  grid.width = 1;
+  grid.height = 1;
+  grid.ground_y = {0.5f};
+
+  const rat::TerrainGeometry geometry = rat::build_terrain_geometry(grid, {}, 2.0f);
+  const std::vector<rat::EdgeBarrierDef> barriers = {
+      {.tile = {10, -2},
+       .direction = rat::RampDirection::West,
+       .height = rat::kEdgeBarrierMiniHeight},
+      {.tile = {10, -2},
+       .direction = rat::RampDirection::South,
+       .height = rat::kEdgeBarrierFullHeight},
+  };
+  const auto faces = rat::build_edge_barrier_faces(geometry, barriers);
+  REQUIRE(faces.size() == 2);
+
+  const rat::TerrainSideFace& west = faces[0];
+  REQUIRE(west.x0 == Catch::Approx(20.0f));
+  REQUIRE(west.x1 == Catch::Approx(20.0f));
+  REQUIRE(west.z0 == Catch::Approx(-4.0f));
+  REQUIRE(west.z1 == Catch::Approx(-2.0f));
+  REQUIRE(west.y0_lo == Catch::Approx(0.5f));
+  REQUIRE(west.y0_hi == Catch::Approx(0.5f + rat::kEdgeBarrierMiniHeight));
+
+  const rat::TerrainSideFace& south = faces[1];
+  REQUIRE(south.z0 == Catch::Approx(-2.0f));
+  REQUIRE(south.z1 == Catch::Approx(-2.0f));
+  REQUIRE(south.x0 == Catch::Approx(20.0f));
+  REQUIRE(south.x1 == Catch::Approx(22.0f));
+  REQUIRE(south.y0_hi - south.y0_lo == Catch::Approx(rat::kEdgeBarrierFullHeight));
+  REQUIRE(south.y0_lo == Catch::Approx(0.5f));
+}
+
+TEST_CASE("Edge barrier faces skip non-positive height and missing tiles", "[unit][terrain]") {
+  rat::HeightGrid grid;
+  grid.origin_x = 0;
+  grid.origin_z = 0;
+  grid.width = 1;
+  grid.height = 1;
+  grid.ground_y = {0.0f};
+
+  const rat::TerrainGeometry geometry = rat::build_terrain_geometry(grid, {}, 1.0f);
+  const std::vector<rat::EdgeBarrierDef> barriers = {
+      {.tile = {0, 0}, .direction = rat::RampDirection::East, .height = 0.0f},
+      {.tile = {9, 9},
+       .direction = rat::RampDirection::East,
+       .height = rat::kEdgeBarrierMiniHeight},
+  };
+  const auto faces = rat::build_edge_barrier_faces(geometry, barriers);
+  REQUIRE(faces.empty());
+}
+
+TEST_CASE("Terrain fill mesh rejects extra fence faces that overflow uint16", "[unit][terrain]") {
+  REQUIRE(rat::terrain_fill_quad_count_fits_u16(16382, 1, 0));
+  REQUIRE_FALSE(rat::terrain_fill_quad_count_fits_u16(16382, 1, 1));
+  REQUIRE(rat::terrain_fill_quad_count_fits_u16(16381, 1, 1));
+  REQUIRE_FALSE(rat::terrain_fill_quad_count_fits_u16(16383, 0, 1));
 }

@@ -258,7 +258,17 @@ HeightEditResult upsert_map_ramp(MapData& map, const RampDef& ramp) {
   if (!upgraded.ok) {
     return upgraded;
   }
-  return add_or_replace_ramp(map.ramps, map.height_grid, ramp);
+  const HeightEditResult edited = add_or_replace_ramp(map.ramps, map.height_grid, ramp);
+  if (!edited.ok) {
+    return edited;
+  }
+  map.edge_barriers.erase(
+      std::remove_if(map.edge_barriers.begin(), map.edge_barriers.end(),
+                     [&](const EdgeBarrierDef& existing) {
+                       return existing.tile.x == ramp.tile.x && existing.tile.z == ramp.tile.z;
+                     }),
+      map.edge_barriers.end());
+  return edited;
 }
 
 HeightEditResult remove_map_ramp(MapData& map, TileCoord tile) {
@@ -268,6 +278,56 @@ HeightEditResult remove_map_ramp(MapData& map, TileCoord tile) {
   }
   if (!remove_ramp_by_tile(map.ramps, tile)) {
     return error_result("ramp not found for tile");
+  }
+  return ok_result();
+}
+
+HeightEditResult upsert_map_edge_barrier(MapData& map, const EdgeBarrierDef& edge) {
+  const HeightEditResult upgraded = upgrade_map_schema_for_elevation(map);
+  if (!upgraded.ok) {
+    return upgraded;
+  }
+  if (!is_valid_direction(edge.direction)) {
+    return error_result("edge barrier direction is invalid");
+  }
+  if (edge.height <= 0.0f) {
+    return error_result("edge barrier height must be > 0");
+  }
+  std::size_t ignored = 0;
+  const HeightEditResult indexed =
+      tile_to_index(map.height_grid, edge.tile.x, edge.tile.z, ignored);
+  if (!indexed.ok) {
+    return indexed;
+  }
+  if (has_ramp_on_tile(map.ramps, edge.tile.x, edge.tile.z)) {
+    return error_result("cannot place edge barrier on tile with ramp");
+  }
+  for (EdgeBarrierDef& existing : map.edge_barriers) {
+    if (existing.tile.x == edge.tile.x && existing.tile.z == edge.tile.z &&
+        existing.direction == edge.direction) {
+      existing = edge;
+      return ok_result();
+    }
+  }
+  map.edge_barriers.push_back(edge);
+  return ok_result();
+}
+
+HeightEditResult remove_map_edge_barrier(MapData& map, TileCoord tile, RampDirection direction) {
+  const HeightEditResult upgraded = upgrade_map_schema_for_elevation(map);
+  if (!upgraded.ok) {
+    return upgraded;
+  }
+  const std::size_t before = map.edge_barriers.size();
+  map.edge_barriers.erase(std::remove_if(map.edge_barriers.begin(), map.edge_barriers.end(),
+                                         [&](const EdgeBarrierDef& existing) {
+                                           return existing.tile.x == tile.x &&
+                                                  existing.tile.z == tile.z &&
+                                                  existing.direction == direction;
+                                         }),
+                          map.edge_barriers.end());
+  if (map.edge_barriers.size() == before) {
+    return error_result("edge barrier not found for tile and direction");
   }
   return ok_result();
 }

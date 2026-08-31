@@ -459,6 +459,35 @@ void EditorApp::draw_height_edit_ui() {
   if (ImGui::Button("Remove ramp")) {
     (void)apply_result(events_.remove_ramp_elevation(ramp_tile));
   }
+
+  ImGui::Separator();
+  ImGui::TextUnformatted("Edge fences");
+  ImGui::Combo("Edge direction", &edge_direction_index_, "North\0East\0South\0West\0");
+  if (tile_has_ramp) {
+    ImGui::BeginDisabled();
+  }
+  auto upsert_selected_edge = [&](float height) {
+    EdgeBarrierDef edge;
+    edge.tile = ramp_tile;
+    edge.direction = static_cast<RampDirection>(edge_direction_index_);
+    edge.height = height;
+    (void)apply_result(events_.upsert_edge_barrier(edge));
+  };
+  if (ImGui::Button("Mini 0.45")) {
+    upsert_selected_edge(kEdgeBarrierMiniHeight);
+  }
+  ImGui::SameLine();
+  if (ImGui::Button("Full 1.6")) {
+    upsert_selected_edge(kEdgeBarrierFullHeight);
+  }
+  ImGui::SameLine();
+  if (ImGui::Button("Remove edge")) {
+    (void)apply_result(events_.remove_edge_barrier(
+        ramp_tile, static_cast<RampDirection>(edge_direction_index_)));
+  }
+  if (tile_has_ramp) {
+    ImGui::EndDisabled();
+  }
 }
 
 void EditorApp::draw_event_edit_ui() {

@@ -35,6 +35,8 @@ struct HeightGetResult {
 [[nodiscard]] bool remove_ramp_by_tile(std::vector<RampDef>& ramps, TileCoord tile);
 
 inline constexpr float kPlaceCubeDeltaY = 1.0f;
+inline constexpr float kEdgeBarrierMiniHeight = 0.45f;
+inline constexpr float kEdgeBarrierFullHeight = 1.6f;
 
 [[nodiscard]] HeightEditResult set_map_tile_ground_y(MapData& map, int tile_x, int tile_z,
                                                      float ground_y);
@@ -43,5 +45,8 @@ inline constexpr float kPlaceCubeDeltaY = 1.0f;
 [[nodiscard]] HeightEditResult place_map_tile_cube(MapData& map, int tile_x, int tile_z);
 [[nodiscard]] HeightEditResult upsert_map_ramp(MapData& map, const RampDef& ramp);
 [[nodiscard]] HeightEditResult remove_map_ramp(MapData& map, TileCoord tile);
+[[nodiscard]] HeightEditResult upsert_map_edge_barrier(MapData& map, const EdgeBarrierDef& edge);
+[[nodiscard]] HeightEditResult remove_map_edge_barrier(MapData& map, TileCoord tile,
+                                                       RampDirection direction);
 
 }  // namespace rat

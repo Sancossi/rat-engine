@@ -85,6 +85,7 @@ class EditorApp {
   float height_step_ = 0.25f;
   float height_set_y_ = 0.0f;
   int ramp_direction_index_ = 0;
+  int edge_direction_index_ = 1;
   float ramp_low_y_ = 0.0f;
   float ramp_high_y_ = 0.0f;
   bool height_tile_sync_ready_ = false;

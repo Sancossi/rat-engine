@@ -113,6 +113,7 @@ HeightEditResult EventRuntime::upsert_ramp_elevation(const RampDef& ramp) {
   map_.schema_version = candidate.schema_version;
   map_.height_grid = std::move(candidate.height_grid);
   map_.ramps = std::move(candidate.ramps);
+  map_.edge_barriers = std::move(candidate.edge_barriers);
   rebuild_surface_query_for_elevation();
   return edited;
 }
@@ -126,6 +127,34 @@ HeightEditResult EventRuntime::remove_ramp_elevation(TileCoord tile) {
   map_.schema_version = candidate.schema_version;
   map_.height_grid = std::move(candidate.height_grid);
   map_.ramps = std::move(candidate.ramps);
+  rebuild_surface_query_for_elevation();
+  return edited;
+}
+
+HeightEditResult EventRuntime::upsert_edge_barrier(const EdgeBarrierDef& edge) {
+  MapData candidate = map_;
+  const HeightEditResult edited = upsert_map_edge_barrier(candidate, edge);
+  if (!edited.ok) {
+    return edited;
+  }
+  map_.schema_version = candidate.schema_version;
+  map_.height_grid = std::move(candidate.height_grid);
+  map_.ramps = std::move(candidate.ramps);
+  map_.edge_barriers = std::move(candidate.edge_barriers);
+  rebuild_surface_query_for_elevation();
+  return edited;
+}
+
+HeightEditResult EventRuntime::remove_edge_barrier(TileCoord tile, RampDirection direction) {
+  MapData candidate = map_;
+  const HeightEditResult edited = remove_map_edge_barrier(candidate, tile, direction);
+  if (!edited.ok) {
+    return edited;
+  }
+  map_.schema_version = candidate.schema_version;
+  map_.height_grid = std::move(candidate.height_grid);
+  map_.ramps = std::move(candidate.ramps);
+  map_.edge_barriers = std::move(candidate.edge_barriers);
   rebuild_surface_query_for_elevation();
   return edited;
 }

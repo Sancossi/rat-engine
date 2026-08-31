@@ -61,6 +61,8 @@ class EventRuntime {
   [[nodiscard]] HeightEditResult place_tile_cube(int tile_x, int tile_z);
   [[nodiscard]] HeightEditResult upsert_ramp_elevation(const RampDef& ramp);
   [[nodiscard]] HeightEditResult remove_ramp_elevation(TileCoord tile);
+  [[nodiscard]] HeightEditResult upsert_edge_barrier(const EdgeBarrierDef& edge);
+  [[nodiscard]] HeightEditResult remove_edge_barrier(TileCoord tile, RampDirection direction);
   void clear();
 
   // One simulation step. `interact_pressed` is edge-ish: true on the frame interact is pressed.

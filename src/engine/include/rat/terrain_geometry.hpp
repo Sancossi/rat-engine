@@ -72,8 +72,11 @@ struct TerrainSideFace {
 [[nodiscard]] TerrainRenderPolicy choose_terrain_render_policy(const MapData& map);
 [[nodiscard]] bool terrain_tile_count_fits_u16(std::size_t tile_count);
 [[nodiscard]] bool terrain_fill_quad_count_fits_u16(std::size_t tile_count,
-                                                    std::size_t side_face_count);
+                                                    std::size_t side_face_count,
+                                                    std::size_t fence_face_count = 0);
 [[nodiscard]] std::vector<TerrainSideFace> build_terrain_side_faces(
     const TerrainGeometry& geometry);
+[[nodiscard]] std::vector<TerrainSideFace> build_edge_barrier_faces(
+    const TerrainGeometry& geometry, std::span<const EdgeBarrierDef> barriers);
 
 }  // namespace rat

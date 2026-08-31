@@ -1,4 +1,5 @@
 #include <rat/blocker_edit.hpp>
+#include <rat/height_edit.hpp>
 #include <rat/map_loader.hpp>
 
 #include <catch2/catch_approx.hpp>
@@ -196,11 +197,52 @@ TEST_CASE("Example grey_yard.json loads without crash", "[unit][map]") {
   REQUIRE(max_event_x == 11);
   REQUIRE(max_event_z == 8);
 
+  bool found_standable_cube = false;
+  {
+    const rat::HeightGrid& grid = result.map.height_grid;
+    const int cube_x = 9;
+    const int cube_z = 8;
+    const int local_x = cube_x - grid.origin_x;
+    const int local_z = cube_z - grid.origin_z;
+    const int neighbor_x = cube_x - grid.origin_x;
+    const int neighbor_z = (cube_z - 1) - grid.origin_z;
+    REQUIRE(local_x >= 0);
+    REQUIRE(local_z >= 0);
+    REQUIRE(local_x < grid.width);
+    REQUIRE(local_z < grid.height);
+    REQUIRE(neighbor_z >= 0);
+    const std::size_t cube_index =
+        static_cast<std::size_t>(local_z) * static_cast<std::size_t>(grid.width) +
+        static_cast<std::size_t>(local_x);
+    const std::size_t neighbor_index =
+        static_cast<std::size_t>(neighbor_z) * static_cast<std::size_t>(grid.width) +
+        static_cast<std::size_t>(neighbor_x);
+    REQUIRE(grid.ground_y[cube_index] == Catch::Approx(1.0f));
+    REQUIRE(grid.ground_y[neighbor_index] == Catch::Approx(0.0f));
+    found_standable_cube = true;
+  }
+
+  bool found_mini_fence = false;
+  bool found_full_fence = false;
+  for (const rat::EdgeBarrierDef& edge : result.map.edge_barriers) {
+    REQUIRE_FALSE((edge.tile.x == 8 && edge.tile.z == 8));
+    REQUIRE_FALSE((edge.tile.x == 0 && edge.tile.z == 0));
+    if (edge.height == Catch::Approx(rat::kEdgeBarrierMiniHeight)) {
+      found_mini_fence = true;
+    }
+    if (edge.height == Catch::Approx(rat::kEdgeBarrierFullHeight)) {
+      found_full_fence = true;
+    }
+  }
+
   REQUIRE(found_autorun);
   REQUIRE(found_branchish);
   REQUIRE(found_crate_notice);
   REQUIRE(found_jumpable_blocker);
   REQUIRE(found_elevated_event);
+  REQUIRE(found_standable_cube);
+  REQUIRE(found_mini_fence);
+  REQUIRE(found_full_fence);
 
   // Round-trip via string path also works.
   const auto from_string = rat::load_map_from_string(read_file(path));
@@ -222,6 +264,13 @@ TEST_CASE("Example grey_yard.json loads without crash", "[unit][map]") {
   REQUIRE(from_serialized.map.ramps.size() == result.map.ramps.size());
   REQUIRE(from_serialized.map.ramps[0].tile.x == 8);
   REQUIRE(from_serialized.map.ramps[0].tile.z == 8);
+  REQUIRE(from_serialized.map.edge_barriers.size() == result.map.edge_barriers.size());
+  REQUIRE(from_serialized.map.edge_barriers.size() >= 2);
+  REQUIRE(from_serialized.map.edge_barriers[0].tile.x == result.map.edge_barriers[0].tile.x);
+  REQUIRE(from_serialized.map.edge_barriers[0].tile.z == result.map.edge_barriers[0].tile.z);
+  REQUIRE(from_serialized.map.edge_barriers[0].direction == result.map.edge_barriers[0].direction);
+  REQUIRE(from_serialized.map.edge_barriers[0].height ==
+          Catch::Approx(result.map.edge_barriers[0].height));
   REQUIRE(from_serialized.map.blockers.size() == result.map.blockers.size());
   REQUIRE(from_serialized.map.events.size() == result.map.events.size());
   REQUIRE(from_serialized.map.events.back().id == "elevated_after_blocker");

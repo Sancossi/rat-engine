@@ -107,7 +107,10 @@ void GreyboxScene::set_terrain_map(const MapData& map) {
     return;
   }
   const std::vector<TerrainSideFace> side_faces = build_terrain_side_faces(terrain_geometry_);
-  if (!terrain_fill_quad_count_fits_u16(terrain_geometry_.tiles.size(), side_faces.size())) {
+  const std::vector<TerrainSideFace> fence_faces =
+      build_edge_barrier_faces(terrain_geometry_, map.edge_barriers);
+  if (!terrain_fill_quad_count_fits_u16(terrain_geometry_.tiles.size(), side_faces.size(),
+                                        fence_faces.size())) {
     // Safe fallback: keep legacy floor/grid if geometry is invalid or exceeds uint16 indexing.
     terrain_geometry_ = {};
     return;
@@ -119,22 +122,25 @@ void GreyboxScene::set_terrain_map(const MapData& map) {
   };
 
   const std::uint32_t terrain_color = 0xff707070;
+  const std::uint32_t fence_color = 0xff8a5a38;
   const std::uint32_t grid_color = 0xff3a3a3a;
   const std::uint32_t axis_x = 0xff5050d0;
   const std::uint32_t axis_z = 0xffd05050;
   constexpr float kLineOffset = 0.03f;
 
   if (!terrain_geometry_.tiles.empty()) {
-    const std::size_t quad_count = terrain_geometry_.tiles.size() + side_faces.size();
+    const std::size_t quad_count =
+        terrain_geometry_.tiles.size() + side_faces.size() + fence_faces.size();
     terrain_vertex_data_.reserve(quad_count * 4);
     terrain_indices_.reserve(quad_count * 6);
     std::uint32_t base_vertex = 0;
     auto push_fill_quad = [&](float x0, float y0, float z0, float x1, float y1, float z1, float x2,
-                              float y2, float z2, float x3, float y3, float z3) {
-      push_vertex(terrain_vertex_data_, x0, y0, z0, terrain_color);
-      push_vertex(terrain_vertex_data_, x1, y1, z1, terrain_color);
-      push_vertex(terrain_vertex_data_, x2, y2, z2, terrain_color);
-      push_vertex(terrain_vertex_data_, x3, y3, z3, terrain_color);
+                              float y2, float z2, float x3, float y3, float z3,
+                              std::uint32_t color) {
+      push_vertex(terrain_vertex_data_, x0, y0, z0, color);
+      push_vertex(terrain_vertex_data_, x1, y1, z1, color);
+      push_vertex(terrain_vertex_data_, x2, y2, z2, color);
+      push_vertex(terrain_vertex_data_, x3, y3, z3, color);
       terrain_indices_.push_back(static_cast<std::uint16_t>(base_vertex + 0));
       terrain_indices_.push_back(static_cast<std::uint16_t>(base_vertex + 2));
       terrain_indices_.push_back(static_cast<std::uint16_t>(base_vertex + 1));
@@ -145,11 +151,15 @@ void GreyboxScene::set_terrain_map(const MapData& map) {
     };
     for (const TerrainTileQuad& tile : terrain_geometry_.tiles) {
       push_fill_quad(tile.min_x, tile.y_nw, tile.min_z, tile.max_x, tile.y_ne, tile.min_z, tile.max_x,
-                     tile.y_se, tile.max_z, tile.min_x, tile.y_sw, tile.max_z);
+                     tile.y_se, tile.max_z, tile.min_x, tile.y_sw, tile.max_z, terrain_color);
     }
     for (const TerrainSideFace& face : side_faces) {
       push_fill_quad(face.x0, face.y0_lo, face.z0, face.x0, face.y0_hi, face.z0, face.x1, face.y1_hi,
-                     face.z1, face.x1, face.y1_lo, face.z1);
+                     face.z1, face.x1, face.y1_lo, face.z1, terrain_color);
+    }
+    for (const TerrainSideFace& face : fence_faces) {
+      push_fill_quad(face.x0, face.y0_lo, face.z0, face.x0, face.y0_hi, face.z0, face.x1, face.y1_hi,
+                     face.z1, face.x1, face.y1_lo, face.z1, fence_color);
     }
 
     const auto lines = build_terrain_grid_lines(terrain_geometry_, kLineOffset);

@@ -218,13 +218,18 @@ TerrainRenderPolicy choose_terrain_render_policy(const MapData& map) {
   return TerrainRenderPolicy::HeightTerrain;
 }
 
-bool terrain_fill_quad_count_fits_u16(std::size_t tile_count, std::size_t side_face_count) {
-  // 4 vertices per fill quad (top or side), indices addressed by uint16.
+bool terrain_fill_quad_count_fits_u16(std::size_t tile_count, std::size_t side_face_count,
+                                      std::size_t fence_face_count) {
+  // 4 vertices per fill quad (top, side, or fence), indices addressed by uint16.
   constexpr std::size_t kMaxQuadCount = static_cast<std::size_t>(65535u / 4u);
   if (tile_count > kMaxQuadCount) {
     return false;
   }
-  return side_face_count <= kMaxQuadCount - tile_count;
+  const std::size_t remaining = kMaxQuadCount - tile_count;
+  if (side_face_count > remaining) {
+    return false;
+  }
+  return fence_face_count <= remaining - side_face_count;
 }
 
 bool terrain_tile_count_fits_u16(std::size_t tile_count) {
@@ -278,6 +283,73 @@ std::vector<TerrainSideFace> build_terrain_side_faces(const TerrainGeometry& geo
                    south.y_ne);
       }
     }
+  }
+  return out;
+}
+
+std::vector<TerrainSideFace> build_edge_barrier_faces(const TerrainGeometry& geometry,
+                                                      std::span<const EdgeBarrierDef> barriers) {
+  std::vector<TerrainSideFace> out;
+  if (geometry.width <= 0 || geometry.height <= 0 || geometry.tiles.empty() ||
+      geometry.tile_size <= 0.0f) {
+    return out;
+  }
+  const std::size_t expected =
+      static_cast<std::size_t>(geometry.width) * static_cast<std::size_t>(geometry.height);
+  if (geometry.tiles.size() != expected) {
+    return out;
+  }
+
+  for (const EdgeBarrierDef& edge : barriers) {
+    if (edge.height <= 0.0f) {
+      continue;
+    }
+    const int local_x = edge.tile.x - geometry.origin_x;
+    const int local_z = edge.tile.z - geometry.origin_z;
+    if (local_x < 0 || local_z < 0 || local_x >= geometry.width || local_z >= geometry.height) {
+      continue;
+    }
+    const TerrainTileQuad& tile =
+        geometry.tiles[static_cast<std::size_t>(local_z) * static_cast<std::size_t>(geometry.width) +
+                       static_cast<std::size_t>(local_x)];
+    const float owner_top = sample_terrain_height(
+        geometry, 0.5f * (tile.min_x + tile.max_x), 0.5f * (tile.min_z + tile.max_z));
+    const float top_y = owner_top + edge.height;
+
+    TerrainSideFace face;
+    switch (edge.direction) {
+      case RampDirection::East:
+        face.x0 = tile.max_x;
+        face.z0 = tile.min_z;
+        face.x1 = tile.max_x;
+        face.z1 = tile.max_z;
+        break;
+      case RampDirection::West:
+        face.x0 = tile.min_x;
+        face.z0 = tile.min_z;
+        face.x1 = tile.min_x;
+        face.z1 = tile.max_z;
+        break;
+      case RampDirection::South:
+        face.x0 = tile.min_x;
+        face.z0 = tile.max_z;
+        face.x1 = tile.max_x;
+        face.z1 = tile.max_z;
+        break;
+      case RampDirection::North:
+        face.x0 = tile.min_x;
+        face.z0 = tile.min_z;
+        face.x1 = tile.max_x;
+        face.z1 = tile.min_z;
+        break;
+      default:
+        continue;
+    }
+    face.y0_lo = owner_top;
+    face.y0_hi = top_y;
+    face.y1_lo = owner_top;
+    face.y1_hi = top_y;
+    out.push_back(face);
   }
   return out;
 }
