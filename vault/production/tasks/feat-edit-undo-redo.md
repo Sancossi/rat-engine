@@ -1,7 +1,7 @@
 ---
 type: task
 area: Engine
-status: In progress
+status: Done
 task_type: Feature
 sprint: Sprint 4
 due:
@@ -16,11 +16,12 @@ Acceptance: undo/redo для place/move/delete blocker и event; стек сбр
 
 ## Resolution
 
-`EditHistory` + `EditCommand` in `rat_core` (no singleton). Place/delete/grid-move of blockers and events go through `execute`; `undo`/`redo` restore the same indices. `EditorApp` owns the stack, records only in Edit UI, applies Ctrl+Z / Ctrl+Y (Ctrl+Shift+Z) via `InputFrame` when ImGui is not capturing keyboard, and `clear()`s on successful hot-apply (covers init load). Height-grid, grow/shrink, and field tweaks stay out of the stack. Verify: `.\build\tests\rat_tests.exe "[edit]"`.
+`EditHistory` + `EditCommand` in `rat_core`. Place/delete/grid-move of blockers and events go through `execute`; blocker mutations do not call `set_events` (autorun/dialog survive Edit). Ctrl+Z/Y in Edit; `clear()` on successful hot-apply. Verify: `.\build\tests\rat_tests.exe "[edit]"`.
 
 Follow-up: [[feat: undo grow/shrink and field edits]]
+Follow-up: [[chore: undo set_events contract test polish]]
 
 ## Bugs found
 
-none.
+none (продуктовых). Important `set_events` на blocker-edit — закрыт в `2b8b23d`. Minor ревью: контрактный тест не ловит wipe при живом сообщении — см. follow-up.
 
