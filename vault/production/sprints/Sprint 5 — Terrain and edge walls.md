@@ -1,9 +1,9 @@
 ---
 type: sprint
-status: Active
+status: Done
 dates: 2026-09-15/2026-09-28
 goal: Height-grid standable cubes and edge fences, visible in greybox and editable in Edit
-current: true
+current: false
 tags: [sprint]
 ---
 
@@ -25,4 +25,4 @@ DoD:
 
 ## Итог
 
-DoD выполнен 2026-09-01. [[feat: Terrain wall cubes]]: боковые грани + Place cube +1.0. [[feat: Grid edge barriers]]: schema v2 `edge_barriers`, ходьба режется, 0.45 перепрыгивается, 1.6 нет. [[feat: Edit and greybox edge walls]]: ImGui N/E/S/W Mini/Full, greybox, `grey_yard` куб + оба забора. Мышь, undo высот/рёбер, slice — не брали.
+DoD выполнен 2026-09-01. [[feat: Terrain wall cubes]]: боковые грани + Place cube +1.0. [[feat: Grid edge barriers]]: schema v2 `edge_barriers`, ходьба режется, 0.45 перепрыгивается, 1.6 нет. [[feat: Edit and greybox edge walls]]: ImGui N/E/S/W Mini/Full, greybox, `grey_yard` куб + оба забора. Мышь, undo высот/рёбер, slice — не брали → [[Sprint 6 — Viewport map edit]].
