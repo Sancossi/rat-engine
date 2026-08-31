@@ -1,7 +1,7 @@
 ---
 type: task
 area: Engine
-status: In progress
+status: Done
 task_type: Feature
 sprint: Sprint 4
 due:
@@ -18,8 +18,11 @@ Origin: [[feat: Event why-not-fired]]
 
 ## Resolution
 
-`why_not_fired` uses the same start gates as `try_start_*`. Existing reason strings unchanged. New: `autorun_lock`, `foreground_busy`, `parallel_limit`, `already_inside`. `ok` means this event would `start_page` this frame (live instance still `already_running`). Verify: `rat_tests.exe "[why]"`. Stays In progress until review Approved.
+`why_not_fired` uses the same start gates as `try_start_*`. Existing reason strings unchanged. New: `autorun_lock`, `foreground_busy`, `parallel_limit`, `already_inside`. `ok` means this event would `start_page` this frame (live instance still `already_running`). Verify: `rat_tests.exe "[why]"`.
+
+Follow-up: [[chore: why-not start-lock review polish]]
+Follow-up: [[feat: Debug snapshot why-not for selected event]]
 
 ## Bugs found
 
-none.
+none (продуктовых). Minor ревью: нет positive Ok для Parallel/Touch; вики MCP со старым списком кодов — см. follow-up.
