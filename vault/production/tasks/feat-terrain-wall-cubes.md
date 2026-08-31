@@ -1,7 +1,7 @@
 ---
 type: task
 area: Engine
-status: In review
+status: Done
 task_type: Feature
 sprint: Sprint 5
 due:
@@ -18,7 +18,7 @@ Depends: none. Next: [[feat: Grid edge barriers]]. Взято в [[Sprint 5 — 
 
 ## Resolution
 
-`build_terrain_side_faces` emits vertical quads on east/south shared edges where corner Ys differ (trapezoid OK for ramps). Greybox `set_terrain_map` draws those faces with the same fill as tops and fail-closes if tops+sides overflow uint16. **Place cube** raises a flat tile by exactly 1.0 (`place_map_tile_cube` / `EventRuntime::place_tile_cube`); ramp tiles reject without mutation. Collision is existing too-high step-up — no physics change.
+`build_terrain_side_faces` emits vertical quads on east/south shared edges where corner Ys differ (trapezoid OK for ramps). Greybox `set_terrain_map` draws those faces with the same fill as tops and fail-closes if tops+sides overflow uint16. **Place cube** raises a flat tile by exactly 1.0 (`place_map_tile_cube` / `EventRuntime::place_tile_cube`); ramp tiles reject without mutation. Collision is existing too-high step-up — no physics change. Review: Approved.
 
 Verify: `.\build\tests\rat_tests.exe "[terrain]"` and `"[height_edit]"`; Edit → Elevation → Place cube.
 
