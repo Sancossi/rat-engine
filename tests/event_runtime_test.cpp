@@ -84,9 +84,17 @@ TEST_CASE("Event runtime action trigger requires interact near tile", "[unit][ev
   runtime.update(state, far, true, 1.0f / 60.0f);
   REQUIRE_FALSE(state.get_switch(5));
 
+  // This overlaps the old whole-cell AABB, but is still visibly too far from marker center.
+  rat::PlayerBody early;
+  early.x = 1.7f;
+  early.z = 2.5f;
+  REQUIRE_FALSE(runtime.has_action_prompt(early, state));
+  runtime.update(state, early, true, 1.0f / 60.0f);
+  REQUIRE_FALSE(state.get_switch(5));
+
   rat::PlayerBody near;
-  near.x = 2.5f;
-  near.z = 2.5f;
+  near.x = 2.1f;
+  near.z = 2.1f;
   REQUIRE(runtime.has_action_prompt(near, state));
   runtime.update(state, near, true, 1.0f / 60.0f);
   REQUIRE(state.get_switch(5));
@@ -155,8 +163,8 @@ TEST_CASE("Event runtime control_self_switch flips page conditions", "[unit][eve
   runtime.load(loaded.map);
 
   rat::PlayerBody player;
-  player.x = 1.0f;
-  player.z = 1.0f;
+  player.x = 1.5f;
+  player.z = 1.5f;
 
   runtime.update(state, player, true, 1.0f / 60.0f);
   REQUIRE(runtime.active_message() == "Loot");

@@ -63,6 +63,7 @@ class EventRuntime {
   [[nodiscard]] int select_page(const EventDef& event, const GameState& state) const;
   [[nodiscard]] Aabb2 event_bounds(const EventDef& event) const;
   [[nodiscard]] bool player_overlaps(const EventDef& event, const PlayerBody& player) const;
+  [[nodiscard]] bool action_in_range(const EventDef& event, const PlayerBody& player) const;
 
   void try_start_autorun(GameState& state);
   void try_start_parallels(GameState& state);

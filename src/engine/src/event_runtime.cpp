@@ -73,7 +73,7 @@ bool EventRuntime::has_action_prompt(const PlayerBody& player, const GameState& 
     return false;
   }
   for (const EventDef& event : map_.events) {
-    if (!player_overlaps(event, player)) {
+    if (!action_in_range(event, player)) {
       continue;
     }
     const int page_index = select_page(event, state);
@@ -160,6 +160,19 @@ bool EventRuntime::player_overlaps(const EventDef& event, const PlayerBody& play
   return aabb_overlap(box, body);
 }
 
+bool EventRuntime::action_in_range(const EventDef& event, const PlayerBody& player) const {
+  if (event.tile.has_value()) {
+    const Vec3 center = tile_center_world(*event.tile, map_.tile_size);
+    const float dx = player.x - center.x;
+    const float dz = player.z - center.z;
+    constexpr float kActionRadiusInTiles = 0.65f;
+    const float radius = kActionRadiusInTiles * map_.tile_size;
+    return dx * dx + dz * dz <= radius * radius;
+  }
+  // Explicit volumes keep authored AABB semantics.
+  return event.volume.has_value() && player_overlaps(event, player);
+}
+
 void EventRuntime::start_page(const EventDef& event, int page_index, bool parallel, bool autorun) {
   const EventPage& page = event.pages[static_cast<std::size_t>(page_index)];
   Interpreter interp;
@@ -223,7 +236,7 @@ void EventRuntime::try_start_action(GameState& state, const PlayerBody& player,
     return;
   }
   for (const EventDef& event : map_.events) {
-    if (!player_overlaps(event, player)) {
+    if (!action_in_range(event, player)) {
       continue;
     }
     const int page_index = select_page(event, state);
