@@ -3,6 +3,7 @@ add_executable(rat_tests
   blocker_edit_test.cpp
   camera_test.cpp
   event_edit_test.cpp
+  event_inspect_test.cpp
   event_runtime_test.cpp
   game_state_test.cpp
   headless_mechanics_stub_test.cpp

@@ -49,6 +49,7 @@ class EditorApp {
   std::string last_serialize_status_;
   int selected_blocker_ = -1;
   int selected_event_ = -1;
+  int selected_page_ = 0;
   int next_stub_event_ = 1;
   int width_ = 1280;
   int height_ = 720;

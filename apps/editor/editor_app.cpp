@@ -5,6 +5,7 @@
 #include <rat/blocker_edit.hpp>
 #include <rat/engine.hpp>
 #include <rat/event_edit.hpp>
+#include <rat/event_inspect.hpp>
 #include <rat/hot_apply.hpp>
 #include <rat/map_loader.hpp>
 
@@ -188,6 +189,7 @@ void EditorApp::draw_event_edit_ui() {
       }
       if (ImGui::Selectable(label, selected_event_ == i)) {
         selected_event_ = i;
+        selected_page_ = 0;
         sync_events_to_runtime();
       }
     }
@@ -195,7 +197,6 @@ void EditorApp::draw_event_edit_ui() {
   }
 
   if (selected_event_ >= 0 && selected_event_ < static_cast<int>(event_list.size())) {
-    EventDef& event = event_list[static_cast<std::size_t>(selected_event_)];
     auto apply_event = [&](EventDef next) {
       event_list[static_cast<std::size_t>(selected_event_)] = std::move(next);
       events_.set_events(event_list);
@@ -203,30 +204,129 @@ void EditorApp::draw_event_edit_ui() {
       event_list = events_.map().events;
     };
 
+    EventDef event = event_list[static_cast<std::size_t>(selected_event_)];
+    ImGui::Text("id: %s", event.id.c_str());
+    ImGui::Text("pages: %zu", event.pages.size());
+
     if (!event.tile.has_value() && !event.volume.has_value()) {
       if (ImGui::Button("Place on tile (0,0)")) {
         event.tile = TileCoord{0, 0};
-        apply_event(event);
+        apply_event(std::move(event));
+        event = event_list[static_cast<std::size_t>(selected_event_)];
       }
     } else {
       if (ImGui::Button("Ev -X")) {
         translate_event_on_grid(event, -1, 0, tile);
-        apply_event(event);
+        apply_event(std::move(event));
+        event = event_list[static_cast<std::size_t>(selected_event_)];
       }
       ImGui::SameLine();
       if (ImGui::Button("Ev +X")) {
         translate_event_on_grid(event, 1, 0, tile);
-        apply_event(event);
+        apply_event(std::move(event));
+        event = event_list[static_cast<std::size_t>(selected_event_)];
       }
       ImGui::SameLine();
       if (ImGui::Button("Ev -Z")) {
         translate_event_on_grid(event, 0, -1, tile);
-        apply_event(event);
+        apply_event(std::move(event));
+        event = event_list[static_cast<std::size_t>(selected_event_)];
       }
       ImGui::SameLine();
       if (ImGui::Button("Ev +Z")) {
         translate_event_on_grid(event, 0, 1, tile);
+        apply_event(std::move(event));
+        event = event_list[static_cast<std::size_t>(selected_event_)];
+      }
+    }
+
+    ImGui::Separator();
+    ImGui::TextUnformatted("Page inspector");
+    if (event.pages.empty()) {
+      ImGui::TextUnformatted("(no pages)");
+    } else {
+      if (selected_page_ < 0 || selected_page_ >= static_cast<int>(event.pages.size())) {
+        selected_page_ = 0;
+      }
+      if (ImGui::BeginListBox("##pages", ImVec2(-1.0f, 80.0f))) {
+        for (int p = 0; p < static_cast<int>(event.pages.size()); ++p) {
+          const EventPage& page = event.pages[static_cast<std::size_t>(p)];
+          char label[192];
+          std::snprintf(label, sizeof(label), "%d: %s | %s", p, trigger_kind_name(page.trigger),
+                        summarize_page_conditions(page).c_str());
+          if (ImGui::Selectable(label, selected_page_ == p)) {
+            selected_page_ = p;
+          }
+        }
+        ImGui::EndListBox();
+      }
+
+      EventPage& page = event.pages[static_cast<std::size_t>(selected_page_)];
+      int trigger = static_cast<int>(page.trigger);
+      if (ImGui::Combo("Trigger", &trigger,
+                       "action\0player_touch\0event_touch\0autorun\0parallel\0")) {
+        page.trigger = static_cast<TriggerKind>(trigger);
         apply_event(event);
+        event = event_list[static_cast<std::size_t>(selected_event_)];
+      }
+      ImGui::TextWrapped("Conditions: %s", summarize_page_conditions(page).c_str());
+
+      int sw_i = -1;
+      for (int i = 0; i < static_cast<int>(page.conditions.size()); ++i) {
+        if (page.conditions[static_cast<std::size_t>(i)].type == ConditionType::Switch) {
+          sw_i = i;
+          break;
+        }
+      }
+      if (sw_i < 0) {
+        if (ImGui::Button("Add enable Switch")) {
+          ensure_page_enable_switch(page, 1, true);
+          apply_event(event);
+          event = event_list[static_cast<std::size_t>(selected_event_)];
+        }
+      } else {
+        Condition& sw = event.pages[static_cast<std::size_t>(selected_page_)]
+                            .conditions[static_cast<std::size_t>(sw_i)];
+        int switch_id = static_cast<int>(sw.id);
+        bool on = sw.bool_value;
+        bool dirty = false;
+        if (ImGui::InputInt("Enable SW id", &switch_id)) {
+          if (switch_id < 0) {
+            switch_id = 0;
+          }
+          sw.id = static_cast<std::uint32_t>(switch_id);
+          dirty = true;
+        }
+        if (ImGui::Checkbox("Enable SW ON", &on)) {
+          sw.bool_value = on;
+          dirty = true;
+        }
+        if (dirty) {
+          apply_event(event);
+          event = event_list[static_cast<std::size_t>(selected_event_)];
+        }
+      }
+
+      EventPage& page_now = event.pages[static_cast<std::size_t>(selected_page_)];
+      int text_i = find_first_show_text(page_now);
+      if (text_i < 0) {
+        if (ImGui::Button("Add Show Text")) {
+          Command cmd;
+          cmd.op = CommandOp::ShowText;
+          cmd.text = "New text";
+          page_now.commands.insert(page_now.commands.begin(), std::move(cmd));
+          apply_event(event);
+          event = event_list[static_cast<std::size_t>(selected_event_)];
+        }
+      } else {
+        Command& cmd = event.pages[static_cast<std::size_t>(selected_page_)]
+                           .commands[static_cast<std::size_t>(text_i)];
+        char buf[512];
+        std::snprintf(buf, sizeof(buf), "%s", cmd.text.c_str());
+        if (ImGui::InputTextMultiline("Show Text", buf, sizeof(buf), ImVec2(-1.0f, 60.0f))) {
+          cmd.text = buf;
+          apply_event(event);
+        }
       }
     }
   }
@@ -255,6 +355,7 @@ bool EditorApp::hot_apply_map_path(const std::string& path, bool preserve_player
   map_path_ = path;
   selected_blocker_ = blockers.empty() ? -1 : 0;
   selected_event_ = events_.map().events.empty() ? -1 : 0;
+  selected_page_ = 0;
   engine_->set_blockers(std::move(blockers));
   engine_->set_event_markers(std::move(markers));
   engine_->set_player(player_);
