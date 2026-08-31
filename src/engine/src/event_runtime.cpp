@@ -35,6 +35,20 @@ void EventRuntime::set_blockers(std::vector<Aabb2> blockers) {
   map_.blockers = std::move(blockers);
 }
 
+void EventRuntime::set_events(std::vector<EventDef> events) {
+  map_.events = std::move(events);
+  // Drop live interpreters — page pointers / overlaps may be stale after moves.
+  foreground_.reset();
+  parallels_.clear();
+  active_message_.reset();
+  touch_inside_.clear();
+  parallel_started_.clear();
+  autorun_lock_.clear();
+  active_parallel_count_ = 0;
+  last_parallel_commands_executed_ = 0;
+  warnings_.clear();
+}
+
 void EventRuntime::clear() {
   map_ = {};
   foreground_.reset();

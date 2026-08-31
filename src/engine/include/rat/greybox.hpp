@@ -32,6 +32,7 @@ class GreyboxScene {
   void set_blockers(std::span<const Aabb2> blockers);
   void set_event_markers(std::span<const Vec3> markers);
   void set_selected_blocker(int index);  // -1 = none
+  void set_selected_event_marker(int index);  // -1 = none
 
   void draw(bgfx::ViewId view_id = 0);
 
@@ -52,6 +53,7 @@ class GreyboxScene {
   std::vector<Aabb2> blockers_;
   std::vector<Vec3> event_markers_;
   int selected_blocker_ = -1;
+  int selected_event_marker_ = -1;
 
   bgfx::ProgramHandle program_ = BGFX_INVALID_HANDLE;
   bgfx::VertexLayout layout_;

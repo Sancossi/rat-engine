@@ -4,6 +4,7 @@
 
 #include <rat/blocker_edit.hpp>
 #include <rat/engine.hpp>
+#include <rat/event_edit.hpp>
 #include <rat/hot_apply.hpp>
 #include <rat/map_loader.hpp>
 
@@ -30,6 +31,16 @@ void EditorApp::sync_blockers_to_runtime() {
   }
   engine_->set_blockers(events_.map().blockers);
   engine_->greybox().set_selected_blocker(app_mode_ == AppMode::Edit ? selected_blocker_ : -1);
+}
+
+void EditorApp::sync_events_to_runtime() {
+  if (engine_ == nullptr) {
+    return;
+  }
+  engine_->set_event_markers(event_markers_from_map(events_.map()));
+  const int marker =
+      app_mode_ == AppMode::Edit ? event_marker_index(events_.map(), selected_event_) : -1;
+  engine_->greybox().set_selected_event_marker(marker);
 }
 
 void EditorApp::draw_blocker_edit_ui() {
@@ -135,6 +146,92 @@ void EditorApp::draw_blocker_edit_ui() {
   }
 }
 
+void EditorApp::draw_event_edit_ui() {
+  ImGui::Separator();
+  ImGui::TextUnformatted("Events (Edit)");
+  const float tile = events_.map().tile_size > 0.0f ? events_.map().tile_size : 1.0f;
+  auto event_list = events_.map().events;
+
+  if (ImGui::Button("Add stub event")) {
+    const std::string id = "stub_" + std::to_string(next_stub_event_++);
+    event_list.push_back(make_stub_event(id, 0, 0));
+    selected_event_ = static_cast<int>(event_list.size()) - 1;
+    events_.set_events(event_list);
+    sync_events_to_runtime();
+    event_list = events_.map().events;
+  }
+  ImGui::SameLine();
+  if (ImGui::Button("Delete event") && selected_event_ >= 0 &&
+      selected_event_ < static_cast<int>(event_list.size())) {
+    event_list.erase(event_list.begin() + selected_event_);
+    if (event_list.empty()) {
+      selected_event_ = -1;
+    } else if (selected_event_ >= static_cast<int>(event_list.size())) {
+      selected_event_ = static_cast<int>(event_list.size()) - 1;
+    }
+    events_.set_events(event_list);
+    sync_events_to_runtime();
+    event_list = events_.map().events;
+  }
+
+  if (ImGui::BeginListBox("##events", ImVec2(-1.0f, 120.0f))) {
+    for (int i = 0; i < static_cast<int>(event_list.size()); ++i) {
+      const auto& ev = event_list[static_cast<std::size_t>(i)];
+      char label[160];
+      if (ev.tile.has_value()) {
+        std::snprintf(label, sizeof(label), "%s  tile(%d,%d)", ev.id.c_str(), ev.tile->x,
+                      ev.tile->z);
+      } else if (ev.volume.has_value()) {
+        std::snprintf(label, sizeof(label), "%s  vol", ev.id.c_str());
+      } else {
+        std::snprintf(label, sizeof(label), "%s  (no place)", ev.id.c_str());
+      }
+      if (ImGui::Selectable(label, selected_event_ == i)) {
+        selected_event_ = i;
+        sync_events_to_runtime();
+      }
+    }
+    ImGui::EndListBox();
+  }
+
+  if (selected_event_ >= 0 && selected_event_ < static_cast<int>(event_list.size())) {
+    EventDef& event = event_list[static_cast<std::size_t>(selected_event_)];
+    auto apply_event = [&](EventDef next) {
+      event_list[static_cast<std::size_t>(selected_event_)] = std::move(next);
+      events_.set_events(event_list);
+      sync_events_to_runtime();
+      event_list = events_.map().events;
+    };
+
+    if (!event.tile.has_value() && !event.volume.has_value()) {
+      if (ImGui::Button("Place on tile (0,0)")) {
+        event.tile = TileCoord{0, 0};
+        apply_event(event);
+      }
+    } else {
+      if (ImGui::Button("Ev -X")) {
+        translate_event_on_grid(event, -1, 0, tile);
+        apply_event(event);
+      }
+      ImGui::SameLine();
+      if (ImGui::Button("Ev +X")) {
+        translate_event_on_grid(event, 1, 0, tile);
+        apply_event(event);
+      }
+      ImGui::SameLine();
+      if (ImGui::Button("Ev -Z")) {
+        translate_event_on_grid(event, 0, -1, tile);
+        apply_event(event);
+      }
+      ImGui::SameLine();
+      if (ImGui::Button("Ev +Z")) {
+        translate_event_on_grid(event, 0, 1, tile);
+        apply_event(event);
+      }
+    }
+  }
+}
+
 bool EditorApp::hot_apply_map_path(const std::string& path, bool preserve_player) {
   if (engine_ == nullptr) {
     last_apply_error_ = "engine not ready";
@@ -157,10 +254,13 @@ bool EditorApp::hot_apply_map_path(const std::string& path, bool preserve_player
   last_apply_error_.clear();
   map_path_ = path;
   selected_blocker_ = blockers.empty() ? -1 : 0;
+  selected_event_ = events_.map().events.empty() ? -1 : 0;
   engine_->set_blockers(std::move(blockers));
   engine_->set_event_markers(std::move(markers));
   engine_->set_player(player_);
   engine_->greybox().set_selected_blocker(app_mode_ == AppMode::Edit ? selected_blocker_ : -1);
+  engine_->greybox().set_selected_event_marker(
+      app_mode_ == AppMode::Edit ? event_marker_index(events_.map(), selected_event_) : -1);
   return true;
 }
 
@@ -337,6 +437,7 @@ void EditorApp::update_simulation(float dt) {
     app_mode_ = toggle_app_mode(app_mode_);
     refresh_mode_banner();
     sync_blockers_to_runtime();
+    sync_events_to_runtime();
   }
   mode_toggle_was_down_ = mode_down;
 
@@ -457,7 +558,7 @@ void EditorApp::draw_ui() {
   ImGui::Begin("Inspector");
   ImGui::Text("App mode: %s", app_mode_name(app_mode_));
   if (app_mode_ == AppMode::Edit) {
-    ImGui::TextUnformatted("EDIT: player + events paused. Edit blockers below.");
+    ImGui::TextUnformatted("EDIT: player + events paused. Edit blockers/events below.");
   } else {
     ImGui::TextUnformatted("Quest: ask foreman (cyan) for a rusty cog,");
     ImGui::TextUnformatted("loot scrap east of crates, return.");
@@ -467,6 +568,7 @@ void EditorApp::draw_ui() {
     app_mode_ = toggle_app_mode(app_mode_);
     refresh_mode_banner();
     sync_blockers_to_runtime();
+    sync_events_to_runtime();
   }
   if (!map_path_.empty() && ImGui::Button("Hot-apply map (F5, keep pos)")) {
     hot_apply_map_path(map_path_, true);
@@ -485,6 +587,7 @@ void EditorApp::draw_ui() {
   }
   if (app_mode_ == AppMode::Edit) {
     draw_blocker_edit_ui();
+    draw_event_edit_ui();
   }
   {
     int mode = 0;

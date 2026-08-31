@@ -100,6 +100,10 @@ void GreyboxScene::set_selected_blocker(int index) {
   selected_blocker_ = index;
 }
 
+void GreyboxScene::set_selected_event_marker(int index) {
+  selected_event_marker_ = index;
+}
+
 void GreyboxScene::rebuild_camera() {
   camera_ = build_ortho_camera(width_, height_, params_);
 
@@ -217,18 +221,22 @@ void GreyboxScene::draw(bgfx::ViewId view_id) {
 
   // Cyan pillars mark interactive events (NPC / scrap).
   const std::uint32_t event_color = 0xffe0c040;
-  for (const Vec3& m : event_markers_) {
+  const std::uint32_t selected_event_color = 0xff40ffff;
+  for (std::size_t i = 0; i < event_markers_.size(); ++i) {
+    const Vec3& m = event_markers_[i];
+    const std::uint32_t color =
+        (static_cast<int>(i) == selected_event_marker_) ? selected_event_color : event_color;
     const float h = 0.35f;
     const ColorVertex base[4] = {
-        {m.x - h, 0.06f, m.z - h, event_color},
-        {m.x + h, 0.06f, m.z - h, event_color},
-        {m.x + h, 0.06f, m.z + h, event_color},
-        {m.x - h, 0.06f, m.z + h, event_color},
+        {m.x - h, 0.06f, m.z - h, color},
+        {m.x + h, 0.06f, m.z - h, color},
+        {m.x + h, 0.06f, m.z + h, color},
+        {m.x - h, 0.06f, m.z + h, color},
     };
     submit_tris(base, 4, quad_indices, 6);
     const ColorVertex stem[2] = {
-        {m.x, 0.06f, m.z, 0xffffe080},
-        {m.x, 1.4f, m.z, 0xffffe080},
+        {m.x, 0.06f, m.z, color},
+        {m.x, 1.4f, m.z, color},
     };
     submit_lines(stem, 2);
   }

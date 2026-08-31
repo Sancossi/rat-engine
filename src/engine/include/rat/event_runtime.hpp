@@ -20,6 +20,7 @@ class EventRuntime {
  public:
   void load(MapData map);
   void set_blockers(std::vector<Aabb2> blockers);
+  void set_events(std::vector<EventDef> events);
   void clear();
 
   // One simulation step. `interact_pressed` is edge-ish: true on the frame interact is pressed.

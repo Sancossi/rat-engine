@@ -2,6 +2,7 @@ add_library(rat_core
   src/app_mode.cpp
   src/blocker_edit.cpp
   src/camera.cpp
+  src/event_edit.cpp
   src/event_runtime.cpp
   src/game_state.cpp
   src/hot_apply.cpp
