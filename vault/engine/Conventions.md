@@ -10,6 +10,7 @@ tags: [engine]
 - `main` — стабильная линия.
 - Feature branches: `feat/...`, `fix/...`, `chore/...`.
 - PR с кратким why; ссылка на задачу в vault (`vault/production/tasks/...`), если есть.
+- Агент коммитит зелёный срез на feature-branch сам; не копит несколько задач в одном неотправленном diff.
 
 ## Naming
 

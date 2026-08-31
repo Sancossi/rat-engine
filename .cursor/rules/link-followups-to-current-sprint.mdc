@@ -5,9 +5,16 @@ alwaysApply: true
 
 # Link follow-up work to its origin
 
-When implementation, review, testing, or acceptance reveals actionable follow-up
-work, create or update a vault task/bug for it. This applies to bugs, rework,
-polish, chores, research, and newly exposed requirements.
+When **implementation or testing** (also review/acceptance) exposes extra work,
+file it in the vault **before it stays only in chat**. This includes bugs,
+regressions, polish, chores, research, and newly discovered requirements.
+
+| Discovery | Destination |
+| --- | --- |
+| Broken behavior / regression | `vault/production/bugs/` (`type: bug`, `status: Open`) |
+| New/changed requirement or extra feature | `vault/production/tasks/` (`type: task`, `status: Not started`) |
+
+Then:
 
 1. Find the sprint note with `current: true`.
 2. Set the item's `sprint` frontmatter to that sprint's short label (`Sprint N`).
@@ -18,6 +25,9 @@ polish, chores, research, and newly exposed requirements.
    briefly identify the review, test, acceptance pass, or chat request.
 6. Deduplicate before creating; update existing links instead of cloning notes.
 
-Do not pull unrelated backlog ideas into the current sprint. This rule applies
-to work discovered from an item already being implemented in the current
-sprint. Respect an explicit user request not to create or schedule an item.
+Examples: height-mismatch test reveals a second event never fires → bug.
+Snapshot work needs a `why_not` field the card did not include → follow-up task.
+
+Do not pull unrelated backlog ideas into the current sprint. Skip only tiny
+edits inside the same open card ("rename this var") or an explicit
+"не заводи задачу".

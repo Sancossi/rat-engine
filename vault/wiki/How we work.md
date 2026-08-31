@@ -34,4 +34,11 @@ Knowledge and production live in the git vault (`vault/`). Open that folder as a
 
 ## Задачи и баги
 
-Новые идеи из чата агент кладёт в `vault/production/tasks/` или `vault/production/bugs/` (см. шаблоны в `vault/templates/` и Cursor rule capture-user-proposals). Дедуп — поиск по vault, не Notion.
+Новые идеи из чата агент кладёт в `vault/production/tasks/` или `vault/production/bugs/` (см. шаблоны в `vault/templates/` и Cursor rule capture-user-proposals). Дедуп — поиск по vault, не Notion. Доска задач в Obsidian: [[Task board]].
+
+Баг или новое требование, вскрывшиеся **во время реализации или тестов**, тоже становятся заметкой (не остаются только в чате), с `Origin` / `Follow-up` на исходную карточку и `sprint` текущего спринта.
+
+## Как агент исполняет работу
+
+- Спринт и пачки карточек — **сабагентами** (один implementer на задачу, затем review).
+- Готовый срез **коммитится сразу**, без ожидания «закоммить».
