@@ -39,6 +39,48 @@ TEST_CASE("unproject center pixel hits camera focus xz", "[unit][viewport_edit]"
   REQUIRE(hit->z == Approx(params.focus.z).margin(0.01f));
 }
 
+TEST_CASE("unproject off-center pixel follows top-down extents", "[unit][viewport_edit]") {
+  rat::OrthoCameraParams params;
+  params.focus = {3.0f, 0.0f, -2.0f};
+  params.mode = rat::CameraMode::TopDown;
+  const rat::OrthoCamera camera = rat::build_ortho_top_down(640, 480, params);
+
+  const float pixel_x = 400.0f;
+  const float pixel_y = 180.0f;
+  const auto hit = rat::unproject_to_ground_plane(camera, pixel_x, pixel_y, 640, 480);
+  REQUIRE(hit.has_value());
+
+  const float ndc_x = 2.0f * pixel_x / 640.0f - 1.0f;
+  const float ndc_y = 1.0f - 2.0f * pixel_y / 480.0f;
+  const float expected_x = params.focus.x + ndc_x * camera.half_width_world;
+  const float expected_z = params.focus.z - ndc_y * camera.half_height_world;
+  REQUIRE(hit->x == Approx(expected_x).margin(0.02f));
+  REQUIRE(hit->y == Approx(0.0f).margin(0.001f));
+  REQUIRE(hit->z == Approx(expected_z).margin(0.02f));
+}
+
+TEST_CASE("unproject tilt45 center pixel hits focus xz", "[unit][viewport_edit]") {
+  rat::OrthoCameraParams params;
+  params.focus = {5.0f, 0.0f, 7.0f};
+  const rat::OrthoCamera camera = rat::build_ortho_tilt45(800, 600, params);
+
+  const auto hit = rat::unproject_to_ground_plane(camera, 400.0f, 300.0f, 800, 600);
+  REQUIRE(hit.has_value());
+  REQUIRE(hit->x == Approx(params.focus.x).margin(0.05f));
+  REQUIRE(hit->z == Approx(params.focus.z).margin(0.05f));
+}
+
+TEST_CASE("unproject three-quarter center pixel hits focus xz", "[unit][viewport_edit]") {
+  rat::OrthoCameraParams params;
+  params.focus = {-4.0f, 0.0f, 6.0f};
+  const rat::OrthoCamera camera = rat::build_ortho_three_quarter(800, 600, params);
+
+  const auto hit = rat::unproject_to_ground_plane(camera, 400.0f, 300.0f, 800, 600);
+  REQUIRE(hit.has_value());
+  REQUIRE(hit->x == Approx(params.focus.x).margin(0.10f));
+  REQUIRE(hit->z == Approx(params.focus.z).margin(0.10f));
+}
+
 TEST_CASE("pick returns nearest and prefers blocker on tie", "[unit][viewport_edit]") {
   rat::MapData map = make_test_map();
   map.blockers.push_back(make_blocker(0.0f, 0.0f, 1.0f, 1.0f));

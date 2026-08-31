@@ -50,3 +50,14 @@
 
 ## Concerns
 - `unproject_to_ground_plane` includes a documented Z-sign normalization step (`-world_z`) to match map tile-space convention observed in this codebase/tests. No failing tests remain, but this convention should stay consistent if camera matrix conventions change later.
+
+## Task 25 follow-up: unproject Z fix
+- Added TDD coverage in `tests/viewport_edit_test.cpp`:
+  - off-center top-down pixel expects world XZ from ortho extents,
+  - Tilt45 center pixel hits `params.focus` XZ,
+  - ThreeQuarter center pixel hits `params.focus` XZ (looser margin).
+- Reworked `unproject_to_ground_plane` in `src/engine/src/viewport_edit.cpp` to derive ray origin/direction from `camera.view` basis + `camera.proj` extents; removed unconditional `-world_z`.
+- Added in-code derivation comment for recovering `eye` from `look_at` translation terms.
+- Verification:
+  - `build/tests/rat_tests.exe "[viewport_edit]"` → pass (`22 assertions`, `7 test cases`).
+  - `build/tests/rat_tests.exe` → pass (`2183 assertions`, `275 test cases`).
