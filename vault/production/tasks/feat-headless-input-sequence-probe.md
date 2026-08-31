@@ -16,8 +16,10 @@ Acceptance: helper/CLI: последовательность входов → к
 
 ## Resolution
 
-`run_input_sequence` в `rat_core` (`rat/input_sequence.hpp`): N шагов 120 Hz, `InputFrame`, без GLFW. Опционально snapshot на шаг. Catch2 `[probe]` на `grey_yard` (сначала снять autorun intro). CLI не делали (YAGNI).
+`run_input_sequence` в `rat_core` (`rat/input_sequence.hpp`): N шагов 120 Hz, `InputFrame`, без GLFW. Опционально snapshot на шаг. Catch2 `[probe]` на `grey_yard` (сначала снять autorun intro). CLI не делали (YAGNI). Ревью: Approved.
+
+Follow-up: [[chore: input sequence probe review polish]]
 
 ## Bugs found
 
-none.
+none (продуктовых). Minor ревью: тихий IO snapshot, Edit без snap-to-ground, общий temp теста — см. follow-up.
