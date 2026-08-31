@@ -96,6 +96,10 @@ void GreyboxScene::set_event_markers(std::span<const Vec3> markers) {
   event_markers_.assign(markers.begin(), markers.end());
 }
 
+void GreyboxScene::set_selected_blocker(int index) {
+  selected_blocker_ = index;
+}
+
 void GreyboxScene::rebuild_camera() {
   camera_ = build_ortho_camera(width_, height_, params_);
 
@@ -197,12 +201,16 @@ void GreyboxScene::draw(bgfx::ViewId view_id) {
 
   const std::uint16_t quad_indices[6] = {0, 1, 2, 0, 2, 3};
   const std::uint32_t blocker_color = 0xff554080;
-  for (const Aabb2& b : blockers_) {
+  const std::uint32_t selected_blocker_color = 0xff40c0ff;
+  for (std::size_t i = 0; i < blockers_.size(); ++i) {
+    const Aabb2& b = blockers_[i];
+    const std::uint32_t color =
+        (static_cast<int>(i) == selected_blocker_) ? selected_blocker_color : blocker_color;
     const ColorVertex verts[4] = {
-        {b.min_x, 0.04f, b.min_z, blocker_color},
-        {b.max_x, 0.04f, b.min_z, blocker_color},
-        {b.max_x, 0.04f, b.max_z, blocker_color},
-        {b.min_x, 0.04f, b.max_z, blocker_color},
+        {b.min_x, 0.04f, b.min_z, color},
+        {b.max_x, 0.04f, b.min_z, color},
+        {b.max_x, 0.04f, b.max_z, color},
+        {b.min_x, 0.04f, b.max_z, color},
     };
     submit_tris(verts, 4, quad_indices, 6);
   }

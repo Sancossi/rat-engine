@@ -31,6 +31,8 @@ class EditorApp {
   void draw_ui();
   void refresh_mode_banner();
   bool hot_apply_map_path(const std::string& path, bool preserve_player);
+  void sync_blockers_to_runtime();
+  void draw_blocker_edit_ui();
 
   static void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 
@@ -42,6 +44,8 @@ class EditorApp {
   AppMode app_mode_ = AppMode::Play;
   std::string map_path_;
   std::string last_apply_error_;
+  std::string last_serialize_status_;
+  int selected_blocker_ = -1;
   int width_ = 1280;
   int height_ = 720;
   bool running_ = false;

@@ -248,4 +248,164 @@ MapLoadResult load_map_from_file(const std::string& path) {
   return load_map_from_string(oss.str());
 }
 
+namespace {
+
+using json = nlohmann::json;
+
+const char* trigger_to_string(TriggerKind trigger) {
+  switch (trigger) {
+    case TriggerKind::Action:
+      return "action";
+    case TriggerKind::PlayerTouch:
+      return "player_touch";
+    case TriggerKind::EventTouch:
+      return "event_touch";
+    case TriggerKind::Autorun:
+      return "autorun";
+    case TriggerKind::Parallel:
+      return "parallel";
+  }
+  return "action";
+}
+
+const char* compare_op_to_string(CompareOp op) {
+  switch (op) {
+    case CompareOp::Eq:
+      return "==";
+    case CompareOp::Ne:
+      return "!=";
+    case CompareOp::Lt:
+      return "<";
+    case CompareOp::Le:
+      return "<=";
+    case CompareOp::Gt:
+      return ">";
+    case CompareOp::Ge:
+      return ">=";
+  }
+  return "==";
+}
+
+json dump_aabb(const Aabb2& box) {
+  return json{{"min_x", box.min_x}, {"min_z", box.min_z}, {"max_x", box.max_x}, {"max_z", box.max_z}};
+}
+
+json dump_condition(const Condition& condition) {
+  switch (condition.type) {
+    case ConditionType::Switch:
+      return json{{"type", "switch"}, {"id", condition.id}, {"value", condition.bool_value}};
+    case ConditionType::Variable:
+      return json{{"type", "variable"},
+                  {"id", condition.id},
+                  {"op", compare_op_to_string(condition.op)},
+                  {"value", condition.int_value}};
+    case ConditionType::Item:
+      return json{{"type", "item"}, {"id", condition.string_id}, {"quantity", condition.int_value}};
+    case ConditionType::SelfSwitch:
+      return json{{"type", "self_switch"},
+                  {"key", std::string(1, condition.self_switch)},
+                  {"value", condition.bool_value}};
+  }
+  return json{{"type", "switch"}, {"id", 0}, {"value", false}};
+}
+
+json dump_commands(const std::vector<Command>& commands);
+
+json dump_command(const Command& command) {
+  switch (command.op) {
+    case CommandOp::ShowText:
+      return json{{"op", "show_text"}, {"text", command.text}};
+    case CommandOp::ControlSwitch:
+      return json{{"op", "control_switch"}, {"id", command.id}, {"value", command.bool_value}};
+    case CommandOp::ControlVariable:
+      return json{{"op", "control_variable"}, {"id", command.id}, {"value", command.int_value}};
+    case CommandOp::ConditionalBranch: {
+      json node{{"op", "conditional_branch"},
+                {"condition", dump_condition(command.branch_condition)},
+                {"then", dump_commands(command.then_commands)}};
+      if (!command.else_commands.empty()) {
+        node["else"] = dump_commands(command.else_commands);
+      }
+      return node;
+    }
+    case CommandOp::Wait:
+      return json{{"op", "wait"}, {"frames", command.frames}};
+    case CommandOp::TransferPlayer:
+      return json{{"op", "transfer_player"},
+                  {"map_id", command.map_id},
+                  {"x", command.x},
+                  {"y", command.y},
+                  {"z", command.z}};
+    case CommandOp::ChangeItems:
+      return json{{"op", "change_items"},
+                  {"id", command.item_id},
+                  {"delta", command.item_delta},
+                  {"key_item", command.key_item}};
+    case CommandOp::Comment:
+      return json{{"op", "comment"}, {"text", command.text}};
+  }
+  return json{{"op", "comment"}, {"text", ""}};
+}
+
+json dump_commands(const std::vector<Command>& commands) {
+  json arr = json::array();
+  for (const Command& command : commands) {
+    arr.push_back(dump_command(command));
+  }
+  return arr;
+}
+
+json dump_page(const EventPage& page) {
+  json node{{"trigger", trigger_to_string(page.trigger)},
+            {"conditions", json::array()},
+            {"commands", dump_commands(page.commands)}};
+  for (const Condition& condition : page.conditions) {
+    node["conditions"].push_back(dump_condition(condition));
+  }
+  return node;
+}
+
+json dump_event(const EventDef& event) {
+  json node{{"id", event.id}, {"pages", json::array()}};
+  if (event.tile.has_value()) {
+    node["tile"] = json{{"x", event.tile->x}, {"z", event.tile->z}};
+  }
+  if (event.volume.has_value()) {
+    node["volume"] = dump_aabb(*event.volume);
+  }
+  for (const EventPage& page : event.pages) {
+    node["pages"].push_back(dump_page(page));
+  }
+  return node;
+}
+
+}  // namespace
+
+MapSerializeResult serialize_map_to_string(const MapData& map) {
+  try {
+    json root{{"schema_version", map.schema_version},
+              {"id", map.id},
+              {"width", map.width},
+              {"height", map.height},
+              {"tile_size", map.tile_size},
+              {"blockers", json::array()},
+              {"events", json::array()}};
+    for (const Aabb2& blocker : map.blockers) {
+      root["blockers"].push_back(dump_aabb(blocker));
+    }
+    for (const EventDef& event : map.events) {
+      root["events"].push_back(dump_event(event));
+    }
+    MapSerializeResult result;
+    result.ok = true;
+    result.json_text = root.dump(2);
+    return result;
+  } catch (const std::exception& ex) {
+    MapSerializeResult result;
+    result.ok = false;
+    result.error = ex.what();
+    return result;
+  }
+}
+
 }  // namespace rat

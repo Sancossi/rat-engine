@@ -31,6 +31,10 @@ void EventRuntime::load(MapData map) {
   map_ = std::move(map);
 }
 
+void EventRuntime::set_blockers(std::vector<Aabb2> blockers) {
+  map_.blockers = std::move(blockers);
+}
+
 void EventRuntime::clear() {
   map_ = {};
   foreground_.reset();

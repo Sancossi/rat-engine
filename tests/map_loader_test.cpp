@@ -1,5 +1,7 @@
+#include <rat/blocker_edit.hpp>
 #include <rat/map_loader.hpp>
 
+#include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
 
 #include <fstream>
@@ -95,4 +97,28 @@ TEST_CASE("Example grey_yard.json loads without crash", "[unit][map]") {
   const auto from_string = rat::load_map_from_string(read_file(path));
   REQUIRE(from_string.ok);
   REQUIRE(from_string.map.events.size() == result.map.events.size());
+}
+
+TEST_CASE("Serialize map roundtrips blockers after edit", "[unit][map]") {
+  constexpr const char* kJson = R"({
+    "schema_version": 1,
+    "id": "mini",
+    "width": 4,
+    "height": 4,
+    "tile_size": 1.0,
+    "blockers": [{"min_x": 0, "min_z": 0, "max_x": 1, "max_z": 1}],
+    "events": []
+  })";
+  auto loaded = rat::load_map_from_string(kJson);
+  REQUIRE(loaded.ok);
+  loaded.map.blockers[0] = rat::translate_aabb_on_grid(loaded.map.blockers[0], 2, 0, 1.0f);
+
+  const auto serialized = rat::serialize_map_to_string(loaded.map);
+  REQUIRE(serialized.ok);
+
+  const auto again = rat::load_map_from_string(serialized.json_text);
+  REQUIRE(again.ok);
+  REQUIRE(again.map.blockers.size() == 1);
+  REQUIRE(again.map.blockers[0].min_x == Catch::Approx(2.0f));
+  REQUIRE(again.map.blockers[0].max_x == Catch::Approx(3.0f));
 }

@@ -2,8 +2,10 @@
 
 #include "imgui_bgfx.hpp"
 
+#include <rat/blocker_edit.hpp>
 #include <rat/engine.hpp>
 #include <rat/hot_apply.hpp>
+#include <rat/map_loader.hpp>
 
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
@@ -20,6 +22,117 @@ namespace rat {
 
 EditorApp::~EditorApp() {
   shutdown();
+}
+
+void EditorApp::sync_blockers_to_runtime() {
+  if (engine_ == nullptr) {
+    return;
+  }
+  engine_->set_blockers(events_.map().blockers);
+  engine_->greybox().set_selected_blocker(app_mode_ == AppMode::Edit ? selected_blocker_ : -1);
+}
+
+void EditorApp::draw_blocker_edit_ui() {
+  ImGui::Separator();
+  ImGui::TextUnformatted("Blockers (Edit)");
+  const float tile = events_.map().tile_size > 0.0f ? events_.map().tile_size : 1.0f;
+  auto blockers = events_.map().blockers;
+
+  if (ImGui::Button("Add blocker")) {
+    blockers.push_back(Aabb2{0.0f, 0.0f, tile, tile});
+    selected_blocker_ = static_cast<int>(blockers.size()) - 1;
+    events_.set_blockers(blockers);
+    sync_blockers_to_runtime();
+    blockers = events_.map().blockers;
+  }
+  ImGui::SameLine();
+  if (ImGui::Button("Delete selected") && selected_blocker_ >= 0 &&
+      selected_blocker_ < static_cast<int>(blockers.size())) {
+    blockers.erase(blockers.begin() + selected_blocker_);
+    if (blockers.empty()) {
+      selected_blocker_ = -1;
+    } else if (selected_blocker_ >= static_cast<int>(blockers.size())) {
+      selected_blocker_ = static_cast<int>(blockers.size()) - 1;
+    }
+    events_.set_blockers(blockers);
+    sync_blockers_to_runtime();
+    blockers = events_.map().blockers;
+  }
+
+  if (ImGui::BeginListBox("##blockers", ImVec2(-1.0f, 100.0f))) {
+    for (int i = 0; i < static_cast<int>(blockers.size()); ++i) {
+      const auto& b = blockers[static_cast<std::size_t>(i)];
+      char label[128];
+      std::snprintf(label, sizeof(label), "%d: (%.0f,%.0f)-(%.0f,%.0f)", i, b.min_x, b.min_z,
+                    b.max_x, b.max_z);
+      if (ImGui::Selectable(label, selected_blocker_ == i)) {
+        selected_blocker_ = i;
+        sync_blockers_to_runtime();
+      }
+    }
+    ImGui::EndListBox();
+  }
+
+  if (selected_blocker_ >= 0 && selected_blocker_ < static_cast<int>(blockers.size())) {
+    Aabb2& box = blockers[static_cast<std::size_t>(selected_blocker_)];
+    ImGui::Text("Selected %d", selected_blocker_);
+    auto apply_box = [&](Aabb2 next) {
+      blockers[static_cast<std::size_t>(selected_blocker_)] = next;
+      events_.set_blockers(blockers);
+      sync_blockers_to_runtime();
+      blockers = events_.map().blockers;
+    };
+
+    if (ImGui::Button("-X")) {
+      apply_box(translate_aabb_on_grid(box, -1, 0, tile));
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("+X")) {
+      apply_box(translate_aabb_on_grid(box, 1, 0, tile));
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("-Z")) {
+      apply_box(translate_aabb_on_grid(box, 0, -1, tile));
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("+Z")) {
+      apply_box(translate_aabb_on_grid(box, 0, 1, tile));
+    }
+
+    if (ImGui::Button("Grow +X")) {
+      apply_box(resize_aabb_on_grid(box, AabbEdge::MaxX, 1, tile));
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Shrink +X")) {
+      apply_box(resize_aabb_on_grid(box, AabbEdge::MaxX, -1, tile));
+    }
+    if (ImGui::Button("Grow +Z")) {
+      apply_box(resize_aabb_on_grid(box, AabbEdge::MaxZ, 1, tile));
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Shrink +Z")) {
+      apply_box(resize_aabb_on_grid(box, AabbEdge::MaxZ, -1, tile));
+    }
+    if (ImGui::Button("Snap to grid")) {
+      apply_box(snap_aabb_to_grid(box, tile));
+    }
+  }
+
+  if (ImGui::Button("Serialize map JSON (memory check)")) {
+    const auto serialized = serialize_map_to_string(events_.map());
+    if (serialized.ok) {
+      last_serialize_status_ =
+          "OK (" + std::to_string(serialized.json_text.size()) + " bytes, blockers=" +
+          std::to_string(events_.map().blockers.size()) + ")";
+      last_apply_error_.clear();
+    } else {
+      last_serialize_status_.clear();
+      last_apply_error_ = serialized.error;
+    }
+  }
+  if (!last_serialize_status_.empty()) {
+    ImGui::TextWrapped("%s", last_serialize_status_.c_str());
+  }
 }
 
 bool EditorApp::hot_apply_map_path(const std::string& path, bool preserve_player) {
@@ -43,9 +156,11 @@ bool EditorApp::hot_apply_map_path(const std::string& path, bool preserve_player
 
   last_apply_error_.clear();
   map_path_ = path;
+  selected_blocker_ = blockers.empty() ? -1 : 0;
   engine_->set_blockers(std::move(blockers));
   engine_->set_event_markers(std::move(markers));
   engine_->set_player(player_);
+  engine_->greybox().set_selected_blocker(app_mode_ == AppMode::Edit ? selected_blocker_ : -1);
   return true;
 }
 
@@ -221,6 +336,7 @@ void EditorApp::update_simulation(float dt) {
   if (mode_down && !mode_toggle_was_down_ && !events_.active_message().has_value()) {
     app_mode_ = toggle_app_mode(app_mode_);
     refresh_mode_banner();
+    sync_blockers_to_runtime();
   }
   mode_toggle_was_down_ = mode_down;
 
@@ -341,7 +457,7 @@ void EditorApp::draw_ui() {
   ImGui::Begin("Inspector");
   ImGui::Text("App mode: %s", app_mode_name(app_mode_));
   if (app_mode_ == AppMode::Edit) {
-    ImGui::TextUnformatted("EDIT: player + events paused. Gizmos next.");
+    ImGui::TextUnformatted("EDIT: player + events paused. Edit blockers below.");
   } else {
     ImGui::TextUnformatted("Quest: ask foreman (cyan) for a rusty cog,");
     ImGui::TextUnformatted("loot scrap east of crates, return.");
@@ -350,6 +466,7 @@ void EditorApp::draw_ui() {
   if (ImGui::Button(app_mode_ == AppMode::Play ? "Enter Edit (F2)" : "Enter Play (F2)")) {
     app_mode_ = toggle_app_mode(app_mode_);
     refresh_mode_banner();
+    sync_blockers_to_runtime();
   }
   if (!map_path_.empty() && ImGui::Button("Hot-apply map (F5, keep pos)")) {
     hot_apply_map_path(map_path_, true);
@@ -365,6 +482,9 @@ void EditorApp::draw_ui() {
   if (!last_apply_error_.empty()) {
     ImGui::TextColored(ImVec4(1.0f, 0.35f, 0.35f, 1.0f), "Apply error: %s",
                        last_apply_error_.c_str());
+  }
+  if (app_mode_ == AppMode::Edit) {
+    draw_blocker_edit_ui();
   }
   {
     int mode = 0;

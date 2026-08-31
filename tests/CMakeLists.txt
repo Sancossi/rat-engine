@@ -1,5 +1,6 @@
 add_executable(rat_tests
   app_mode_test.cpp
+  blocker_edit_test.cpp
   camera_test.cpp
   event_runtime_test.cpp
   game_state_test.cpp

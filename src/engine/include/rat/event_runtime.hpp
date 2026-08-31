@@ -19,6 +19,7 @@ inline constexpr int kMaxParallelCommandsPerFrame = 32;
 class EventRuntime {
  public:
   void load(MapData map);
+  void set_blockers(std::vector<Aabb2> blockers);
   void clear();
 
   // One simulation step. `interact_pressed` is edge-ish: true on the frame interact is pressed.
