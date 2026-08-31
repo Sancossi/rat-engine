@@ -1,6 +1,7 @@
 #pragma once
 
 #include "rat/greybox.hpp"
+#include "rat/map_data.hpp"
 #include "rat/player.hpp"
 #include "rat/renderer.hpp"
 
@@ -28,10 +29,11 @@ class Engine {
   void frame();
 
   void set_player(const PlayerBody& player);
-  void set_blockers(std::vector<Aabb2> blockers);
+  void set_blockers(std::vector<BlockerDef> blockers);
   void set_event_markers(std::vector<Vec3> markers);
+  void set_terrain_map(const MapData& map);
   [[nodiscard]] const PlayerBody& player() const { return player_; }
-  [[nodiscard]] const std::vector<Aabb2>& blockers() const { return blockers_; }
+  [[nodiscard]] const std::vector<BlockerDef>& blockers() const { return blockers_; }
 
   [[nodiscard]] bool is_initialized() const { return initialized_; }
   [[nodiscard]] GreyboxScene& greybox() { return greybox_; }
@@ -43,7 +45,8 @@ class Engine {
   Renderer renderer_;
   GreyboxScene greybox_;
   PlayerBody player_{};
-  std::vector<Aabb2> blockers_;
+  std::vector<BlockerDef> blockers_;
+  MapData terrain_map_{};
   bool initialized_ = false;
   std::string debug_banner_{"rat-engine"};
 };

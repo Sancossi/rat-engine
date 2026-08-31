@@ -1,0 +1,23 @@
+---
+description: Routes discovered follow-up work into the current sprint and links it to its origin
+alwaysApply: true
+---
+
+# Link follow-up work to its origin
+
+When implementation, review, testing, or acceptance reveals actionable follow-up
+work, create or update a vault task/bug for it. This applies to bugs, rework,
+polish, chores, research, and newly exposed requirements.
+
+1. Find the sprint note with `current: true`.
+2. Set the item's `sprint` frontmatter to that sprint's short label (`Sprint N`).
+3. Add `Origin: [[source task or bug]]` to the new item's body.
+4. Add `Follow-up: [[new item]]` to the source item's body so navigation is
+   bidirectional.
+5. If there is no source item, link `Origin` to the current sprint note and
+   briefly identify the review, test, acceptance pass, or chat request.
+6. Deduplicate before creating; update existing links instead of cloning notes.
+
+Do not pull unrelated backlog ideas into the current sprint. This rule applies
+to work discovered from an item already being implemented in the current
+sprint. Respect an explicit user request not to create or schedule an item.

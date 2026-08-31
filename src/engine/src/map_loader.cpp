@@ -2,6 +2,7 @@
 
 #include <nlohmann/json.hpp>
 
+#include <cstddef>
 #include <fstream>
 #include <sstream>
 #include <stdexcept>
@@ -57,6 +58,22 @@ TriggerKind parse_trigger(const std::string& value) {
     return TriggerKind::Parallel;
   }
   throw std::runtime_error("unknown trigger: " + value);
+}
+
+RampDirection parse_ramp_direction(const std::string& value) {
+  if (value == "north") {
+    return RampDirection::North;
+  }
+  if (value == "east") {
+    return RampDirection::East;
+  }
+  if (value == "south") {
+    return RampDirection::South;
+  }
+  if (value == "west") {
+    return RampDirection::West;
+  }
+  throw std::runtime_error("unknown ramp direction: " + value);
 }
 
 Condition parse_condition(const json& node) {
@@ -167,6 +184,37 @@ Aabb2 parse_aabb(const json& node) {
   };
 }
 
+BlockerDef parse_blocker(const json& node) {
+  BlockerDef blocker;
+  blocker.bounds = parse_aabb(node);
+
+  const bool has_base_y = node.contains("base_y");
+  const bool has_top_y = node.contains("top_y");
+  const bool has_jumpable = node.contains("jumpable");
+
+  if (has_base_y) {
+    blocker.base_y = node.at("base_y").get<float>();
+  }
+  if (has_top_y) {
+    blocker.top_y = node.at("top_y").get<float>();
+  }
+  if (has_jumpable) {
+    blocker.jumpable = node.at("jumpable").get<bool>();
+  }
+
+  if (has_base_y != has_top_y) {
+    throw std::runtime_error("blocker vertical fields require base_y and top_y pair");
+  }
+  if (blocker.jumpable && !has_base_y) {
+    throw std::runtime_error("jumpable blocker requires base_y and top_y");
+  }
+  if (has_base_y && has_top_y && *blocker.top_y < *blocker.base_y) {
+    throw std::runtime_error("blocker top_y must be >= base_y");
+  }
+
+  return blocker;
+}
+
 EventPage parse_page(const json& node) {
   EventPage page;
   page.trigger = parse_trigger(node.at("trigger").get<std::string>());
@@ -206,8 +254,8 @@ EventDef parse_event(const json& node) {
 MapData parse_map(const json& root) {
   MapData map;
   map.schema_version = root.at("schema_version").get<int>();
-  if (map.schema_version != 1) {
-    throw std::runtime_error("unsupported schema_version (expected 1)");
+  if (map.schema_version != 1 && map.schema_version != 2) {
+    throw std::runtime_error("unsupported schema_version (expected 1 or 2)");
   }
   map.id = root.at("id").get<std::string>();
   map.width = root.at("width").get<int>();
@@ -219,9 +267,44 @@ MapData parse_map(const json& root) {
   if (map.width <= 0 || map.height <= 0) {
     throw std::runtime_error("map width/height must be > 0");
   }
+  if (map.schema_version == 1) {
+    map.height_grid.origin_x = 0;
+    map.height_grid.origin_z = 0;
+    map.height_grid.width = map.width;
+    map.height_grid.height = map.height;
+    map.height_grid.ground_y.assign(static_cast<std::size_t>(map.width) * map.height, 0.0f);
+  } else {
+    if (!root.contains("height_grid") || !root.at("height_grid").is_object()) {
+      throw std::runtime_error("schema v2 requires height_grid object");
+    }
+    const auto& grid = root.at("height_grid");
+    map.height_grid.origin_x = grid.at("origin_x").get<int>();
+    map.height_grid.origin_z = grid.at("origin_z").get<int>();
+    map.height_grid.width = grid.at("width").get<int>();
+    map.height_grid.height = grid.at("height").get<int>();
+    if (map.height_grid.width <= 0 || map.height_grid.height <= 0) {
+      throw std::runtime_error("height_grid width/height must be > 0");
+    }
+    map.height_grid.ground_y = grid.at("ground_y").get<std::vector<float>>();
+    const std::size_t expected = static_cast<std::size_t>(map.height_grid.width) * map.height_grid.height;
+    if (map.height_grid.ground_y.size() != expected) {
+      throw std::runtime_error("height_grid ground_y length mismatch");
+    }
+    if (root.contains("ramps")) {
+      for (const auto& ramp : root.at("ramps")) {
+        RampDef out;
+        const auto& tile = ramp.at("tile");
+        out.tile = TileCoord{tile.at("x").get<int>(), tile.at("z").get<int>()};
+        out.direction = parse_ramp_direction(ramp.at("direction").get<std::string>());
+        out.low_y = ramp.at("low_y").get<float>();
+        out.high_y = ramp.at("high_y").get<float>();
+        map.ramps.push_back(out);
+      }
+    }
+  }
   if (root.contains("blockers")) {
     for (const auto& blocker : root.at("blockers")) {
-      map.blockers.push_back(parse_aabb(blocker));
+      map.blockers.push_back(parse_blocker(blocker));
     }
   }
   if (root.contains("events")) {
@@ -294,8 +377,36 @@ const char* compare_op_to_string(CompareOp op) {
   return "==";
 }
 
+const char* ramp_direction_to_string(RampDirection dir) {
+  switch (dir) {
+    case RampDirection::North:
+      return "north";
+    case RampDirection::East:
+      return "east";
+    case RampDirection::South:
+      return "south";
+    case RampDirection::West:
+      return "west";
+  }
+  return "north";
+}
+
 json dump_aabb(const Aabb2& box) {
   return json{{"min_x", box.min_x}, {"min_z", box.min_z}, {"max_x", box.max_x}, {"max_z", box.max_z}};
+}
+
+json dump_blocker(const BlockerDef& blocker) {
+  json node = dump_aabb(blocker.bounds);
+  if (blocker.base_y.has_value() || blocker.top_y.has_value() || blocker.jumpable) {
+    if (blocker.base_y.has_value()) {
+      node["base_y"] = *blocker.base_y;
+    }
+    if (blocker.top_y.has_value()) {
+      node["top_y"] = *blocker.top_y;
+    }
+    node["jumpable"] = blocker.jumpable;
+  }
+  return node;
 }
 
 json dump_condition(const Condition& condition) {
@@ -402,8 +513,22 @@ MapSerializeResult serialize_map_to_string(const MapData& map) {
               {"tile_size", map.tile_size},
               {"blockers", json::array()},
               {"events", json::array()}};
-    for (const Aabb2& blocker : map.blockers) {
-      root["blockers"].push_back(dump_aabb(blocker));
+    if (map.schema_version == 2) {
+      root["height_grid"] = json{{"origin_x", map.height_grid.origin_x},
+                                 {"origin_z", map.height_grid.origin_z},
+                                 {"width", map.height_grid.width},
+                                 {"height", map.height_grid.height},
+                                 {"ground_y", map.height_grid.ground_y}};
+      root["ramps"] = json::array();
+      for (const RampDef& ramp : map.ramps) {
+        root["ramps"].push_back(json{{"tile", {{"x", ramp.tile.x}, {"z", ramp.tile.z}}},
+                                      {"direction", ramp_direction_to_string(ramp.direction)},
+                                      {"low_y", ramp.low_y},
+                                      {"high_y", ramp.high_y}});
+      }
+    }
+    for (const BlockerDef& blocker : map.blockers) {
+      root["blockers"].push_back(dump_blocker(blocker));
     }
     for (const EventDef& event : map.events) {
       root["events"].push_back(dump_event(event));

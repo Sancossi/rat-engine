@@ -11,3 +11,10 @@ compile_commands.json
 .DS_Store
 
 aqtinstall.log
+
+# Obsidian: commit vault notes + app config; keep local UI state out of git
+vault/.obsidian/workspace.json
+vault/.obsidian/workspace-mobile.json
+vault/.obsidian/graph.json
+vault/.obsidian/cache/
+vault/.obsidian/plugins/dataview/

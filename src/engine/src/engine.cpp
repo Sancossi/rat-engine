@@ -25,7 +25,7 @@ bool Engine::init(const RendererConfig& config) {
   greybox_.resize(config.width, config.height);
 
   // Sample blocker so collision is visible in the editor immediately.
-  blockers_ = {Aabb2{3.0f, -1.0f, 5.0f, 1.0f}};
+  blockers_ = {BlockerDef{.bounds = Aabb2{3.0f, -1.0f, 5.0f, 1.0f}}};
   player_ = {};
   greybox_.set_player(player_);
   greybox_.set_blockers(blockers_);
@@ -53,13 +53,18 @@ void Engine::set_player(const PlayerBody& player) {
   greybox_.set_player(player_);
 }
 
-void Engine::set_blockers(std::vector<Aabb2> blockers) {
+void Engine::set_blockers(std::vector<BlockerDef> blockers) {
   blockers_ = std::move(blockers);
   greybox_.set_blockers(blockers_);
 }
 
 void Engine::set_event_markers(std::vector<Vec3> markers) {
   greybox_.set_event_markers(markers);
+}
+
+void Engine::set_terrain_map(const MapData& map) {
+  terrain_map_ = map;
+  greybox_.set_terrain_map(terrain_map_);
 }
 
 void Engine::begin_frame() {
@@ -75,7 +80,7 @@ void Engine::begin_frame() {
   bgfx::dbgTextPrintf(1, 1, 0x0f, "%s", debug_banner_.c_str());
   bgfx::dbgTextPrintf(1, 3, 0x0a, "%s  scale=%d  WASD | C camera | F2 mode",
                       camera_mode_name(cam.mode), cam.pixel_scale);
-  bgfx::dbgTextPrintf(1, 4, 0x0b, "player (%.2f, %.2f)", player_.x, player_.z);
+  bgfx::dbgTextPrintf(1, 4, 0x0b, "player (%.2f, %.2f, %.2f)", player_.x, player_.y, player_.z);
 }
 
 void Engine::end_frame() {

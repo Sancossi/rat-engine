@@ -13,6 +13,7 @@ Game engine bootstrap: **bgfx** renderer + **GLFW** window + **Dear ImGui** mini
 | `tests` | Catch2 unit + headless mechanics tests |
 | `cmake/Dependencies.cmake` | FetchContent: bgfx.cmake, GLFW, ImGui, Catch2, nlohmann/json |
 | `docs/superpowers/specs/` | Design notes |
+| `vault/` | Obsidian hub: wiki, GDD, tasks, bugs, ADR (open this folder as a vault) |
 
 ## Prerequisites (Windows)
 
@@ -57,6 +58,14 @@ ctest --test-dir build --output-on-failure
 - **Unit:** `GameState` and future pure logic (no GLFW/bgfx).  
 - **Mechanics:** headless event/quest scenarios (stub ready; fill with Event runtime v1).  
 - Disable with `-DRAT_BUILD_TESTS=OFF`.
+
+## Knowledge vault (Obsidian)
+
+Product wiki, GDD, sprints, tasks, bugs, and ADRs live in **`vault/`** (git). Engineering schemas and implementation specs stay in `docs/`.
+
+In Obsidian: **File → Open folder as vault** and choose the `vault` directory (not the repo root). Optional community plugin: Dataview (listed in `vault/.obsidian/community-plugins.json`; install from Obsidian if you want table views). The agent reads/writes markdown + YAML and does not need the app.
+
+Do not treat Notion as the source of truth for this project.
 
 ## Notes
 

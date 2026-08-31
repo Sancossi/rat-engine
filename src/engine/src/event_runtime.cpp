@@ -8,6 +8,9 @@
 namespace rat {
 namespace {
 
+constexpr float kEventHeightToleranceTiles = 0.35f;
+constexpr float kPlayerBelowGroundEpsilon = 1e-4f;
+
 bool compare(int left, CompareOp op, int right) {
   switch (op) {
     case CompareOp::Eq:
@@ -31,9 +34,10 @@ bool compare(int left, CompareOp op, int right) {
 void EventRuntime::load(MapData map) {
   clear();
   map_ = std::move(map);
+  surface_query_ = std::make_unique<SurfaceQuery>(map_);
 }
 
-void EventRuntime::set_blockers(std::vector<Aabb2> blockers) {
+void EventRuntime::set_blockers(std::vector<BlockerDef> blockers) {
   map_.blockers = std::move(blockers);
 }
 
@@ -62,6 +66,7 @@ void EventRuntime::clear() {
   active_parallel_count_ = 0;
   last_parallel_commands_executed_ = 0;
   warnings_.clear();
+  surface_query_.reset();
 }
 
 bool EventRuntime::player_input_blocked() const {
@@ -150,8 +155,48 @@ Aabb2 EventRuntime::event_bounds(const EventDef& event) const {
   return Aabb2{0, 0, 0, 0};
 }
 
+SurfaceSample EventRuntime::event_surface_sample(const EventDef& event) const {
+  SurfaceSample sample;
+  if (!surface_query_) {
+    return sample;
+  }
+  Vec3 center{};
+  if (event.tile.has_value()) {
+    center = tile_center_world(*event.tile, map_.tile_size);
+  } else if (event.volume.has_value()) {
+    center.x = (event.volume->min_x + event.volume->max_x) * 0.5f;
+    center.z = (event.volume->min_z + event.volume->max_z) * 0.5f;
+  } else {
+    return sample;
+  }
+  return surface_query_->sample(center.x, center.z);
+}
+
+bool EventRuntime::event_height_matches_player(const EventDef& event, const PlayerBody& player) const {
+  if (!surface_query_) {
+    return true;
+  }
+  const float tile = map_.tile_size > 0.0f ? map_.tile_size : 1.0f;
+  const float tolerance = kEventHeightToleranceTiles * tile;
+  const SurfaceSample player_surface = surface_query_->sample(player.x, player.z);
+  const SurfaceSample event_surface = event_surface_sample(event);
+  if (player_surface.surface_id != event_surface.surface_id) {
+    return false;
+  }
+  if (player.y + kPlayerBelowGroundEpsilon < player_surface.y) {
+    return false;
+  }
+  if (player_surface.on_ramp || event_surface.on_ramp) {
+    return true;
+  }
+  return std::abs(player_surface.y - event_surface.y) <= tolerance;
+}
+
 bool EventRuntime::player_overlaps(const EventDef& event, const PlayerBody& player) const {
   if (!event.volume.has_value() && !event.tile.has_value()) {
+    return false;
+  }
+  if (!event_height_matches_player(event, player)) {
     return false;
   }
   const Aabb2 box = event_bounds(event);
@@ -161,6 +206,9 @@ bool EventRuntime::player_overlaps(const EventDef& event, const PlayerBody& play
 }
 
 bool EventRuntime::action_in_range(const EventDef& event, const PlayerBody& player) const {
+  if (!event_height_matches_player(event, player)) {
+    return false;
+  }
   if (event.tile.has_value()) {
     const Vec3 center = tile_center_world(*event.tile, map_.tile_size);
     const float dx = player.x - center.x;
@@ -304,7 +352,12 @@ bool EventRuntime::exec_command(Interpreter& interp, GameState& state, const Com
       return true;
     case CommandOp::TransferPlayer:
       state.set_map_id(command.map_id);
-      state.set_player_position(command.x, command.y, command.z);
+      if (surface_query_) {
+        const float sampled_y = surface_query_->sample(command.x, command.z).y;
+        state.set_player_position(command.x, sampled_y, command.z);
+      } else {
+        state.set_player_position(command.x, command.y, command.z);
+      }
       return true;
     case CommandOp::ChangeItems:
       state.add_item(command.item_id, command.item_delta, command.key_item);

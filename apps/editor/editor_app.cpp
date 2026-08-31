@@ -8,6 +8,7 @@
 #include <rat/event_inspect.hpp>
 #include <rat/hot_apply.hpp>
 #include <rat/map_loader.hpp>
+#include <rat/surface_query.hpp>
 
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
@@ -30,6 +31,8 @@ void EditorApp::sync_blockers_to_runtime() {
   if (engine_ == nullptr) {
     return;
   }
+  rebuild_surface_query_cache();
+  engine_->set_terrain_map(events_.map());
   engine_->set_blockers(events_.map().blockers);
   engine_->greybox().set_selected_blocker(app_mode_ == AppMode::Edit ? selected_blocker_ : -1);
 }
@@ -38,6 +41,8 @@ void EditorApp::sync_events_to_runtime() {
   if (engine_ == nullptr) {
     return;
   }
+  rebuild_surface_query_cache();
+  engine_->set_terrain_map(events_.map());
   engine_->set_event_markers(event_markers_from_map(events_.map()));
   const int marker =
       app_mode_ == AppMode::Edit ? event_marker_index(events_.map(), selected_event_) : -1;
@@ -51,7 +56,7 @@ void EditorApp::draw_blocker_edit_ui() {
   auto blockers = events_.map().blockers;
 
   if (ImGui::Button("Add blocker")) {
-    blockers.push_back(Aabb2{0.0f, 0.0f, tile, tile});
+    blockers.push_back(BlockerDef{.bounds = Aabb2{0.0f, 0.0f, tile, tile}});
     selected_blocker_ = static_cast<int>(blockers.size()) - 1;
     events_.set_blockers(blockers);
     sync_blockers_to_runtime();
@@ -73,7 +78,7 @@ void EditorApp::draw_blocker_edit_ui() {
 
   if (ImGui::BeginListBox("##blockers", ImVec2(-1.0f, 100.0f))) {
     for (int i = 0; i < static_cast<int>(blockers.size()); ++i) {
-      const auto& b = blockers[static_cast<std::size_t>(i)];
+      const auto& b = blockers[static_cast<std::size_t>(i)].bounds;
       char label[128];
       std::snprintf(label, sizeof(label), "%d: (%.0f,%.0f)-(%.0f,%.0f)", i, b.min_x, b.min_z,
                     b.max_x, b.max_z);
@@ -86,10 +91,11 @@ void EditorApp::draw_blocker_edit_ui() {
   }
 
   if (selected_blocker_ >= 0 && selected_blocker_ < static_cast<int>(blockers.size())) {
-    Aabb2& box = blockers[static_cast<std::size_t>(selected_blocker_)];
+    BlockerDef& blocker = blockers[static_cast<std::size_t>(selected_blocker_)];
+    Aabb2& box = blocker.bounds;
     ImGui::Text("Selected %d", selected_blocker_);
     auto apply_box = [&](Aabb2 next) {
-      blockers[static_cast<std::size_t>(selected_blocker_)] = next;
+      blockers[static_cast<std::size_t>(selected_blocker_)].bounds = next;
       events_.set_blockers(blockers);
       sync_blockers_to_runtime();
       blockers = events_.map().blockers;
@@ -323,9 +329,10 @@ bool EditorApp::hot_apply_map_path(const std::string& path, bool preserve_player
     return false;
   }
 
-  std::vector<Aabb2> blockers;
+  std::vector<BlockerDef> blockers;
   std::vector<Vec3> markers;
-  HotApplyTargets targets{events_, game_state_, player_, blockers, markers};
+  HotApplyTargets targets{events_, game_state_, player_, blockers, markers, &surface_query_cache_,
+                          &jump_state_};
   HotApplyOptions options;
   options.preserve_player_position = preserve_player;
 
@@ -341,12 +348,22 @@ bool EditorApp::hot_apply_map_path(const std::string& path, bool preserve_player
   selected_blocker_ = blockers.empty() ? -1 : 0;
   selected_event_ = events_.map().events.empty() ? -1 : 0;
   selected_page_ = 0;
+  engine_->set_terrain_map(events_.map());
   engine_->set_blockers(std::move(blockers));
   engine_->set_event_markers(std::move(markers));
   engine_->set_player(player_);
   engine_->greybox().set_selected_blocker(app_mode_ == AppMode::Edit ? selected_blocker_ : -1);
   engine_->greybox().set_selected_event_marker(
       app_mode_ == AppMode::Edit ? event_marker_index(events_.map(), selected_event_) : -1);
+  jump_state_ = make_grounded_jump_state();
+  jump_state_.coyote_time_left = jump_tuning_.coyote_seconds;
+  jump_state_.jump_buffer_left = 0.0f;
+  interact_was_down_ = window_ != nullptr && glfwGetKey(window_, GLFW_KEY_E) == GLFW_PRESS;
+  clear_buffered_press(interact_press_buffer_);
+  jump_was_down_ = window_ != nullptr && glfwGetKey(window_, GLFW_KEY_SPACE) == GLFW_PRESS;
+  jump_press_pending_ = false;
+  fixed_accumulator_ = 0.0f;
+  snap_player_to_ground_clear_jump();
   return true;
 }
 
@@ -416,8 +433,7 @@ bool EditorApp::init() {
   // Spawn near the foreman for the sample quest path.
   player_.x = -1.5f;
   player_.z = 1.5f;
-  game_state_.set_player_position(player_.x, player_.y, player_.z);
-  engine_->set_player(player_);
+  snap_player_to_ground_clear_jump();
 
   refresh_mode_banner();
 
@@ -518,6 +534,42 @@ void EditorApp::refresh_mode_banner() {
   engine_->set_debug_banner(std::string("rat-engine  [") + app_mode_name(app_mode_) + "]");
 }
 
+void EditorApp::set_app_mode(AppMode next_mode) {
+  if (app_mode_ == next_mode) {
+    return;
+  }
+  const AppMode prev_mode = app_mode_;
+  app_mode_ = next_mode;
+  refresh_mode_banner();
+  sync_blockers_to_runtime();
+  sync_events_to_runtime();
+  if (prev_mode != AppMode::Edit && app_mode_ == AppMode::Edit) {
+    clear_buffered_press(interact_press_buffer_);
+  }
+}
+
+void EditorApp::rebuild_surface_query_cache() {
+  surface_query_cache_ = std::make_unique<SurfaceQuery>(events_.map());
+}
+
+void EditorApp::snap_player_to_ground_clear_jump() {
+  if (surface_query_cache_ == nullptr) {
+    rebuild_surface_query_cache();
+  }
+  const SurfaceSample sample = surface_query_cache_->sample(player_.x, player_.z);
+  jump_state_ = make_grounded_jump_state();
+  jump_state_.grounded = true;
+  jump_state_.jump_offset = 0.0f;
+  jump_state_.vertical_speed = 0.0f;
+  jump_state_.coyote_time_left = jump_tuning_.coyote_seconds;
+  jump_state_.jump_buffer_left = 0.0f;
+  player_.y = sample.y;
+  game_state_.set_player_position(player_.x, player_.y, player_.z);
+  if (engine_ != nullptr) {
+    engine_->set_player(player_);
+  }
+}
+
 void EditorApp::framebuffer_size_callback(GLFWwindow* window, int width, int height) {
   auto* self = static_cast<EditorApp*>(glfwGetWindowUserPointer(window));
   if (self != nullptr) {
@@ -531,16 +583,14 @@ void EditorApp::update_simulation(float dt) {
   }
 
   const ImGuiIO& io = ImGui::GetIO();
+  constexpr float kFixedStep = 1.0f / 120.0f;
 
   // F2 toggles Play <-> Edit (edge). Allowed even if ImGui wants keyboard
   // except when typing into an active text field would be ideal later; for now
   // skip only when a dialog message is open so Space/E ack stays clean.
   const bool mode_down = glfwGetKey(window_, GLFW_KEY_F2) == GLFW_PRESS;
   if (mode_down && !mode_toggle_was_down_ && !events_.active_message().has_value()) {
-    app_mode_ = toggle_app_mode(app_mode_);
-    refresh_mode_banner();
-    sync_blockers_to_runtime();
-    sync_events_to_runtime();
+    set_app_mode(toggle_app_mode(app_mode_));
   }
   mode_toggle_was_down_ = mode_down;
 
@@ -548,20 +598,27 @@ void EditorApp::update_simulation(float dt) {
   const bool hot_apply_down = glfwGetKey(window_, GLFW_KEY_F5) == GLFW_PRESS;
   if (hot_apply_down && !hot_apply_was_down_ && !events_.active_message().has_value() &&
       !map_path_.empty()) {
+    clear_buffered_press(interact_press_buffer_);
     hot_apply_map_path(map_path_, true);
   }
   hot_apply_was_down_ = hot_apply_down;
 
-  // Raw edge from GLFW — never gate on ImGui WantCaptureKeyboard.
-  // Dialog windows / Nav otherwise swallow Space and drop edges intermittently.
-  const bool interact_down = glfwGetKey(window_, GLFW_KEY_E) == GLFW_PRESS ||
-                             glfwGetKey(window_, GLFW_KEY_SPACE) == GLFW_PRESS;
+  const bool interact_down = glfwGetKey(window_, GLFW_KEY_E) == GLFW_PRESS;
   const bool interact_edge = interact_down && !interact_was_down_;
   interact_was_down_ = interact_down;
+  push_buffered_press_if_allowed(interact_press_buffer_, interact_edge, event_runtime_enabled(app_mode_),
+                                 io.WantCaptureKeyboard, 0.1f);
+
+  const bool jump_down = glfwGetKey(window_, GLFW_KEY_SPACE) == GLFW_PRESS;
+  const bool jump_edge = jump_down && !jump_was_down_;
+  jump_was_down_ = jump_down;
+  if (jump_edge) {
+    jump_press_pending_ = true;
+  }
 
   bool consumed_for_dialog = false;
-  if (event_runtime_enabled(app_mode_) && events_.active_message().has_value() &&
-      interact_edge) {
+  if (event_runtime_enabled(app_mode_) && events_.active_message().has_value() && !io.WantCaptureKeyboard &&
+      consume_buffered_press(interact_press_buffer_)) {
     events_.acknowledge_message();
     consumed_for_dialog = true;
   }
@@ -574,47 +631,96 @@ void EditorApp::update_simulation(float dt) {
   }
   camera_toggle_was_down_ = camera_down;
 
-  MoveInput input;
-  if (player_control_enabled(app_mode_) && !io.WantCaptureKeyboard &&
-      !events_.player_input_blocked()) {
-    float screen_x = 0.0f;
-    float screen_z = 0.0f;
-    if (glfwGetKey(window_, GLFW_KEY_W) == GLFW_PRESS ||
-        glfwGetKey(window_, GLFW_KEY_UP) == GLFW_PRESS) {
-      screen_z += 1.0f;
-    }
-    if (glfwGetKey(window_, GLFW_KEY_S) == GLFW_PRESS ||
-        glfwGetKey(window_, GLFW_KEY_DOWN) == GLFW_PRESS) {
-      screen_z -= 1.0f;
-    }
-    if (glfwGetKey(window_, GLFW_KEY_A) == GLFW_PRESS ||
-        glfwGetKey(window_, GLFW_KEY_LEFT) == GLFW_PRESS) {
-      screen_x -= 1.0f;
-    }
-    if (glfwGetKey(window_, GLFW_KEY_D) == GLFW_PRESS ||
-        glfwGetKey(window_, GLFW_KEY_RIGHT) == GLFW_PRESS) {
-      screen_x += 1.0f;
-    }
-    input = world_aligned_move(screen_x, screen_z);
-  }
+  fixed_accumulator_ += std::max(0.0f, dt);
+  fixed_accumulator_ = std::min(fixed_accumulator_, 0.2f);
+  while (fixed_accumulator_ >= kFixedStep) {
+    fixed_accumulator_ -= kFixedStep;
 
-  if (player_control_enabled(app_mode_)) {
-    player_ = integrate_player(player_, input, dt, engine_->blockers());
-    game_state_.set_player_position(player_.x, player_.y, player_.z);
-    engine_->set_player(player_);
-  }
+    MoveInput move_input;
+    const bool allow_player_input =
+        player_control_enabled(app_mode_) && !io.WantCaptureKeyboard && !events_.player_input_blocked();
+    if (allow_player_input) {
+      float screen_x = 0.0f;
+      float screen_z = 0.0f;
+      if (glfwGetKey(window_, GLFW_KEY_W) == GLFW_PRESS ||
+          glfwGetKey(window_, GLFW_KEY_UP) == GLFW_PRESS) {
+        screen_z += 1.0f;
+      }
+      if (glfwGetKey(window_, GLFW_KEY_S) == GLFW_PRESS ||
+          glfwGetKey(window_, GLFW_KEY_DOWN) == GLFW_PRESS) {
+        screen_z -= 1.0f;
+      }
+      if (glfwGetKey(window_, GLFW_KEY_A) == GLFW_PRESS ||
+          glfwGetKey(window_, GLFW_KEY_LEFT) == GLFW_PRESS) {
+        screen_x -= 1.0f;
+      }
+      if (glfwGetKey(window_, GLFW_KEY_D) == GLFW_PRESS ||
+          glfwGetKey(window_, GLFW_KEY_RIGHT) == GLFW_PRESS) {
+        screen_x += 1.0f;
+      }
+      move_input = world_aligned_move(screen_x, screen_z);
+    } else {
+      jump_state_.jump_buffer_left = 0.0f;
+      jump_press_pending_ = false;
+    }
 
-  if (event_runtime_enabled(app_mode_)) {
-    // Same key edge that closes dialog must not also fire Action triggers.
-    const bool gameplay_interact =
-        interact_edge && !consumed_for_dialog && !io.WantCaptureKeyboard;
-    events_.update(game_state_, player_, gameplay_interact, dt);
+    if (player_control_enabled(app_mode_)) {
+      PlayerFrameInput frame_input;
+      frame_input.move = move_input;
+      frame_input.jump_pressed = allow_player_input && jump_press_pending_;
+      frame_input.jump_held = allow_player_input && jump_down;
 
-    // Transfer stub: sync player body if an event moved GameState.
-    player_.x = game_state_.player_x();
-    player_.y = game_state_.player_y();
-    player_.z = game_state_.player_z();
-    engine_->set_player(player_);
+      if (surface_query_cache_ == nullptr) {
+        rebuild_surface_query_cache();
+      }
+      const PlayerFrameResult frame = integrate_player_frame_surface(
+          player_, jump_state_, frame_input, kFixedStep, engine_->blockers(), *surface_query_cache_,
+          jump_tuning_);
+      player_ = frame.body;
+      jump_state_ = frame.jump;
+      game_state_.set_player_position(player_.x, player_.y, player_.z);
+      engine_->set_player(player_);
+      if (frame_input.jump_pressed) {
+        jump_press_pending_ = false;
+      }
+    } else {
+      jump_state_ = make_grounded_jump_state();
+      jump_state_.coyote_time_left = jump_tuning_.coyote_seconds;
+      jump_state_.jump_buffer_left = 0.0f;
+      jump_press_pending_ = false;
+      snap_player_to_ground_clear_jump();
+    }
+
+    if (event_runtime_enabled(app_mode_)) {
+      // Same key edge that closes dialog must not also fire Action triggers.
+      const bool gameplay_interact = !consumed_for_dialog && !io.WantCaptureKeyboard &&
+                                     !events_.player_input_blocked() &&
+                                     consume_buffered_press(interact_press_buffer_);
+
+      const std::string before_map_id = game_state_.map_id();
+      const float before_x = game_state_.player_x();
+      const float before_y = game_state_.player_y();
+      const float before_z = game_state_.player_z();
+      events_.update(game_state_, player_, gameplay_interact, kFixedStep);
+
+      const bool transferred = game_state_.map_id() != before_map_id ||
+                               game_state_.player_x() != before_x ||
+                               game_state_.player_y() != before_y ||
+                               game_state_.player_z() != before_z;
+      player_.x = game_state_.player_x();
+      player_.y = game_state_.player_y();
+      player_.z = game_state_.player_z();
+      engine_->set_player(player_);
+
+      if (transferred) {
+        jump_state_ = make_grounded_jump_state();
+        jump_state_.coyote_time_left = jump_tuning_.coyote_seconds;
+        jump_state_.jump_buffer_left = 0.0f;
+        jump_was_down_ = jump_down;
+        jump_press_pending_ = false;
+      }
+    }
+    consume_then_tick_buffered_press(interact_press_buffer_, false, kFixedStep);
   }
 }
 
@@ -651,7 +757,7 @@ void EditorApp::draw_ui() {
   ImGui::Begin("Hierarchy");
   ImGui::Text("Mode: %s  (F2)", app_mode_name(app_mode_));
   ImGui::Text("Map: %s", game_state_.map_id().c_str());
-  ImGui::Text("Player: (%.2f, %.2f)", player_.x, player_.z);
+  ImGui::Text("Player: (%.2f, %.2f, %.2f)", player_.x, player_.y, player_.z);
   ImGui::Text("Events: %zu", events_.map().events.size());
   ImGui::Text("Parallel: %d", events_.active_parallel_count());
   ImGui::End();
@@ -664,12 +770,9 @@ void EditorApp::draw_ui() {
     ImGui::TextUnformatted("Quest: ask foreman (cyan) for a rusty cog,");
     ImGui::TextUnformatted("loot scrap east of crates, return.");
   }
-  ImGui::TextUnformatted("WASD move | E/Space interact | C camera | F2 Play/Edit | F5 hot-apply");
+  ImGui::TextUnformatted("WASD move | Space jump | E interact | C camera | F2 Play/Edit | F5 hot-apply");
   if (ImGui::Button(app_mode_ == AppMode::Play ? "Enter Edit (F2)" : "Enter Play (F2)")) {
-    app_mode_ = toggle_app_mode(app_mode_);
-    refresh_mode_banner();
-    sync_blockers_to_runtime();
-    sync_events_to_runtime();
+    set_app_mode(toggle_app_mode(app_mode_));
   }
   if (!map_path_.empty()) {
     ImGui::TextWrapped("Map file: %s", map_path_.c_str());
@@ -685,8 +788,7 @@ void EditorApp::draw_ui() {
     if (hot_apply_map_path(map_path_, false)) {
       player_.x = -1.5f;
       player_.z = 1.5f;
-      game_state_.set_player_position(player_.x, player_.y, player_.z);
-      engine_->set_player(player_);
+      snap_player_to_ground_clear_jump();
     }
   }
   if (!last_apply_error_.empty()) {
@@ -767,7 +869,7 @@ void EditorApp::draw_ui() {
     ImGui::Spacing();
     ImGui::TextWrapped("%s", events_.active_message()->c_str());
     ImGui::SetCursorPosY(ImGui::GetWindowHeight() - 36.0f);
-    if (ImGui::Button("Continue (E / Space)")) {
+    if (ImGui::Button("Continue (E)")) {
       events_.acknowledge_message();
     }
     ImGui::End();

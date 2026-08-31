@@ -1,5 +1,6 @@
 add_library(rat_core
   src/app_mode.cpp
+  src/buffered_press.cpp
   src/blocker_edit.cpp
   src/camera.cpp
   src/event_edit.cpp
@@ -9,6 +10,9 @@ add_library(rat_core
   src/hot_apply.cpp
   src/map_loader.cpp
   src/player.cpp
+  src/player_jump.cpp
+  src/surface_query.cpp
+  src/terrain_geometry.cpp
 )
 
 add_library(rat::core ALIAS rat_core)

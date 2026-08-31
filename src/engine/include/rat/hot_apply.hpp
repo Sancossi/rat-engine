@@ -5,7 +5,9 @@
 #include "rat/game_state.hpp"
 #include "rat/map_data.hpp"
 #include "rat/player.hpp"
+#include "rat/surface_query.hpp"
 
+#include <memory>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -20,8 +22,10 @@ struct HotApplyTargets {
   EventRuntime& events;
   GameState& state;
   PlayerBody& player;
-  std::vector<Aabb2>& blockers;
+  std::vector<BlockerDef>& blockers;
   std::vector<Vec3>& event_markers;
+  std::unique_ptr<SurfaceQuery>* cached_surface_query = nullptr;
+  JumpState* jump_state = nullptr;
 };
 
 struct HotApplyResult {

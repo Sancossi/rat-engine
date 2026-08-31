@@ -3,8 +3,10 @@
 #include "rat/game_state.hpp"
 #include "rat/map_data.hpp"
 #include "rat/player.hpp"
+#include "rat/surface_query.hpp"
 
 #include <cstddef>
+#include <memory>
 #include <optional>
 #include <string>
 #include <unordered_map>
@@ -19,7 +21,7 @@ inline constexpr int kMaxParallelCommandsPerFrame = 32;
 class EventRuntime {
  public:
   void load(MapData map);
-  void set_blockers(std::vector<Aabb2> blockers);
+  void set_blockers(std::vector<BlockerDef> blockers);
   void set_events(std::vector<EventDef> events);
   void clear();
 
@@ -62,6 +64,9 @@ class EventRuntime {
                                    const std::string& event_id) const;
   [[nodiscard]] int select_page(const EventDef& event, const GameState& state) const;
   [[nodiscard]] Aabb2 event_bounds(const EventDef& event) const;
+  [[nodiscard]] SurfaceSample event_surface_sample(const EventDef& event) const;
+  [[nodiscard]] bool event_height_matches_player(const EventDef& event,
+                                                 const PlayerBody& player) const;
   [[nodiscard]] bool player_overlaps(const EventDef& event, const PlayerBody& player) const;
   [[nodiscard]] bool action_in_range(const EventDef& event, const PlayerBody& player) const;
 
@@ -84,6 +89,7 @@ class EventRuntime {
   int active_parallel_count_ = 0;
   int last_parallel_commands_executed_ = 0;
   std::vector<std::string> warnings_;
+  std::unique_ptr<SurfaceQuery> surface_query_;
 };
 
 }  // namespace rat

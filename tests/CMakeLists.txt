@@ -1,5 +1,6 @@
 add_executable(rat_tests
   app_mode_test.cpp
+  buffered_press_test.cpp
   blocker_edit_test.cpp
   camera_test.cpp
   event_edit_test.cpp
@@ -9,7 +10,10 @@ add_executable(rat_tests
   headless_mechanics_stub_test.cpp
   hot_apply_test.cpp
   map_loader_test.cpp
+  player_jump_test.cpp
   player_test.cpp
+  surface_query_test.cpp
+  terrain_geometry_test.cpp
 )
 
 target_link_libraries(rat_tests

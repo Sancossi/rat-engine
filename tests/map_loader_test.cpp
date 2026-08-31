@@ -63,9 +63,38 @@ TEST_CASE("Map loader parses minimal map JSON", "[unit][map]") {
 }
 
 TEST_CASE("Map loader rejects unknown schema version", "[unit][map]") {
-  const auto result = rat::load_map_from_string(R"({"schema_version":2,"id":"x","width":1,"height":1})");
+  const auto result = rat::load_map_from_string(R"({"schema_version":3,"id":"x","width":1,"height":1})");
   REQUIRE_FALSE(result.ok);
   REQUIRE_FALSE(result.error.empty());
+}
+
+TEST_CASE("Map loader rejects v2 map without height grid", "[unit][map]") {
+  const auto result =
+      rat::load_map_from_string(R"({"schema_version":2,"id":"x","width":1,"height":1,"events":[]})");
+  REQUIRE_FALSE(result.ok);
+  REQUIRE_FALSE(result.error.empty());
+}
+
+TEST_CASE("Map loader v1 fallback builds flat height grid", "[unit][map]") {
+  constexpr const char* kJson = R"({
+    "schema_version": 1,
+    "id": "legacy",
+    "width": 3,
+    "height": 2,
+    "events": []
+  })";
+
+  const auto result = rat::load_map_from_string(kJson);
+  REQUIRE(result.ok);
+  REQUIRE(result.map.schema_version == 1);
+  REQUIRE(result.map.height_grid.origin_x == 0);
+  REQUIRE(result.map.height_grid.origin_z == 0);
+  REQUIRE(result.map.height_grid.width == 3);
+  REQUIRE(result.map.height_grid.height == 2);
+  REQUIRE(result.map.height_grid.ground_y.size() == 6);
+  for (const float y : result.map.height_grid.ground_y) {
+    REQUIRE(y == Catch::Approx(0.0f));
+  }
 }
 
 TEST_CASE("Example grey_yard.json loads without crash", "[unit][map]") {
@@ -122,7 +151,8 @@ TEST_CASE("Serialize map roundtrips blockers after edit", "[unit][map]") {
   })";
   auto loaded = rat::load_map_from_string(kJson);
   REQUIRE(loaded.ok);
-  loaded.map.blockers[0] = rat::translate_aabb_on_grid(loaded.map.blockers[0], 2, 0, 1.0f);
+  loaded.map.blockers[0].bounds =
+      rat::translate_aabb_on_grid(loaded.map.blockers[0].bounds, 2, 0, 1.0f);
 
   const auto serialized = rat::serialize_map_to_string(loaded.map);
   REQUIRE(serialized.ok);
@@ -130,8 +160,8 @@ TEST_CASE("Serialize map roundtrips blockers after edit", "[unit][map]") {
   const auto again = rat::load_map_from_string(serialized.json_text);
   REQUIRE(again.ok);
   REQUIRE(again.map.blockers.size() == 1);
-  REQUIRE(again.map.blockers[0].min_x == Catch::Approx(2.0f));
-  REQUIRE(again.map.blockers[0].max_x == Catch::Approx(3.0f));
+  REQUIRE(again.map.blockers[0].bounds.min_x == Catch::Approx(2.0f));
+  REQUIRE(again.map.blockers[0].bounds.max_x == Catch::Approx(3.0f));
 }
 
 TEST_CASE("Save map file roundtrips blocker and event edits", "[unit][map]") {
@@ -139,7 +169,7 @@ TEST_CASE("Save map file roundtrips blocker and event edits", "[unit][map]") {
   map.id = "saved";
   map.width = 8;
   map.height = 8;
-  map.blockers.push_back({2.0f, 3.0f, 4.0f, 5.0f});
+  map.blockers.push_back({.bounds = {2.0f, 3.0f, 4.0f, 5.0f}});
 
   rat::EventDef event;
   event.id = "moved";
@@ -156,8 +186,295 @@ TEST_CASE("Save map file roundtrips blocker and event edits", "[unit][map]") {
   std::filesystem::remove(path);
   REQUIRE(loaded.ok);
   REQUIRE(loaded.map.blockers.size() == 1);
-  REQUIRE(loaded.map.blockers[0].min_x == Catch::Approx(2.0f));
+  REQUIRE(loaded.map.blockers[0].bounds.min_x == Catch::Approx(2.0f));
   REQUIRE(loaded.map.events.size() == 1);
   REQUIRE(loaded.map.events[0].tile->x == 6);
   REQUIRE(loaded.map.events[0].tile->z == -2);
+}
+
+TEST_CASE("Map loader v2 roundtrips height grid and ramps", "[unit][map]") {
+  constexpr const char* kJson = R"({
+    "schema_version": 2,
+    "id": "height_map",
+    "width": 8,
+    "height": 8,
+    "height_grid": {
+      "origin_x": -2,
+      "origin_z": 3,
+      "width": 2,
+      "height": 2,
+      "ground_y": [1.0, 2.0, 3.0, 4.0]
+    },
+    "ramps": [
+      {
+        "tile": { "x": -1, "z": 4 },
+        "direction": "east",
+        "low_y": 2.0,
+        "high_y": 3.5
+      }
+    ],
+    "events": []
+  })";
+
+  const auto loaded = rat::load_map_from_string(kJson);
+  REQUIRE(loaded.ok);
+  REQUIRE(loaded.map.schema_version == 2);
+  REQUIRE(loaded.map.height_grid.origin_x == -2);
+  REQUIRE(loaded.map.height_grid.origin_z == 3);
+  REQUIRE(loaded.map.height_grid.width == 2);
+  REQUIRE(loaded.map.height_grid.height == 2);
+  REQUIRE(loaded.map.height_grid.ground_y.size() == 4);
+  REQUIRE(loaded.map.height_grid.ground_y[0] == Catch::Approx(1.0f));
+  REQUIRE(loaded.map.height_grid.ground_y[3] == Catch::Approx(4.0f));
+  REQUIRE(loaded.map.ramps.size() == 1);
+  REQUIRE(loaded.map.ramps[0].tile.x == -1);
+  REQUIRE(loaded.map.ramps[0].tile.z == 4);
+  REQUIRE(loaded.map.ramps[0].direction == rat::RampDirection::East);
+  REQUIRE(loaded.map.ramps[0].low_y == Catch::Approx(2.0f));
+  REQUIRE(loaded.map.ramps[0].high_y == Catch::Approx(3.5f));
+
+  const auto serialized = rat::serialize_map_to_string(loaded.map);
+  REQUIRE(serialized.ok);
+
+  const auto again = rat::load_map_from_string(serialized.json_text);
+  REQUIRE(again.ok);
+  REQUIRE(again.map.schema_version == 2);
+  REQUIRE(again.map.height_grid.origin_x == -2);
+  REQUIRE(again.map.height_grid.origin_z == 3);
+  REQUIRE(again.map.height_grid.width == 2);
+  REQUIRE(again.map.height_grid.height == 2);
+  REQUIRE(again.map.height_grid.ground_y == loaded.map.height_grid.ground_y);
+  REQUIRE(again.map.ramps.size() == 1);
+  REQUIRE(again.map.ramps[0].tile.x == -1);
+  REQUIRE(again.map.ramps[0].tile.z == 4);
+  REQUIRE(again.map.ramps[0].direction == rat::RampDirection::East);
+  REQUIRE(again.map.ramps[0].low_y == Catch::Approx(2.0f));
+  REQUIRE(again.map.ramps[0].high_y == Catch::Approx(3.5f));
+}
+
+TEST_CASE("Map loader rejects invalid height grid length", "[unit][map]") {
+  constexpr const char* kJson = R"({
+    "schema_version": 2,
+    "id": "broken",
+    "width": 3,
+    "height": 3,
+    "height_grid": {
+      "origin_x": 0,
+      "origin_z": 0,
+      "width": 2,
+      "height": 2,
+      "ground_y": [0.0, 1.0, 2.0]
+    },
+    "events": []
+  })";
+
+  const auto result = rat::load_map_from_string(kJson);
+  REQUIRE_FALSE(result.ok);
+  REQUIRE_FALSE(result.error.empty());
+}
+
+TEST_CASE("Serializer keeps v1 payload free of elevation fields", "[unit][map]") {
+  rat::MapData map;
+  map.schema_version = 1;
+  map.id = "legacy_save";
+  map.width = 2;
+  map.height = 2;
+  map.height_grid.origin_x = 9;
+  map.height_grid.origin_z = 9;
+  map.height_grid.width = 1;
+  map.height_grid.height = 1;
+  map.height_grid.ground_y = {7.0f};
+  map.ramps.push_back({
+      .tile = rat::TileCoord{0, 0},
+      .direction = rat::RampDirection::North,
+      .low_y = 0.0f,
+      .high_y = 1.0f,
+  });
+
+  const auto serialized = rat::serialize_map_to_string(map);
+  REQUIRE(serialized.ok);
+  REQUIRE(serialized.json_text.find("\"height_grid\"") == std::string::npos);
+  REQUIRE(serialized.json_text.find("\"ramps\"") == std::string::npos);
+}
+
+TEST_CASE("Serializer writes elevation fields for v2", "[unit][map]") {
+  rat::MapData map;
+  map.schema_version = 2;
+  map.id = "elevated";
+  map.width = 2;
+  map.height = 2;
+  map.height_grid.origin_x = -3;
+  map.height_grid.origin_z = 5;
+  map.height_grid.width = 2;
+  map.height_grid.height = 2;
+  map.height_grid.ground_y = {1.0f, 2.0f, 3.0f, 4.0f};
+  map.ramps.push_back({
+      .tile = rat::TileCoord{-2, 5},
+      .direction = rat::RampDirection::West,
+      .low_y = 4.0f,
+      .high_y = 6.0f,
+  });
+
+  const auto serialized = rat::serialize_map_to_string(map);
+  REQUIRE(serialized.ok);
+  REQUIRE(serialized.json_text.find("\"height_grid\"") != std::string::npos);
+  REQUIRE(serialized.json_text.find("\"ramps\"") != std::string::npos);
+}
+
+TEST_CASE("Legacy blocker remains full wall and roundtrips without vertical keys", "[unit][map]") {
+  constexpr const char* kJson = R"({
+    "schema_version": 1,
+    "id": "legacy_blocker",
+    "width": 2,
+    "height": 2,
+    "blockers": [
+      { "min_x": 0.0, "min_z": 0.0, "max_x": 1.0, "max_z": 1.0 }
+    ],
+    "events": []
+  })";
+
+  const auto loaded = rat::load_map_from_string(kJson);
+  REQUIRE(loaded.ok);
+  REQUIRE(loaded.map.blockers.size() == 1);
+  REQUIRE_FALSE(loaded.map.blockers[0].jumpable);
+  REQUIRE_FALSE(loaded.map.blockers[0].base_y.has_value());
+  REQUIRE_FALSE(loaded.map.blockers[0].top_y.has_value());
+  REQUIRE(loaded.map.blockers[0].bounds.min_x == Catch::Approx(0.0f));
+  REQUIRE(loaded.map.blockers[0].bounds.max_x == Catch::Approx(1.0f));
+
+  const auto serialized = rat::serialize_map_to_string(loaded.map);
+  REQUIRE(serialized.ok);
+  REQUIRE(serialized.json_text.find("\"jumpable\"") == std::string::npos);
+  REQUIRE(serialized.json_text.find("\"base_y\"") == std::string::npos);
+  REQUIRE(serialized.json_text.find("\"top_y\"") == std::string::npos);
+}
+
+TEST_CASE("Low jumpable blocker parses and roundtrips with vertical keys", "[unit][map]") {
+  constexpr const char* kJson = R"({
+    "schema_version": 2,
+    "id": "low_blocker",
+    "width": 2,
+    "height": 2,
+    "height_grid": {
+      "origin_x": 0,
+      "origin_z": 0,
+      "width": 2,
+      "height": 2,
+      "ground_y": [0.0, 0.0, 0.0, 0.0]
+    },
+    "blockers": [
+      {
+        "min_x": 0.0,
+        "min_z": 0.0,
+        "max_x": 1.0,
+        "max_z": 1.0,
+        "base_y": 0.0,
+        "top_y": 0.75,
+        "jumpable": true
+      }
+    ],
+    "events": []
+  })";
+
+  const auto loaded = rat::load_map_from_string(kJson);
+  REQUIRE(loaded.ok);
+  REQUIRE(loaded.map.blockers.size() == 1);
+  REQUIRE(loaded.map.blockers[0].jumpable);
+  REQUIRE(loaded.map.blockers[0].base_y.has_value());
+  REQUIRE(loaded.map.blockers[0].top_y.has_value());
+  REQUIRE(*loaded.map.blockers[0].base_y == Catch::Approx(0.0f));
+  REQUIRE(*loaded.map.blockers[0].top_y == Catch::Approx(0.75f));
+
+  const auto serialized = rat::serialize_map_to_string(loaded.map);
+  REQUIRE(serialized.ok);
+  REQUIRE(serialized.json_text.find("\"jumpable\": true") != std::string::npos);
+  REQUIRE(serialized.json_text.find("\"base_y\": 0.0") != std::string::npos);
+  REQUIRE(serialized.json_text.find("\"top_y\": 0.75") != std::string::npos);
+}
+
+TEST_CASE("Loader rejects jumpable blocker missing vertical pair", "[unit][map]") {
+  constexpr const char* kMissingTop = R"({
+    "schema_version": 1,
+    "id": "bad_missing_top",
+    "width": 2,
+    "height": 2,
+    "blockers": [
+      {
+        "min_x": 0.0,
+        "min_z": 0.0,
+        "max_x": 1.0,
+        "max_z": 1.0,
+        "base_y": 0.0,
+        "jumpable": true
+      }
+    ],
+    "events": []
+  })";
+  const auto missing_top = rat::load_map_from_string(kMissingTop);
+  REQUIRE_FALSE(missing_top.ok);
+
+  constexpr const char* kMissingBase = R"({
+    "schema_version": 1,
+    "id": "bad_missing_base",
+    "width": 2,
+    "height": 2,
+    "blockers": [
+      {
+        "min_x": 0.0,
+        "min_z": 0.0,
+        "max_x": 1.0,
+        "max_z": 1.0,
+        "top_y": 1.0,
+        "jumpable": true
+      }
+    ],
+    "events": []
+  })";
+  const auto missing_base = rat::load_map_from_string(kMissingBase);
+  REQUIRE_FALSE(missing_base.ok);
+}
+
+TEST_CASE("Loader rejects blocker with top below base", "[unit][map]") {
+  constexpr const char* kJson = R"({
+    "schema_version": 1,
+    "id": "bad_range",
+    "width": 2,
+    "height": 2,
+    "blockers": [
+      {
+        "min_x": 0.0,
+        "min_z": 0.0,
+        "max_x": 1.0,
+        "max_z": 1.0,
+        "base_y": 2.0,
+        "top_y": 1.0,
+        "jumpable": false
+      }
+    ],
+    "events": []
+  })";
+  const auto result = rat::load_map_from_string(kJson);
+  REQUIRE_FALSE(result.ok);
+}
+
+TEST_CASE("Loader rejects partial vertical fields when non-jumpable", "[unit][map]") {
+  constexpr const char* kJson = R"({
+    "schema_version": 1,
+    "id": "bad_partial_vertical",
+    "width": 2,
+    "height": 2,
+    "blockers": [
+      {
+        "min_x": 0.0,
+        "min_z": 0.0,
+        "max_x": 1.0,
+        "max_z": 1.0,
+        "base_y": 0.0,
+        "jumpable": false
+      }
+    ],
+    "events": []
+  })";
+  const auto result = rat::load_map_from_string(kJson);
+  REQUIRE_FALSE(result.ok);
 }

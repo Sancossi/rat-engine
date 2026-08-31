@@ -50,6 +50,54 @@ struct TileCoord {
   int z = 0;
 };
 
+enum class RampDirection {
+  North,
+  East,
+  South,
+  West,
+};
+
+struct HeightGrid {
+  int origin_x = 0;
+  int origin_z = 0;
+  int width = 0;
+  int height = 0;
+  std::vector<float> ground_y;
+};
+
+struct RampDef {
+  TileCoord tile;
+  RampDirection direction = RampDirection::North;
+  float low_y = 0.0f;
+  float high_y = 0.0f;
+};
+
+struct BlockerDef {
+  Aabb2 bounds{};
+  std::optional<float> base_y{};
+  std::optional<float> top_y{};
+  bool jumpable = false;
+};
+
+[[nodiscard]] inline bool blocker_blocks_feet(const BlockerDef& blocker, float feet_world_y,
+                                              float epsilon = 1e-4f) {
+  if (!blocker.jumpable) {
+    return true;
+  }
+  if (!blocker.base_y.has_value() || !blocker.top_y.has_value()) {
+    return true;
+  }
+  const float base = *blocker.base_y;
+  const float top = *blocker.top_y;
+  if (feet_world_y + epsilon < base) {
+    return false;
+  }
+  if (feet_world_y >= top - epsilon) {
+    return false;
+  }
+  return true;
+}
+
 struct Condition {
   ConditionType type = ConditionType::Switch;
   std::uint32_t id = 0;
@@ -99,7 +147,9 @@ struct MapData {
   int width = 0;
   int height = 0;
   float tile_size = 1.0f;
-  std::vector<Aabb2> blockers;
+  HeightGrid height_grid;
+  std::vector<RampDef> ramps;
+  std::vector<BlockerDef> blockers;
   std::vector<EventDef> events;
 };
 

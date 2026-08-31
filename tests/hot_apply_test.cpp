@@ -1,11 +1,14 @@
 #include <rat/event_runtime.hpp>
 #include <rat/game_state.hpp>
 #include <rat/hot_apply.hpp>
+#include <rat/map_loader.hpp>
 #include <rat/player.hpp>
+#include <rat/surface_query.hpp>
 
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
 
+#include <memory>
 #include <vector>
 
 using Catch::Approx;
@@ -47,6 +50,38 @@ constexpr const char* kMapB = R"({
   ]
 })";
 
+constexpr const char* kHeightMap = R"({
+  "schema_version": 2,
+  "id": "height_map",
+  "width": 6,
+  "height": 4,
+  "tile_size": 1.0,
+  "height_grid": {
+    "origin_x": 0,
+    "origin_z": 0,
+    "width": 6,
+    "height": 4,
+    "ground_y": [
+      1, 1, 1, 1, 1, 1,
+      1, 2, 2, 5, 2, 1,
+      1, 2, 2, 2, 2, 1,
+      1, 1, 1, 1, 1, 1
+    ]
+  },
+  "events": [
+    {
+      "id": "tile_hi",
+      "tile": { "x": 1, "z": 1 },
+      "pages": [{ "trigger": "action", "commands": [{ "op": "comment", "text": "tile" }] }]
+    },
+    {
+      "id": "volume_hi",
+      "volume": { "min_x": 2.0, "min_z": 0.0, "max_x": 4.0, "max_z": 2.0 },
+      "pages": [{ "trigger": "player_touch", "commands": [{ "op": "comment", "text": "vol" }] }]
+    }
+  ]
+})";
+
 }  // namespace
 
 TEST_CASE("Hot-apply replaces blockers events and map id", "[unit][hot_apply]") {
@@ -55,7 +90,7 @@ TEST_CASE("Hot-apply replaces blockers events and map id", "[unit][hot_apply]") 
   rat::PlayerBody player;
   player.x = 4.5f;
   player.z = -2.0f;
-  std::vector<rat::Aabb2> blockers;
+  std::vector<rat::BlockerDef> blockers;
   std::vector<rat::Vec3> markers;
 
   rat::HotApplyTargets targets{events, state, player, blockers, markers};
@@ -90,7 +125,7 @@ TEST_CASE("Hot-apply can reset player position", "[unit][hot_apply]") {
   player.x = 9.0f;
   player.y = 1.0f;
   player.z = 8.0f;
-  std::vector<rat::Aabb2> blockers;
+  std::vector<rat::BlockerDef> blockers;
   std::vector<rat::Vec3> markers;
 
   rat::HotApplyTargets targets{events, state, player, blockers, markers};
@@ -107,7 +142,7 @@ TEST_CASE("Hot-apply failed parse leaves session untouched", "[unit][hot_apply]"
   rat::EventRuntime events;
   rat::GameState state;
   rat::PlayerBody player;
-  std::vector<rat::Aabb2> blockers{{0, 0, 1, 1}};
+  std::vector<rat::BlockerDef> blockers{{.bounds = {0, 0, 1, 1}}};
   std::vector<rat::Vec3> markers{{1, 0, 1}};
 
   rat::HotApplyTargets targets{events, state, player, blockers, markers};
@@ -131,7 +166,7 @@ TEST_CASE("Hot-apply grey_yard from file", "[unit][hot_apply]") {
   rat::PlayerBody player;
   player.x = 1.0f;
   player.z = 2.0f;
-  std::vector<rat::Aabb2> blockers;
+  std::vector<rat::BlockerDef> blockers;
   std::vector<rat::Vec3> markers;
 
   rat::HotApplyTargets targets{events, state, player, blockers, markers};
@@ -143,4 +178,56 @@ TEST_CASE("Hot-apply grey_yard from file", "[unit][hot_apply]") {
   REQUIRE(events.map().events.size() >= 2);
   REQUIRE(player.x == Approx(1.0f));
   REQUIRE(player.z == Approx(2.0f));
+}
+
+TEST_CASE("Event markers sample elevated tile and volume centers", "[unit][hot_apply]") {
+  const auto loaded = rat::load_map_from_string(kHeightMap);
+  REQUIRE(loaded.ok);
+
+  const auto markers = rat::event_markers_from_map(loaded.map);
+  REQUIRE(markers.size() == 2);
+  REQUIRE(markers[0].x == Approx(1.5f));
+  REQUIRE(markers[0].z == Approx(1.5f));
+  REQUIRE(markers[0].y == Approx(2.0f));
+  REQUIRE(markers[1].x == Approx(3.0f));
+  REQUIRE(markers[1].z == Approx(1.0f));
+  REQUIRE(markers[1].y == Approx(5.0f));
+}
+
+TEST_CASE("Hot-apply refreshes cached query and resets jump state", "[unit][hot_apply]") {
+  const auto loaded = rat::load_map_from_string(kHeightMap);
+  REQUIRE(loaded.ok);
+
+  rat::EventRuntime events;
+  rat::GameState state;
+  rat::PlayerBody player;
+  player.x = 1.5f;
+  player.y = 42.0f;
+  player.z = 1.5f;
+  rat::JumpState jump;
+  jump.grounded = false;
+  jump.jump_offset = 1.5f;
+  jump.vertical_speed = -4.0f;
+  jump.jump_buffer_left = 0.08f;
+  jump.coyote_time_left = 0.02f;
+
+  std::vector<rat::BlockerDef> blockers;
+  std::vector<rat::Vec3> markers;
+  std::unique_ptr<rat::SurfaceQuery> cache;
+  rat::HotApplyTargets targets{events, state, player, blockers, markers, &cache, &jump};
+
+  const auto applied =
+      rat::hot_apply_map_from_string(kHeightMap, targets, {.preserve_player_position = true});
+  REQUIRE(applied.ok);
+  REQUIRE(cache != nullptr);
+  REQUIRE(player.x == Approx(1.5f));
+  REQUIRE(player.z == Approx(1.5f));
+  REQUIRE(player.y == Approx(2.0f));
+  REQUIRE(state.player_y() == Approx(2.0f));
+  REQUIRE(jump.grounded);
+  REQUIRE(jump.jump_offset == Approx(0.0f));
+  REQUIRE(jump.vertical_speed == Approx(0.0f));
+  REQUIRE(jump.jump_buffer_left == Approx(0.0f));
+  REQUIRE(jump.coyote_time_left == Approx(0.0f));
+  REQUIRE(cache->sample(3.0f, 1.0f).y == Approx(5.0f));
 }
