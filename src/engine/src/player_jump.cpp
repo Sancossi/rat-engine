@@ -299,6 +299,7 @@ PlayerFrameResult integrate_player_frame_surface(PlayerBody player, JumpState ju
   const float coyote_seconds = clamp_nonnegative(tuning.coyote_seconds);
   const float input_buffer_seconds = clamp_nonnegative(tuning.input_buffer_seconds);
 
+  bool landed = false;
   for (int i = 0; i < substeps; ++i) {
     const bool jump_pressed_this_substep = input.jump_pressed && i == 0;
     const bool was_grounded = jump.grounded;
@@ -613,9 +614,13 @@ PlayerFrameResult integrate_player_frame_surface(PlayerBody player, JumpState ju
         player.y = corrected.y;
       }
     }
+
+    if (!was_grounded && jump.grounded) {
+      landed = true;
+    }
   }
 
-  return PlayerFrameResult{player, jump};
+  return PlayerFrameResult{player, jump, landed};
 }
 
 }  // namespace rat

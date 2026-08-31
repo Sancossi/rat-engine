@@ -33,7 +33,7 @@ tags: [engine]
 | Singleton | нет | Так и держать |
 | State (FSM) | нет персонажного FSM | [[feat: Player locomotion FSM]] (Sprint 4); физика прыжка остаётся `JumpState` |
 | Component / ECS | open question | [[research: Entity model ECS vs scene vs hybrid]] — ADR до любого ECS-кода |
-| Observer | нет шины | [[feat: Gameplay notify observer]] когда UI/аудио иначе лезут вглубь |
+| Observer | `GameplayNotifyBus` subscribe/post | stub; side channel (ItemPicked / DialogShown / Landed), not opcode interpreter. [[feat: Gameplay notify observer]] |
 | Object Pool | нет | [[feat: Object pool for short-lived FX]] с field-action FX |
 | Spatial Partition | height grid + linear blockers | [[feat: Spatial partition broadphase]] после профиля |
 | Data Locality, Dirty Flag | нет | Не заводим без замера |

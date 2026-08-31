@@ -6,6 +6,7 @@
 #include <rat/debug_snapshot.hpp>
 #include <rat/event_runtime.hpp>
 #include <rat/game_state.hpp>
+#include <rat/gameplay_notify.hpp>
 #include <rat/input.hpp>
 #include <rat/log.hpp>
 #include <rat/player.hpp>
@@ -61,6 +62,7 @@ class EditorApp {
   std::unique_ptr<QueuedAudio> audio_;
   PlayerBody player_{};
   GameState game_state_{};
+  GameplayNotifyBus notify_bus_{};
   EventRuntime events_{};
   AppMode app_mode_ = AppMode::Play;
   std::string map_path_;

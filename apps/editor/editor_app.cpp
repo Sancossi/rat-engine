@@ -651,6 +651,18 @@ bool EditorApp::init() {
   audio_sink_ = std::make_unique<LogAudioSink>(*logger_);
   audio_ = std::make_unique<QueuedAudio>(*audio_sink_);
   events_.set_audio(audio_.get());
+  events_.set_notify(&notify_bus_);
+  notify_bus_.subscribe([this](const GameplayNotify& notify) {
+    if (logger_ == nullptr) {
+      return;
+    }
+    std::string message = gameplay_notify_kind_name(notify.kind);
+    if (!notify.id.empty()) {
+      message += ' ';
+      message += notify.id;
+    }
+    log(*logger_, LogLevel::Info, "notify", message);
+  });
   if (file_log_->ok()) {
     log(*logger_, LogLevel::Info, "editor", std::string("log file ") + file_log_->path());
   } else {
@@ -939,6 +951,9 @@ void EditorApp::update_simulation(float dt) {
           jump_tuning_);
       player_ = frame.body;
       jump_state_ = frame.jump;
+      if (frame.landed) {
+        notify_bus_.post({GameplayNotifyKind::Landed, {}});
+      }
       game_state_.set_player_position(player_.x, player_.y, player_.z);
       engine_->set_player(player_);
       if (frame_input.jump_pressed) {

@@ -2,6 +2,7 @@
 
 #include "rat/audio.hpp"
 #include "rat/event_edit.hpp"
+#include "rat/gameplay_notify.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -40,6 +41,10 @@ void EventRuntime::load(MapData map) {
 
 void EventRuntime::set_audio(Audio* audio) {
   audio_ = audio;
+}
+
+void EventRuntime::set_notify(GameplayNotifyBus* notify) {
+  notify_ = notify;
 }
 
 void EventRuntime::set_blockers(std::vector<BlockerDef> blockers) {
@@ -398,6 +403,9 @@ bool EventRuntime::exec_command(Interpreter& interp, GameState& state, const Com
     case CommandOp::ShowText:
       active_message_ = command.text;
       interp.waiting_message = true;
+      if (notify_ != nullptr) {
+        notify_->post({GameplayNotifyKind::DialogShown, {}});
+      }
       return false;
     case CommandOp::ControlSwitch:
       state.set_switch(command.id, command.bool_value);
@@ -428,6 +436,9 @@ bool EventRuntime::exec_command(Interpreter& interp, GameState& state, const Com
       return true;
     case CommandOp::ChangeItems:
       state.add_item(command.item_id, command.item_delta, command.key_item);
+      if (notify_ != nullptr && command.item_delta > 0) {
+        notify_->post({GameplayNotifyKind::ItemPicked, command.item_id});
+      }
       return true;
     case CommandOp::PlaySE:
       if (audio_ != nullptr) {
