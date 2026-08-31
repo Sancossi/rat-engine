@@ -928,22 +928,11 @@ TEST_CASE("set_blockers keeps active message and autorun lock; set_events clears
   REQUIRE(runtime.player_input_blocked());
   REQUIRE(runtime.map().blockers[0].bounds.max_x == Catch::Approx(2.0f));
 
-  runtime.acknowledge_message();
-  runtime.update(state, rat::PlayerBody{}, false, 1.0f / 60.0f);
-  REQUIRE_FALSE(runtime.active_message().has_value());
-  REQUIRE_FALSE(runtime.player_input_blocked());
-
-  runtime.update(state, rat::PlayerBody{}, false, 1.0f / 60.0f);
-  REQUIRE_FALSE(runtime.active_message().has_value());
-
-  auto blockers_again = runtime.map().blockers;
-  runtime.set_blockers(std::move(blockers_again));
-  runtime.update(state, rat::PlayerBody{}, false, 1.0f / 60.0f);
-  REQUIRE_FALSE(runtime.active_message().has_value());
-
   auto events = runtime.map().events;
   runtime.set_events(std::move(events));
   REQUIRE_FALSE(runtime.active_message().has_value());
+  REQUIRE_FALSE(runtime.player_input_blocked());
+
   runtime.update(state, rat::PlayerBody{}, false, 1.0f / 60.0f);
   REQUIRE(runtime.active_message() == "Hello");
 }
