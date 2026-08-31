@@ -411,3 +411,33 @@ TEST_CASE("failed place cube on ramp does not create undo entry", "[unit][edit][
   REQUIRE_FALSE(executed.mutates_elevation);
   REQUIRE_FALSE(history.can_undo());
 }
+
+TEST_CASE("failed place cube on legacy map keeps elevation snapshot unchanged", "[unit][edit][height]") {
+  rat::MapData map = make_tiny_map();
+  map.schema_version = 1;
+
+  rat::RampDef ramp;
+  ramp.tile = {1, 1};
+  ramp.direction = rat::RampDirection::North;
+  ramp.low_y = 0.0f;
+  ramp.high_y = 1.0f;
+  map.ramps.push_back(ramp);
+
+  rat::EditHistory history;
+  const rat::EditApplyResult executed =
+      history.execute(map, rat::make_place_map_tile_cube_command(1, 1));
+  REQUIRE_FALSE(executed.applied);
+  REQUIRE_FALSE(executed.mutates_blockers);
+  REQUIRE_FALSE(executed.mutates_events);
+  REQUIRE_FALSE(executed.mutates_elevation);
+  REQUIRE_FALSE(history.can_undo());
+
+  REQUIRE(map.schema_version == 1);
+  REQUIRE(map.height_grid.width == 0);
+  REQUIRE(map.height_grid.height == 0);
+  REQUIRE(map.height_grid.ground_y.empty());
+  REQUIRE(map.ramps.size() == 1);
+  REQUIRE(map.ramps[0].tile.x == 1);
+  REQUIRE(map.ramps[0].tile.z == 1);
+  REQUIRE(map.edge_barriers.empty());
+}

@@ -53,3 +53,11 @@
 
 ## Concerns
 - None at this scope; behavior is covered by focused edit-history tests and full suite pass.
+
+## Task 26 fix after review (failed elevation rollback)
+- Added RED test `failed place cube on legacy map keeps elevation snapshot unchanged` in `tests/edit_history_test.cpp`.
+- RED result before fix: `[edit]` failed on `REQUIRE( map.schema_version == 1 )` with actual `2 == 1`.
+- Fixed `ReplaceElevationSnapshotCommand::apply` in `src/engine/src/edit_history.cpp`: when `edit_(map)` returns `!ok`, it now restores `schema_version`, `height_grid`, `ramps`, and `edge_barriers` from the captured before-snapshot before returning failure.
+- GREEN result after fix:
+  - `.\build\tests\rat_tests.exe "[edit]"` — pass (`200 assertions`, `17 test cases`).
+  - `.\build\tests\rat_tests.exe` — pass (`2173 assertions`, `272 test cases`).

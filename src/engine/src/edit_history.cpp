@@ -265,6 +265,10 @@ class ReplaceElevationSnapshotCommand final : public EditCommand {
 
     const HeightEditResult edited = edit_(map);
     if (!edited.ok) {
+      map.schema_version = before_schema_version_;
+      map.height_grid = before_height_grid_;
+      map.ramps = before_ramps_;
+      map.edge_barriers = before_edge_barriers_;
       applied_successfully_ = false;
       last_error_ = edited.error;
       return;
