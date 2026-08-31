@@ -73,6 +73,8 @@ bool EditorApp::init() {
     return false;
   }
 
+  player_ = engine_->player();
+  last_time_ = glfwGetTime();
   running_ = true;
   return true;
 }
@@ -84,6 +86,17 @@ int EditorApp::run() {
 
   while (!glfwWindowShouldClose(window_)) {
     glfwPollEvents();
+
+    const double now = glfwGetTime();
+    float dt = static_cast<float>(now - last_time_);
+    last_time_ = now;
+    if (dt < 0.0f) {
+      dt = 0.0f;
+    }
+    if (dt > 0.1f) {
+      dt = 0.1f;
+    }
+    update_player(dt);
 
     ImGui_ImplGlfw_NewFrame();
     imgui_bgfx::begin_frame(width_, height_);
@@ -139,6 +152,37 @@ void EditorApp::framebuffer_size_callback(GLFWwindow* window, int width, int hei
   }
 }
 
+void EditorApp::update_player(float dt) {
+  if (engine_ == nullptr || window_ == nullptr) {
+    return;
+  }
+
+  // Skip world move while ImGui wants the keyboard (e.g. text fields later).
+  const ImGuiIO& io = ImGui::GetIO();
+  MoveInput input;
+  if (!io.WantCaptureKeyboard) {
+    if (glfwGetKey(window_, GLFW_KEY_W) == GLFW_PRESS ||
+        glfwGetKey(window_, GLFW_KEY_UP) == GLFW_PRESS) {
+      input.axis_z -= 1.0f;
+    }
+    if (glfwGetKey(window_, GLFW_KEY_S) == GLFW_PRESS ||
+        glfwGetKey(window_, GLFW_KEY_DOWN) == GLFW_PRESS) {
+      input.axis_z += 1.0f;
+    }
+    if (glfwGetKey(window_, GLFW_KEY_A) == GLFW_PRESS ||
+        glfwGetKey(window_, GLFW_KEY_LEFT) == GLFW_PRESS) {
+      input.axis_x -= 1.0f;
+    }
+    if (glfwGetKey(window_, GLFW_KEY_D) == GLFW_PRESS ||
+        glfwGetKey(window_, GLFW_KEY_RIGHT) == GLFW_PRESS) {
+      input.axis_x += 1.0f;
+    }
+  }
+
+  player_ = integrate_player(player_, input, dt, engine_->blockers());
+  engine_->set_player(player_);
+}
+
 void EditorApp::draw_ui() {
   ImGuiWindowFlags dock_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking;
   const ImGuiViewport* viewport = ImGui::GetMainViewport();
@@ -171,10 +215,20 @@ void EditorApp::draw_ui() {
 
   ImGui::Begin("Hierarchy");
   ImGui::TextUnformatted("Hierarchy (placeholder)");
+  ImGui::Text("Player: (%.2f, %.2f)", player_.x, player_.z);
   ImGui::End();
 
   ImGui::Begin("Inspector");
   ImGui::TextUnformatted("Inspector (placeholder)");
+  ImGui::TextUnformatted("WASD / arrows: free move");
+  ImGui::TextUnformatted("Sample blocker at x=[3,5]");
+  if (ImGui::Button("Snap player to grid")) {
+    const auto snapped = snap_to_grid(player_.x, player_.y, player_.z, 1.0f);
+    player_.x = snapped.x;
+    player_.y = snapped.y;
+    player_.z = snapped.z;
+    engine_->set_player(player_);
+  }
   ImGui::End();
 
   ImGui::End();

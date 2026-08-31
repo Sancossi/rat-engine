@@ -103,6 +103,10 @@ void GreyboxScene::set_focus(float x, float y, float z) {
   rebuild_camera();
 }
 
+void GreyboxScene::set_blockers(std::span<const Aabb2> blockers) {
+  blockers_.assign(blockers.begin(), blockers.end());
+}
+
 void GreyboxScene::rebuild_camera() {
   camera_ = build_ortho_three_quarter(width_, height_, params_);
 
@@ -174,20 +178,72 @@ void GreyboxScene::draw(bgfx::ViewId view_id) {
   }
 
   const std::uint32_t num_verts = static_cast<std::uint32_t>(lines.size());
-  if (num_verts == 0) {
-    return;
-  }
-  if (num_verts != bgfx::getAvailTransientVertexBuffer(num_verts, layout_lines_)) {
-    return;
+  if (num_verts > 0 &&
+      num_verts == bgfx::getAvailTransientVertexBuffer(num_verts, layout_lines_)) {
+    bgfx::TransientVertexBuffer tvb;
+    bgfx::allocTransientVertexBuffer(&tvb, num_verts, layout_lines_);
+    bx::memCopy(tvb.data, lines.data(), lines.size() * sizeof(LineVertex));
+    bgfx::setVertexBuffer(0, &tvb);
+    bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_WRITE_Z |
+                   BGFX_STATE_DEPTH_TEST_LESS | BGFX_STATE_PT_LINES);
+    bgfx::submit(view_id, program_lines_);
   }
 
-  bgfx::TransientVertexBuffer tvb;
-  bgfx::allocTransientVertexBuffer(&tvb, num_verts, layout_lines_);
-  bx::memCopy(tvb.data, lines.data(), lines.size() * sizeof(LineVertex));
-  bgfx::setVertexBuffer(0, &tvb);
-  bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_WRITE_Z |
-                 BGFX_STATE_DEPTH_TEST_LESS | BGFX_STATE_PT_LINES);
-  bgfx::submit(view_id, program_lines_);
+  auto submit_quad = [&](const FillVertex verts[4], const std::uint16_t indices[6]) {
+    if (4 != bgfx::getAvailTransientVertexBuffer(4, layout_fill_) ||
+        6 != bgfx::getAvailTransientIndexBuffer(6)) {
+      return;
+    }
+    bgfx::TransientVertexBuffer qvb;
+    bgfx::TransientIndexBuffer qib;
+    bgfx::allocTransientVertexBuffer(&qvb, 4, layout_fill_);
+    bgfx::allocTransientIndexBuffer(&qib, 6);
+    bx::memCopy(qvb.data, verts, sizeof(FillVertex) * 4);
+    bx::memCopy(qib.data, indices, sizeof(std::uint16_t) * 6);
+    bgfx::setVertexBuffer(0, &qvb);
+    bgfx::setIndexBuffer(&qib);
+    bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_WRITE_Z |
+                   BGFX_STATE_DEPTH_TEST_LESS | BGFX_STATE_CULL_CW);
+    bgfx::submit(view_id, program_fill_);
+  };
+
+  const std::uint16_t quad_indices[6] = {0, 1, 2, 0, 2, 3};
+  const std::uint32_t blocker_color = 0xff3a3a55;
+  for (const Aabb2& b : blockers_) {
+    FillVertex verts[4] = {
+        {b.min_x, 0.02f, b.min_z, 0.0f, 0.0f, blocker_color},
+        {b.max_x, 0.02f, b.min_z, 1.0f, 0.0f, blocker_color},
+        {b.max_x, 0.02f, b.max_z, 1.0f, 1.0f, blocker_color},
+        {b.min_x, 0.02f, b.max_z, 0.0f, 1.0f, blocker_color},
+    };
+    submit_quad(verts, quad_indices);
+  }
+
+  if (has_player_) {
+    const float h = player_.half_extent;
+    const std::uint32_t player_color = 0xff40c070;
+    FillVertex verts[4] = {
+        {player_.x - h, 0.05f, player_.z - h, 0.0f, 0.0f, player_color},
+        {player_.x + h, 0.05f, player_.z - h, 1.0f, 0.0f, player_color},
+        {player_.x + h, 0.05f, player_.z + h, 1.0f, 1.0f, player_color},
+        {player_.x - h, 0.05f, player_.z + h, 0.0f, 1.0f, player_color},
+    };
+    submit_quad(verts, quad_indices);
+
+    LineVertex stem[2] = {
+        {player_.x, 0.05f, player_.z, 0.0f, 0xffe0ffe0},
+        {player_.x, 1.2f, player_.z, 1.0f, 0xffe0ffe0},
+    };
+    if (2 == bgfx::getAvailTransientVertexBuffer(2, layout_lines_)) {
+      bgfx::TransientVertexBuffer svb;
+      bgfx::allocTransientVertexBuffer(&svb, 2, layout_lines_);
+      bx::memCopy(svb.data, stem, sizeof(stem));
+      bgfx::setVertexBuffer(0, &svb);
+      bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_WRITE_Z |
+                     BGFX_STATE_DEPTH_TEST_LESS | BGFX_STATE_PT_LINES);
+      bgfx::submit(view_id, program_lines_);
+    }
+  }
 }
 
 }  // namespace rat

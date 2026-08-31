@@ -1,9 +1,11 @@
 #pragma once
 
 #include "rat/greybox.hpp"
+#include "rat/player.hpp"
 #include "rat/renderer.hpp"
 
 #include <string>
+#include <vector>
 
 namespace rat {
 
@@ -25,6 +27,11 @@ class Engine {
   void end_frame();
   void frame();
 
+  void set_player(const PlayerBody& player);
+  void set_blockers(std::vector<Aabb2> blockers);
+  [[nodiscard]] const PlayerBody& player() const { return player_; }
+  [[nodiscard]] const std::vector<Aabb2>& blockers() const { return blockers_; }
+
   [[nodiscard]] bool is_initialized() const { return initialized_; }
   [[nodiscard]] const GreyboxScene& greybox() const { return greybox_; }
 
@@ -33,6 +40,8 @@ class Engine {
  private:
   Renderer renderer_;
   GreyboxScene greybox_;
+  PlayerBody player_{};
+  std::vector<Aabb2> blockers_;
   bool initialized_ = false;
   std::string debug_banner_{"rat-engine"};
 };

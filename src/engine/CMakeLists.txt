@@ -1,6 +1,7 @@
 add_library(rat_core
   src/camera.cpp
   src/game_state.cpp
+  src/player.cpp
 )
 
 add_library(rat::core ALIAS rat_core)

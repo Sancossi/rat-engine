@@ -23,6 +23,13 @@ bool Engine::init(const RendererConfig& config) {
     return false;
   }
   greybox_.resize(config.width, config.height);
+
+  // Sample blocker so collision is visible in the editor immediately.
+  blockers_ = {Aabb2{3.0f, -1.0f, 5.0f, 1.0f}};
+  player_ = {};
+  greybox_.set_player(player_);
+  greybox_.set_blockers(blockers_);
+
   initialized_ = true;
   return true;
 }
@@ -41,6 +48,16 @@ void Engine::resize(std::uint32_t width, std::uint32_t height) {
   greybox_.resize(width, height);
 }
 
+void Engine::set_player(const PlayerBody& player) {
+  player_ = player;
+  greybox_.set_player(player_);
+}
+
+void Engine::set_blockers(std::vector<Aabb2> blockers) {
+  blockers_ = std::move(blockers);
+  greybox_.set_blockers(blockers_);
+}
+
 void Engine::begin_frame() {
   if (!initialized_) {
     return;
@@ -52,7 +69,8 @@ void Engine::begin_frame() {
   const auto& cam = greybox_.camera();
   bgfx::dbgTextClear();
   bgfx::dbgTextPrintf(1, 1, 0x0f, "%s", debug_banner_.c_str());
-  bgfx::dbgTextPrintf(1, 3, 0x0a, "ortho 3/4 greybox  scale=%d", cam.pixel_scale);
+  bgfx::dbgTextPrintf(1, 3, 0x0a, "ortho 3/4  scale=%d  WASD move", cam.pixel_scale);
+  bgfx::dbgTextPrintf(1, 4, 0x0b, "player (%.2f, %.2f)", player_.x, player_.z);
 }
 
 void Engine::end_frame() {

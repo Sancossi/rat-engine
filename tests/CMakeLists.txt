@@ -2,6 +2,7 @@ add_executable(rat_tests
   camera_test.cpp
   game_state_test.cpp
   headless_mechanics_stub_test.cpp
+  player_test.cpp
 )
 
 target_link_libraries(rat_tests
