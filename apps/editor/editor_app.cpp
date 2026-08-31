@@ -109,6 +109,17 @@ void EditorApp::apply_edited_map(MapData map, EditApplyResult mutation) {
     events_.set_events(std::move(map.events));
     sync_events_to_runtime();
   }
+  if (mutation.mutates_elevation) {
+    events_.set_elevation_data(map.schema_version, std::move(map.height_grid), std::move(map.ramps),
+                               std::move(map.edge_barriers));
+    rebuild_surface_query_cache();
+    if (engine_ != nullptr) {
+      engine_->set_terrain_map(events_.map());
+      engine_->set_event_markers(event_markers_from_map(events_.map()));
+      engine_->set_blockers(events_.map().blockers);
+    }
+    snap_player_to_ground_clear_jump();
+  }
 }
 
 void EditorApp::discard_field_edit_origins() {
@@ -389,23 +400,16 @@ void EditorApp::draw_height_edit_ui() {
     height_step_ = 0.25f;
   }
 
-  auto sync_elevation = [&]() {
-    rebuild_surface_query_cache();
-    if (engine_ != nullptr) {
-      engine_->set_terrain_map(events_.map());
-      engine_->set_event_markers(event_markers_from_map(events_.map()));
-      engine_->set_blockers(events_.map().blockers);
-    }
-    snap_player_to_ground_clear_jump();
-  };
-
-  auto apply_result = [&](const HeightEditResult& result) {
-    if (!result.ok) {
-      last_apply_error_ = result.error;
+  auto run_height_history = [&](std::unique_ptr<EditCommand> command) {
+    discard_field_edit_origins();
+    MapData map = events_.map();
+    const EditApplyResult result = edit_history_.execute(map, std::move(command));
+    if (!result.applied) {
+      last_apply_error_ = result.error.empty() ? "Height edit failed" : result.error;
       return false;
     }
     last_apply_error_.clear();
-    sync_elevation();
+    apply_edited_map(std::move(map), result);
     return true;
   };
 
@@ -445,7 +449,8 @@ void EditorApp::draw_height_edit_ui() {
     ImGui::BeginDisabled();
   }
   if (ImGui::Button("- Step")) {
-    if (apply_result(events_.adjust_tile_elevation(height_tile_x_, height_tile_z_, -height_step_))) {
+    if (run_height_history(
+            make_adjust_map_tile_ground_y_command(height_tile_x_, height_tile_z_, -height_step_))) {
       const HeightGetResult updated =
           get_tile_ground_y(events_.map().height_grid, height_tile_x_, height_tile_z_);
       if (updated.ok) {
@@ -455,7 +460,8 @@ void EditorApp::draw_height_edit_ui() {
   }
   ImGui::SameLine();
   if (ImGui::Button("+ Step")) {
-    if (apply_result(events_.adjust_tile_elevation(height_tile_x_, height_tile_z_, height_step_))) {
+    if (run_height_history(
+            make_adjust_map_tile_ground_y_command(height_tile_x_, height_tile_z_, height_step_))) {
       const HeightGetResult updated =
           get_tile_ground_y(events_.map().height_grid, height_tile_x_, height_tile_z_);
       if (updated.ok) {
@@ -465,7 +471,7 @@ void EditorApp::draw_height_edit_ui() {
   }
   ImGui::SameLine();
   if (ImGui::Button("Place cube")) {
-    if (apply_result(events_.place_tile_cube(height_tile_x_, height_tile_z_))) {
+    if (run_height_history(make_place_map_tile_cube_command(height_tile_x_, height_tile_z_))) {
       const HeightGetResult updated =
           get_tile_ground_y(events_.map().height_grid, height_tile_x_, height_tile_z_);
       if (updated.ok) {
@@ -481,7 +487,8 @@ void EditorApp::draw_height_edit_ui() {
     ImGui::BeginDisabled();
   }
   if (ImGui::Button("Set tile height")) {
-    (void)apply_result(events_.set_tile_elevation(height_tile_x_, height_tile_z_, height_set_y_));
+    (void)run_height_history(
+        make_set_map_tile_ground_y_command(height_tile_x_, height_tile_z_, height_set_y_));
   }
   if (tile_has_ramp) {
     ImGui::EndDisabled();
@@ -505,11 +512,11 @@ void EditorApp::draw_height_edit_ui() {
     ramp.direction = static_cast<RampDirection>(ramp_direction_index_);
     ramp.low_y = ramp_low_y_;
     ramp.high_y = ramp_high_y_;
-    (void)apply_result(events_.upsert_ramp_elevation(ramp));
+    (void)run_height_history(make_upsert_map_ramp_command(std::move(ramp)));
   }
   ImGui::SameLine();
   if (ImGui::Button("Remove ramp")) {
-    (void)apply_result(events_.remove_ramp_elevation(ramp_tile));
+    (void)run_height_history(make_remove_map_ramp_command(ramp_tile));
   }
 
   ImGui::Separator();
@@ -523,7 +530,7 @@ void EditorApp::draw_height_edit_ui() {
     edge.tile = ramp_tile;
     edge.direction = static_cast<RampDirection>(edge_direction_index_);
     edge.height = height;
-    (void)apply_result(events_.upsert_edge_barrier(edge));
+    (void)run_height_history(make_upsert_map_edge_barrier_command(std::move(edge)));
   };
   if (ImGui::Button("Mini 0.45")) {
     upsert_selected_edge(kEdgeBarrierMiniHeight);
@@ -534,7 +541,7 @@ void EditorApp::draw_height_edit_ui() {
   }
   ImGui::SameLine();
   if (ImGui::Button("Remove edge")) {
-    (void)apply_result(events_.remove_edge_barrier(
+    (void)run_height_history(make_remove_map_edge_barrier_command(
         ramp_tile, static_cast<RampDirection>(edge_direction_index_)));
   }
   if (tile_has_ramp) {

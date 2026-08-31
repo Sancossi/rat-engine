@@ -1,6 +1,7 @@
 #include <rat/blocker_edit.hpp>
 #include <rat/edit_history.hpp>
 #include <rat/event_edit.hpp>
+#include <rat/height_edit.hpp>
 #include <rat/map_data.hpp>
 
 #include <catch2/catch_approx.hpp>
@@ -328,4 +329,85 @@ TEST_CASE("replace event Show Text undo restores the old string", "[unit][edit]"
 
   REQUIRE(history.redo(map));
   REQUIRE(map.events[0].pages[0].commands[0].text == "Hello");
+}
+
+TEST_CASE("place cube undo restores ground and redo raises again", "[unit][edit][height]") {
+  rat::MapData map = make_tiny_map();
+  REQUIRE(rat::upgrade_map_schema_for_elevation(map).ok);
+  rat::EditHistory history;
+
+  const rat::EditApplyResult executed =
+      history.execute(map, rat::make_place_map_tile_cube_command(1, 2));
+  REQUIRE(executed.applied);
+  REQUIRE_FALSE(executed.mutates_blockers);
+  REQUIRE_FALSE(executed.mutates_events);
+  REQUIRE(executed.mutates_elevation);
+
+  const rat::HeightGetResult raised = rat::get_tile_ground_y(map.height_grid, 1, 2);
+  REQUIRE(raised.ok);
+  REQUIRE(raised.value == Approx(rat::kPlaceCubeDeltaY));
+
+  const rat::EditApplyResult undone = history.undo(map);
+  REQUIRE(undone.applied);
+  REQUIRE_FALSE(undone.mutates_blockers);
+  REQUIRE_FALSE(undone.mutates_events);
+  REQUIRE(undone.mutates_elevation);
+
+  const rat::HeightGetResult restored = rat::get_tile_ground_y(map.height_grid, 1, 2);
+  REQUIRE(restored.ok);
+  REQUIRE(restored.value == Approx(0.0f));
+
+  const rat::EditApplyResult redone = history.redo(map);
+  REQUIRE(redone.applied);
+  REQUIRE(redone.mutates_elevation);
+  const rat::HeightGetResult reraised = rat::get_tile_ground_y(map.height_grid, 1, 2);
+  REQUIRE(reraised.ok);
+  REQUIRE(reraised.value == Approx(rat::kPlaceCubeDeltaY));
+}
+
+TEST_CASE("upsert edge barrier undo removes it and redo restores", "[unit][edit][height]") {
+  rat::MapData map = make_tiny_map();
+  REQUIRE(rat::upgrade_map_schema_for_elevation(map).ok);
+  rat::EditHistory history;
+
+  rat::EdgeBarrierDef edge;
+  edge.tile = {0, 0};
+  edge.direction = rat::RampDirection::East;
+  edge.height = rat::kEdgeBarrierMiniHeight;
+
+  const rat::EditApplyResult executed =
+      history.execute(map, rat::make_upsert_map_edge_barrier_command(edge));
+  REQUIRE(executed.applied);
+  REQUIRE(executed.mutates_elevation);
+  REQUIRE(map.edge_barriers.size() == 1);
+  REQUIRE(map.edge_barriers[0].height == Approx(rat::kEdgeBarrierMiniHeight));
+
+  REQUIRE(history.undo(map));
+  REQUIRE(map.edge_barriers.empty());
+
+  REQUIRE(history.redo(map));
+  REQUIRE(map.edge_barriers.size() == 1);
+  REQUIRE(map.edge_barriers[0].tile.x == 0);
+  REQUIRE(map.edge_barriers[0].tile.z == 0);
+  REQUIRE(map.edge_barriers[0].direction == rat::RampDirection::East);
+}
+
+TEST_CASE("failed place cube on ramp does not create undo entry", "[unit][edit][height]") {
+  rat::MapData map = make_tiny_map();
+  REQUIRE(rat::upgrade_map_schema_for_elevation(map).ok);
+  rat::RampDef ramp;
+  ramp.tile = {1, 1};
+  ramp.direction = rat::RampDirection::North;
+  ramp.low_y = 0.0f;
+  ramp.high_y = 1.0f;
+  REQUIRE(rat::upsert_map_ramp(map, ramp).ok);
+
+  rat::EditHistory history;
+  const rat::EditApplyResult executed =
+      history.execute(map, rat::make_place_map_tile_cube_command(1, 1));
+  REQUIRE_FALSE(executed.applied);
+  REQUIRE_FALSE(executed.mutates_blockers);
+  REQUIRE_FALSE(executed.mutates_events);
+  REQUIRE_FALSE(executed.mutates_elevation);
+  REQUIRE_FALSE(history.can_undo());
 }

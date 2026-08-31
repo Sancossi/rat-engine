@@ -56,6 +56,8 @@ class EventRuntime {
   void set_notify(GameplayNotifyBus* notify);  // nullable; not owned
   void set_blockers(std::vector<BlockerDef> blockers);
   void set_events(std::vector<EventDef> events);
+  void set_elevation_data(int schema_version, HeightGrid height_grid, std::vector<RampDef> ramps,
+                          std::vector<EdgeBarrierDef> edge_barriers);
   [[nodiscard]] HeightEditResult set_tile_elevation(int tile_x, int tile_z, float ground_y);
   [[nodiscard]] HeightEditResult adjust_tile_elevation(int tile_x, int tile_z, float delta_y);
   [[nodiscard]] HeightEditResult place_tile_cube(int tile_x, int tile_z);

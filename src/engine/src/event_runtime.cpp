@@ -65,6 +65,16 @@ void EventRuntime::set_events(std::vector<EventDef> events) {
   warnings_.clear();
 }
 
+void EventRuntime::set_elevation_data(int schema_version, HeightGrid height_grid,
+                                      std::vector<RampDef> ramps,
+                                      std::vector<EdgeBarrierDef> edge_barriers) {
+  map_.schema_version = schema_version;
+  map_.height_grid = std::move(height_grid);
+  map_.ramps = std::move(ramps);
+  map_.edge_barriers = std::move(edge_barriers);
+  rebuild_surface_query_for_elevation();
+}
+
 HeightEditResult EventRuntime::set_tile_elevation(int tile_x, int tile_z, float ground_y) {
   MapData candidate = map_;
   const HeightEditResult edited = set_map_tile_ground_y(candidate, tile_x, tile_z, ground_y);

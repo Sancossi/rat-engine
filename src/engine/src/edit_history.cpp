@@ -2,8 +2,10 @@
 
 #include "rat/blocker_edit.hpp"
 #include "rat/event_edit.hpp"
+#include "rat/height_edit.hpp"
 
 #include <cstddef>
+#include <functional>
 #include <utility>
 
 namespace rat {
@@ -15,6 +17,7 @@ EditApplyResult result_from(const EditCommand& command) {
   result.applied = true;
   result.mutates_blockers = command.mutates_blockers();
   result.mutates_events = command.mutates_events();
+  result.mutates_elevation = command.mutates_elevation();
   return result;
 }
 
@@ -240,6 +243,72 @@ class ReplaceEventCommand final : public EditCommand {
   bool captured_ = false;
 };
 
+class ReplaceElevationSnapshotCommand final : public EditCommand {
+ public:
+  using ElevationEditFn = std::function<HeightEditResult(MapData&)>;
+
+  explicit ReplaceElevationSnapshotCommand(ElevationEditFn edit) : edit_(std::move(edit)) {}
+
+  void apply(MapData& map) override {
+    if (committed_) {
+      map.schema_version = after_schema_version_;
+      map.height_grid = after_height_grid_;
+      map.ramps = after_ramps_;
+      map.edge_barriers = after_edge_barriers_;
+      applied_successfully_ = true;
+      return;
+    }
+    before_schema_version_ = map.schema_version;
+    before_height_grid_ = map.height_grid;
+    before_ramps_ = map.ramps;
+    before_edge_barriers_ = map.edge_barriers;
+
+    const HeightEditResult edited = edit_(map);
+    if (!edited.ok) {
+      applied_successfully_ = false;
+      last_error_ = edited.error;
+      return;
+    }
+    after_schema_version_ = map.schema_version;
+    after_height_grid_ = map.height_grid;
+    after_ramps_ = map.ramps;
+    after_edge_barriers_ = map.edge_barriers;
+    committed_ = true;
+    applied_successfully_ = true;
+    last_error_.clear();
+  }
+
+  void revert(MapData& map) override {
+    if (!committed_) {
+      return;
+    }
+    map.schema_version = before_schema_version_;
+    map.height_grid = before_height_grid_;
+    map.ramps = before_ramps_;
+    map.edge_barriers = before_edge_barriers_;
+  }
+
+  [[nodiscard]] bool applied_successfully() const override { return applied_successfully_; }
+  [[nodiscard]] std::string last_error() const override { return last_error_; }
+  [[nodiscard]] bool mutates_blockers() const override { return false; }
+  [[nodiscard]] bool mutates_events() const override { return false; }
+  [[nodiscard]] bool mutates_elevation() const override { return true; }
+
+ private:
+  ElevationEditFn edit_{};
+  int before_schema_version_ = 1;
+  HeightGrid before_height_grid_{};
+  std::vector<RampDef> before_ramps_{};
+  std::vector<EdgeBarrierDef> before_edge_barriers_{};
+  int after_schema_version_ = 1;
+  HeightGrid after_height_grid_{};
+  std::vector<RampDef> after_ramps_{};
+  std::vector<EdgeBarrierDef> after_edge_barriers_{};
+  bool committed_ = false;
+  bool applied_successfully_ = false;
+  std::string last_error_{};
+};
+
 }  // namespace
 
 std::unique_ptr<EditCommand> make_place_blocker_command(BlockerDef blocker) {
@@ -276,11 +345,58 @@ std::unique_ptr<EditCommand> make_replace_event_command(std::size_t index, Event
   return std::make_unique<ReplaceEventCommand>(index, std::move(next));
 }
 
+std::unique_ptr<EditCommand> make_set_map_tile_ground_y_command(int tile_x, int tile_z,
+                                                                 float ground_y) {
+  return std::make_unique<ReplaceElevationSnapshotCommand>(
+      [tile_x, tile_z, ground_y](MapData& map) {
+        return set_map_tile_ground_y(map, tile_x, tile_z, ground_y);
+      });
+}
+
+std::unique_ptr<EditCommand> make_adjust_map_tile_ground_y_command(int tile_x, int tile_z,
+                                                                    float delta_y) {
+  return std::make_unique<ReplaceElevationSnapshotCommand>(
+      [tile_x, tile_z, delta_y](MapData& map) {
+        return adjust_map_tile_ground_y(map, tile_x, tile_z, delta_y);
+      });
+}
+
+std::unique_ptr<EditCommand> make_place_map_tile_cube_command(int tile_x, int tile_z) {
+  return std::make_unique<ReplaceElevationSnapshotCommand>(
+      [tile_x, tile_z](MapData& map) { return place_map_tile_cube(map, tile_x, tile_z); });
+}
+
+std::unique_ptr<EditCommand> make_upsert_map_ramp_command(RampDef ramp) {
+  return std::make_unique<ReplaceElevationSnapshotCommand>(
+      [ramp = std::move(ramp)](MapData& map) { return upsert_map_ramp(map, ramp); });
+}
+
+std::unique_ptr<EditCommand> make_remove_map_ramp_command(TileCoord tile) {
+  return std::make_unique<ReplaceElevationSnapshotCommand>(
+      [tile](MapData& map) { return remove_map_ramp(map, tile); });
+}
+
+std::unique_ptr<EditCommand> make_upsert_map_edge_barrier_command(EdgeBarrierDef edge) {
+  return std::make_unique<ReplaceElevationSnapshotCommand>(
+      [edge = std::move(edge)](MapData& map) { return upsert_map_edge_barrier(map, edge); });
+}
+
+std::unique_ptr<EditCommand> make_remove_map_edge_barrier_command(TileCoord tile,
+                                                                   RampDirection direction) {
+  return std::make_unique<ReplaceElevationSnapshotCommand>(
+      [tile, direction](MapData& map) { return remove_map_edge_barrier(map, tile, direction); });
+}
+
 EditApplyResult EditHistory::execute(MapData& map, std::unique_ptr<EditCommand> command) {
   if (command == nullptr) {
     return {};
   }
   command->apply(map);
+  if (!command->applied_successfully()) {
+    EditApplyResult failed;
+    failed.error = command->last_error();
+    return failed;
+  }
   const EditApplyResult result = result_from(*command);
   undo_.push_back(std::move(command));
   redo_.clear();
@@ -306,6 +422,11 @@ EditApplyResult EditHistory::redo(MapData& map) {
   std::unique_ptr<EditCommand> command = std::move(redo_.back());
   redo_.pop_back();
   command->apply(map);
+  if (!command->applied_successfully()) {
+    EditApplyResult failed;
+    failed.error = command->last_error();
+    return failed;
+  }
   const EditApplyResult result = result_from(*command);
   undo_.push_back(std::move(command));
   return result;
