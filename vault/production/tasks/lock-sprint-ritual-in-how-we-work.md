@@ -1,7 +1,7 @@
 ---
 type: task
 area: Production
-status: In progress
+status: Done
 task_type: Chore
 sprint: Sprint 0
 roadmap: Production cadence locked
