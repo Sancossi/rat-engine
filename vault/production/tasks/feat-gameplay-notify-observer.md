@@ -18,7 +18,9 @@ Acceptance: подписка/пост без синглтона; RM-команд
 
 `GameplayNotifyBus` in `rat_core`: `subscribe` / `post` FIFO, no singleton. `EventRuntime::set_notify` (nullable, same inject as `set_audio`) posts `DialogShown` after `ShowText` and `ItemPicked` after `ChangeItems` with `item_delta > 0`. `PlayerFrameResult::landed` is true on airborne→grounded in `integrate_player_frame_surface`; `EditorApp` posts `Landed` from that flag and owns the bus. Verify: `.\build\tests\rat_tests.exe "[notify]"`.
 
+Follow-up: [[chore: notify bus review polish]]
+
 ## Bugs found
 
-none.
+none (продуктовых). Minor ревью: нет теста двух handlers, in-place `post`, landed vs buffer relaunch — см. follow-up.
 
