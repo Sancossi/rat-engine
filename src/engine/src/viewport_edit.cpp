@@ -55,55 +55,107 @@ Vec3 event_center(const EventDef& event, float tile_size) {
   return {};
 }
 
+void mul_mat4(const float a[16], const float b[16], float out[16]) {
+  float tmp[16];
+  for (int col = 0; col < 4; ++col) {
+    for (int row = 0; row < 4; ++row) {
+      tmp[col * 4 + row] = a[0 * 4 + row] * b[col * 4 + 0] + a[1 * 4 + row] * b[col * 4 + 1] +
+                           a[2 * 4 + row] * b[col * 4 + 2] + a[3 * 4 + row] * b[col * 4 + 3];
+    }
+  }
+  for (int i = 0; i < 16; ++i) {
+    out[i] = tmp[i];
+  }
+}
+
+bool invert_mat4(const float m[16], float inv_out[16]) {
+  float inv[16];
+  inv[0] = m[5] * m[10] * m[15] - m[5] * m[11] * m[14] - m[9] * m[6] * m[15] + m[9] * m[7] * m[14] +
+           m[13] * m[6] * m[11] - m[13] * m[7] * m[10];
+  inv[4] = -m[4] * m[10] * m[15] + m[4] * m[11] * m[14] + m[8] * m[6] * m[15] - m[8] * m[7] * m[14] -
+           m[12] * m[6] * m[11] + m[12] * m[7] * m[10];
+  inv[8] = m[4] * m[9] * m[15] - m[4] * m[11] * m[13] - m[8] * m[5] * m[15] + m[8] * m[7] * m[13] +
+           m[12] * m[5] * m[11] - m[12] * m[7] * m[9];
+  inv[12] = -m[4] * m[9] * m[14] + m[4] * m[10] * m[13] + m[8] * m[5] * m[14] - m[8] * m[6] * m[13] -
+            m[12] * m[5] * m[10] + m[12] * m[6] * m[9];
+  inv[1] = -m[1] * m[10] * m[15] + m[1] * m[11] * m[14] + m[9] * m[2] * m[15] - m[9] * m[3] * m[14] -
+           m[13] * m[2] * m[11] + m[13] * m[3] * m[10];
+  inv[5] = m[0] * m[10] * m[15] - m[0] * m[11] * m[14] - m[8] * m[2] * m[15] + m[8] * m[3] * m[14] +
+           m[12] * m[2] * m[11] - m[12] * m[3] * m[10];
+  inv[9] = -m[0] * m[9] * m[15] + m[0] * m[11] * m[13] + m[8] * m[1] * m[15] - m[8] * m[3] * m[13] -
+           m[12] * m[1] * m[11] + m[12] * m[3] * m[9];
+  inv[13] = m[0] * m[9] * m[14] - m[0] * m[10] * m[13] - m[8] * m[1] * m[14] + m[8] * m[2] * m[13] +
+            m[12] * m[1] * m[10] - m[12] * m[2] * m[9];
+  inv[2] = m[1] * m[6] * m[15] - m[1] * m[7] * m[14] - m[5] * m[2] * m[15] + m[5] * m[3] * m[14] +
+           m[13] * m[2] * m[7] - m[13] * m[3] * m[6];
+  inv[6] = -m[0] * m[6] * m[15] + m[0] * m[7] * m[14] + m[4] * m[2] * m[15] - m[4] * m[3] * m[14] -
+           m[12] * m[2] * m[7] + m[12] * m[3] * m[6];
+  inv[10] = m[0] * m[5] * m[15] - m[0] * m[7] * m[13] - m[4] * m[1] * m[15] + m[4] * m[3] * m[13] +
+            m[12] * m[1] * m[7] - m[12] * m[3] * m[5];
+  inv[14] = -m[0] * m[5] * m[14] + m[0] * m[6] * m[13] + m[4] * m[1] * m[14] - m[4] * m[2] * m[13] -
+            m[12] * m[1] * m[6] + m[12] * m[2] * m[5];
+  inv[3] = -m[1] * m[6] * m[11] + m[1] * m[7] * m[10] + m[5] * m[2] * m[11] - m[5] * m[3] * m[10] -
+           m[9] * m[2] * m[7] + m[9] * m[3] * m[6];
+  inv[7] = m[0] * m[6] * m[11] - m[0] * m[7] * m[10] - m[4] * m[2] * m[11] + m[4] * m[3] * m[10] +
+           m[8] * m[2] * m[7] - m[8] * m[3] * m[6];
+  inv[11] = -m[0] * m[5] * m[11] + m[0] * m[7] * m[9] + m[4] * m[1] * m[11] - m[4] * m[3] * m[9] -
+            m[8] * m[1] * m[7] + m[8] * m[3] * m[5];
+  inv[15] = m[0] * m[5] * m[10] - m[0] * m[6] * m[9] - m[4] * m[1] * m[10] + m[4] * m[2] * m[9] +
+            m[8] * m[1] * m[6] - m[8] * m[2] * m[5];
+
+  const float det = m[0] * inv[0] + m[1] * inv[4] + m[2] * inv[8] + m[3] * inv[12];
+  if (std::fabs(det) <= kEpsilon) {
+    return false;
+  }
+  const float inv_det = 1.0f / det;
+  for (int i = 0; i < 16; ++i) {
+    inv_out[i] = inv[i] * inv_det;
+  }
+  return true;
+}
+
+std::optional<Vec3> transform_clip_to_world(const float inv_clip[16], float ndc_x, float ndc_y,
+                                            float ndc_z) {
+  const float x = inv_clip[0] * ndc_x + inv_clip[4] * ndc_y + inv_clip[8] * ndc_z + inv_clip[12];
+  const float y = inv_clip[1] * ndc_x + inv_clip[5] * ndc_y + inv_clip[9] * ndc_z + inv_clip[13];
+  const float z = inv_clip[2] * ndc_x + inv_clip[6] * ndc_y + inv_clip[10] * ndc_z + inv_clip[14];
+  const float w = inv_clip[3] * ndc_x + inv_clip[7] * ndc_y + inv_clip[11] * ndc_z + inv_clip[15];
+  if (std::fabs(w) <= kEpsilon) {
+    return std::nullopt;
+  }
+  return Vec3{x / w, y / w, z / w};
+}
+
 }  // namespace
 
 std::optional<Vec3> unproject_to_ground_plane(const OrthoCamera& camera, float pixel_x, float pixel_y,
                                               std::uint32_t framebuffer_width,
                                               std::uint32_t framebuffer_height, float ground_y) {
+  // Invert live view/proj as opaque world-to-clip 4x4 (what bgfx::setViewTransform consumes).
   const float width = static_cast<float>(std::max<std::uint32_t>(1, framebuffer_width));
   const float height = static_cast<float>(std::max<std::uint32_t>(1, framebuffer_height));
   const float ndc_x = 2.0f * pixel_x / width - 1.0f;
   const float ndc_y = 1.0f - 2.0f * pixel_y / height;
-  if (std::fabs(camera.proj.m[0]) <= kEpsilon || std::fabs(camera.proj.m[5]) <= kEpsilon) {
+
+  float clip[16];
+  mul_mat4(camera.proj.m, camera.view.m, clip);
+  float inv_clip[16];
+  if (!invert_mat4(clip, inv_clip)) {
     return std::nullopt;
   }
 
-  const Vec3 right{camera.view.m[0], camera.view.m[1], camera.view.m[2]};
-  const Vec3 up{camera.view.m[4], camera.view.m[5], camera.view.m[6]};
-  const Vec3 minus_forward{camera.view.m[8], camera.view.m[9], camera.view.m[10]};
-  const Vec3 forward{-minus_forward.x, -minus_forward.y, -minus_forward.z};
-
-  // camera.cpp look_at stores translation as:
-  // tx = -dot(right, eye), ty = -dot(up, eye), tz = dot(forward, eye).
-  // Recover eye in world space from that identity:
-  // eye = -tx * right - ty * up + tz * forward.
-  const Vec3 eye{
-      -camera.view.m[12] * right.x - camera.view.m[13] * up.x + camera.view.m[14] * forward.x,
-      -camera.view.m[12] * right.y - camera.view.m[13] * up.y + camera.view.m[14] * forward.y,
-      -camera.view.m[12] * right.z - camera.view.m[13] * up.z + camera.view.m[14] * forward.z,
-  };
-
-  const float view_x = (ndc_x - camera.proj.m[12]) / camera.proj.m[0];
-  const float view_y = (ndc_y - camera.proj.m[13]) / camera.proj.m[5];
-  const Vec3 ray_origin{
-      eye.x + right.x * view_x + up.x * view_y,
-      eye.y + right.y * view_x + up.y * view_y,
-      eye.z + right.z * view_x + up.z * view_y,
-  };
-
-  if (std::fabs(forward.y) <= kEpsilon) {
+  const auto p0 = transform_clip_to_world(inv_clip, ndc_x, ndc_y, -1.0f);
+  const auto p1 = transform_clip_to_world(inv_clip, ndc_x, ndc_y, 1.0f);
+  if (!p0.has_value() || !p1.has_value()) {
     return std::nullopt;
   }
 
-  const float t = (ground_y - ray_origin.y) / forward.y;
-  if (t < 0.0f) {
+  const float dy = p1->y - p0->y;
+  if (std::fabs(dy) <= kEpsilon) {
     return std::nullopt;
   }
-  return Vec3{
-      ray_origin.x + forward.x * t,
-      ground_y,
-      ray_origin.z + forward.z * t,
-  };
+  const float t = (ground_y - p0->y) / dy;
+  return Vec3{p0->x + (p1->x - p0->x) * t, ground_y, p0->z + (p1->z - p0->z) * t};
 }
 
 std::optional<ViewportPick> pick_map_object_xz(const MapData& map, Vec3 world_hit) {

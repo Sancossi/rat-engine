@@ -5,9 +5,55 @@
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
 
+#include <cmath>
+
 using Catch::Approx;
 
 namespace {
+
+rat::Vec3 vec_sub(rat::Vec3 a, rat::Vec3 b) {
+  return {a.x - b.x, a.y - b.y, a.z - b.z};
+}
+
+float vec_dot(rat::Vec3 a, rat::Vec3 b) {
+  return a.x * b.x + a.y * b.y + a.z * b.z;
+}
+
+rat::Vec3 vec_cross(rat::Vec3 a, rat::Vec3 b) {
+  return {a.y * b.z - a.z * b.y, a.z * b.x - a.x * b.z, a.x * b.y - a.y * b.x};
+}
+
+rat::Vec3 vec_normalize(rat::Vec3 v) {
+  const float len = std::sqrt(vec_dot(v, v));
+  return {v.x / len, v.y / len, v.z / len};
+}
+
+// Byte-layout twin of bx::mtxLookAt(..., Left). rat_core must not link bx.
+rat::Mat4 look_at_bx_left(rat::Vec3 eye, rat::Vec3 at, rat::Vec3 up) {
+  const rat::Vec3 view = vec_normalize(vec_sub(at, eye));
+  const rat::Vec3 uxv = vec_cross(up, view);
+  const rat::Vec3 right = (vec_dot(uxv, uxv) == 0.0f) ? rat::Vec3{-1.0f, 0.0f, 0.0f} : vec_normalize(uxv);
+  const rat::Vec3 up_axis = vec_cross(view, right);
+
+  rat::Mat4 out{};
+  out.m[0] = right.x;
+  out.m[1] = up_axis.x;
+  out.m[2] = view.x;
+  out.m[3] = 0.0f;
+  out.m[4] = right.y;
+  out.m[5] = up_axis.y;
+  out.m[6] = view.y;
+  out.m[7] = 0.0f;
+  out.m[8] = right.z;
+  out.m[9] = up_axis.z;
+  out.m[10] = view.z;
+  out.m[11] = 0.0f;
+  out.m[12] = -vec_dot(right, eye);
+  out.m[13] = -vec_dot(up_axis, eye);
+  out.m[14] = -vec_dot(view, eye);
+  out.m[15] = 1.0f;
+  return out;
+}
 
 rat::MapData make_test_map() {
   rat::MapData map;
@@ -52,7 +98,8 @@ TEST_CASE("unproject off-center pixel follows top-down extents", "[unit][viewpor
 
   const float ndc_x = 2.0f * pixel_x / 640.0f - 1.0f;
   const float ndc_y = 1.0f - 2.0f * pixel_y / 480.0f;
-  const float expected_x = params.focus.x + ndc_x * camera.half_width_world;
+  // TopDown look_at Left: right = (-1,0,0), camera-up = (0,0,-1). Screen-up = world -Z.
+  const float expected_x = params.focus.x - ndc_x * camera.half_width_world;
   const float expected_z = params.focus.z - ndc_y * camera.half_height_world;
   REQUIRE(hit->x == Approx(expected_x).margin(0.02f));
   REQUIRE(hit->y == Approx(0.0f).margin(0.001f));
@@ -79,6 +126,34 @@ TEST_CASE("unproject three-quarter center pixel hits focus xz", "[unit][viewport
   REQUIRE(hit.has_value());
   REQUIRE(hit->x == Approx(params.focus.x).margin(0.10f));
   REQUIRE(hit->z == Approx(params.focus.z).margin(0.10f));
+}
+
+TEST_CASE("unproject bx look-at left view hits center and off-center", "[unit][viewport_edit]") {
+  rat::OrthoCameraParams params;
+  params.focus = {3.0f, 0.0f, -2.0f};
+  params.mode = rat::CameraMode::TopDown;
+  rat::OrthoCamera camera = rat::build_ortho_top_down(640, 480, params);
+  camera.view = look_at_bx_left(camera.eye, params.focus, {0.0f, 0.0f, -1.0f});
+
+  const auto center = rat::unproject_to_ground_plane(camera, 320.0f, 240.0f, 640, 480);
+  REQUIRE(center.has_value());
+  REQUIRE(center->x == Approx(params.focus.x).margin(0.01f));
+  REQUIRE(center->y == Approx(0.0f).margin(0.001f));
+  REQUIRE(center->z == Approx(params.focus.z).margin(0.01f));
+
+  const float pixel_x = 400.0f;
+  const float pixel_y = 180.0f;
+  const auto off = rat::unproject_to_ground_plane(camera, pixel_x, pixel_y, 640, 480);
+  REQUIRE(off.has_value());
+
+  const float ndc_x = 2.0f * pixel_x / 640.0f - 1.0f;
+  const float ndc_y = 1.0f - 2.0f * pixel_y / 480.0f;
+  // bx Left TopDown: right = (-1,0,0), camera-up = (0,0,-1).
+  const float expected_x = params.focus.x - ndc_x * camera.half_width_world;
+  const float expected_z = params.focus.z - ndc_y * camera.half_height_world;
+  REQUIRE(off->x == Approx(expected_x).margin(0.02f));
+  REQUIRE(off->y == Approx(0.0f).margin(0.001f));
+  REQUIRE(off->z == Approx(expected_z).margin(0.02f));
 }
 
 TEST_CASE("pick returns nearest and prefers blocker on tie", "[unit][viewport_edit]") {

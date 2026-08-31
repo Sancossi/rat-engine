@@ -61,3 +61,14 @@
 - Verification:
   - `build/tests/rat_tests.exe "[viewport_edit]"` → pass (`22 assertions`, `7 test cases`).
   - `build/tests/rat_tests.exe` → pass (`2183 assertions`, `275 test cases`).
+
+## Task 25 Critical follow-up: invert live view/proj (bx layout)
+
+- Added Catch2 fixture in `tests/viewport_edit_test.cpp` that fills `OrthoCamera.view` like `bx::mtxLookAt` Left (row-basis, `m[14] = -dot(view, eye)`, no bx link) and asserts TopDown center + off-center ground hits.
+- Reworked `unproject_to_ground_plane` to invert opaque `proj * view` 4×4 (NDC near/far → world line → `y = ground_y`). No column-basis decode, no `-world_z`.
+- Aligned `camera.cpp` `look_at` with `bx::mtxLookAt` Left so `build_ortho_*` matrices invert the same way as the editor greybox overwrite. Off-center TopDown expected X uses screen-right = world −X (bx `right`).
+- TDD: RED was `REQUIRE(center.has_value())` false on the bx fixture (column-basis reader reconstructed `forward` looking up). GREEN after invert + look_at align.
+- Verification:
+  - `build/tests/rat_tests.exe "[viewport_edit]"` → pass (`30 assertions`, `8 test cases`).
+  - `build/tests/rat_tests.exe` → pass (`2192 assertions`, `279 test cases`).
+- Vault card left `In progress` (implementer must not set Done / In review).
