@@ -227,6 +227,10 @@ ViewportClickAction resolve_viewport_click(const MapData& map, ViewportTool tool
       return {ViewportClickActionKind::PlaceBlocker, 0, tile};
     case ViewportTool::PlaceEvent:
       return {ViewportClickActionKind::PlaceEvent, 0, tile};
+    case ViewportTool::PlaceCube:
+      return {ViewportClickActionKind::PlaceCube, 0, tile};
+    case ViewportTool::PlaceFence:
+      return {ViewportClickActionKind::PlaceFence, 0, tile};
   }
   return {};
 }

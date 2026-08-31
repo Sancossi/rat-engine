@@ -52,6 +52,8 @@ class EditorApp {
   void draw_height_edit_ui();
   void draw_event_edit_ui();
   void handle_edit_mouse_input(const ImGuiIO& io);
+  bool run_height_history(std::unique_ptr<EditCommand> command);
+  void sync_height_tile_from_click(TileCoord tile);
   void snap_player_to_ground_clear_jump();
   void rebuild_surface_query_cache();
   void apply_edited_map(MapData map, EditApplyResult mutation);
@@ -85,6 +87,7 @@ class EditorApp {
   int selected_event_ = -1;
   int selected_page_ = 0;
   ViewportTool viewport_tool_ = ViewportTool::Select;
+  int fence_preset_index_ = 0;
   bool mouse_left_was_down_ = false;
   bool drag_active_ = false;
   ViewportPick drag_pick_{};

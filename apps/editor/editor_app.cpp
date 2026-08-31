@@ -139,6 +139,24 @@ void EditorApp::execute_edit_command(std::unique_ptr<EditCommand> command) {
   apply_edited_map(std::move(map), result);
 }
 
+bool EditorApp::run_height_history(std::unique_ptr<EditCommand> command) {
+  discard_field_edit_origins();
+  MapData map = events_.map();
+  const EditApplyResult result = edit_history_.execute(map, std::move(command));
+  if (!result.applied) {
+    last_apply_error_ = result.error.empty() ? "Height edit failed" : result.error;
+    return false;
+  }
+  last_apply_error_.clear();
+  apply_edited_map(std::move(map), result);
+  return true;
+}
+
+void EditorApp::sync_height_tile_from_click(TileCoord tile) {
+  height_tile_x_ = tile.x;
+  height_tile_z_ = tile.z;
+}
+
 void EditorApp::clear_map_selection() {
   selected_blocker_ = -1;
   selected_event_ = -1;
@@ -399,19 +417,6 @@ void EditorApp::draw_height_edit_ui() {
   if (height_step_ <= 0.0f) {
     height_step_ = 0.25f;
   }
-
-  auto run_height_history = [&](std::unique_ptr<EditCommand> command) {
-    discard_field_edit_origins();
-    MapData map = events_.map();
-    const EditApplyResult result = edit_history_.execute(map, std::move(command));
-    if (!result.applied) {
-      last_apply_error_ = result.error.empty() ? "Height edit failed" : result.error;
-      return false;
-    }
-    last_apply_error_.clear();
-    apply_edited_map(std::move(map), result);
-    return true;
-  };
 
   const HeightGetResult tile_height =
       get_tile_ground_y(events_.map().height_grid, height_tile_x_, height_tile_z_);
@@ -1142,6 +1147,32 @@ void EditorApp::handle_edit_mouse_input(const ImGuiIO& io) {
         select_event_from_map(static_cast<int>(events_.map().events.size()) - 1);
         break;
       }
+      case ViewportClickActionKind::PlaceCube: {
+        sync_height_tile_from_click(action.tile);
+        if (run_height_history(make_place_map_tile_cube_command(action.tile.x, action.tile.z))) {
+          const HeightGetResult updated =
+              get_tile_ground_y(events_.map().height_grid, height_tile_x_, height_tile_z_);
+          if (updated.ok) {
+            height_set_y_ = updated.value;
+          }
+        }
+        break;
+      }
+      case ViewportClickActionKind::PlaceFence: {
+        sync_height_tile_from_click(action.tile);
+        const RampDirection direction = static_cast<RampDirection>(edge_direction_index_);
+        if (fence_preset_index_ == 2) {
+          (void)run_height_history(make_remove_map_edge_barrier_command(action.tile, direction));
+        } else {
+          EdgeBarrierDef edge;
+          edge.tile = action.tile;
+          edge.direction = direction;
+          edge.height =
+              fence_preset_index_ == 1 ? kEdgeBarrierFullHeight : kEdgeBarrierMiniHeight;
+          (void)run_height_history(make_upsert_map_edge_barrier_command(std::move(edge)));
+        }
+        break;
+      }
       case ViewportClickActionKind::None:
         break;
     }
@@ -1411,6 +1442,21 @@ void EditorApp::draw_ui() {
     if (ImGui::RadioButton("Place event", viewport_tool_ == ViewportTool::PlaceEvent)) {
       viewport_tool_ = ViewportTool::PlaceEvent;
     }
+    ImGui::SameLine();
+    if (ImGui::RadioButton("Place cube", viewport_tool_ == ViewportTool::PlaceCube)) {
+      viewport_tool_ = ViewportTool::PlaceCube;
+    }
+    ImGui::SameLine();
+    if (ImGui::RadioButton("Fence", viewport_tool_ == ViewportTool::PlaceFence)) {
+      viewport_tool_ = ViewportTool::PlaceFence;
+    }
+    ImGui::TextUnformatted("Fence preset");
+    ImGui::SameLine();
+    ImGui::RadioButton("Mini 0.45", &fence_preset_index_, 0);
+    ImGui::SameLine();
+    ImGui::RadioButton("Full 1.6", &fence_preset_index_, 1);
+    ImGui::SameLine();
+    ImGui::RadioButton("Remove", &fence_preset_index_, 2);
     draw_height_edit_ui();
     draw_blocker_edit_ui();
     draw_event_edit_ui();

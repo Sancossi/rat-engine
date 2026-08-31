@@ -1,5 +1,6 @@
 #include <rat/camera.hpp>
 #include <rat/event_edit.hpp>
+#include <rat/height_edit.hpp>
 #include <rat/viewport_edit.hpp>
 
 #include <catch2/catch_approx.hpp>
@@ -186,4 +187,73 @@ TEST_CASE("place tool click on object selects instead of placing", "[unit][viewp
       rat::resolve_viewport_click(map, rat::ViewportTool::PlaceEvent, rat::Vec3{2.2f, 0.0f, 1.6f});
   REQUIRE(action.kind == rat::ViewportClickActionKind::SelectBlocker);
   REQUIRE(action.index == 0);
+}
+
+TEST_CASE("place cube on empty tile returns that tile", "[unit][viewport_edit]") {
+  rat::MapData map = make_test_map();
+  const rat::Vec3 world{2.9f, 0.0f, -0.1f};
+
+  const rat::ViewportClickAction action =
+      rat::resolve_viewport_click(map, rat::ViewportTool::PlaceCube, world);
+  REQUIRE(action.kind == rat::ViewportClickActionKind::PlaceCube);
+  REQUIRE(action.tile.x == 2);
+  REQUIRE(action.tile.z == -1);
+}
+
+TEST_CASE("place cube on ramp tile does not raise ground", "[unit][viewport_edit]") {
+  rat::MapData map = make_test_map();
+  map.schema_version = 2;
+  map.height_grid.origin_x = 0;
+  map.height_grid.origin_z = 0;
+  map.height_grid.width = 8;
+  map.height_grid.height = 8;
+  map.height_grid.ground_y.assign(64, 0.0f);
+
+  rat::RampDef ramp;
+  ramp.tile = {1, 2};
+  ramp.direction = rat::RampDirection::East;
+  ramp.low_y = 0.0f;
+  ramp.high_y = 1.0f;
+  REQUIRE(rat::upsert_map_ramp(map, ramp).ok);
+
+  const rat::Vec3 world{1.2f, 0.0f, 2.3f};
+  const rat::ViewportClickAction action =
+      rat::resolve_viewport_click(map, rat::ViewportTool::PlaceCube, world);
+  REQUIRE(action.kind == rat::ViewportClickActionKind::PlaceCube);
+  REQUIRE(action.tile.x == 1);
+  REQUIRE(action.tile.z == 2);
+
+  const auto before_grid = map.height_grid.ground_y;
+  const auto before_ramps = map.ramps;
+  const auto placed = rat::place_map_tile_cube(map, action.tile.x, action.tile.z);
+  REQUIRE_FALSE(placed.ok);
+  REQUIRE(map.height_grid.ground_y == before_grid);
+  REQUIRE(map.ramps.size() == before_ramps.size());
+}
+
+TEST_CASE("place fence on empty tile returns that tile", "[unit][viewport_edit]") {
+  rat::MapData map = make_test_map();
+  const rat::Vec3 world{4.1f, 0.0f, 3.7f};
+
+  const rat::ViewportClickAction action =
+      rat::resolve_viewport_click(map, rat::ViewportTool::PlaceFence, world);
+  REQUIRE(action.kind == rat::ViewportClickActionKind::PlaceFence);
+  REQUIRE(action.tile.x == 4);
+  REQUIRE(action.tile.z == 3);
+}
+
+TEST_CASE("place cube and fence on object still select", "[unit][viewport_edit]") {
+  rat::MapData map = make_test_map();
+  map.blockers.push_back(make_blocker(2.0f, 1.0f, 3.0f, 2.0f));
+  const rat::Vec3 hit{2.2f, 0.0f, 1.6f};
+
+  const rat::ViewportClickAction cube =
+      rat::resolve_viewport_click(map, rat::ViewportTool::PlaceCube, hit);
+  REQUIRE(cube.kind == rat::ViewportClickActionKind::SelectBlocker);
+  REQUIRE(cube.index == 0);
+
+  const rat::ViewportClickAction fence =
+      rat::resolve_viewport_click(map, rat::ViewportTool::PlaceFence, hit);
+  REQUIRE(fence.kind == rat::ViewportClickActionKind::SelectBlocker);
+  REQUIRE(fence.index == 0);
 }
