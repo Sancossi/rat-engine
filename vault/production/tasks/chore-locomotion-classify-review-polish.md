@@ -15,3 +15,13 @@ Intent: minor из ревью [[feat: Player locomotion FSM]] (Approved): тес
 Acceptance: `[loco]` падает, если classify отдаёт Jump на земле; while не может зависнуть.
 
 Origin: [[feat: Player locomotion FSM]]
+
+## Resolution
+
+`[loco]` locks grounded + `vertical_speed > 0` as Idle (zero move) or Walk (non-zero axis), never Jump — classify already required `!grounded` before Jump; the case fails if airborne-vs is checked first. Apex integrate loop is capped at 600 frames and `REQUIRE`s the cap so Fall is not skipped on hang. Jump physics and `locomotion_from` product unchanged.
+
+Verify: `.\build\tests\rat_tests.exe "[loco]"`.
+
+## Bugs found
+
+none.

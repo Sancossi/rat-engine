@@ -85,6 +85,19 @@ TEST_CASE("Airborne with non-positive vertical speed classifies as Fall", "[unit
   REQUIRE(rat::locomotion_from(jump, {}) == rat::LocomotionState::Fall);
 }
 
+TEST_CASE("Grounded with positive vertical speed is not Jump", "[unit][loco]") {
+  rat::JumpState jump = rat::make_grounded_jump_state();
+  jump.vertical_speed = 7.5f;
+  REQUIRE(jump.grounded);
+  REQUIRE(jump.vertical_speed > 0.0f);
+
+  REQUIRE(rat::locomotion_from(jump, {}) == rat::LocomotionState::Idle);
+
+  rat::MoveInput move;
+  move.axis_x = 1.0f;
+  REQUIRE(rat::locomotion_from(jump, move) == rat::LocomotionState::Walk);
+}
+
 TEST_CASE("locomotion_state_name matches animation contract strings", "[unit][loco]") {
   CHECK(std::string_view(rat::locomotion_state_name(rat::LocomotionState::Idle)) == "Idle");
   CHECK(std::string_view(rat::locomotion_state_name(rat::LocomotionState::Walk)) == "Walk");
@@ -131,12 +144,16 @@ TEST_CASE("integrate_player_frame_surface classify matches locomotion rules", "[
 
   body = launch.body;
   jump = launch.jump;
-  while (jump.vertical_speed > 0.0f && !jump.grounded) {
+  constexpr int kMaxApexFrames = 600;
+  int apex_frames = 0;
+  for (; apex_frames < kMaxApexFrames && jump.vertical_speed > 0.0f && !jump.grounded;
+       ++apex_frames) {
     const rat::PlayerFrameResult rising =
         rat::integrate_player_frame_surface(body, jump, {}, 1.0f / 120.0f, {}, query);
     body = rising.body;
     jump = rising.jump;
   }
+  REQUIRE(apex_frames < kMaxApexFrames);
   REQUIRE_FALSE(jump.grounded);
   REQUIRE(jump.vertical_speed <= 0.0f);
   REQUIRE(rat::locomotion_from(jump, {}) == rat::LocomotionState::Fall);
