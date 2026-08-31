@@ -1,6 +1,7 @@
 add_library(rat_core
   src/camera.cpp
   src/game_state.cpp
+  src/map_loader.cpp
   src/player.cpp
 )
 
@@ -9,6 +10,11 @@ add_library(rat::core ALIAS rat_core)
 target_include_directories(rat_core
   PUBLIC
     "${CMAKE_CURRENT_SOURCE_DIR}/include"
+)
+
+target_link_libraries(rat_core
+  PUBLIC
+    nlohmann_json::nlohmann_json
 )
 
 target_compile_features(rat_core PUBLIC cxx_std_20)

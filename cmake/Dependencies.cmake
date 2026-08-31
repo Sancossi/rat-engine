@@ -64,6 +64,14 @@ set(RAT_BGFX_IMGUI_SHADER_DIR "${bgfx_cmake_SOURCE_DIR}/bgfx/examples/common/img
 set(RAT_BGFX_DEBUGDRAW_SHADER_DIR "${bgfx_cmake_SOURCE_DIR}/bgfx/examples/common/debugdraw"
     CACHE INTERNAL "bgfx debugdraw shader headers")
 
+FetchContent_Declare(
+  nlohmann_json
+  GIT_REPOSITORY https://github.com/nlohmann/json.git
+  GIT_TAG        v3.11.3
+  GIT_SHALLOW    TRUE
+)
+FetchContent_MakeAvailable(nlohmann_json)
+
 if(RAT_BUILD_TESTS)
   set(CATCH_INSTALL_DOCS OFF CACHE BOOL "" FORCE)
   set(CATCH_INSTALL_EXTRAS OFF CACHE BOOL "" FORCE)
