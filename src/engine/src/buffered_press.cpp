@@ -32,6 +32,13 @@ bool consume_then_tick_buffered_press(BufferedPress& press, bool consume_allowed
   return consumed;
 }
 
+void clear_buffered_press_if_captured(BufferedPress& press, bool keyboard_captured) {
+  if (!keyboard_captured) {
+    return;
+  }
+  clear_buffered_press(press);
+}
+
 void clear_buffered_press(BufferedPress& press) {
   press.seconds_left = 0.0f;
 }

@@ -7,6 +7,7 @@ add_library(rat_core
   src/event_inspect.cpp
   src/event_runtime.cpp
   src/game_state.cpp
+  src/height_edit.cpp
   src/hot_apply.cpp
   src/map_loader.cpp
   src/player.cpp

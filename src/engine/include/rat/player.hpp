@@ -35,6 +35,7 @@ struct JumpState {
   float coyote_time_left = 0.0f;
   float jump_buffer_left = 0.0f;
   bool grounded = true;
+  int support_blocker_index = -1;
 };
 
 struct JumpTuning {

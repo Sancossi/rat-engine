@@ -298,6 +298,9 @@ MapData parse_map(const json& root) {
         out.direction = parse_ramp_direction(ramp.at("direction").get<std::string>());
         out.low_y = ramp.at("low_y").get<float>();
         out.high_y = ramp.at("high_y").get<float>();
+        if (out.high_y < out.low_y) {
+          throw std::runtime_error("ramp high_y must be >= low_y");
+        }
         map.ramps.push_back(out);
       }
     }

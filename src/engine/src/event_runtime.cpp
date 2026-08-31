@@ -55,6 +55,58 @@ void EventRuntime::set_events(std::vector<EventDef> events) {
   warnings_.clear();
 }
 
+HeightEditResult EventRuntime::set_tile_elevation(int tile_x, int tile_z, float ground_y) {
+  MapData candidate = map_;
+  const HeightEditResult edited = set_map_tile_ground_y(candidate, tile_x, tile_z, ground_y);
+  if (!edited.ok) {
+    return edited;
+  }
+  map_.schema_version = candidate.schema_version;
+  map_.height_grid = std::move(candidate.height_grid);
+  map_.ramps = std::move(candidate.ramps);
+  rebuild_surface_query_for_elevation();
+  return edited;
+}
+
+HeightEditResult EventRuntime::adjust_tile_elevation(int tile_x, int tile_z, float delta_y) {
+  MapData candidate = map_;
+  const HeightEditResult edited = adjust_map_tile_ground_y(candidate, tile_x, tile_z, delta_y);
+  if (!edited.ok) {
+    return edited;
+  }
+  map_.schema_version = candidate.schema_version;
+  map_.height_grid = std::move(candidate.height_grid);
+  map_.ramps = std::move(candidate.ramps);
+  rebuild_surface_query_for_elevation();
+  return edited;
+}
+
+HeightEditResult EventRuntime::upsert_ramp_elevation(const RampDef& ramp) {
+  MapData candidate = map_;
+  const HeightEditResult edited = upsert_map_ramp(candidate, ramp);
+  if (!edited.ok) {
+    return edited;
+  }
+  map_.schema_version = candidate.schema_version;
+  map_.height_grid = std::move(candidate.height_grid);
+  map_.ramps = std::move(candidate.ramps);
+  rebuild_surface_query_for_elevation();
+  return edited;
+}
+
+HeightEditResult EventRuntime::remove_ramp_elevation(TileCoord tile) {
+  MapData candidate = map_;
+  const HeightEditResult edited = remove_map_ramp(candidate, tile);
+  if (!edited.ok) {
+    return edited;
+  }
+  map_.schema_version = candidate.schema_version;
+  map_.height_grid = std::move(candidate.height_grid);
+  map_.ramps = std::move(candidate.ramps);
+  rebuild_surface_query_for_elevation();
+  return edited;
+}
+
 void EventRuntime::clear() {
   map_ = {};
   foreground_.reset();
@@ -67,6 +119,14 @@ void EventRuntime::clear() {
   last_parallel_commands_executed_ = 0;
   warnings_.clear();
   surface_query_.reset();
+}
+
+void EventRuntime::rebuild_surface_query_for_elevation() {
+  if (!surface_query_) {
+    surface_query_ = std::make_unique<SurfaceQuery>(map_);
+    return;
+  }
+  *surface_query_ = SurfaceQuery(map_);
 }
 
 bool EventRuntime::player_input_blocked() const {
@@ -186,7 +246,9 @@ bool EventRuntime::event_height_matches_player(const EventDef& event, const Play
   if (player.y + kPlayerBelowGroundEpsilon < player_surface.y) {
     return false;
   }
-  if (player_surface.on_ramp || event_surface.on_ramp) {
+  if (player_surface.on_ramp && event_surface.on_ramp &&
+      player_surface.ramp_index == event_surface.ramp_index &&
+      player_surface.ramp_index >= 0) {
     return true;
   }
   return std::abs(player_surface.y - event_surface.y) <= tolerance;

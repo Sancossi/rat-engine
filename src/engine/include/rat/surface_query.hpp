@@ -9,6 +9,7 @@ namespace rat {
 struct SurfaceSample {
   float y = 0.0f;
   int surface_id = 0;
+  int ramp_index = -1;
   bool walkable = true;
   bool on_ramp = false;
 };

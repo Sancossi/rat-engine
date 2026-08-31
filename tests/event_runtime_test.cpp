@@ -512,3 +512,378 @@ TEST_CASE("Event runtime rejects adjacent lower flat to upper event for action a
   runtime.update(state, lower, false, 1.0f / 60.0f);
   REQUIRE_FALSE(state.get_switch(25));
 }
+
+TEST_CASE("Event runtime same ramp rise bypasses height delta", "[unit][events]") {
+  constexpr const char* kJson = R"({
+    "schema_version": 2,
+    "id": "same_ramp",
+    "width": 3,
+    "height": 3,
+    "tile_size": 1.0,
+    "height_grid": {
+      "origin_x": 0,
+      "origin_z": 0,
+      "width": 3,
+      "height": 3,
+      "ground_y": [
+        0, 0, 0,
+        0, 0, 0,
+        0, 0, 0
+      ]
+    },
+    "ramps": [
+      { "tile": { "x": 1, "z": 1 }, "direction": "east", "low_y": 1.0, "high_y": 5.0 }
+    ],
+    "events": [
+      {
+        "id": "ramp_event",
+        "tile": { "x": 1, "z": 1 },
+        "pages": [
+          { "trigger": "action", "commands": [{ "op": "control_switch", "id": 31, "value": true }] }
+        ]
+      }
+    ]
+  })";
+
+  const auto loaded = rat::load_map_from_string(kJson);
+  REQUIRE(loaded.ok);
+  rat::GameState state;
+  rat::EventRuntime runtime;
+  runtime.load(loaded.map);
+
+  rat::PlayerBody player;
+  player.x = 1.0f;
+  player.z = 1.5f;
+  player.y = 1.0f;  // event center is y=3, delta=2 on same ramp.
+  REQUIRE(runtime.has_action_prompt(player, state));
+  runtime.update(state, player, true, 1.0f / 60.0f);
+  REQUIRE(state.get_switch(31));
+}
+
+TEST_CASE("Event runtime lower flat near ramp event is rejected", "[unit][events]") {
+  constexpr const char* kJson = R"({
+    "schema_version": 2,
+    "id": "flat_vs_ramp",
+    "width": 3,
+    "height": 3,
+    "tile_size": 1.0,
+    "height_grid": {
+      "origin_x": 0,
+      "origin_z": 0,
+      "width": 3,
+      "height": 3,
+      "ground_y": [
+        0, 0, 0,
+        0, 0, 0,
+        0, 0, 0
+      ]
+    },
+    "ramps": [
+      { "tile": { "x": 1, "z": 1 }, "direction": "east", "low_y": 1.0, "high_y": 5.0 }
+    ],
+    "events": [
+      {
+        "id": "ramp_event",
+        "tile": { "x": 1, "z": 1 },
+        "pages": [
+          { "trigger": "action", "commands": [{ "op": "control_switch", "id": 32, "value": true }] }
+        ]
+      }
+    ]
+  })";
+
+  const auto loaded = rat::load_map_from_string(kJson);
+  REQUIRE(loaded.ok);
+  rat::GameState state;
+  rat::EventRuntime runtime;
+  runtime.load(loaded.map);
+
+  rat::PlayerBody player;
+  player.x = 0.9f;  // flat tile, still within action radius.
+  player.z = 1.5f;
+  player.y = 0.0f;
+  REQUIRE_FALSE(runtime.has_action_prompt(player, state));
+  runtime.update(state, player, true, 1.0f / 60.0f);
+  REQUIRE_FALSE(state.get_switch(32));
+}
+
+TEST_CASE("Event runtime ramp player near elevated flat event is rejected", "[unit][events]") {
+  constexpr const char* kJson = R"({
+    "schema_version": 2,
+    "id": "ramp_vs_flat",
+    "width": 5,
+    "height": 3,
+    "tile_size": 1.0,
+    "height_grid": {
+      "origin_x": 0,
+      "origin_z": 0,
+      "width": 5,
+      "height": 3,
+      "ground_y": [
+        0, 0, 0, 0, 0,
+        0, 0, 0, 3, 0,
+        0, 0, 0, 0, 0
+      ]
+    },
+    "ramps": [
+      { "tile": { "x": 2, "z": 1 }, "direction": "east", "low_y": 0.0, "high_y": 1.0 }
+    ],
+    "events": [
+      {
+        "id": "high_flat",
+        "tile": { "x": 3, "z": 1 },
+        "pages": [
+          { "trigger": "action", "commands": [{ "op": "control_switch", "id": 33, "value": true }] }
+        ]
+      }
+    ]
+  })";
+
+  const auto loaded = rat::load_map_from_string(kJson);
+  REQUIRE(loaded.ok);
+  rat::GameState state;
+  rat::EventRuntime runtime;
+  runtime.load(loaded.map);
+
+  rat::PlayerBody player;
+  player.x = 2.95f;
+  player.z = 1.5f;
+  player.y = 0.95f;
+  REQUIRE_FALSE(runtime.has_action_prompt(player, state));
+  runtime.update(state, player, true, 1.0f / 60.0f);
+  REQUIRE_FALSE(state.get_switch(33));
+}
+
+TEST_CASE("Event runtime different adjacent ramps do not bypass delta", "[unit][events]") {
+  constexpr const char* kJson = R"({
+    "schema_version": 2,
+    "id": "adjacent_ramps",
+    "width": 4,
+    "height": 3,
+    "tile_size": 1.0,
+    "height_grid": {
+      "origin_x": 0,
+      "origin_z": 0,
+      "width": 4,
+      "height": 3,
+      "ground_y": [
+        0, 0, 0, 0,
+        0, 0, 0, 0,
+        0, 0, 0, 0
+      ]
+    },
+    "ramps": [
+      { "tile": { "x": 1, "z": 1 }, "direction": "east", "low_y": 0.0, "high_y": 4.0 },
+      { "tile": { "x": 2, "z": 1 }, "direction": "east", "low_y": 0.0, "high_y": 4.0 }
+    ],
+    "events": [
+      {
+        "id": "ramp2_event",
+        "tile": { "x": 2, "z": 1 },
+        "pages": [
+          { "trigger": "action", "commands": [{ "op": "control_switch", "id": 34, "value": true }] }
+        ]
+      }
+    ]
+  })";
+
+  const auto loaded = rat::load_map_from_string(kJson);
+  REQUIRE(loaded.ok);
+  rat::GameState state;
+  rat::EventRuntime runtime;
+  runtime.load(loaded.map);
+
+  rat::PlayerBody player;
+  player.x = 1.95f;
+  player.z = 1.5f;
+  player.y = 3.8f;
+  REQUIRE_FALSE(runtime.has_action_prompt(player, state));
+  runtime.update(state, player, true, 1.0f / 60.0f);
+  REQUIRE_FALSE(state.get_switch(34));
+}
+
+TEST_CASE("Event runtime elevation mutation rebuilds surface query safely", "[unit][events]") {
+  constexpr const char* kJson = R"({
+    "schema_version": 2,
+    "id": "runtime_mutation",
+    "width": 3,
+    "height": 3,
+    "tile_size": 1.0,
+    "height_grid": {
+      "origin_x": 0,
+      "origin_z": 0,
+      "width": 3,
+      "height": 3,
+      "ground_y": [
+        0, 0, 0,
+        0, 0, 0,
+        0, 0, 0
+      ]
+    },
+    "events": [
+      {
+        "id": "talk",
+        "tile": { "x": 1, "z": 1 },
+        "pages": [
+          {
+            "trigger": "action",
+            "commands": [{ "op": "show_text", "text": "Hi" }]
+          }
+        ]
+      }
+    ]
+  })";
+
+  const auto loaded = rat::load_map_from_string(kJson);
+  REQUIRE(loaded.ok);
+
+  rat::GameState state;
+  rat::EventRuntime runtime;
+  runtime.load(loaded.map);
+
+  rat::PlayerBody player;
+  player.x = 1.5f;
+  player.z = 1.5f;
+  player.y = 0.0f;
+  REQUIRE(runtime.has_action_prompt(player, state));
+
+  runtime.update(state, player, true, 1.0f / 60.0f);
+  REQUIRE(runtime.active_message() == "Hi");
+  REQUIRE(runtime.player_input_blocked());
+
+  const auto elevate = runtime.set_tile_elevation(1, 1, 2.0f);
+  REQUIRE(elevate.ok);
+  REQUIRE(runtime.active_message() == "Hi");
+  REQUIRE(runtime.player_input_blocked());
+
+  runtime.acknowledge_message();
+  runtime.update(state, player, false, 1.0f / 60.0f);
+  REQUIRE_FALSE(runtime.has_action_prompt(player, state));
+
+  player.y = 2.0f;
+  REQUIRE(runtime.has_action_prompt(player, state));
+}
+
+TEST_CASE("Event runtime failed elevation mutation is transactional for legacy map",
+          "[unit][events]") {
+  constexpr const char* kJson = R"({
+    "schema_version": 1,
+    "id": "legacy_txn",
+    "width": 3,
+    "height": 3,
+    "events": [
+      {
+        "id": "talk",
+        "tile": { "x": 1, "z": 1 },
+        "pages": [
+          {
+            "trigger": "action",
+            "commands": [{ "op": "show_text", "text": "Legacy" }]
+          }
+        ]
+      }
+    ]
+  })";
+  const auto loaded = rat::load_map_from_string(kJson);
+  REQUIRE(loaded.ok);
+
+  rat::GameState state;
+  rat::EventRuntime runtime;
+  runtime.load(loaded.map);
+  const rat::MapData before = runtime.map();
+
+  rat::PlayerBody player;
+  player.x = 1.5f;
+  player.y = 0.0f;
+  player.z = 1.5f;
+  runtime.update(state, player, true, 1.0f / 60.0f);
+  REQUIRE(runtime.active_message() == "Legacy");
+  REQUIRE(runtime.player_input_blocked());
+
+  const auto failed_oor = runtime.set_tile_elevation(99, 99, 5.0f);
+  REQUIRE_FALSE(failed_oor.ok);
+  REQUIRE(runtime.map().schema_version == before.schema_version);
+  REQUIRE(runtime.map().height_grid.origin_x == before.height_grid.origin_x);
+  REQUIRE(runtime.map().height_grid.origin_z == before.height_grid.origin_z);
+  REQUIRE(runtime.map().height_grid.width == before.height_grid.width);
+  REQUIRE(runtime.map().height_grid.height == before.height_grid.height);
+  REQUIRE(runtime.map().height_grid.ground_y == before.height_grid.ground_y);
+  REQUIRE(runtime.map().ramps.empty());
+  REQUIRE(runtime.active_message() == "Legacy");
+  REQUIRE(runtime.player_input_blocked());
+
+  rat::RampDef invalid_ramp;
+  invalid_ramp.tile = rat::TileCoord{1, 1};
+  invalid_ramp.direction = static_cast<rat::RampDirection>(999);
+  invalid_ramp.low_y = 0.0f;
+  invalid_ramp.high_y = 1.0f;
+
+  const auto failed_ramp = runtime.upsert_ramp_elevation(invalid_ramp);
+  REQUIRE_FALSE(failed_ramp.ok);
+  REQUIRE(runtime.map().schema_version == before.schema_version);
+  REQUIRE(runtime.map().height_grid.ground_y == before.height_grid.ground_y);
+  REQUIRE(runtime.map().ramps.empty());
+  REQUIRE(runtime.active_message() == "Legacy");
+  REQUIRE(runtime.player_input_blocked());
+
+  runtime.acknowledge_message();
+  runtime.update(state, player, false, 1.0f / 60.0f);
+  REQUIRE_FALSE(runtime.active_message().has_value());
+}
+
+TEST_CASE("Event runtime rejects set/adjust on ramp tile transactionally", "[unit][events]") {
+  constexpr const char* kJson = R"({
+    "schema_version": 2,
+    "id": "runtime_ramp_guard",
+    "width": 3,
+    "height": 3,
+    "tile_size": 1.0,
+    "height_grid": {
+      "origin_x": 0,
+      "origin_z": 0,
+      "width": 3,
+      "height": 3,
+      "ground_y": [
+        0, 0, 0,
+        0, 0, 0,
+        0, 0, 0
+      ]
+    },
+    "ramps": [
+      { "tile": { "x": 1, "z": 1 }, "direction": "east", "low_y": 1.0, "high_y": 2.0 }
+    ],
+    "events": []
+  })";
+
+  const auto loaded = rat::load_map_from_string(kJson);
+  REQUIRE(loaded.ok);
+  rat::EventRuntime runtime;
+  runtime.load(loaded.map);
+
+  const auto before_grid = runtime.map().height_grid.ground_y;
+  const std::size_t before_ramp_count = runtime.map().ramps.size();
+  REQUIRE(before_ramp_count == 1);
+  const auto before_ramp = runtime.map().ramps[0];
+
+  const auto set_result = runtime.set_tile_elevation(1, 1, 9.0f);
+  REQUIRE_FALSE(set_result.ok);
+  REQUIRE_FALSE(set_result.error.empty());
+  REQUIRE(runtime.map().height_grid.ground_y == before_grid);
+  REQUIRE(runtime.map().ramps.size() == before_ramp_count);
+  REQUIRE(runtime.map().ramps[0].tile.x == before_ramp.tile.x);
+  REQUIRE(runtime.map().ramps[0].tile.z == before_ramp.tile.z);
+  REQUIRE(runtime.map().ramps[0].direction == before_ramp.direction);
+  REQUIRE(runtime.map().ramps[0].low_y == Catch::Approx(before_ramp.low_y));
+  REQUIRE(runtime.map().ramps[0].high_y == Catch::Approx(before_ramp.high_y));
+
+  const auto adjust_result = runtime.adjust_tile_elevation(1, 1, 1.0f);
+  REQUIRE_FALSE(adjust_result.ok);
+  REQUIRE_FALSE(adjust_result.error.empty());
+  REQUIRE(runtime.map().height_grid.ground_y == before_grid);
+  REQUIRE(runtime.map().ramps.size() == before_ramp_count);
+  REQUIRE(runtime.map().ramps[0].tile.x == before_ramp.tile.x);
+  REQUIRE(runtime.map().ramps[0].tile.z == before_ramp.tile.z);
+  REQUIRE(runtime.map().ramps[0].direction == before_ramp.direction);
+  REQUIRE(runtime.map().ramps[0].low_y == Catch::Approx(before_ramp.low_y));
+  REQUIRE(runtime.map().ramps[0].high_y == Catch::Approx(before_ramp.high_y));
+}

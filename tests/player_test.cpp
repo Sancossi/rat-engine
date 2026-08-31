@@ -27,6 +27,24 @@ rat::MapData make_surface_map(int width, int height, std::vector<float> ground_y
   return map;
 }
 
+rat::MapData make_east_ramp_side_entry_map() {
+  constexpr int kWidth = 10;
+  constexpr int kHeight = 10;
+  std::vector<float> ground(static_cast<std::size_t>(kWidth * kHeight), 0.0f);
+
+  // High platform connected to the ramp's east edge.
+  ground[8 * kWidth + 9] = 1.0f;
+
+  rat::MapData map = make_surface_map(kWidth, kHeight, std::move(ground));
+  map.ramps.push_back({
+      .tile = rat::TileCoord{8, 8},
+      .direction = rat::RampDirection::East,
+      .low_y = 0.0f,
+      .high_y = 1.0f,
+  });
+  return map;
+}
+
 }  // namespace
 
 TEST_CASE("Player moves freely from WASD axes on XZ", "[unit][player]") {
@@ -280,6 +298,95 @@ TEST_CASE("Surface move keeps X then Z semantics", "[unit][player][surface]") {
 
   REQUIRE(player.x == Approx(0.95f).margin(0.01f));
   REQUIRE(player.z > 0.5f);
+}
+
+TEST_CASE("Ramp side entry from north and south is blocked by step cap", "[unit][player][surface]") {
+  const rat::MapData map = make_east_ramp_side_entry_map();
+  const rat::SurfaceQuery query(map);
+  constexpr float kMaxStepUp = 0.35f;
+
+  auto attempt = [&](float start_x, float start_z, float axis_x, float axis_z) {
+    rat::PlayerBody player;
+    player.x = start_x;
+    player.z = start_z;
+    player.y = query.sample(start_x, start_z).y;
+    player.speed = 1.0f;
+
+    player = rat::integrate_player_surface(player, rat::MoveInput{axis_x, axis_z}, 0.2f, {}, query,
+                                           kMaxStepUp);
+    return player;
+  };
+
+  const rat::PlayerBody from_north = attempt(8.5f, 7.95f, 0.0f, 1.0f);
+  REQUIRE(from_north.z < 8.0f);
+  REQUIRE(from_north.y <= Approx(kMaxStepUp).margin(1e-4f));
+
+  const rat::PlayerBody from_south = attempt(8.5f, 9.05f, 0.0f, -1.0f);
+  REQUIRE(from_south.z >= 9.0f);
+  REQUIRE(from_south.y <= Approx(kMaxStepUp).margin(1e-4f));
+}
+
+TEST_CASE("Ramp low-edge and low-side diagonals remain allowed", "[unit][player][surface]") {
+  const rat::MapData map = make_east_ramp_side_entry_map();
+  const rat::SurfaceQuery query(map);
+
+  auto step_once = [&](float start_x, float start_z, float axis_x, float axis_z) {
+    rat::PlayerBody player;
+    player.x = start_x;
+    player.z = start_z;
+    player.y = query.sample(start_x, start_z).y;
+    player.speed = 1.0f;
+    return rat::integrate_player_surface(player, rat::MoveInput{axis_x, axis_z}, 0.2f, {}, query, 0.35f);
+  };
+
+  const rat::PlayerBody west_entry = step_once(7.95f, 8.5f, 1.0f, 0.0f);
+  REQUIRE(west_entry.x > 8.0f);
+  REQUIRE(west_entry.y > 0.0f);
+  REQUIRE(west_entry.y <= 0.35f);
+
+  const rat::PlayerBody from_nw = step_once(7.95f, 7.95f, 1.0f, 1.0f);
+  REQUIRE(from_nw.x > 8.0f);
+  REQUIRE(from_nw.z > 8.0f);
+  REQUIRE(from_nw.y > 0.0f);
+  REQUIRE(from_nw.y <= 0.35f);
+
+  const rat::PlayerBody from_sw = step_once(7.95f, 9.05f, 1.0f, -1.0f);
+  REQUIRE(from_sw.x > 8.0f);
+  REQUIRE(from_sw.z < 9.0f);
+  REQUIRE(from_sw.y > 0.0f);
+  REQUIRE(from_sw.y <= 0.35f);
+}
+
+TEST_CASE("Ramp high-edge descent and same-ramp steep rise stay allowed",
+          "[unit][player][surface]") {
+  const rat::MapData map = make_east_ramp_side_entry_map();
+  const rat::SurfaceQuery query(map);
+
+  rat::PlayerBody from_platform;
+  from_platform.x = 9.05f;
+  from_platform.z = 8.5f;
+  from_platform.y = query.sample(from_platform.x, from_platform.z).y;
+  from_platform.speed = 1.0f;
+  from_platform = rat::integrate_player_surface(from_platform, rat::MoveInput{-1.0f, 0.0f}, 0.2f, {}, query,
+                                                0.35f);
+  REQUIRE(from_platform.x < 9.0f);
+  REQUIRE(from_platform.y < 1.0f);
+  REQUIRE(from_platform.y > 0.5f);
+
+  rat::PlayerBody on_ramp;
+  on_ramp.x = 8.2f;
+  on_ramp.z = 8.5f;
+  on_ramp.y = query.sample(on_ramp.x, on_ramp.z).y;
+  on_ramp.speed = 1.0f;
+
+  float prev_y = on_ramp.y;
+  for (int i = 0; i < 4; ++i) {
+    on_ramp = rat::integrate_player_surface(on_ramp, rat::MoveInput{1.0f, 0.0f}, 0.1f, {}, query, 0.05f);
+    REQUIRE(on_ramp.y >= prev_y - 1e-5f);
+    prev_y = on_ramp.y;
+  }
+  REQUIRE(on_ramp.x > 8.5f);
+  REQUIRE(on_ramp.y > 0.5f);
 }
 
 TEST_CASE("Legacy integrate_player flat movement remains", "[unit][player]") {

@@ -61,3 +61,12 @@ TEST_CASE("BufferedPress editor wiring blocks push in edit and capture", "[unit]
   rat::push_buffered_press_if_allowed(press, true, true, false, 0.1f);
   REQUIRE(rat::has_buffered_press(press));
 }
+
+TEST_CASE("BufferedPress capture clears pending press", "[unit][input]") {
+  rat::BufferedPress press;
+  rat::push_buffered_press(press, 0.1f);
+  REQUIRE(rat::has_buffered_press(press));
+
+  rat::clear_buffered_press_if_captured(press, true);
+  REQUIRE_FALSE(rat::has_buffered_press(press));
+}

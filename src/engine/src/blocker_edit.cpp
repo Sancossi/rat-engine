@@ -92,4 +92,24 @@ Aabb2 resize_aabb_on_grid(Aabb2 box, AabbEdge edge, int tile_delta, float tile_s
   return normalize_aabb(box);
 }
 
+bool set_blocker_vertical_range(BlockerDef& blocker, bool jumpable, std::optional<float> base_y,
+                                std::optional<float> top_y) {
+  if (!jumpable) {
+    blocker.jumpable = false;
+    blocker.base_y.reset();
+    blocker.top_y.reset();
+    return true;
+  }
+  if (!base_y.has_value() || !top_y.has_value()) {
+    return false;
+  }
+  if (*top_y < *base_y) {
+    return false;
+  }
+  blocker.jumpable = true;
+  blocker.base_y = *base_y;
+  blocker.top_y = *top_y;
+  return true;
+}
+
 }  // namespace rat

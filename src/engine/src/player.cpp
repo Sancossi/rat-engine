@@ -30,7 +30,7 @@ bool surface_step_allowed(const SurfaceSample& from, const SurfaceSample& to, fl
   if (rise <= 0.0f) {
     return true;
   }
-  if (from.on_ramp || to.on_ramp) {
+  if (from.on_ramp && to.on_ramp && from.ramp_index >= 0 && from.ramp_index == to.ramp_index) {
     return true;
   }
   return rise <= max_step_up;

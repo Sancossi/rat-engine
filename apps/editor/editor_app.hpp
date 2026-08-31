@@ -39,6 +39,7 @@ class EditorApp {
   void sync_blockers_to_runtime();
   void sync_events_to_runtime();
   void draw_blocker_edit_ui();
+  void draw_height_edit_ui();
   void draw_event_edit_ui();
   void snap_player_to_ground_clear_jump();
   void rebuild_surface_query_cache();
@@ -57,6 +58,16 @@ class EditorApp {
   int selected_blocker_ = -1;
   int selected_event_ = -1;
   int selected_page_ = 0;
+  int height_tile_x_ = 0;
+  int height_tile_z_ = 0;
+  float height_step_ = 0.25f;
+  float height_set_y_ = 0.0f;
+  int ramp_direction_index_ = 0;
+  float ramp_low_y_ = 0.0f;
+  float ramp_high_y_ = 0.0f;
+  bool height_tile_sync_ready_ = false;
+  int last_height_tile_x_ = 0;
+  int last_height_tile_z_ = 0;
   int next_stub_event_ = 1;
   int width_ = 1280;
   int height_ = 720;

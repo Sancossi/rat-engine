@@ -3,10 +3,12 @@ add_executable(rat_tests
   buffered_press_test.cpp
   blocker_edit_test.cpp
   camera_test.cpp
+  elevation_mechanics_test.cpp
   event_edit_test.cpp
   event_inspect_test.cpp
   event_runtime_test.cpp
   game_state_test.cpp
+  height_edit_test.cpp
   headless_mechanics_stub_test.cpp
   hot_apply_test.cpp
   map_loader_test.cpp

@@ -9,6 +9,7 @@ namespace rat {
 namespace {
 
 struct RampRuntime {
+  int ramp_index = -1;
   int tile_x = 0;
   int tile_z = 0;
   RampDirection direction = RampDirection::North;
@@ -40,9 +41,10 @@ SurfaceQuery::SurfaceQuery(const MapData& map) : impl_(std::make_unique<Impl>())
   impl_->tile_size = map.tile_size > 0.0f ? map.tile_size : 1.0f;
   impl_->ground_y = map.height_grid.ground_y;
   impl_->ramps.reserve(map.ramps.size());
+  int ramp_index = 0;
   for (const RampDef& ramp : map.ramps) {
-    impl_->ramps.push_back(
-        RampRuntime{ramp.tile.x, ramp.tile.z, ramp.direction, ramp.low_y, ramp.high_y});
+    impl_->ramps.push_back(RampRuntime{ramp_index++, ramp.tile.x, ramp.tile.z, ramp.direction,
+                                       ramp.low_y, ramp.high_y});
   }
 }
 
@@ -100,6 +102,7 @@ SurfaceSample SurfaceQuery::sample(float world_x, float world_z) const {
         break;
     }
     out.y = ramp.low_y + (ramp.high_y - ramp.low_y) * clamp01(t);
+    out.ramp_index = ramp.ramp_index;
     out.on_ramp = true;
     break;
   }

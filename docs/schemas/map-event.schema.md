@@ -35,7 +35,7 @@ Human-readable schema for map/event data. Files live under `data/maps/<id>.json`
 | `tile` | object | yes | `{ "x": int, "z": int }` tile coordinate |
 | `direction` | string | yes | `north`, `east`, `south`, `west` |
 | `low_y` | number | yes | Height at low edge of the ramp |
-| `high_y` | number | yes | Height at high edge of the ramp |
+| `high_y` | number | yes | Height at high edge of the ramp, must be `>= low_y` |
 
 ### Blocker
 

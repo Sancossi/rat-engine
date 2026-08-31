@@ -4,8 +4,10 @@
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
 
+#include <algorithm>
 #include <filesystem>
 #include <fstream>
+#include <limits>
 #include <sstream>
 #include <string>
 
@@ -105,13 +107,42 @@ TEST_CASE("Example grey_yard.json loads without crash", "[unit][map]") {
   const auto result = rat::load_map_from_file(path);
   REQUIRE(result.ok);
   REQUIRE(result.map.id == "grey_yard");
+  REQUIRE(result.map.schema_version == 2);
+  REQUIRE(result.map.height_grid.origin_x == -4);
+  REQUIRE(result.map.height_grid.origin_z == -3);
+  REQUIRE(result.map.height_grid.width == 16);
+  REQUIRE(result.map.height_grid.height == 16);
+  REQUIRE(result.map.height_grid.ground_y.size() == static_cast<std::size_t>(16 * 16));
   REQUIRE_FALSE(result.map.blockers.empty());
-  REQUIRE(result.map.events.size() >= 2);
+  REQUIRE(result.map.events.size() >= 3);
 
   bool found_autorun = false;
   bool found_branchish = false;
   bool found_crate_notice = false;
+  bool found_jumpable_blocker = false;
+  bool found_elevated_event = false;
+  int max_event_x = std::numeric_limits<int>::min();
+  int max_event_z = std::numeric_limits<int>::min();
+  int min_event_x = std::numeric_limits<int>::max();
+  int min_event_z = std::numeric_limits<int>::max();
   for (const auto& ev : result.map.events) {
+    if (ev.tile.has_value()) {
+      max_event_x = std::max(max_event_x, ev.tile->x);
+      max_event_z = std::max(max_event_z, ev.tile->z);
+      min_event_x = std::min(min_event_x, ev.tile->x);
+      min_event_z = std::min(min_event_z, ev.tile->z);
+    }
+    if (ev.id == "elevated_after_blocker") {
+      REQUIRE(ev.tile.has_value());
+      REQUIRE(ev.tile->x == 11);
+      REQUIRE(ev.tile->z == 8);
+      REQUIRE(ev.pages.size() == 1);
+      REQUIRE(ev.pages[0].commands.size() == 2);
+      REQUIRE(ev.pages[0].commands[1].op == rat::CommandOp::ControlSwitch);
+      REQUIRE(ev.pages[0].commands[1].id == 40);
+      REQUIRE(ev.pages[0].commands[1].bool_value);
+      found_elevated_event = true;
+    }
     if (ev.id == "crate_notice") {
       REQUIRE(ev.volume.has_value());
       REQUIRE(ev.volume->min_x == Catch::Approx(3.0f));
@@ -129,14 +160,71 @@ TEST_CASE("Example grey_yard.json loads without crash", "[unit][map]") {
       }
     }
   }
+  for (const auto& blocker : result.map.blockers) {
+    if (blocker.jumpable && blocker.base_y.has_value() && blocker.top_y.has_value()) {
+      REQUIRE(blocker.bounds.min_x == Catch::Approx(10.2f));
+      REQUIRE(blocker.bounds.min_z == Catch::Approx(8.1f));
+      REQUIRE(blocker.bounds.max_x == Catch::Approx(10.8f));
+      REQUIRE(blocker.bounds.max_z == Catch::Approx(8.9f));
+      REQUIRE(*blocker.base_y == Catch::Approx(1.0f));
+      REQUIRE(*blocker.top_y == Catch::Approx(1.6f));
+      found_jumpable_blocker = true;
+    }
+  }
+  REQUIRE(result.map.ramps.size() == 1);
+  REQUIRE(result.map.ramps[0].tile.x == 8);
+  REQUIRE(result.map.ramps[0].tile.z == 8);
+  REQUIRE(result.map.ramps[0].direction == rat::RampDirection::East);
+  REQUIRE(result.map.ramps[0].low_y == Catch::Approx(0.0f));
+  REQUIRE(result.map.ramps[0].high_y == Catch::Approx(1.0f));
+  {
+    const int local_x = result.map.ramps[0].tile.x - result.map.height_grid.origin_x;
+    const int local_z = result.map.ramps[0].tile.z - result.map.height_grid.origin_z;
+    const std::size_t index = static_cast<std::size_t>(local_z) *
+                                  static_cast<std::size_t>(result.map.height_grid.width) +
+                              static_cast<std::size_t>(local_x);
+    REQUIRE(index < result.map.height_grid.ground_y.size());
+    REQUIRE(result.map.height_grid.ground_y[index] ==
+            Catch::Approx(result.map.ramps[0].low_y));
+  }
+  const int grid_max_x = result.map.height_grid.origin_x + result.map.height_grid.width - 1;
+  const int grid_max_z = result.map.height_grid.origin_z + result.map.height_grid.height - 1;
+  REQUIRE(min_event_x >= result.map.height_grid.origin_x);
+  REQUIRE(min_event_z >= result.map.height_grid.origin_z);
+  REQUIRE(max_event_x <= grid_max_x);
+  REQUIRE(max_event_z <= grid_max_z);
+  REQUIRE(max_event_x == 11);
+  REQUIRE(max_event_z == 8);
+
   REQUIRE(found_autorun);
   REQUIRE(found_branchish);
   REQUIRE(found_crate_notice);
+  REQUIRE(found_jumpable_blocker);
+  REQUIRE(found_elevated_event);
 
   // Round-trip via string path also works.
   const auto from_string = rat::load_map_from_string(read_file(path));
   REQUIRE(from_string.ok);
   REQUIRE(from_string.map.events.size() == result.map.events.size());
+  REQUIRE(from_string.map.schema_version == 2);
+  REQUIRE(from_string.map.height_grid.ground_y == result.map.height_grid.ground_y);
+
+  const auto serialized = rat::serialize_map_to_string(result.map);
+  REQUIRE(serialized.ok);
+  const auto from_serialized = rat::load_map_from_string(serialized.json_text);
+  REQUIRE(from_serialized.ok);
+  REQUIRE(from_serialized.map.schema_version == 2);
+  REQUIRE(from_serialized.map.height_grid.origin_x == result.map.height_grid.origin_x);
+  REQUIRE(from_serialized.map.height_grid.origin_z == result.map.height_grid.origin_z);
+  REQUIRE(from_serialized.map.height_grid.width == result.map.height_grid.width);
+  REQUIRE(from_serialized.map.height_grid.height == result.map.height_grid.height);
+  REQUIRE(from_serialized.map.height_grid.ground_y == result.map.height_grid.ground_y);
+  REQUIRE(from_serialized.map.ramps.size() == result.map.ramps.size());
+  REQUIRE(from_serialized.map.ramps[0].tile.x == 8);
+  REQUIRE(from_serialized.map.ramps[0].tile.z == 8);
+  REQUIRE(from_serialized.map.blockers.size() == result.map.blockers.size());
+  REQUIRE(from_serialized.map.events.size() == result.map.events.size());
+  REQUIRE(from_serialized.map.events.back().id == "elevated_after_blocker");
 }
 
 TEST_CASE("Serialize map roundtrips blockers after edit", "[unit][map]") {
@@ -265,6 +353,30 @@ TEST_CASE("Map loader rejects invalid height grid length", "[unit][map]") {
       "height": 2,
       "ground_y": [0.0, 1.0, 2.0]
     },
+    "events": []
+  })";
+
+  const auto result = rat::load_map_from_string(kJson);
+  REQUIRE_FALSE(result.ok);
+  REQUIRE_FALSE(result.error.empty());
+}
+
+TEST_CASE("Map loader rejects ramp with high below low", "[unit][map]") {
+  constexpr const char* kJson = R"({
+    "schema_version": 2,
+    "id": "broken_ramp",
+    "width": 2,
+    "height": 2,
+    "height_grid": {
+      "origin_x": 0,
+      "origin_z": 0,
+      "width": 2,
+      "height": 2,
+      "ground_y": [0.0, 0.0, 0.0, 0.0]
+    },
+    "ramps": [
+      { "tile": { "x": 0, "z": 0 }, "direction": "north", "low_y": 3.0, "high_y": 1.0 }
+    ],
     "events": []
   })";
 

@@ -6,6 +6,7 @@
 #include <rat/engine.hpp>
 #include <rat/event_edit.hpp>
 #include <rat/event_inspect.hpp>
+#include <rat/height_edit.hpp>
 #include <rat/hot_apply.hpp>
 #include <rat/map_loader.hpp>
 #include <rat/surface_query.hpp>
@@ -91,15 +92,31 @@ void EditorApp::draw_blocker_edit_ui() {
   }
 
   if (selected_blocker_ >= 0 && selected_blocker_ < static_cast<int>(blockers.size())) {
-    BlockerDef& blocker = blockers[static_cast<std::size_t>(selected_blocker_)];
-    Aabb2& box = blocker.bounds;
-    ImGui::Text("Selected %d", selected_blocker_);
-    auto apply_box = [&](Aabb2 next) {
-      blockers[static_cast<std::size_t>(selected_blocker_)].bounds = next;
+    auto submit_blockers = [&]() {
       events_.set_blockers(blockers);
       sync_blockers_to_runtime();
       blockers = events_.map().blockers;
     };
+    auto selected_valid = [&]() {
+      return selected_blocker_ >= 0 && selected_blocker_ < static_cast<int>(blockers.size());
+    };
+
+    ImGui::Text("Selected %d", selected_blocker_);
+    auto apply_box = [&](Aabb2 next) {
+      if (!selected_valid()) {
+        return;
+      }
+      BlockerDef updated = blockers[static_cast<std::size_t>(selected_blocker_)];
+      updated.bounds = next;
+      blockers[static_cast<std::size_t>(selected_blocker_)] = updated;
+      submit_blockers();
+    };
+
+    if (!selected_valid()) {
+      return;
+    }
+    BlockerDef current = blockers[static_cast<std::size_t>(selected_blocker_)];
+    const Aabb2 box = current.bounds;
 
     if (ImGui::Button("-X")) {
       apply_box(translate_aabb_on_grid(box, -1, 0, tile));
@@ -134,8 +151,207 @@ void EditorApp::draw_blocker_edit_ui() {
     if (ImGui::Button("Snap to grid")) {
       apply_box(snap_aabb_to_grid(box, tile));
     }
+
+    if (!selected_valid()) {
+      return;
+    }
+    current = blockers[static_cast<std::size_t>(selected_blocker_)];
+
+    ImGui::Separator();
+    bool jumpable = current.jumpable;
+    if (ImGui::Checkbox("Jumpable vertical blocker", &jumpable)) {
+      BlockerDef updated = current;
+      if (jumpable) {
+        const float center_x = 0.5f * (updated.bounds.min_x + updated.bounds.max_x);
+        const float center_z = 0.5f * (updated.bounds.min_z + updated.bounds.max_z);
+        if (surface_query_cache_ == nullptr) {
+          rebuild_surface_query_cache();
+        }
+        const float sampled = surface_query_cache_ == nullptr
+                                  ? 0.0f
+                                  : surface_query_cache_->sample(center_x, center_z).y;
+        const std::optional<float> base = updated.base_y.has_value() ? updated.base_y : sampled;
+        const std::optional<float> top =
+            updated.top_y.has_value() ? updated.top_y : (sampled + 0.9f);
+        if (!set_blocker_vertical_range(updated, true, base, top)) {
+          last_apply_error_ = "Invalid blocker vertical pair";
+        } else {
+          last_apply_error_.clear();
+          blockers[static_cast<std::size_t>(selected_blocker_)] = updated;
+          submit_blockers();
+        }
+      } else {
+        (void)set_blocker_vertical_range(updated, false, std::nullopt, std::nullopt);
+        last_apply_error_.clear();
+        blockers[static_cast<std::size_t>(selected_blocker_)] = updated;
+        submit_blockers();
+      }
+    }
+
+    if (!selected_valid()) {
+      return;
+    }
+    current = blockers[static_cast<std::size_t>(selected_blocker_)];
+
+    if (current.jumpable) {
+      float base_y = current.base_y.value_or(0.0f);
+      float top_y = current.top_y.value_or(base_y + 0.9f);
+      bool vertical_dirty = false;
+      if (ImGui::InputFloat("Base Y", &base_y, 0.05f, 0.25f, "%.3f")) {
+        vertical_dirty = true;
+      }
+      if (ImGui::InputFloat("Top Y", &top_y, 0.05f, 0.25f, "%.3f")) {
+        vertical_dirty = true;
+      }
+      if (top_y < base_y) {
+        top_y = base_y;
+      }
+      if (vertical_dirty) {
+        BlockerDef updated = current;
+        if (!set_blocker_vertical_range(updated, true, base_y, top_y)) {
+          last_apply_error_ = "Invalid blocker vertical pair";
+        } else {
+          last_apply_error_.clear();
+          blockers[static_cast<std::size_t>(selected_blocker_)] = updated;
+          submit_blockers();
+        }
+      }
+    } else {
+      ImGui::TextUnformatted("Legacy full wall (no vertical pair).");
+    }
   }
 
+}
+
+void EditorApp::draw_height_edit_ui() {
+  ImGui::Separator();
+  ImGui::TextUnformatted("Elevation (Edit)");
+  if (ImGui::InputInt("Tile X", &height_tile_x_)) {
+    // Keep immediate mode state only.
+  }
+  if (ImGui::InputInt("Tile Z", &height_tile_z_)) {
+    // Keep immediate mode state only.
+  }
+  if (height_step_ <= 0.0f) {
+    height_step_ = 0.25f;
+  }
+  ImGui::InputFloat("Step", &height_step_, 0.05f, 0.25f, "%.3f");
+  if (height_step_ <= 0.0f) {
+    height_step_ = 0.25f;
+  }
+
+  auto sync_elevation = [&]() {
+    rebuild_surface_query_cache();
+    if (engine_ != nullptr) {
+      engine_->set_terrain_map(events_.map());
+      engine_->set_event_markers(event_markers_from_map(events_.map()));
+      engine_->set_blockers(events_.map().blockers);
+    }
+    snap_player_to_ground_clear_jump();
+  };
+
+  auto apply_result = [&](const HeightEditResult& result) {
+    if (!result.ok) {
+      last_apply_error_ = result.error;
+      return false;
+    }
+    last_apply_error_.clear();
+    sync_elevation();
+    return true;
+  };
+
+  const HeightGetResult tile_height =
+      get_tile_ground_y(events_.map().height_grid, height_tile_x_, height_tile_z_);
+  const TileCoord ramp_tile{height_tile_x_, height_tile_z_};
+  const int ramp_index = find_ramp_index_by_tile(events_.map().ramps, ramp_tile);
+  if (!height_tile_sync_ready_ || last_height_tile_x_ != height_tile_x_ ||
+      last_height_tile_z_ != height_tile_z_) {
+    height_tile_sync_ready_ = true;
+    last_height_tile_x_ = height_tile_x_;
+    last_height_tile_z_ = height_tile_z_;
+    if (tile_height.ok) {
+      height_set_y_ = tile_height.value;
+    }
+    if (ramp_index >= 0) {
+      const RampDef& ramp = events_.map().ramps[static_cast<std::size_t>(ramp_index)];
+      ramp_direction_index_ = static_cast<int>(ramp.direction);
+      ramp_low_y_ = ramp.low_y;
+      ramp_high_y_ = ramp.high_y;
+    } else if (tile_height.ok) {
+      ramp_low_y_ = tile_height.value;
+      ramp_high_y_ = tile_height.value;
+    }
+  }
+
+  if (tile_height.ok) {
+    ImGui::Text("Ground Y: %.3f", tile_height.value);
+    ImGui::TextUnformatted("Tile in range: yes");
+  } else {
+    ImGui::TextUnformatted("Ground Y: (out of range)");
+    ImGui::TextUnformatted("Tile in range: no");
+  }
+
+  const bool tile_has_ramp = ramp_index >= 0;
+  if (tile_has_ramp) {
+    ImGui::BeginDisabled();
+  }
+  if (ImGui::Button("- Step")) {
+    if (apply_result(events_.adjust_tile_elevation(height_tile_x_, height_tile_z_, -height_step_))) {
+      const HeightGetResult updated =
+          get_tile_ground_y(events_.map().height_grid, height_tile_x_, height_tile_z_);
+      if (updated.ok) {
+        height_set_y_ = updated.value;
+      }
+    }
+  }
+  ImGui::SameLine();
+  if (ImGui::Button("+ Step")) {
+    if (apply_result(events_.adjust_tile_elevation(height_tile_x_, height_tile_z_, height_step_))) {
+      const HeightGetResult updated =
+          get_tile_ground_y(events_.map().height_grid, height_tile_x_, height_tile_z_);
+      if (updated.ok) {
+        height_set_y_ = updated.value;
+      }
+    }
+  }
+  if (tile_has_ramp) {
+    ImGui::EndDisabled();
+  }
+  ImGui::InputFloat("Set Y", &height_set_y_, 0.05f, 0.25f, "%.3f");
+  if (tile_has_ramp) {
+    ImGui::BeginDisabled();
+  }
+  if (ImGui::Button("Set tile height")) {
+    (void)apply_result(events_.set_tile_elevation(height_tile_x_, height_tile_z_, height_set_y_));
+  }
+  if (tile_has_ramp) {
+    ImGui::EndDisabled();
+  }
+
+  ImGui::Separator();
+  if (ramp_index >= 0) {
+    ImGui::TextUnformatted("Ramp on tile: yes");
+    ImGui::TextUnformatted("Flat ground editing disabled; use ramp controls.");
+  } else {
+    ImGui::TextUnformatted("Ramp on tile: no");
+  }
+
+  ImGui::Combo("Ramp direction", &ramp_direction_index_, "North\0East\0South\0West\0");
+  ImGui::InputFloat("Ramp low Y", &ramp_low_y_, 0.05f, 0.25f, "%.3f");
+  ImGui::InputFloat("Ramp high Y", &ramp_high_y_, 0.05f, 0.25f, "%.3f");
+
+  if (ImGui::Button(ramp_index >= 0 ? "Update ramp" : "Add ramp")) {
+    RampDef ramp;
+    ramp.tile = ramp_tile;
+    ramp.direction = static_cast<RampDirection>(ramp_direction_index_);
+    ramp.low_y = ramp_low_y_;
+    ramp.high_y = ramp_high_y_;
+    (void)apply_result(events_.upsert_ramp_elevation(ramp));
+  }
+  ImGui::SameLine();
+  if (ImGui::Button("Remove ramp")) {
+    (void)apply_result(events_.remove_ramp_elevation(ramp_tile));
+  }
 }
 
 void EditorApp::draw_event_edit_ui() {
@@ -348,6 +564,16 @@ bool EditorApp::hot_apply_map_path(const std::string& path, bool preserve_player
   selected_blocker_ = blockers.empty() ? -1 : 0;
   selected_event_ = events_.map().events.empty() ? -1 : 0;
   selected_page_ = 0;
+  height_tile_x_ = events_.map().height_grid.origin_x;
+  height_tile_z_ = events_.map().height_grid.origin_z;
+  height_step_ = 0.25f;
+  height_set_y_ = 0.0f;
+  ramp_direction_index_ = 0;
+  ramp_low_y_ = 0.0f;
+  ramp_high_y_ = 0.0f;
+  height_tile_sync_ready_ = false;
+  last_height_tile_x_ = 0;
+  last_height_tile_z_ = 0;
   engine_->set_terrain_map(events_.map());
   engine_->set_blockers(std::move(blockers));
   engine_->set_event_markers(std::move(markers));
@@ -608,6 +834,7 @@ void EditorApp::update_simulation(float dt) {
   interact_was_down_ = interact_down;
   push_buffered_press_if_allowed(interact_press_buffer_, interact_edge, event_runtime_enabled(app_mode_),
                                  io.WantCaptureKeyboard, 0.1f);
+  clear_buffered_press_if_captured(interact_press_buffer_, io.WantCaptureKeyboard);
 
   const bool jump_down = glfwGetKey(window_, GLFW_KEY_SPACE) == GLFW_PRESS;
   const bool jump_edge = jump_down && !jump_was_down_;
@@ -765,7 +992,7 @@ void EditorApp::draw_ui() {
   ImGui::Begin("Inspector");
   ImGui::Text("App mode: %s", app_mode_name(app_mode_));
   if (app_mode_ == AppMode::Edit) {
-    ImGui::TextUnformatted("EDIT: player + events paused. Edit blockers/events below.");
+    ImGui::TextUnformatted("EDIT: player + events paused. Edit elevation/blockers/events below.");
   } else {
     ImGui::TextUnformatted("Quest: ask foreman (cyan) for a rusty cog,");
     ImGui::TextUnformatted("loot scrap east of crates, return.");
@@ -799,6 +1026,7 @@ void EditorApp::draw_ui() {
     ImGui::TextWrapped("%s", last_serialize_status_.c_str());
   }
   if (app_mode_ == AppMode::Edit) {
+    draw_height_edit_ui();
     draw_blocker_edit_ui();
     draw_event_edit_ui();
   }
@@ -823,12 +1051,11 @@ void EditorApp::draw_ui() {
     }
   }
   if (ImGui::Button("Snap player to grid")) {
-    const auto snapped = snap_to_grid(player_.x, player_.y, player_.z, 1.0f);
+    const float tile_size = events_.map().tile_size > 0.0f ? events_.map().tile_size : 1.0f;
+    const auto snapped = snap_to_grid(player_.x, player_.y, player_.z, tile_size);
     player_.x = snapped.x;
-    player_.y = snapped.y;
     player_.z = snapped.z;
-    game_state_.set_player_position(player_.x, player_.y, player_.z);
-    engine_->set_player(player_);
+    snap_player_to_ground_clear_jump();
   }
   ImGui::Separator();
   ImGui::Text("Quest accepted (sw1): %s", game_state_.get_switch(1) ? "ON" : "OFF");

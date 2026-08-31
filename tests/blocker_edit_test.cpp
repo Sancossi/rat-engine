@@ -45,3 +45,28 @@ TEST_CASE("snap_aabb_to_grid snaps all corners", "[unit][blocker_edit]") {
   REQUIRE(snapped.max_x == Approx(2.0f));
   REQUIRE(snapped.max_z == Approx(1.0f));
 }
+
+TEST_CASE("set_blocker_vertical_range enforces valid pair", "[unit][blocker_edit]") {
+  rat::BlockerDef blocker;
+  blocker.bounds = {0.0f, 0.0f, 1.0f, 1.0f};
+
+  REQUIRE_FALSE(rat::set_blocker_vertical_range(blocker, true, 0.0f, std::nullopt));
+  REQUIRE_FALSE(blocker.jumpable);
+  REQUIRE_FALSE(blocker.base_y.has_value());
+  REQUIRE_FALSE(blocker.top_y.has_value());
+
+  REQUIRE_FALSE(rat::set_blocker_vertical_range(blocker, true, 2.0f, 1.0f));
+  REQUIRE_FALSE(blocker.jumpable);
+
+  REQUIRE(rat::set_blocker_vertical_range(blocker, true, 0.25f, 1.25f));
+  REQUIRE(blocker.jumpable);
+  REQUIRE(blocker.base_y.has_value());
+  REQUIRE(blocker.top_y.has_value());
+  REQUIRE(*blocker.base_y == Approx(0.25f));
+  REQUIRE(*blocker.top_y == Approx(1.25f));
+
+  REQUIRE(rat::set_blocker_vertical_range(blocker, false, std::nullopt, std::nullopt));
+  REQUIRE_FALSE(blocker.jumpable);
+  REQUIRE_FALSE(blocker.base_y.has_value());
+  REQUIRE_FALSE(blocker.top_y.has_value());
+}

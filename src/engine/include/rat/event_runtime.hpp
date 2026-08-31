@@ -1,6 +1,7 @@
 #pragma once
 
 #include "rat/game_state.hpp"
+#include "rat/height_edit.hpp"
 #include "rat/map_data.hpp"
 #include "rat/player.hpp"
 #include "rat/surface_query.hpp"
@@ -23,6 +24,10 @@ class EventRuntime {
   void load(MapData map);
   void set_blockers(std::vector<BlockerDef> blockers);
   void set_events(std::vector<EventDef> events);
+  [[nodiscard]] HeightEditResult set_tile_elevation(int tile_x, int tile_z, float ground_y);
+  [[nodiscard]] HeightEditResult adjust_tile_elevation(int tile_x, int tile_z, float delta_y);
+  [[nodiscard]] HeightEditResult upsert_ramp_elevation(const RampDef& ramp);
+  [[nodiscard]] HeightEditResult remove_ramp_elevation(TileCoord tile);
   void clear();
 
   // One simulation step. `interact_pressed` is edge-ish: true on the frame interact is pressed.
@@ -74,6 +79,7 @@ class EventRuntime {
   void try_start_parallels(GameState& state);
   void try_start_action(GameState& state, const PlayerBody& player, bool interact_pressed);
   void try_start_player_touch(GameState& state, const PlayerBody& player);
+  void rebuild_surface_query_for_elevation();
 
   void start_page(const EventDef& event, int page_index, bool parallel, bool autorun);
   void step_interpreter(Interpreter& interp, GameState& state, int& command_budget);
