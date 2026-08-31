@@ -6,6 +6,7 @@ add_executable(rat_tests
   camera_test.cpp
   debug_snapshot_test.cpp
   elevation_mechanics_test.cpp
+  edit_history_test.cpp
   event_edit_test.cpp
   event_inspect_test.cpp
   event_runtime_test.cpp

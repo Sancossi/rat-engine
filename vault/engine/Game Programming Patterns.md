@@ -15,6 +15,7 @@ tags: [engine]
 - **Update Method** — центральные `update_simulation`, `EventRuntime::update`, `integrate_player_frame_surface`. Нет иерархии виртуальных `update()` на сущностях.
 - **Bytecode / Interpreter** — `Command` + `CommandOp` + стек interpreter в `EventRuntime`. Data-driven VM, не GoF Command. Совпадает с [[Event System]] и [[ADR-007 Events and maps stored as JSON]].
 - **Input** — сырой `glfwGetKey` в `EditorApp`. Зачатки decoupling: `MoveInput` / `PlayerFrameInput` уже без GLFW. Action map, ребинд, геймпад — нет. Слой «raw → actions» в [[Architecture]]; задача [[feat: Input action mapping]].
+- **Edit Command** — `EditHistory` / `EditCommand` в `rat_core`, владелец `EditorApp`. Place/move/delete blockers и events; Play не пишет стек; `clear()` на hot-apply.
 - **Audio** — `QueuedAudio` + `AudioSink` (null/log) в `rat_core`; composition root `EditorApp` drain раз в кадр. Бэкенд — [[research: Audio backend ADR]]. Заготовка [[Audio Direction]].
 - **Владение сервисами** — composition root `EditorApp`, без singleton/locator. Совпадает с [[Engine Vision]] («минимум скрытого глобального состояния»).
 - **State** — `AppMode { Play, Edit }`, физические флаги `JumpState`, interpreter wait/message. Персонажного FSM нет.
@@ -27,7 +28,7 @@ tags: [engine]
 | Update Method | центральный tick | Оставить |
 | Bytecode | EventRuntime opcodes | Уже правильный слой; follow-up [[feat: PlaySE event command]] |
 | Command (ввод) | сырой GLFW | [[feat: Input action mapping]] → [[feat: Input rebind and gamepad]] |
-| Command (редактор) | нет undo | [[feat: Edit undo/redo command stack]] |
+| Command (редактор) | `EditHistory` / `EditCommand` (place/move/delete blockers+events) | Готово [[feat: Edit undo/redo command stack]] |
 | Event Queue (звук) | `QueuedAudio` FIFO, log/null sink | [[feat: PlaySE event command]] → [[research: Audio backend ADR]] |
 | Service Locator | composition | Не заводить locator |
 | Singleton | нет | Так и держать |

@@ -15,6 +15,8 @@ struct InputButtons {
   bool hot_apply = false;
   bool cycle_camera = false;
   bool debug_snapshot = false;
+  bool undo = false;
+  bool redo = false;
 };
 
 struct InputGating {
@@ -33,6 +35,8 @@ struct InputFrame {
   bool hot_apply_pressed = false;
   bool cycle_camera_pressed = false;
   bool debug_snapshot_pressed = false;
+  bool undo_pressed = false;
+  bool redo_pressed = false;
 };
 
 [[nodiscard]] InputFrame map_input_frame(const InputButtons& down, const InputButtons& previous,

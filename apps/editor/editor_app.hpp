@@ -4,6 +4,7 @@
 #include <rat/audio.hpp>
 #include <rat/buffered_press.hpp>
 #include <rat/debug_snapshot.hpp>
+#include <rat/edit_history.hpp>
 #include <rat/event_runtime.hpp>
 #include <rat/game_state.hpp>
 #include <rat/gameplay_notify.hpp>
@@ -49,6 +50,7 @@ class EditorApp {
   void draw_event_edit_ui();
   void snap_player_to_ground_clear_jump();
   void rebuild_surface_query_cache();
+  void apply_edited_map(MapData map);
 
   static void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 
@@ -64,6 +66,7 @@ class EditorApp {
   GameState game_state_{};
   GameplayNotifyBus notify_bus_{};
   EventRuntime events_{};
+  EditHistory edit_history_{};
   AppMode app_mode_ = AppMode::Play;
   std::string map_path_;
   std::string last_apply_error_;

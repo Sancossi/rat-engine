@@ -100,3 +100,23 @@ TEST_CASE("player_input_from_frame copies move and jump", "[unit][input]") {
   CHECK(player.jump_pressed);
   CHECK(player.jump_held);
 }
+
+TEST_CASE("InputFrame reports undo and redo edges unless keyboard captured", "[unit][input]") {
+  rat::InputButtons down;
+  down.undo = true;
+  down.redo = true;
+
+  const rat::InputFrame pressed = rat::map_input_frame(down, {}, {});
+  CHECK(pressed.undo_pressed);
+  CHECK(pressed.redo_pressed);
+
+  const rat::InputFrame held = rat::map_input_frame(down, down, {});
+  CHECK_FALSE(held.undo_pressed);
+  CHECK_FALSE(held.redo_pressed);
+
+  rat::InputGating captured;
+  captured.keyboard_captured = true;
+  const rat::InputFrame captured_frame = rat::map_input_frame(down, {}, captured);
+  CHECK_FALSE(captured_frame.undo_pressed);
+  CHECK_FALSE(captured_frame.redo_pressed);
+}

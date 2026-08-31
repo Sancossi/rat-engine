@@ -43,6 +43,8 @@ InputFrame map_input_frame(const InputButtons& down, const InputButtons& previou
       !gating.dialog_open;
   frame.debug_snapshot_pressed =
       edge(down.debug_snapshot, previous.debug_snapshot) && !gating.keyboard_captured;
+  frame.undo_pressed = edge(down.undo, previous.undo) && !gating.keyboard_captured;
+  frame.redo_pressed = edge(down.redo, previous.redo) && !gating.keyboard_captured;
   return frame;
 }
 

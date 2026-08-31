@@ -5,6 +5,7 @@ add_library(rat_core
   src/blocker_edit.cpp
   src/camera.cpp
   src/debug_snapshot.cpp
+  src/edit_history.cpp
   src/event_edit.cpp
   src/event_inspect.cpp
   src/event_runtime.cpp
