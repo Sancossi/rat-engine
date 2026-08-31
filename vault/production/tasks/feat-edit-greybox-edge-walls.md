@@ -1,7 +1,7 @@
 ---
 type: task
 area: Engine
-status: In review
+status: Done
 task_type: Feature
 sprint: Sprint 5
 due:
@@ -18,7 +18,7 @@ Depends: [[feat: Grid edge barriers]]. Взято в [[Sprint 5 — Terrain and 
 
 ## Resolution
 
-ImGui N/E/S/W + Mini 0.45 / Full 1.6 on the selected elevation tile; Remove edge. Greybox draws thin fence quads from `owner_top` to `owner_top + height`. `grey_yard` keeps the z=8 cube strip and ships east fences at (4,6) mini / (6,6) full with save/load roundtrip. `upsert_map_ramp` drops fences on that tile.
+ImGui N/E/S/W + Mini 0.45 / Full 1.6 on the selected elevation tile; Remove edge. Greybox draws thin fence quads from `owner_top` to `owner_top + height`. `grey_yard` keeps the z=8 cube strip and ships east fences at (4,6) mini / (6,6) full with save/load roundtrip. `upsert_map_ramp` drops fences on that tile. Review: Approved.
 
 Verify: `.\build\tests\rat_tests.exe "[height_edit]"`, `"[terrain]"`, `"[map]"`.
 

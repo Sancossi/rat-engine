@@ -22,3 +22,7 @@ DoD:
 Порядок:
 
 - [[feat: Terrain wall cubes]] → [[feat: Grid edge barriers]] → [[feat: Edit and greybox edge walls]]
+
+## Итог
+
+DoD выполнен 2026-09-01. [[feat: Terrain wall cubes]]: боковые грани + Place cube +1.0. [[feat: Grid edge barriers]]: schema v2 `edge_barriers`, ходьба режется, 0.45 перепрыгивается, 1.6 нет. [[feat: Edit and greybox edge walls]]: ImGui N/E/S/W Mini/Full, greybox, `grey_yard` куб + оба забора. Мышь, undo высот/рёбер, slice — не брали.
