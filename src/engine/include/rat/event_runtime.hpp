@@ -19,6 +19,15 @@ namespace rat {
 inline constexpr int kMaxParallelEvents = 8;
 inline constexpr int kMaxParallelCommandsPerFrame = 32;
 
+struct InterpreterDebug {
+  std::string event_id;
+  int page_index = -1;
+  int command_index = -1;
+  int wait_frames = 0;
+  bool waiting_message = false;
+  bool parallel = false;
+};
+
 class EventRuntime {
  public:
   void load(MapData map);
@@ -44,6 +53,9 @@ class EventRuntime {
   }
   [[nodiscard]] const MapData& map() const { return map_; }
   [[nodiscard]] const std::vector<std::string>& warnings() const { return warnings_; }
+  [[nodiscard]] std::vector<std::string> overlapping_event_ids(const PlayerBody& player) const;
+  [[nodiscard]] std::optional<InterpreterDebug> foreground_debug() const;
+  [[nodiscard]] std::vector<InterpreterDebug> parallel_debug() const;
 
  private:
   struct StackFrame {
@@ -84,6 +96,7 @@ class EventRuntime {
   void start_page(const EventDef& event, int page_index, bool parallel, bool autorun);
   void step_interpreter(Interpreter& interp, GameState& state, int& command_budget);
   bool exec_command(Interpreter& interp, GameState& state, const Command& command);
+  [[nodiscard]] InterpreterDebug to_debug(const Interpreter& interp) const;
 
   MapData map_;
   std::optional<Interpreter> foreground_;  // autorun / action / touch (blocking)

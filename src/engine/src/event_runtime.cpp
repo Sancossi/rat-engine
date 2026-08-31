@@ -552,4 +552,43 @@ void EventRuntime::update(GameState& state, const PlayerBody& player, bool inter
   active_parallel_count_ = static_cast<int>(parallels_.size());
 }
 
+InterpreterDebug EventRuntime::to_debug(const Interpreter& interp) const {
+  InterpreterDebug debug;
+  debug.event_id = interp.event_id;
+  debug.page_index = interp.page_index;
+  if (!interp.stack.empty()) {
+    debug.command_index = static_cast<int>(interp.stack.back().index);
+  }
+  debug.wait_frames = interp.wait_frames;
+  debug.waiting_message = interp.waiting_message;
+  debug.parallel = interp.parallel;
+  return debug;
+}
+
+std::vector<std::string> EventRuntime::overlapping_event_ids(const PlayerBody& player) const {
+  std::vector<std::string> ids;
+  for (const EventDef& event : map_.events) {
+    if (player_overlaps(event, player)) {
+      ids.push_back(event.id);
+    }
+  }
+  return ids;
+}
+
+std::optional<InterpreterDebug> EventRuntime::foreground_debug() const {
+  if (!foreground_.has_value()) {
+    return std::nullopt;
+  }
+  return to_debug(*foreground_);
+}
+
+std::vector<InterpreterDebug> EventRuntime::parallel_debug() const {
+  std::vector<InterpreterDebug> out;
+  out.reserve(parallels_.size());
+  for (const Interpreter& interp : parallels_) {
+    out.push_back(to_debug(interp));
+  }
+  return out;
+}
+
 }  // namespace rat

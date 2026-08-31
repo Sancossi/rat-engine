@@ -3,11 +3,13 @@
 #include "imgui_bgfx.hpp"
 
 #include <rat/blocker_edit.hpp>
+#include <rat/debug_snapshot.hpp>
 #include <rat/engine.hpp>
 #include <rat/event_edit.hpp>
 #include <rat/event_inspect.hpp>
 #include <rat/height_edit.hpp>
 #include <rat/hot_apply.hpp>
+#include <rat/input.hpp>
 #include <rat/map_loader.hpp>
 #include <rat/surface_query.hpp>
 
@@ -19,10 +21,34 @@
 #include <GLFW/glfw3native.h>
 
 #include <cstdio>
+#include <iostream>
 #include <string>
 #include <vector>
 
 namespace rat {
+
+namespace {
+
+InputButtons sample_editor_buttons(GLFWwindow* window) {
+  InputButtons buttons;
+  if (window == nullptr) {
+    return buttons;
+  }
+  const auto down = [window](int key) { return glfwGetKey(window, key) == GLFW_PRESS; };
+  buttons.move_up = down(GLFW_KEY_W) || down(GLFW_KEY_UP);
+  buttons.move_down = down(GLFW_KEY_S) || down(GLFW_KEY_DOWN);
+  buttons.move_left = down(GLFW_KEY_A) || down(GLFW_KEY_LEFT);
+  buttons.move_right = down(GLFW_KEY_D) || down(GLFW_KEY_RIGHT);
+  buttons.jump = down(GLFW_KEY_SPACE);
+  buttons.interact = down(GLFW_KEY_E);
+  buttons.toggle_mode = down(GLFW_KEY_F2);
+  buttons.hot_apply = down(GLFW_KEY_F5);
+  buttons.cycle_camera = down(GLFW_KEY_C);
+  buttons.debug_snapshot = down(GLFW_KEY_F3);
+  return buttons;
+}
+
+}  // namespace
 
 EditorApp::~EditorApp() {
   shutdown();
@@ -555,7 +581,10 @@ bool EditorApp::hot_apply_map_path(const std::string& path, bool preserve_player
   const HotApplyResult result = hot_apply_map_from_file(path, targets, options);
   if (!result.ok) {
     last_apply_error_ = result.error;
-    std::fprintf(stderr, "hot-apply failed (%s): %s\n", path.c_str(), result.error.c_str());
+    if (logger_ != nullptr) {
+      log(*logger_, LogLevel::Error, "editor",
+          std::string("hot-apply failed (") + path + "): " + result.error);
+    }
     return false;
   }
 
@@ -584,9 +613,8 @@ bool EditorApp::hot_apply_map_path(const std::string& path, bool preserve_player
   jump_state_ = make_grounded_jump_state();
   jump_state_.coyote_time_left = jump_tuning_.coyote_seconds;
   jump_state_.jump_buffer_left = 0.0f;
-  interact_was_down_ = window_ != nullptr && glfwGetKey(window_, GLFW_KEY_E) == GLFW_PRESS;
+  previous_buttons_ = window_ != nullptr ? sample_editor_buttons(window_) : InputButtons{};
   clear_buffered_press(interact_press_buffer_);
-  jump_was_down_ = window_ != nullptr && glfwGetKey(window_, GLFW_KEY_SPACE) == GLFW_PRESS;
   jump_press_pending_ = false;
   fixed_accumulator_ = 0.0f;
   snap_player_to_ground_clear_jump();
@@ -602,7 +630,10 @@ bool EditorApp::save_map_path(const std::string& path) {
   if (!result.ok) {
     last_apply_error_ = result.error;
     last_serialize_status_.clear();
-    std::fprintf(stderr, "map save failed (%s): %s\n", path.c_str(), result.error.c_str());
+    if (logger_ != nullptr) {
+      log(*logger_, LogLevel::Error, "editor",
+          std::string("map save failed (") + path + "): " + result.error);
+    }
     return false;
   }
   last_apply_error_.clear();
@@ -611,8 +642,20 @@ bool EditorApp::save_map_path(const std::string& path) {
 }
 
 bool EditorApp::init() {
+  file_log_ = std::make_unique<FileLogSink>(default_log_path());
+  stderr_log_ = std::make_unique<StreamLogSink>(std::cerr);
+  tee_log_ = std::make_unique<TeeLogSink>(*file_log_, *stderr_log_);
+  logger_ = std::make_unique<Logger>(*tee_log_);
+  if (file_log_->ok()) {
+    log(*logger_, LogLevel::Info, "editor", std::string("log file ") + file_log_->path());
+  } else {
+    log(*logger_, LogLevel::Warn, "editor",
+        std::string("could not open log file ") + file_log_->path());
+  }
+  log(*logger_, LogLevel::Info, "editor", "starting rat-editor");
+
   if (!glfwInit()) {
-    std::fprintf(stderr, "glfwInit failed\n");
+    log(*logger_, LogLevel::Error, "editor", "glfwInit failed");
     return false;
   }
 
@@ -621,7 +664,7 @@ bool EditorApp::init() {
 
   window_ = glfwCreateWindow(width_, height_, "rat-editor", nullptr, nullptr);
   if (window_ == nullptr) {
-    std::fprintf(stderr, "glfwCreateWindow failed\n");
+    log(*logger_, LogLevel::Error, "editor", "glfwCreateWindow failed");
     glfwTerminate();
     return false;
   }
@@ -639,7 +682,7 @@ bool EditorApp::init() {
   config.vsync = true;
 
   if (!engine_->init(config)) {
-    std::fprintf(stderr, "Engine::init failed\n");
+    log(*logger_, LogLevel::Error, "editor", "Engine::init failed");
     shutdown();
     return false;
   }
@@ -650,8 +693,8 @@ bool EditorApp::init() {
 #endif
   const std::string map_path = std::string(RAT_DATA_DIR) + "/maps/grey_yard.json";
   if (!hot_apply_map_path(map_path, false)) {
-    std::fprintf(stderr, "Failed to load map %s: %s\n", map_path.c_str(),
-                 last_apply_error_.c_str());
+    log(*logger_, LogLevel::Error, "editor",
+        std::string("Failed to load map ") + map_path + ": " + last_apply_error_);
     shutdown();
     return false;
   }
@@ -671,13 +714,13 @@ bool EditorApp::init() {
   ImGui::StyleColorsDark();
 
   if (!ImGui_ImplGlfw_InitForOther(window_, true)) {
-    std::fprintf(stderr, "ImGui_ImplGlfw_InitForOther failed\n");
+    log(*logger_, LogLevel::Error, "editor", "ImGui_ImplGlfw_InitForOther failed");
     shutdown();
     return false;
   }
 
   if (!imgui_bgfx::init(255)) {
-    std::fprintf(stderr, "imgui_bgfx::init failed\n");
+    log(*logger_, LogLevel::Error, "editor", "imgui_bgfx::init failed");
     shutdown();
     return false;
   }
@@ -811,35 +854,29 @@ void EditorApp::update_simulation(float dt) {
   const ImGuiIO& io = ImGui::GetIO();
   constexpr float kFixedStep = 1.0f / 120.0f;
 
-  // F2 toggles Play <-> Edit (edge). Allowed even if ImGui wants keyboard
-  // except when typing into an active text field would be ideal later; for now
-  // skip only when a dialog message is open so Space/E ack stays clean.
-  const bool mode_down = glfwGetKey(window_, GLFW_KEY_F2) == GLFW_PRESS;
-  if (mode_down && !mode_toggle_was_down_ && !events_.active_message().has_value()) {
+  const InputButtons buttons = sample_editor_buttons(window_);
+  InputGating gating;
+  gating.player_control = player_control_enabled(app_mode_);
+  gating.keyboard_captured = io.WantCaptureKeyboard;
+  gating.dialog_open = events_.active_message().has_value();
+  gating.player_input_blocked = events_.player_input_blocked();
+  const InputFrame input = map_input_frame(buttons, previous_buttons_, gating);
+  previous_buttons_ = buttons;
+
+  if (input.toggle_mode_pressed) {
     set_app_mode(toggle_app_mode(app_mode_));
   }
-  mode_toggle_was_down_ = mode_down;
 
-  // F5 hot-applies current map JSON (preserves player). Works in Play and Edit.
-  const bool hot_apply_down = glfwGetKey(window_, GLFW_KEY_F5) == GLFW_PRESS;
-  if (hot_apply_down && !hot_apply_was_down_ && !events_.active_message().has_value() &&
-      !map_path_.empty()) {
+  if (input.hot_apply_pressed && !map_path_.empty()) {
     clear_buffered_press(interact_press_buffer_);
     hot_apply_map_path(map_path_, true);
   }
-  hot_apply_was_down_ = hot_apply_down;
 
-  const bool interact_down = glfwGetKey(window_, GLFW_KEY_E) == GLFW_PRESS;
-  const bool interact_edge = interact_down && !interact_was_down_;
-  interact_was_down_ = interact_down;
-  push_buffered_press_if_allowed(interact_press_buffer_, interact_edge, event_runtime_enabled(app_mode_),
-                                 io.WantCaptureKeyboard, 0.1f);
+  push_buffered_press_if_allowed(interact_press_buffer_, input.interact_pressed,
+                                 event_runtime_enabled(app_mode_), io.WantCaptureKeyboard, 0.1f);
   clear_buffered_press_if_captured(interact_press_buffer_, io.WantCaptureKeyboard);
 
-  const bool jump_down = glfwGetKey(window_, GLFW_KEY_SPACE) == GLFW_PRESS;
-  const bool jump_edge = jump_down && !jump_was_down_;
-  jump_was_down_ = jump_down;
-  if (jump_edge) {
+  if (input.jump_pressed) {
     jump_press_pending_ = true;
   }
 
@@ -850,52 +887,40 @@ void EditorApp::update_simulation(float dt) {
     consumed_for_dialog = true;
   }
 
-  // C cycles TopDown -> Tilt45 -> 3/4 (edge, ignore while typing in ImGui).
-  const bool camera_down = glfwGetKey(window_, GLFW_KEY_C) == GLFW_PRESS;
-  if (camera_down && !camera_toggle_was_down_ && !io.WantCaptureKeyboard &&
-      !events_.active_message().has_value()) {
+  if (input.cycle_camera_pressed) {
     engine_->greybox().set_camera_mode(next_camera_mode(engine_->greybox().camera_mode()));
   }
-  camera_toggle_was_down_ = camera_down;
+
+  if (input.debug_snapshot_pressed) {
+    const DebugSnapshot snapshot =
+        make_debug_snapshot(sim_frame_, app_mode_, player_, jump_state_, events_, game_state_);
+    const std::string path = default_debug_snapshot_path();
+    if (write_debug_snapshot(path, snapshot)) {
+      if (logger_ != nullptr) {
+        log(*logger_, LogLevel::Info, "debug", std::string("wrote snapshot ") + path);
+      }
+    } else if (logger_ != nullptr) {
+      log(*logger_, LogLevel::Error, "debug", std::string("failed to write snapshot ") + path);
+    }
+  }
 
   fixed_accumulator_ += std::max(0.0f, dt);
   fixed_accumulator_ = std::min(fixed_accumulator_, 0.2f);
   while (fixed_accumulator_ >= kFixedStep) {
     fixed_accumulator_ -= kFixedStep;
+    ++sim_frame_;
 
-    MoveInput move_input;
     const bool allow_player_input =
         player_control_enabled(app_mode_) && !io.WantCaptureKeyboard && !events_.player_input_blocked();
-    if (allow_player_input) {
-      float screen_x = 0.0f;
-      float screen_z = 0.0f;
-      if (glfwGetKey(window_, GLFW_KEY_W) == GLFW_PRESS ||
-          glfwGetKey(window_, GLFW_KEY_UP) == GLFW_PRESS) {
-        screen_z += 1.0f;
-      }
-      if (glfwGetKey(window_, GLFW_KEY_S) == GLFW_PRESS ||
-          glfwGetKey(window_, GLFW_KEY_DOWN) == GLFW_PRESS) {
-        screen_z -= 1.0f;
-      }
-      if (glfwGetKey(window_, GLFW_KEY_A) == GLFW_PRESS ||
-          glfwGetKey(window_, GLFW_KEY_LEFT) == GLFW_PRESS) {
-        screen_x -= 1.0f;
-      }
-      if (glfwGetKey(window_, GLFW_KEY_D) == GLFW_PRESS ||
-          glfwGetKey(window_, GLFW_KEY_RIGHT) == GLFW_PRESS) {
-        screen_x += 1.0f;
-      }
-      move_input = world_aligned_move(screen_x, screen_z);
-    } else {
+    if (!allow_player_input) {
       jump_state_.jump_buffer_left = 0.0f;
       jump_press_pending_ = false;
     }
 
     if (player_control_enabled(app_mode_)) {
-      PlayerFrameInput frame_input;
-      frame_input.move = move_input;
+      PlayerFrameInput frame_input = player_input_from_frame(input);
       frame_input.jump_pressed = allow_player_input && jump_press_pending_;
-      frame_input.jump_held = allow_player_input && jump_down;
+      frame_input.jump_held = allow_player_input && input.jump_held;
 
       if (surface_query_cache_ == nullptr) {
         rebuild_surface_query_cache();
@@ -943,7 +968,7 @@ void EditorApp::update_simulation(float dt) {
         jump_state_ = make_grounded_jump_state();
         jump_state_.coyote_time_left = jump_tuning_.coyote_seconds;
         jump_state_.jump_buffer_left = 0.0f;
-        jump_was_down_ = jump_down;
+        previous_buttons_.jump = buttons.jump;
         jump_press_pending_ = false;
       }
     }
@@ -997,7 +1022,7 @@ void EditorApp::draw_ui() {
     ImGui::TextUnformatted("Quest: ask foreman (cyan) for a rusty cog,");
     ImGui::TextUnformatted("loot scrap east of crates, return.");
   }
-  ImGui::TextUnformatted("WASD move | Space jump | E interact | C camera | F2 Play/Edit | F5 hot-apply");
+  ImGui::TextUnformatted("WASD move | Space jump | E interact | C camera | F2 Play/Edit | F3 snapshot | F5 hot-apply");
   if (ImGui::Button(app_mode_ == AppMode::Play ? "Enter Edit (F2)" : "Enter Play (F2)")) {
     set_app_mode(toggle_app_mode(app_mode_));
   }

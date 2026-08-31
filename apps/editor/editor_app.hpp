@@ -2,11 +2,15 @@
 
 #include <rat/app_mode.hpp>
 #include <rat/buffered_press.hpp>
+#include <rat/debug_snapshot.hpp>
 #include <rat/event_runtime.hpp>
 #include <rat/game_state.hpp>
+#include <rat/input.hpp>
+#include <rat/log.hpp>
 #include <rat/player.hpp>
 #include <rat/surface_query.hpp>
 
+#include <cstdint>
 #include <memory>
 #include <string>
 
@@ -48,6 +52,10 @@ class EditorApp {
 
   GLFWwindow* window_ = nullptr;
   Engine* engine_ = nullptr;
+  std::unique_ptr<FileLogSink> file_log_;
+  std::unique_ptr<StreamLogSink> stderr_log_;
+  std::unique_ptr<TeeLogSink> tee_log_;
+  std::unique_ptr<Logger> logger_;
   PlayerBody player_{};
   GameState game_state_{};
   EventRuntime events_{};
@@ -72,18 +80,15 @@ class EditorApp {
   int width_ = 1280;
   int height_ = 720;
   bool running_ = false;
-  bool interact_was_down_ = false;
+  InputButtons previous_buttons_{};
   BufferedPress interact_press_buffer_{};
-  bool jump_was_down_ = false;
   bool jump_press_pending_ = false;
-  bool camera_toggle_was_down_ = false;
-  bool mode_toggle_was_down_ = false;
-  bool hot_apply_was_down_ = false;
   JumpState jump_state_ = make_grounded_jump_state();
   JumpTuning jump_tuning_{};
   std::unique_ptr<SurfaceQuery> surface_query_cache_;
   float fixed_accumulator_ = 0.0f;
   double last_time_ = 0.0;
+  std::uint64_t sim_frame_ = 0;
 };
 
 }  // namespace rat

@@ -1,6 +1,7 @@
 #include "rat/game_state.hpp"
 
 #include <charconv>
+#include <map>
 #include <sstream>
 
 namespace rat {
@@ -217,6 +218,14 @@ bool GameState::load_from_memory(std::string_view data) {
     }
   }
   return true;
+}
+
+std::map<std::uint32_t, bool> GameState::debug_switches() const {
+  return std::map<std::uint32_t, bool>(switches_.begin(), switches_.end());
+}
+
+std::map<std::uint32_t, int> GameState::debug_variables() const {
+  return std::map<std::uint32_t, int>(variables_.begin(), variables_.end());
 }
 
 }  // namespace rat

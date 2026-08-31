@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <map>
 #include <string>
 #include <string_view>
 #include <unordered_map>
@@ -45,6 +46,9 @@ class GameState {
   // Stub persistence: in-memory roundtrip (file I/O can wrap the same blob later).
   [[nodiscard]] bool save_to_memory(std::string& out) const;
   [[nodiscard]] bool load_from_memory(std::string_view data);
+
+  [[nodiscard]] std::map<std::uint32_t, bool> debug_switches() const;
+  [[nodiscard]] std::map<std::uint32_t, int> debug_variables() const;
 
  private:
   std::unordered_map<std::uint32_t, bool> switches_;

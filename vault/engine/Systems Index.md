@@ -12,13 +12,14 @@ tags: [engine]
 | System | Layer | Status | Owner / notes |
 | --- | --- | --- | --- |
 | Core runtime loop | Core | working | Init → update → render → shutdown. Fixed 120 Hz accumulator in `EditorApp` |
+| Logging | Core | working | `rat::Logger` + sink (file/`stderr`/memory); no locator. Default `rat.log` or `RAT_LOG_PATH` |
 | Window + swapchain | Platform / Render | working | GLFW + bgfx present |
-| Input actions | Input | planned | [[feat: Input action mapping]] |
+| Input actions | Input | working | `InputFrame` via `map_input_frame`; GLFW only in editor adapter |
 | Asset loader | Assets | planned | |
 | Scene / entities | Scene | planned | [[research: Entity model ECS vs scene vs hybrid]] |
 | Audio | Platform | planned | [[feat: Audio play-queue stub]] |
 | Edit gizmos | Input / Scene | planned | [[feat: Mouse viewport map edit]] |
-| Agent debug dump | Core | planned | [[Agent Debug]] — snapshot / why-not / headless probe |
+| Agent debug dump | Core | working | `write_debug_snapshot` → `rat-debug.json` (F3); log file `rat.log` |
 
 ## Как добавлять систему
 

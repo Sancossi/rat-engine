@@ -3,12 +3,15 @@ add_library(rat_core
   src/buffered_press.cpp
   src/blocker_edit.cpp
   src/camera.cpp
+  src/debug_snapshot.cpp
   src/event_edit.cpp
   src/event_inspect.cpp
   src/event_runtime.cpp
   src/game_state.cpp
   src/height_edit.cpp
   src/hot_apply.cpp
+  src/input.cpp
+  src/log.cpp
   src/map_loader.cpp
   src/player.cpp
   src/player_jump.cpp
