@@ -1,7 +1,7 @@
 ---
 type: task
 area: Engine
-status: In progress
+status: Done
 task_type: Chore
 sprint: Sprint 4
 due:
@@ -18,7 +18,7 @@ Origin: [[feat: Gameplay notify observer]]
 
 ## Resolution
 
-`GameplayNotifyBus::post()` copies `handlers_` then iterates the snapshot, FIFO. Subscribe during `post` is not invoked for that notify (same contract as audio drain). `[notify]` covers two subscribers / one post (order vector) and subscribe-during-post. `PlayerFrameResult::landed` stays sticky if a later substep takes off; jump physics unchanged. Review pending.
+`GameplayNotifyBus::post()` copies `handlers_` then iterates the snapshot, FIFO. Subscribe during `post` is not invoked for that notify (same contract as audio drain). `[notify]` covers two subscribers / one post (order vector) and subscribe-during-post. `PlayerFrameResult::landed` stays sticky if a later substep takes off; jump physics unchanged. Review: Approved.
 
 ## Bugs found
 
