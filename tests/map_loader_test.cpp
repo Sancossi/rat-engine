@@ -81,7 +81,16 @@ TEST_CASE("Example grey_yard.json loads without crash", "[unit][map]") {
 
   bool found_autorun = false;
   bool found_branchish = false;
+  bool found_crate_notice = false;
   for (const auto& ev : result.map.events) {
+    if (ev.id == "crate_notice") {
+      REQUIRE(ev.volume.has_value());
+      REQUIRE(ev.volume->min_x == Catch::Approx(3.0f));
+      REQUIRE(ev.volume->min_z == Catch::Approx(-1.0f));
+      REQUIRE(ev.volume->max_x == Catch::Approx(5.0f));
+      REQUIRE(ev.volume->max_z == Catch::Approx(1.0f));
+      found_crate_notice = true;
+    }
     for (const auto& page : ev.pages) {
       if (page.trigger == rat::TriggerKind::Autorun) {
         found_autorun = true;
@@ -93,6 +102,7 @@ TEST_CASE("Example grey_yard.json loads without crash", "[unit][map]") {
   }
   REQUIRE(found_autorun);
   REQUIRE(found_branchish);
+  REQUIRE(found_crate_notice);
 
   // Round-trip via string path also works.
   const auto from_string = rat::load_map_from_string(read_file(path));

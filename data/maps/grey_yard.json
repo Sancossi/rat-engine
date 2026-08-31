@@ -103,7 +103,7 @@
     },
     {
       "id": "crate_notice",
-      "volume": { "min_x": 2.5, "min_z": -1.5, "max_x": 5.5, "max_z": 1.5 },
+      "volume": { "min_x": 3.0, "min_z": -1.0, "max_x": 5.0, "max_z": 1.0 },
       "pages": [
         {
           "trigger": "player_touch",
