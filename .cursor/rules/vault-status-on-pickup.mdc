@@ -1,0 +1,15 @@
+---
+description: Set vault card In progress before starting work, then Done when it ships
+alwaysApply: true
+---
+
+# Vault status when picking up work
+
+**Before** writing code, dispatching an implementer, or starting research: set that card's `status: In progress` and **commit it**. The Obsidian board must show In progress while the agent works — not after the fact, not only in chat.
+
+- One current card: `In progress`. Do not leave it `Not started`.
+- When acceptance is met: `Done` in the same commit as the implementation (or immediately after).
+- Parallel GPP cards: each gets `In progress` when its implementer starts, not earlier.
+- Status-only commit is fine: `Mark [[card title]] in progress.`
+
+Do not skip this because the slice is “small” or the subagent will flip Done later.

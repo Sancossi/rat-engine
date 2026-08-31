@@ -8,7 +8,7 @@ alwaysApply: true
 When implementing a sprint, a written plan, or more than one vault card, **dispatch subagents**. Do not implement the whole slice in the parent chat.
 
 - One **implementer** subagent per task, then a **task reviewer** (spec + quality). Sequential implementers — not parallel (they share the tree).
-- Parent: briefs, vault status, follow-up cards, review packages, next dispatch.
+- Parent: **first** set the vault card `status: In progress` and commit; then briefs, follow-up cards, review packages, next dispatch.
 - Follow `.cursor/skills/obsidian-vault` / vault cards for scope. TDD in `rat_core` as usual.
 
 Exception: a one-file typo or status-only vault edit may stay in the parent.

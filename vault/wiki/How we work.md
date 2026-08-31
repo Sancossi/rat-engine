@@ -41,4 +41,5 @@ Knowledge and production live in the git vault (`vault/`). Open that folder as a
 ## Как агент исполняет работу
 
 - Спринт и пачки карточек — **сабагентами** (один implementer на задачу, затем review).
+- **До** старта работы карточка `status: In progress` (и коммит); после приёмки — `Done`.
 - Готовый срез **коммитится сразу**, без ожидания «закоммить».
