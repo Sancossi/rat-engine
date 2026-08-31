@@ -61,3 +61,15 @@ endif()
 # Embedded imgui shaders shipped with bgfx examples (for imgui_bgfx).
 set(RAT_BGFX_IMGUI_SHADER_DIR "${bgfx_cmake_SOURCE_DIR}/bgfx/examples/common/imgui"
     CACHE INTERNAL "bgfx imgui shader headers")
+
+if(RAT_BUILD_TESTS)
+  set(CATCH_INSTALL_DOCS OFF CACHE BOOL "" FORCE)
+  set(CATCH_INSTALL_EXTRAS OFF CACHE BOOL "" FORCE)
+  FetchContent_Declare(
+    Catch2
+    GIT_REPOSITORY https://github.com/catchorg/Catch2.git
+    GIT_TAG        v3.7.1
+    GIT_SHALLOW    TRUE
+  )
+  FetchContent_MakeAvailable(Catch2)
+endif()

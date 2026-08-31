@@ -6,9 +6,10 @@ Game engine bootstrap: **bgfx** renderer + **GLFW** window + **Dear ImGui** mini
 
 | Path | Role |
 |------|------|
-| `src/engine` | `rat_engine` library (no UI framework in public API) |
+| `src/engine` | `rat_core` (logic) + `rat_engine` (bgfx present) |
 | `apps/editor` | `rat-editor` — GLFW shell, ImGui docks, bgfx present |
-| `cmake/Dependencies.cmake` | FetchContent: bgfx.cmake, GLFW, ImGui |
+| `tests` | Catch2 unit + headless mechanics tests |
+| `cmake/Dependencies.cmake` | FetchContent: bgfx.cmake, GLFW, ImGui, Catch2 |
 | `docs/superpowers/specs/` | Design notes |
 
 ## Prerequisites (Windows)
@@ -43,8 +44,20 @@ Run:
 
 You should see ImGui Hierarchy/Inspector docks and a dark-blue clear with `rat-engine` debug text.
 
+## Tests
+
+```powershell
+cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DRAT_BUILD_TESTS=ON
+cmake --build build --target rat_tests
+ctest --test-dir build --output-on-failure
+```
+
+- **Unit:** `GameState` and future pure logic (no GLFW/bgfx).  
+- **Mechanics:** headless event/quest scenarios (stub ready; fill with Event runtime v1).  
+- Disable with `-DRAT_BUILD_TESTS=OFF`.
+
 ## Notes
 
 - GLFW window uses `GLFW_NO_API`; HWND is passed to bgfx (D3D11).  
 - ImGui is rendered through a small `imgui_bgfx` bridge (bgfx embedded shaders).  
-- `rat_engine` stays free of GLFW/ImGui includes in public headers.
+- `rat_core` has no GLFW/ImGui/bgfx; `rat_engine` adds rendering.

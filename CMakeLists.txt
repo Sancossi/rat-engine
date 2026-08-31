@@ -17,11 +17,18 @@ else()
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
+option(RAT_BUILD_EDITOR "Build GLFW + ImGui rat-editor application" ON)
+option(RAT_BUILD_TESTS "Build unit/mechanic tests (Catch2)" ON)
+
 include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/Dependencies.cmake")
 
 add_subdirectory(src/engine)
 
-option(RAT_BUILD_EDITOR "Build GLFW + ImGui rat-editor application" ON)
 if(RAT_BUILD_EDITOR)
   add_subdirectory(apps/editor)
+endif()
+
+if(RAT_BUILD_TESTS)
+  enable_testing()
+  add_subdirectory(tests)
 endif()
