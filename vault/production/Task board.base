@@ -4,7 +4,7 @@ filters:
     - file.ext == "md"
     - type == "task"
 formulas:
-  board_column: if(status == "Not started", "1 · Not started", if(status == "In progress", "2 · In progress", if(status == "Done", "3 · Done", status)))
+  board_column: if(status == "Not started", "1 · Not started", if(status == "In progress", "2 · In progress", if(status == "In review", "3 · In review", if(status == "Blocked", "4 · Blocked", if(status == "Done", "5 · Done", status)))))
   sprint_column: if(sprint, sprint, "Backlog")
 properties:
   area:
@@ -39,8 +39,10 @@ views:
   - type: cards
     name: In progress
     filters:
-      and:
+      or:
         - status == "In progress"
+        - status == "In review"
+        - status == "Blocked"
     groupBy:
       property: formula.sprint_column
       direction: ASC

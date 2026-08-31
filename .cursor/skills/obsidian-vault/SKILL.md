@@ -48,7 +48,7 @@ Copy fields from [templates.md](templates.md). Required `type`:
 Enums match the old Notion boards:
 
 - area: `Engine` | `Game` | `Production`
-- task status: `Not started` | `In progress` | `Done` | `Archived`
+- task status: `Not started` | `In progress` | `In review` | `Blocked` | `Done` | `Archived`
 - task_type: `Feature` | `Bug` | `Chore` | `Research`
 - bug status: `Open` | `Investigating` | `Fixed` | `Wont Fix`
 - bug severity: `Critical` | `High` | `Medium` | `Low`

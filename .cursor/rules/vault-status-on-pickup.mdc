@@ -1,14 +1,17 @@
 ---
-description: Set vault card In progress before starting work, then Done when it ships
+description: Set vault card In progress before starting work, then In review / Done when it ships
 alwaysApply: true
 ---
 
 # Vault status when picking up work
 
-**Before** writing code, dispatching an implementer, or starting **any** vault card: set that card's `status: In progress` and **commit it**. The board must show In progress while work happens.
+**Before** writing code, dispatching an implementer, or starting **any** vault card: set that card's `status: In progress` and **commit it**. The board must show In progress while an implementer owns the tree.
 
-- One current **implementer** card: `In progress` before dispatch. A card still in **review** stays `In progress` too — the board may show two In progress (implementer + previous review).
-- Do **not** set `Done` in the implementation commit. Keep `In progress` until the task reviewer is **Approved** (or no review for a status-only/wiki-only change). Then `Done` + Resolution in that commit.
+- One current **implementer** card: `In progress` before dispatch.
+- When the implementer has committed: parent sets `In review` and **commit**, then dispatch the task reviewer. Pickup of the next `Not started` card is allowed (reviewer is read-only).
+- Implementer must **not** set `Done` or `In review`. `Done` only after the reviewer is **Approved** (or no review for a status-only/wiki-only change). Then `Done` + Resolution in that commit.
+- Needs fixes → back to `In progress` (not a separate status).
+- `Blocked`: stop pickup; write why in the card body (question to the human, missing asset, open dependency).
 - When `current: true` moves to a new sprint, update the **Current sprint** view filter in `vault/production/Task board.base` (`sprint == "Sprint N"`).
 
 Do not skip this because the slice is “small” or the subagent will flip Done later.

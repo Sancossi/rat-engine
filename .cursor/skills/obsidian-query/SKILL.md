@@ -19,7 +19,7 @@ All queries are filesystem search under `vault/`. Do not use Notion MCP.
 
 ## Backlog
 
-Grep `status: Not started` in `vault/production/tasks/`. Optionally also `status: In progress`.
+Grep `status: Not started` in `vault/production/tasks/`. Open work: also `In progress`, `In review`, `Blocked`.
 
 Exclude `status: Done` and `status: Archived`.
 

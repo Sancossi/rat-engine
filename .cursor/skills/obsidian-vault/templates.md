@@ -16,6 +16,8 @@ tags: [task]
 ---
 ```
 
+Task `status`: `Not started` | `In progress` | `In review` | `Blocked` | `Done` | `Archived`.
+
 `sprint` values are short labels: `Sprint 0`, `Sprint 1`, `Sprint 2`, `Sprint 3` (match the sprint note title prefix). Leave empty unless the user ties the work to the current sprint.
 
 ## Bug (`vault/templates/bug.md`)
