@@ -21,4 +21,4 @@ DoD:
 
 Порядок:
 
-- [[feat: Mouse viewport map edit]] → [[feat: Undo height-grid and edge edits]] → [[feat: Mouse viewport terrain edit]]
+- [[feat: Mouse viewport map edit]] → [[feat: Undo height-grid and edge edits]] → [[edge-walls-hang-in-the-air]] → [[feat: Mouse viewport terrain edit]]
