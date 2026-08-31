@@ -15,6 +15,7 @@ add_library(rat_core
   src/hot_apply.cpp
   src/input.cpp
   src/input_sequence.cpp
+  src/locomotion.cpp
   src/log.cpp
   src/map_loader.cpp
   src/player.cpp

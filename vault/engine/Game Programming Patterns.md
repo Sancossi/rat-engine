@@ -18,7 +18,7 @@ tags: [engine]
 - **Edit Command** — `EditHistory` / `EditCommand` в `rat_core`, владелец `EditorApp`. Place/move/delete blockers и events; Play не пишет стек; `clear()` на hot-apply.
 - **Audio** — `QueuedAudio` + `AudioSink` (null/log) в `rat_core`; composition root `EditorApp` drain раз в кадр. Бэкенд — [[research: Audio backend ADR]]. Заготовка [[Audio Direction]].
 - **Владение сервисами** — composition root `EditorApp`, без singleton/locator. Совпадает с [[Engine Vision]] («минимум скрытого глобального состояния»).
-- **State** — `AppMode { Play, Edit }`, физические флаги `JumpState`, interpreter wait/message. Персонажного FSM нет.
+- **State** — `AppMode { Play, Edit }`, физические флаги `JumpState`, interpreter wait/message. Персонажный classify: `locomotion_from` → Idle/Walk/Jump/Fall (`rat/locomotion.hpp`); физика прыжка не в FSM.
 
 ## Глава → rat-engine
 
@@ -32,7 +32,7 @@ tags: [engine]
 | Event Queue (звук) | `QueuedAudio` FIFO, log/null sink | [[feat: PlaySE event command]] → [[research: Audio backend ADR]] |
 | Service Locator | composition | Не заводить locator |
 | Singleton | нет | Так и держать |
-| State (FSM) | нет персонажного FSM | [[feat: Player locomotion FSM]] (Sprint 4); физика прыжка остаётся `JumpState` |
+| State (FSM) | `locomotion_from` Idle/Walk/Jump/Fall; физика в `JumpState` | Готово [[feat: Player locomotion FSM]]; клипы — позже по [[ADR-009 RE-like segmented character hierarchy]] |
 | Component / ECS | open question | [[research: Entity model ECS vs scene vs hybrid]] — ADR до любого ECS-кода |
 | Observer | `GameplayNotifyBus` subscribe/post | stub; side channel (ItemPicked / DialogShown / Landed), not opcode interpreter. [[feat: Gameplay notify observer]] |
 | Object Pool | нет | [[feat: Object pool for short-lived FX]] с field-action FX |
@@ -51,7 +51,7 @@ GPP Event Queue для звука = геймплей постит `PlaySfx`, а�
 1. Ближний слой (Sprint 4): [[feat: Input action mapping]], [[feat: Audio play-queue stub]].
 2. Сразу за звуком (Sprint 4): [[feat: PlaySE event command]], [[feat: Gameplay notify observer]].
 3. Command в Edit (Sprint 4): [[feat: Edit undo/redo command stack]].
-4. State (Sprint 4): [[feat: Player locomotion FSM]] — каркас имён до клипов; физика прыжка не в FSM.
+4. State (Sprint 4): [[feat: Player locomotion FSM]] — готово (`locomotion_from`); клипы не в этой карточке.
 5. Debug для агента (Sprint 4): [[Logging and assert helpers]], [[feat: Debug snapshot JSON]], [[feat: Event why-not-fired]], [[feat: Headless input sequence probe]] — [[Agent Debug]]. Тулзы: [[research: Rat debug loopback MCP]].
 6. Authoring (бэклог): [[feat: Mouse viewport map edit]].
 7. Следом за вводом/звуком (бэклог): [[feat: Input rebind and gamepad]], [[research: Audio backend ADR]].
