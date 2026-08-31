@@ -20,5 +20,5 @@ tags: [adr]
 
 - Идеи из чата попадают в git, а не теряются в Notion.
 - Diff задач/ADR ревьюится как код.
-- Человек открывает `vault/` в Obsidian; Dataview опционален.
+- Человек открывает `vault/` в Obsidian; доска задач — Bases (`Task board.base`); Dataview опционален на остальных индексах.
 - Существующий `docs/` остаётся для схем и implementation specs.
