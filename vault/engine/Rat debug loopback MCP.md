@@ -29,7 +29,7 @@ tags: [engine]
 | Метод | Контракт |
 | --- | --- |
 | `snapshot` | Текущий `DebugSnapshot` JSON (тот же контракт, что F3 / `write_debug_snapshot` → `rat-debug.json`). |
-| `why_not(event_id)` | `event_why_not_fired` → `wrong_page` / `conditions` / `height` / `not_overlapping` / `out_of_action_range` / `input_blocked` / `already_running` / `ok`. |
+| `why_not(event_id)` | `event_why_not_fired` → `wrong_page` / `conditions` / `height` / `not_overlapping` / `out_of_action_range` / `input_blocked` / `already_running` / `autorun_lock` / `foreground_busy` / `parallel_limit` / `already_inside` / `ok`. |
 | `log_tail(n)` | Последние N строк `rat.log` (или путь из `RAT_LOG_PATH`). |
 | `run_input_sequence` | Headless прогон `InputFrame` шагов → `InputSequenceResult`; опционально snapshot на шаг. GLFW не нужен. |
 | `hwnd_screenshot` | PNG окна `rat-editor` (HWND/GLFW), не браузер. Опционально: ImGui/dbgText с картинки агент читает плохо. |

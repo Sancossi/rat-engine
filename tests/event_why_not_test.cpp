@@ -291,6 +291,75 @@ TEST_CASE("event_why_not_fired reports parallel_limit when cap is full", "[unit]
   REQUIRE(std::string(rat::event_why_not_name(reason)) == "parallel_limit");
 }
 
+TEST_CASE("event_why_not_fired reports ok for startable Parallel under cap", "[unit][why]") {
+  constexpr const char* kJson = R"({
+    "schema_version": 1,
+    "id": "ok_parallel_why",
+    "width": 4,
+    "height": 4,
+    "events": [
+      {
+        "id": "loop",
+        "tile": { "x": 0, "z": 0 },
+        "pages": [
+          {
+            "trigger": "parallel",
+            "commands": [{ "op": "wait", "frames": 1000 }]
+          }
+        ]
+      }
+    ]
+  })";
+
+  const auto loaded = rat::load_map_from_string(kJson);
+  REQUIRE(loaded.ok);
+
+  rat::GameState state;
+  rat::EventRuntime runtime;
+  runtime.load(loaded.map);
+
+  const rat::EventWhyNot reason =
+      rat::event_why_not_fired(runtime, "loop", state, rat::PlayerBody{}, false);
+  REQUIRE(reason == rat::EventWhyNot::Ok);
+  REQUIRE(std::string(rat::event_why_not_name(reason)) == "ok");
+}
+
+TEST_CASE("event_why_not_fired reports ok for PlayerTouch on rising edge", "[unit][why]") {
+  constexpr const char* kJson = R"({
+    "schema_version": 1,
+    "id": "ok_touch_why",
+    "width": 4,
+    "height": 4,
+    "events": [
+      {
+        "id": "pad",
+        "tile": { "x": 1, "z": 1 },
+        "pages": [
+          {
+            "trigger": "player_touch",
+            "commands": [{ "op": "control_switch", "id": 7, "value": true }]
+          }
+        ]
+      }
+    ]
+  })";
+
+  const auto loaded = rat::load_map_from_string(kJson);
+  REQUIRE(loaded.ok);
+
+  rat::GameState state;
+  rat::EventRuntime runtime;
+  runtime.load(loaded.map);
+
+  rat::PlayerBody player;
+  player.x = 1.5f;
+  player.z = 1.5f;
+
+  const rat::EventWhyNot reason = rat::event_why_not_fired(runtime, "pad", state, player, false);
+  REQUIRE(reason == rat::EventWhyNot::Ok);
+  REQUIRE(std::string(rat::event_why_not_name(reason)) == "ok");
+}
+
 TEST_CASE("event_why_not_fired reports already_inside after player_touch edge", "[unit][why]") {
   constexpr const char* kJson = R"({
     "schema_version": 1,
