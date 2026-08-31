@@ -4,6 +4,7 @@
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
 
+#include <filesystem>
 #include <fstream>
 #include <sstream>
 #include <string>
@@ -121,4 +122,32 @@ TEST_CASE("Serialize map roundtrips blockers after edit", "[unit][map]") {
   REQUIRE(again.map.blockers.size() == 1);
   REQUIRE(again.map.blockers[0].min_x == Catch::Approx(2.0f));
   REQUIRE(again.map.blockers[0].max_x == Catch::Approx(3.0f));
+}
+
+TEST_CASE("Save map file roundtrips blocker and event edits", "[unit][map]") {
+  rat::MapData map;
+  map.id = "saved";
+  map.width = 8;
+  map.height = 8;
+  map.blockers.push_back({2.0f, 3.0f, 4.0f, 5.0f});
+
+  rat::EventDef event;
+  event.id = "moved";
+  event.tile = rat::TileCoord{6, -2};
+  event.pages.push_back({});
+  map.events.push_back(event);
+
+  const auto path = std::filesystem::temp_directory_path() / "rat-map-save-test.json";
+  const auto saved = rat::save_map_to_file(map, path.string());
+  REQUIRE(saved.ok);
+  REQUIRE(saved.error.empty());
+
+  const auto loaded = rat::load_map_from_file(path.string());
+  std::filesystem::remove(path);
+  REQUIRE(loaded.ok);
+  REQUIRE(loaded.map.blockers.size() == 1);
+  REQUIRE(loaded.map.blockers[0].min_x == Catch::Approx(2.0f));
+  REQUIRE(loaded.map.events.size() == 1);
+  REQUIRE(loaded.map.events[0].tile->x == 6);
+  REQUIRE(loaded.map.events[0].tile->z == -2);
 }

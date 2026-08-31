@@ -130,21 +130,6 @@ void EditorApp::draw_blocker_edit_ui() {
     }
   }
 
-  if (ImGui::Button("Serialize map JSON (memory check)")) {
-    const auto serialized = serialize_map_to_string(events_.map());
-    if (serialized.ok) {
-      last_serialize_status_ =
-          "OK (" + std::to_string(serialized.json_text.size()) + " bytes, blockers=" +
-          std::to_string(events_.map().blockers.size()) + ")";
-      last_apply_error_.clear();
-    } else {
-      last_serialize_status_.clear();
-      last_apply_error_ = serialized.error;
-    }
-  }
-  if (!last_serialize_status_.empty()) {
-    ImGui::TextWrapped("%s", last_serialize_status_.c_str());
-  }
 }
 
 void EditorApp::draw_event_edit_ui() {
@@ -280,7 +265,7 @@ void EditorApp::draw_event_edit_ui() {
       }
       if (sw_i < 0) {
         if (ImGui::Button("Add enable Switch")) {
-          ensure_page_enable_switch(page, 1, true);
+          (void)ensure_page_enable_switch(page, 1, true);
           apply_event(event);
           event = event_list[static_cast<std::size_t>(selected_event_)];
         }
@@ -362,6 +347,23 @@ bool EditorApp::hot_apply_map_path(const std::string& path, bool preserve_player
   engine_->greybox().set_selected_blocker(app_mode_ == AppMode::Edit ? selected_blocker_ : -1);
   engine_->greybox().set_selected_event_marker(
       app_mode_ == AppMode::Edit ? event_marker_index(events_.map(), selected_event_) : -1);
+  return true;
+}
+
+bool EditorApp::save_map_path(const std::string& path) {
+  if (path.empty()) {
+    last_apply_error_ = "map path is empty";
+    return false;
+  }
+  const MapFileResult result = save_map_to_file(events_.map(), path);
+  if (!result.ok) {
+    last_apply_error_ = result.error;
+    last_serialize_status_.clear();
+    std::fprintf(stderr, "map save failed (%s): %s\n", path.c_str(), result.error.c_str());
+    return false;
+  }
+  last_apply_error_.clear();
+  last_serialize_status_ = "Saved: " + path;
   return true;
 }
 
@@ -671,7 +673,14 @@ void EditorApp::draw_ui() {
     sync_blockers_to_runtime();
     sync_events_to_runtime();
   }
-  if (!map_path_.empty() && ImGui::Button("Hot-apply map (F5, keep pos)")) {
+  if (!map_path_.empty()) {
+    ImGui::TextWrapped("Map file: %s", map_path_.c_str());
+  }
+  if (app_mode_ == AppMode::Edit && !map_path_.empty() &&
+      ImGui::Button("Save current map JSON")) {
+    save_map_path(map_path_);
+  }
+  if (!map_path_.empty() && ImGui::Button("Load map JSON (F5, keep pos)")) {
     hot_apply_map_path(map_path_, true);
   }
   if (!map_path_.empty() && ImGui::Button("Reload map (reset player)")) {
@@ -683,8 +692,11 @@ void EditorApp::draw_ui() {
     }
   }
   if (!last_apply_error_.empty()) {
-    ImGui::TextColored(ImVec4(1.0f, 0.35f, 0.35f, 1.0f), "Apply error: %s",
+    ImGui::TextColored(ImVec4(1.0f, 0.35f, 0.35f, 1.0f), "Map I/O error: %s",
                        last_apply_error_.c_str());
+  }
+  if (!last_serialize_status_.empty()) {
+    ImGui::TextWrapped("%s", last_serialize_status_.c_str());
   }
   if (app_mode_ == AppMode::Edit) {
     draw_blocker_edit_ui();

@@ -420,4 +420,22 @@ MapSerializeResult serialize_map_to_string(const MapData& map) {
   }
 }
 
+MapFileResult save_map_to_file(const MapData& map, const std::string& path) {
+  const MapSerializeResult serialized = serialize_map_to_string(map);
+  if (!serialized.ok) {
+    return MapFileResult{false, serialized.error};
+  }
+
+  std::ofstream out(path, std::ios::binary | std::ios::trunc);
+  if (!out) {
+    return MapFileResult{false, "failed to open map file for writing: " + path};
+  }
+  out << serialized.json_text << '\n';
+  out.flush();
+  if (!out) {
+    return MapFileResult{false, "failed to write map file: " + path};
+  }
+  return MapFileResult{true, {}};
+}
+
 }  // namespace rat

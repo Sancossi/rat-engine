@@ -31,6 +31,7 @@ class EditorApp {
   void draw_ui();
   void refresh_mode_banner();
   bool hot_apply_map_path(const std::string& path, bool preserve_player);
+  bool save_map_path(const std::string& path);
   void sync_blockers_to_runtime();
   void sync_events_to_runtime();
   void draw_blocker_edit_ui();
