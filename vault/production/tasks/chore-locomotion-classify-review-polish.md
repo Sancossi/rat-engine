@@ -1,7 +1,7 @@
 ---
 type: task
 area: Engine
-status: In progress
+status: Done
 task_type: Chore
 sprint: Sprint 4
 due:
@@ -18,7 +18,7 @@ Origin: [[feat: Player locomotion FSM]]
 
 ## Resolution
 
-`[loco]` locks grounded + `vertical_speed > 0` as Idle (zero move) or Walk (non-zero axis), never Jump — classify already required `!grounded` before Jump; the case fails if airborne-vs is checked first. Apex integrate loop is capped at 600 frames and `REQUIRE`s the cap so Fall is not skipped on hang. Jump physics and `locomotion_from` product unchanged.
+`[loco]` locks grounded + `vertical_speed > 0` as Idle (zero move) or Walk (non-zero axis), never Jump — classify already required `!grounded` before Jump; the case fails if airborne-vs is checked first. Apex integrate loop is capped at 600 frames and `REQUIRE`s the cap so Fall is not skipped on hang. Jump physics and `locomotion_from` product unchanged. Review: Approved.
 
 Verify: `.\build\tests\rat_tests.exe "[loco]"`.
 
