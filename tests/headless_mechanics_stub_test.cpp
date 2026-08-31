@@ -62,7 +62,8 @@ TEST_CASE("Headless mechanics: grey_yard cog quest end-to-end", "[mechanics][que
   player.z = 0.0f;
   interact_at(runtime, state, player);
   REQUIRE(state.has_item("rusty_cog"));
-  REQUIRE(state.get_switch(3));
+  REQUIRE(state.get_self_switch("scrap_pile", 'A'));
+  REQUIRE_FALSE(state.get_switch(3));
 
   // Turn in at foreman.
   player.x = -2.0f;

@@ -73,14 +73,10 @@ class EventRuntime {
   void step_interpreter(Interpreter& interp, GameState& state, int& command_budget);
   bool exec_command(Interpreter& interp, GameState& state, const Command& command);
 
-  [[nodiscard]] bool get_self_switch(const std::string& event_id, char key) const;
-  void set_self_switch(const std::string& event_id, char key, bool value);
-
   MapData map_;
   std::optional<Interpreter> foreground_;  // autorun / action / touch (blocking)
   std::vector<Interpreter> parallels_;
   std::optional<std::string> active_message_;
-  std::unordered_map<std::string, std::uint8_t> self_switches_;  // bits 0-3 = A-D
   std::unordered_set<std::string> touch_inside_;
   std::unordered_set<std::string> parallel_started_;
   std::unordered_set<std::string> autorun_lock_;

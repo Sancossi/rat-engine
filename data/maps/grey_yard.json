@@ -87,13 +87,13 @@
           "commands": [
             { "op": "show_text", "text": "You dig up a rusty cog." },
             { "op": "change_items", "id": "rusty_cog", "delta": 1, "key_item": false },
-            { "op": "control_switch", "id": 3, "value": true }
+            { "op": "control_self_switch", "key": "A", "value": true }
           ]
         },
         {
           "trigger": "action",
           "conditions": [
-            { "type": "switch", "id": 3, "value": true }
+            { "type": "self_switch", "key": "A", "value": true }
           ],
           "commands": [
             { "op": "show_text", "text": "The scrap pile is picked clean." }

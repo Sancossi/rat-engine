@@ -37,6 +37,7 @@ enum class CommandOp {
   ShowText,
   ControlSwitch,
   ControlVariable,
+  ControlSelfSwitch,
   ConditionalBranch,
   Wait,
   TransferPlayer,
@@ -73,6 +74,7 @@ struct Command {
   std::string item_id;
   int item_delta = 0;
   bool key_item = false;
+  char self_switch = 'A';
   Condition branch_condition{};
   std::vector<Command> then_commands;
   std::vector<Command> else_commands;

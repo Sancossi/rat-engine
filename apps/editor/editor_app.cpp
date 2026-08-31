@@ -721,7 +721,8 @@ void EditorApp::draw_ui() {
   ImGui::Separator();
   ImGui::Text("Quest accepted (sw1): %s", game_state_.get_switch(1) ? "ON" : "OFF");
   ImGui::Text("Quest done (sw2): %s", game_state_.get_switch(2) ? "ON" : "OFF");
-  ImGui::Text("Scrap looted (sw3): %s", game_state_.get_switch(3) ? "ON" : "OFF");
+  ImGui::Text("Scrap looted (self A): %s",
+              game_state_.get_self_switch("scrap_pile", 'A') ? "ON" : "OFF");
   ImGui::Text("Intro var0: %d", game_state_.get_variable(0));
   ImGui::Text("rusty_cog: %d", game_state_.item_quantity("rusty_cog"));
   ImGui::End();

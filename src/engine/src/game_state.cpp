@@ -54,9 +54,35 @@ void GameState::set_variable(std::uint32_t id, int value) {
 void GameState::clear() {
   switches_.clear();
   variables_.clear();
+  self_switches_.clear();
   inventory_.clear();
   map_id_.clear();
   player_x_ = player_y_ = player_z_ = 0.0f;
+}
+
+bool GameState::get_self_switch(std::string_view event_id, char key) const {
+  const int bit = key - 'A';
+  if (bit < 0 || bit > 3 || event_id.empty()) {
+    return false;
+  }
+  const auto it = self_switches_.find(std::string(event_id));
+  if (it == self_switches_.end()) {
+    return false;
+  }
+  return (it->second & (1u << bit)) != 0;
+}
+
+void GameState::set_self_switch(std::string_view event_id, char key, bool value) {
+  const int bit = key - 'A';
+  if (bit < 0 || bit > 3 || event_id.empty()) {
+    return;
+  }
+  std::uint8_t& bits = self_switches_[std::string(event_id)];
+  if (value) {
+    bits = static_cast<std::uint8_t>(bits | (1u << bit));
+  } else {
+    bits = static_cast<std::uint8_t>(bits & ~(1u << bit));
+  }
 }
 
 void GameState::set_player_position(float x, float y, float z) {
@@ -107,6 +133,9 @@ bool GameState::save_to_memory(std::string& out) const {
   }
   for (const auto& [id, value] : variables_) {
     oss << "var " << id << ' ' << value << '\n';
+  }
+  for (const auto& [event_id, bits] : self_switches_) {
+    oss << "ss " << event_id << ' ' << static_cast<unsigned>(bits) << '\n';
   }
   for (const auto& item : inventory_) {
     oss << "item " << item.id << ' ' << item.quantity << ' ' << (item.key_item ? 1 : 0) << '\n';
@@ -164,6 +193,13 @@ bool GameState::load_from_memory(std::string_view data) {
         return false;
       }
       variables_[id] = value;
+    } else if (tag == "ss") {
+      std::string event_id;
+      unsigned bits = 0;
+      if (!(ls >> event_id >> bits) || event_id.empty()) {
+        return false;
+      }
+      self_switches_[std::move(event_id)] = static_cast<std::uint8_t>(bits & 0x0Fu);
     } else if (tag == "item") {
       std::string id;
       int quantity = 0;

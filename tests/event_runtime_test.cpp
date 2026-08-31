@@ -117,3 +117,53 @@ TEST_CASE("Event runtime enforces Parallel limits", "[unit][events]") {
   REQUIRE(runtime.active_parallel_count() <= 8);
   REQUIRE(runtime.last_parallel_commands_executed() <= 32);
 }
+
+TEST_CASE("Event runtime control_self_switch flips page conditions", "[unit][events]") {
+  constexpr const char* kJson = R"({
+    "schema_version": 1,
+    "id": "t",
+    "width": 4,
+    "height": 4,
+    "events": [
+      {
+        "id": "chest",
+        "tile": { "x": 1, "z": 1 },
+        "pages": [
+          {
+            "trigger": "action",
+            "conditions": [],
+            "commands": [
+              { "op": "show_text", "text": "Loot" },
+              { "op": "control_self_switch", "key": "A", "value": true }
+            ]
+          },
+          {
+            "trigger": "action",
+            "conditions": [ { "type": "self_switch", "key": "A", "value": true } ],
+            "commands": [ { "op": "show_text", "text": "Empty" } ]
+          }
+        ]
+      }
+    ]
+  })";
+
+  const auto loaded = rat::load_map_from_string(kJson);
+  REQUIRE(loaded.ok);
+
+  rat::GameState state;
+  rat::EventRuntime runtime;
+  runtime.load(loaded.map);
+
+  rat::PlayerBody player;
+  player.x = 1.0f;
+  player.z = 1.0f;
+
+  runtime.update(state, player, true, 1.0f / 60.0f);
+  REQUIRE(runtime.active_message() == "Loot");
+  runtime.acknowledge_message();
+  runtime.update(state, player, false, 1.0f / 60.0f);
+  REQUIRE(state.get_self_switch("chest", 'A'));
+
+  runtime.update(state, player, true, 1.0f / 60.0f);
+  REQUIRE(runtime.active_message() == "Empty");
+}

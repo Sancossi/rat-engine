@@ -117,6 +117,14 @@ Command parse_command(const json& node) {
     command.op = CommandOp::ControlVariable;
     command.id = node.at("id").get<std::uint32_t>();
     command.int_value = node.at("value").get<int>();
+  } else if (op == "control_self_switch") {
+    command.op = CommandOp::ControlSelfSwitch;
+    const std::string key = node.at("key").get<std::string>();
+    if (key.size() != 1 || key[0] < 'A' || key[0] > 'D') {
+      throw std::runtime_error("control_self_switch key must be A-D");
+    }
+    command.self_switch = key[0];
+    command.bool_value = node.at("value").get<bool>();
   } else if (op == "conditional_branch") {
     command.op = CommandOp::ConditionalBranch;
     command.branch_condition = parse_condition(node.at("condition"));
@@ -319,6 +327,10 @@ json dump_command(const Command& command) {
       return json{{"op", "control_switch"}, {"id", command.id}, {"value", command.bool_value}};
     case CommandOp::ControlVariable:
       return json{{"op", "control_variable"}, {"id", command.id}, {"value", command.int_value}};
+    case CommandOp::ControlSelfSwitch:
+      return json{{"op", "control_self_switch"},
+                  {"key", std::string(1, command.self_switch)},
+                  {"value", command.bool_value}};
     case CommandOp::ConditionalBranch: {
       json node{{"op", "conditional_branch"},
                 {"condition", dump_condition(command.branch_condition)},

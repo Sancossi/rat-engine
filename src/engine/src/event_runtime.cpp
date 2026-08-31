@@ -54,7 +54,6 @@ void EventRuntime::clear() {
   foreground_.reset();
   parallels_.clear();
   active_message_.reset();
-  self_switches_.clear();
   touch_inside_.clear();
   parallel_started_.clear();
   autorun_lock_.clear();
@@ -101,31 +100,6 @@ void EventRuntime::acknowledge_message() {
   }
 }
 
-bool EventRuntime::get_self_switch(const std::string& event_id, char key) const {
-  const auto it = self_switches_.find(event_id);
-  if (it == self_switches_.end()) {
-    return false;
-  }
-  const int bit = key - 'A';
-  if (bit < 0 || bit > 3) {
-    return false;
-  }
-  return (it->second & (1u << bit)) != 0;
-}
-
-void EventRuntime::set_self_switch(const std::string& event_id, char key, bool value) {
-  const int bit = key - 'A';
-  if (bit < 0 || bit > 3) {
-    return;
-  }
-  std::uint8_t& bits = self_switches_[event_id];
-  if (value) {
-    bits = static_cast<std::uint8_t>(bits | (1u << bit));
-  } else {
-    bits = static_cast<std::uint8_t>(bits & ~(1u << bit));
-  }
-}
-
 bool EventRuntime::condition_met(const Condition& condition, const GameState& state,
                                  const std::string& event_id) const {
   switch (condition.type) {
@@ -136,7 +110,7 @@ bool EventRuntime::condition_met(const Condition& condition, const GameState& st
     case ConditionType::Item:
       return state.has_item(condition.string_id, condition.int_value);
     case ConditionType::SelfSwitch:
-      return get_self_switch(event_id, condition.self_switch) == condition.bool_value;
+      return state.get_self_switch(event_id, condition.self_switch) == condition.bool_value;
   }
   return false;
 }
@@ -301,6 +275,9 @@ bool EventRuntime::exec_command(Interpreter& interp, GameState& state, const Com
       return true;
     case CommandOp::ControlVariable:
       state.set_variable(command.id, command.int_value);
+      return true;
+    case CommandOp::ControlSelfSwitch:
+      state.set_self_switch(interp.event_id, command.self_switch, command.bool_value);
       return true;
     case CommandOp::ConditionalBranch: {
       const bool ok = condition_met(command.branch_condition, state, interp.event_id);
