@@ -272,16 +272,34 @@ void EditorApp::draw_ui() {
   ImGui::Text("rusty_cog: %d", game_state_.item_quantity("rusty_cog"));
   ImGui::End();
 
+  if (events_.has_action_prompt(player_, game_state_) && !events_.active_message().has_value()) {
+    const ImVec2 prompt_pos(viewport->WorkPos.x + viewport->WorkSize.x * 0.5f - 70.0f,
+                            viewport->WorkPos.y + viewport->WorkSize.y * 0.55f);
+    ImGui::SetNextWindowPos(prompt_pos);
+    ImGui::SetNextWindowBgAlpha(0.65f);
+    ImGui::Begin("InteractPrompt", nullptr,
+                 ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize |
+                     ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav |
+                     ImGuiWindowFlags_NoFocusOnAppearing);
+    ImGui::TextUnformatted("[E] Interact");
+    ImGui::End();
+  }
+
   if (events_.active_message().has_value()) {
+    const float dialog_w = viewport->WorkSize.x - 160.0f;
     ImGui::SetNextWindowPos(ImVec2(viewport->WorkPos.x + 80.0f,
-                                   viewport->WorkPos.y + viewport->WorkSize.y - 160.0f));
-    ImGui::SetNextWindowSize(ImVec2(viewport->WorkSize.x - 160.0f, 120.0f));
+                                   viewport->WorkPos.y + viewport->WorkSize.y - 170.0f));
+    ImGui::SetNextWindowSize(ImVec2(dialog_w, 130.0f));
+    ImGui::SetNextWindowBgAlpha(0.92f);
     ImGui::Begin("Dialog", nullptr,
                  ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse |
-                     ImGuiWindowFlags_NoMove);
-    ImGui::TextWrapped("%s", events_.active_message()->c_str());
+                     ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoTitleBar);
+    ImGui::TextUnformatted("Dialog");
+    ImGui::Separator();
     ImGui::Spacing();
-    ImGui::TextUnformatted("[E/Space] continue");
+    ImGui::TextWrapped("%s", events_.active_message()->c_str());
+    ImGui::SetCursorPosY(ImGui::GetWindowHeight() - 28.0f);
+    ImGui::TextDisabled("E / Space — continue");
     ImGui::End();
   }
 

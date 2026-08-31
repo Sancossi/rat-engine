@@ -49,6 +49,25 @@ bool EventRuntime::player_input_blocked() const {
   return foreground_.has_value() || active_message_.has_value();
 }
 
+bool EventRuntime::has_action_prompt(const PlayerBody& player, const GameState& state) const {
+  if (player_input_blocked()) {
+    return false;
+  }
+  for (const EventDef& event : map_.events) {
+    if (!player_overlaps(event, player)) {
+      continue;
+    }
+    const int page_index = select_page(event, state);
+    if (page_index < 0) {
+      continue;
+    }
+    if (event.pages[static_cast<std::size_t>(page_index)].trigger == TriggerKind::Action) {
+      return true;
+    }
+  }
+  return false;
+}
+
 void EventRuntime::acknowledge_message() {
   if (!active_message_.has_value()) {
     return;

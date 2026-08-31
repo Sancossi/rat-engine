@@ -28,6 +28,7 @@ class EventRuntime {
 
   [[nodiscard]] bool player_input_blocked() const;
   [[nodiscard]] const std::optional<std::string>& active_message() const { return active_message_; }
+  [[nodiscard]] bool has_action_prompt(const PlayerBody& player, const GameState& state) const;
   [[nodiscard]] int active_parallel_count() const { return active_parallel_count_; }
   [[nodiscard]] int last_parallel_commands_executed() const {
     return last_parallel_commands_executed_;

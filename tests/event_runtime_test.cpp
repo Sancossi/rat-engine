@@ -80,12 +80,14 @@ TEST_CASE("Event runtime action trigger requires interact near tile", "[unit][ev
   rat::PlayerBody far;
   far.x = 0.0f;
   far.z = 0.0f;
+  REQUIRE_FALSE(runtime.has_action_prompt(far, state));
   runtime.update(state, far, true, 1.0f / 60.0f);
   REQUIRE_FALSE(state.get_switch(5));
 
   rat::PlayerBody near;
   near.x = 2.0f;
   near.z = 2.0f;
+  REQUIRE(runtime.has_action_prompt(near, state));
   runtime.update(state, near, true, 1.0f / 60.0f);
   REQUIRE(state.get_switch(5));
 }
