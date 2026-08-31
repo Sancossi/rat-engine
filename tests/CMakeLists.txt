@@ -12,6 +12,7 @@ add_executable(rat_tests
   game_state_test.cpp
   height_edit_test.cpp
   headless_mechanics_stub_test.cpp
+  input_sequence_probe_test.cpp
   log_test.cpp
   hot_apply_test.cpp
   input_test.cpp
