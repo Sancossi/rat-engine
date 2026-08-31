@@ -11,7 +11,7 @@
 
 namespace rat {
 
-// GPU grey-box helpers: flat floor + grid under fixed ortho 3/4 camera (view 0).
+// GPU grey-box helpers: flat floor + grid under switchable ortho camera (view 0).
 class GreyboxScene {
  public:
   GreyboxScene() = default;
@@ -24,6 +24,7 @@ class GreyboxScene {
   void shutdown();
   void resize(std::uint32_t width, std::uint32_t height);
   void set_focus(float x, float y, float z);
+  void set_camera_mode(CameraMode mode);
   void set_player(const PlayerBody& player) {
     player_ = player;
     has_player_ = true;
@@ -34,6 +35,7 @@ class GreyboxScene {
   void draw(bgfx::ViewId view_id = 0);
 
   [[nodiscard]] bool is_initialized() const { return initialized_; }
+  [[nodiscard]] CameraMode camera_mode() const { return params_.mode; }
   [[nodiscard]] const OrthoCamera& camera() const { return camera_; }
 
  private:

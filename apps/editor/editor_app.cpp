@@ -90,6 +90,8 @@ bool EditorApp::init() {
   game_state_.set_player_position(player_.x, player_.y, player_.z);
   engine_->set_player(player_);
 
+  refresh_mode_banner();
+
   IMGUI_CHECKVERSION();
   ImGui::CreateContext();
   ImGuiIO& io = ImGui::GetIO();
@@ -180,6 +182,13 @@ void EditorApp::on_framebuffer_resize(int width, int height) {
   }
 }
 
+void EditorApp::refresh_mode_banner() {
+  if (engine_ == nullptr) {
+    return;
+  }
+  engine_->set_debug_banner(std::string("rat-engine  [") + app_mode_name(app_mode_) + "]");
+}
+
 void EditorApp::framebuffer_size_callback(GLFWwindow* window, int width, int height) {
   auto* self = static_cast<EditorApp*>(glfwGetWindowUserPointer(window));
   if (self != nullptr) {
@@ -194,6 +203,16 @@ void EditorApp::update_simulation(float dt) {
 
   const ImGuiIO& io = ImGui::GetIO();
 
+  // F2 toggles Play <-> Edit (edge). Allowed even if ImGui wants keyboard
+  // except when typing into an active text field would be ideal later; for now
+  // skip only when a dialog message is open so Space/E ack stays clean.
+  const bool mode_down = glfwGetKey(window_, GLFW_KEY_F2) == GLFW_PRESS;
+  if (mode_down && !mode_toggle_was_down_ && !events_.active_message().has_value()) {
+    app_mode_ = toggle_app_mode(app_mode_);
+    refresh_mode_banner();
+  }
+  mode_toggle_was_down_ = mode_down;
+
   // Raw edge from GLFW — never gate on ImGui WantCaptureKeyboard.
   // Dialog windows / Nav otherwise swallow Space and drop edges intermittently.
   const bool interact_down = glfwGetKey(window_, GLFW_KEY_E) == GLFW_PRESS ||
@@ -202,13 +221,23 @@ void EditorApp::update_simulation(float dt) {
   interact_was_down_ = interact_down;
 
   bool consumed_for_dialog = false;
-  if (events_.active_message().has_value() && interact_edge) {
+  if (event_runtime_enabled(app_mode_) && events_.active_message().has_value() &&
+      interact_edge) {
     events_.acknowledge_message();
     consumed_for_dialog = true;
   }
 
+  // C cycles TopDown -> Tilt45 -> 3/4 (edge, ignore while typing in ImGui).
+  const bool camera_down = glfwGetKey(window_, GLFW_KEY_C) == GLFW_PRESS;
+  if (camera_down && !camera_toggle_was_down_ && !io.WantCaptureKeyboard &&
+      !events_.active_message().has_value()) {
+    engine_->greybox().set_camera_mode(next_camera_mode(engine_->greybox().camera_mode()));
+  }
+  camera_toggle_was_down_ = camera_down;
+
   MoveInput input;
-  if (!io.WantCaptureKeyboard && !events_.player_input_blocked()) {
+  if (player_control_enabled(app_mode_) && !io.WantCaptureKeyboard &&
+      !events_.player_input_blocked()) {
     float screen_x = 0.0f;
     float screen_z = 0.0f;
     if (glfwGetKey(window_, GLFW_KEY_W) == GLFW_PRESS ||
@@ -232,20 +261,24 @@ void EditorApp::update_simulation(float dt) {
                                  {player_.x, 0.0f, player_.z});
   }
 
-  player_ = integrate_player(player_, input, dt, engine_->blockers());
-  game_state_.set_player_position(player_.x, player_.y, player_.z);
-  engine_->set_player(player_);
+  if (player_control_enabled(app_mode_)) {
+    player_ = integrate_player(player_, input, dt, engine_->blockers());
+    game_state_.set_player_position(player_.x, player_.y, player_.z);
+    engine_->set_player(player_);
+  }
 
-  // Same key edge that closes dialog must not also fire Action triggers.
-  const bool gameplay_interact =
-      interact_edge && !consumed_for_dialog && !io.WantCaptureKeyboard;
-  events_.update(game_state_, player_, gameplay_interact, dt);
+  if (event_runtime_enabled(app_mode_)) {
+    // Same key edge that closes dialog must not also fire Action triggers.
+    const bool gameplay_interact =
+        interact_edge && !consumed_for_dialog && !io.WantCaptureKeyboard;
+    events_.update(game_state_, player_, gameplay_interact, dt);
 
-  // Transfer stub: sync player body if an event moved GameState.
-  player_.x = game_state_.player_x();
-  player_.y = game_state_.player_y();
-  player_.z = game_state_.player_z();
-  engine_->set_player(player_);
+    // Transfer stub: sync player body if an event moved GameState.
+    player_.x = game_state_.player_x();
+    player_.y = game_state_.player_y();
+    player_.z = game_state_.player_z();
+    engine_->set_player(player_);
+  }
 }
 
 void EditorApp::draw_ui() {
@@ -279,6 +312,7 @@ void EditorApp::draw_ui() {
   ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_PassthruCentralNode);
 
   ImGui::Begin("Hierarchy");
+  ImGui::Text("Mode: %s  (F2)", app_mode_name(app_mode_));
   ImGui::Text("Map: %s", game_state_.map_id().c_str());
   ImGui::Text("Player: (%.2f, %.2f)", player_.x, player_.z);
   ImGui::Text("Events: %zu", events_.map().events.size());
@@ -286,9 +320,38 @@ void EditorApp::draw_ui() {
   ImGui::End();
 
   ImGui::Begin("Inspector");
-  ImGui::TextUnformatted("Quest: ask foreman (cyan) for a rusty cog,");
-  ImGui::TextUnformatted("loot scrap east of crates, return.");
-  ImGui::TextUnformatted("WASD / arrows: move | E / Space: interact");
+  ImGui::Text("App mode: %s", app_mode_name(app_mode_));
+  if (app_mode_ == AppMode::Edit) {
+    ImGui::TextUnformatted("EDIT: player + events paused. Gizmos next.");
+  } else {
+    ImGui::TextUnformatted("Quest: ask foreman (cyan) for a rusty cog,");
+    ImGui::TextUnformatted("loot scrap east of crates, return.");
+  }
+  ImGui::TextUnformatted("WASD move | E/Space interact | C camera | F2 Play/Edit");
+  if (ImGui::Button(app_mode_ == AppMode::Play ? "Enter Edit (F2)" : "Enter Play (F2)")) {
+    app_mode_ = toggle_app_mode(app_mode_);
+    refresh_mode_banner();
+  }
+  {
+    int mode = 0;
+    switch (engine_->greybox().camera_mode()) {
+      case CameraMode::TopDown:
+        mode = 0;
+        break;
+      case CameraMode::Tilt45:
+        mode = 1;
+        break;
+      case CameraMode::ThreeQuarter:
+        mode = 2;
+        break;
+    }
+    if (ImGui::Combo("Camera", &mode, "Top-down\0Tilt 45\0Ortho 3/4\0")) {
+      const CameraMode selected = mode == 0   ? CameraMode::TopDown
+                                  : mode == 1 ? CameraMode::Tilt45
+                                              : CameraMode::ThreeQuarter;
+      engine_->greybox().set_camera_mode(selected);
+    }
+  }
   if (ImGui::Button("Snap player to grid")) {
     const auto snapped = snap_to_grid(player_.x, player_.y, player_.z, 1.0f);
     player_.x = snapped.x;
@@ -305,7 +368,8 @@ void EditorApp::draw_ui() {
   ImGui::Text("rusty_cog: %d", game_state_.item_quantity("rusty_cog"));
   ImGui::End();
 
-  if (events_.has_action_prompt(player_, game_state_) && !events_.active_message().has_value()) {
+  if (event_runtime_enabled(app_mode_) && events_.has_action_prompt(player_, game_state_) &&
+      !events_.active_message().has_value()) {
     const ImVec2 prompt_pos(viewport->WorkPos.x + viewport->WorkSize.x * 0.5f - 70.0f,
                             viewport->WorkPos.y + viewport->WorkSize.y * 0.55f);
     ImGui::SetNextWindowPos(prompt_pos);
@@ -318,7 +382,7 @@ void EditorApp::draw_ui() {
     ImGui::End();
   }
 
-  if (events_.active_message().has_value()) {
+  if (event_runtime_enabled(app_mode_) && events_.active_message().has_value()) {
     const float dialog_w = viewport->WorkSize.x - 160.0f;
     ImGui::SetNextWindowPos(ImVec2(viewport->WorkPos.x + 80.0f,
                                    viewport->WorkPos.y + viewport->WorkSize.y - 170.0f));

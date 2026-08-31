@@ -76,3 +76,17 @@ TEST_CASE("Camera-relative WASD aligns with ortho 3/4 view", "[unit][player]") {
   REQUIRE(right.axis_x == Approx(-std::sqrt(0.5f)).margin(0.01f));
   REQUIRE(right.axis_z == Approx(std::sqrt(0.5f)).margin(0.01f));
 }
+
+TEST_CASE("Camera-relative WASD for top-down uses world XZ axes", "[unit][player]") {
+  const rat::Vec3 eye{0.0f, 32.0f, 0.0f};
+  const rat::Vec3 focus{0.0f, 0.0f, 0.0f};
+
+  const auto forward = rat::camera_relative_move(0.0f, 1.0f, eye, focus);
+  REQUIRE(forward.axis_x == Approx(0.0f));
+  REQUIRE(forward.axis_z == Approx(-1.0f));
+
+  // D (screen right) -> -X with top-down up=-Z / LH view.
+  const auto right = rat::camera_relative_move(1.0f, 0.0f, eye, focus);
+  REQUIRE(right.axis_x == Approx(-1.0f));
+  REQUIRE(right.axis_z == Approx(0.0f));
+}

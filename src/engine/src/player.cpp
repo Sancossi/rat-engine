@@ -32,12 +32,15 @@ MoveInput camera_relative_move(float screen_x, float screen_z, Vec3 eye, Vec3 fo
   float fz = focus.z - eye.z;
   const float flen = std::sqrt(fx * fx + fz * fz);
   if (flen <= 1e-6f) {
-    fx = 0.0f;
-    fz = -1.0f;
-  } else {
-    fx /= flen;
-    fz /= flen;
+    // Top-down (eye directly above, view up = -Z): screen up = -Z, screen right = -X
+    // (matches left-handed bgfx look-at used at draw time).
+    MoveInput out;
+    out.axis_x = -screen_x;
+    out.axis_z = -screen_z;
+    return out;
   }
+  fx /= flen;
+  fz /= flen;
   // Screen-right on XZ: rotate look 90° clockwise when viewed from +Y.
   const float rx = fz;
   const float rz = -fx;

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <rat/app_mode.hpp>
 #include <rat/event_runtime.hpp>
 #include <rat/game_state.hpp>
 #include <rat/player.hpp>
@@ -26,6 +27,7 @@ class EditorApp {
   void on_framebuffer_resize(int width, int height);
   void update_simulation(float dt);
   void draw_ui();
+  void refresh_mode_banner();
 
   static void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 
@@ -34,10 +36,13 @@ class EditorApp {
   PlayerBody player_{};
   GameState game_state_{};
   EventRuntime events_{};
+  AppMode app_mode_ = AppMode::Play;
   int width_ = 1280;
   int height_ = 720;
   bool running_ = false;
   bool interact_was_down_ = false;
+  bool camera_toggle_was_down_ = false;
+  bool mode_toggle_was_down_ = false;
   double last_time_ = 0.0;
 };
 

@@ -32,14 +32,44 @@ TEST_CASE("Ortho 3/4 view looks from elevated forward offset", "[unit][camera]")
   params.focus = {1.0f, 0.0f, 2.0f};
   const auto cam = rat::build_ortho_three_quarter(640, 480, params);
 
-  // View matrix maps world eye toward -Z in view space; translation column encodes -eye*R.
-  // Spot-check: eye is above and behind focus on XZ diagonal (classic 3/4).
+  REQUIRE(cam.mode == rat::CameraMode::ThreeQuarter);
   REQUIRE(cam.eye.y > params.focus.y);
   REQUIRE(cam.eye.z > params.focus.z);
   REQUIRE(std::abs(cam.eye.x - params.focus.x) > 0.1f);
 
-  // Projection is orthographic: m[11] is typically -1 or 0 depending on depth range convention;
-  // perspective would have m[11] == -1 and m[14] != 0 with m[15]==0. Our ortho keeps m[15]==1.
   REQUIRE(cam.proj.m[15] == Approx(1.0f));
   REQUIRE(cam.proj.m[11] == Approx(0.0f).margin(0.0001f));
+}
+
+TEST_CASE("Ortho top-down looks straight down at focus", "[unit][camera]") {
+  rat::OrthoCameraParams params;
+  params.focus = {3.0f, 0.0f, -1.0f};
+  params.mode = rat::CameraMode::TopDown;
+  const auto cam = rat::build_ortho_top_down(640, 480, params);
+
+  REQUIRE(cam.mode == rat::CameraMode::TopDown);
+  REQUIRE(cam.eye.x == Approx(params.focus.x));
+  REQUIRE(cam.eye.z == Approx(params.focus.z));
+  REQUIRE(cam.eye.y > params.focus.y);
+
+  const auto via_dispatch = rat::build_ortho_camera(640, 480, params);
+  REQUIRE(via_dispatch.mode == rat::CameraMode::TopDown);
+  REQUIRE(via_dispatch.eye.y == Approx(cam.eye.y));
+}
+
+TEST_CASE("Ortho tilt 45 looks from elevated +Z with equal height", "[unit][camera]") {
+  rat::OrthoCameraParams params;
+  params.focus = {0.0f, 0.0f, 0.0f};
+  params.mode = rat::CameraMode::Tilt45;
+  const auto cam = rat::build_ortho_tilt45(640, 480, params);
+
+  REQUIRE(cam.mode == rat::CameraMode::Tilt45);
+  REQUIRE(cam.eye.x == Approx(params.focus.x));
+  REQUIRE(cam.eye.y - params.focus.y == Approx(cam.eye.z - params.focus.z));
+  REQUIRE(cam.eye.y > params.focus.y);
+  REQUIRE(cam.eye.z > params.focus.z);
+
+  REQUIRE(rat::next_camera_mode(rat::CameraMode::TopDown) == rat::CameraMode::Tilt45);
+  REQUIRE(rat::next_camera_mode(rat::CameraMode::Tilt45) == rat::CameraMode::ThreeQuarter);
+  REQUIRE(rat::next_camera_mode(rat::CameraMode::ThreeQuarter) == rat::CameraMode::TopDown);
 }

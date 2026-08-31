@@ -73,7 +73,8 @@ void Engine::begin_frame() {
   const auto& cam = greybox_.camera();
   bgfx::dbgTextClear();
   bgfx::dbgTextPrintf(1, 1, 0x0f, "%s", debug_banner_.c_str());
-  bgfx::dbgTextPrintf(1, 3, 0x0a, "ortho 3/4  scale=%d  WASD move", cam.pixel_scale);
+  bgfx::dbgTextPrintf(1, 3, 0x0a, "%s  scale=%d  WASD | C camera | F2 mode",
+                      camera_mode_name(cam.mode), cam.pixel_scale);
   bgfx::dbgTextPrintf(1, 4, 0x0b, "player (%.2f, %.2f)", player_.x, player_.z);
 }
 

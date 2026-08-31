@@ -1,4 +1,5 @@
 add_library(rat_core
+  src/app_mode.cpp
   src/camera.cpp
   src/event_runtime.cpp
   src/game_state.cpp

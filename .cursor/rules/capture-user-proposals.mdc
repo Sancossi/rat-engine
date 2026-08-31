@@ -1,0 +1,41 @@
+---
+description: Captures user wishlist/bugs into Notion so ideas don't slip past chat
+alwaysApply: true
+---
+
+# Capture user proposals as Notion items
+
+When the user suggests a product/engine change, reports a bug, or says "хочу / давай / надо / баг / сломалось" as a durable idea — **create a Notion item before it disappears into chat**, even if we also implement it immediately.
+
+## Routing
+
+| User intent | Destination | Defaults |
+|-------------|-------------|----------|
+| Feature / wishlist / "feat" | **Tasks** DB | `Type` = `Feature`, `Status` = `Not started` |
+| Bug / regression / broken behavior | **Bugs** DB | `Status` = `Open`, fill `Repro` when known |
+
+IDs (Rat Engine Hub → Production):
+
+- Tasks: `collection://6bc72c4a-0672-4a29-9334-7ce5cdb02586` ([Tasks](https://app.notion.com/p/8c6d10919b9c40b394ec668bf603176b))
+- Bugs: `collection://646de1d4-4e38-4d50-b200-c42a144f11b1` ([Bugs](https://app.notion.com/p/21d712ef64634ff48e6da67613819f70))
+
+## How to write items
+
+- **Title**: short, actionable (`feat:` / bug symptom), Russian or English OK — match surrounding board style.
+- **Area**: `Engine` | `Game` | `Production` when obvious; omit if unclear.
+- **Body**: 2–5 lines — intent, acceptance hint, chat context. For bugs: steps / expected / actual.
+- **Severity** (bugs): default `Medium` unless user implies Critical/High/Low.
+- Do **not** assign Sprint unless user ties it to the current sprint or asks to schedule it.
+- Deduplicate: search Tasks/Bugs first; if a close match exists, update/comment instead of cloning.
+
+## After create
+
+- Reply with the **Notion URL** and one-line title.
+- Ask only if needed: implement now vs backlog.
+- Pure clarifying questions and already-tracked sprint work do not need a new card.
+
+## Exceptions (skip capture)
+
+- Tiny implementation details inside an already open task ("rename this var").
+- Explicit "не заводи задачу".
+- Pure Q&A with no product ask.

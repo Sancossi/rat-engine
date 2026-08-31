@@ -34,6 +34,7 @@ class Engine {
   [[nodiscard]] const std::vector<Aabb2>& blockers() const { return blockers_; }
 
   [[nodiscard]] bool is_initialized() const { return initialized_; }
+  [[nodiscard]] GreyboxScene& greybox() { return greybox_; }
   [[nodiscard]] const GreyboxScene& greybox() const { return greybox_; }
 
   void set_debug_banner(std::string banner) { debug_banner_ = std::move(banner); }

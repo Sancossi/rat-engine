@@ -80,6 +80,14 @@ void GreyboxScene::set_focus(float x, float y, float z) {
   rebuild_camera();
 }
 
+void GreyboxScene::set_camera_mode(CameraMode mode) {
+  if (params_.mode == mode) {
+    return;
+  }
+  params_.mode = mode;
+  rebuild_camera();
+}
+
 void GreyboxScene::set_blockers(std::span<const Aabb2> blockers) {
   blockers_.assign(blockers.begin(), blockers.end());
 }
@@ -89,12 +97,14 @@ void GreyboxScene::set_event_markers(std::span<const Vec3> markers) {
 }
 
 void GreyboxScene::rebuild_camera() {
-  camera_ = build_ortho_three_quarter(width_, height_, params_);
+  camera_ = build_ortho_camera(width_, height_, params_);
 
   // Use bx matrices so handedness/depth match the active renderer.
   const bx::Vec3 eye{camera_.eye.x, camera_.eye.y, camera_.eye.z};
   const bx::Vec3 at{params_.focus.x, params_.focus.y, params_.focus.z};
-  const bx::Vec3 up{0.0f, 1.0f, 0.0f};
+  // Top-down look is parallel to world +Y; use -Z as up so the view is well-defined.
+  const bx::Vec3 up = (params_.mode == CameraMode::TopDown) ? bx::Vec3{0.0f, 0.0f, -1.0f}
+                                                            : bx::Vec3{0.0f, 1.0f, 0.0f};
   bx::mtxLookAt(camera_.view.m, eye, at, up, bx::Handedness::Left);
 
   const bgfx::Caps* caps = bgfx::getCaps();
