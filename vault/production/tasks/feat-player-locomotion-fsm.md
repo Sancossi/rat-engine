@@ -1,7 +1,7 @@
 ---
 type: task
 area: Engine
-status: In progress
+status: Done
 task_type: Feature
 sprint: Sprint 4
 due:
@@ -18,6 +18,8 @@ Acceptance: переходы детерминированы и покрыты he
 
 `locomotion_from` / `locomotion_state_name` in `rat_core` (`rat/locomotion.hpp`): pure classify Idle/Walk/Jump/Fall from `JumpState` + `MoveInput`. Names `"Idle"` `"Walk"` `"Jump"` `"Fall"` are the animation contract. Jump gravity/coyote/buffer stay in `JumpState` / `integrate_player_frame_surface`. Verify: `.\build\tests\rat_tests.exe "[loco]"`.
 
+Follow-up: [[chore: locomotion classify review polish]]
+
 ## Bugs found
 
-none.
+none (продуктовых). Minor ревью: нет кейса grounded+vs>0; while до апекса без капа — см. follow-up.
