@@ -25,4 +25,4 @@ tags: [hub]
 
 ## Текущий спринт
 
-Смотри заметку спринта с `current: true` (сейчас [[Sprint 3 — Height-grid traversal]]). Агент ищет `current: true` в `production/sprints/`.
+Смотри заметку спринта с `current: true` (сейчас [[Sprint 4 — Refactoring and AI workflow]]). Агент ищет `current: true` в `production/sprints/`.

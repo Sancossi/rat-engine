@@ -31,7 +31,7 @@ tags: [engine]
 | Event Queue (звук) | нет аудио | [[feat: Audio play-queue stub]] → [[research: Audio backend ADR]] |
 | Service Locator | composition | Не заводить locator |
 | Singleton | нет | Так и держать |
-| State (FSM) | нет персонажного FSM | [[feat: Player locomotion FSM]] после анимации / [[ADR-009 RE-like segmented character hierarchy]] |
+| State (FSM) | нет персонажного FSM | [[feat: Player locomotion FSM]] (Sprint 4); физика прыжка остаётся `JumpState` |
 | Component / ECS | open question | [[research: Entity model ECS vs scene vs hybrid]] — ADR до любого ECS-кода |
 | Observer | нет шины | [[feat: Gameplay notify observer]] когда UI/аудио иначе лезут вглубь |
 | Object Pool | нет | [[feat: Object pool for short-lived FX]] с field-action FX |
@@ -43,15 +43,18 @@ GPP Command для ввода = кнопка → действие, ребинд,
 
 GPP Event Queue для звука = геймплей постит `PlaySfx`, аудио забирает из очереди. Интерфейс `Audio*` прокидывать из `EditorApp`, не через глобальный locator.
 
-## Очередь доработок (бэклог, без спринта)
+## Очередь доработок
 
-Порядок — зависимости, не даты. Sprint 3 (высота/прыжок) эти карточки не ест.
+Порядок — зависимости, не даты. [[Sprint 4 — Refactoring and AI workflow]] ест Agent Debug и ближний GPP-слой движка; остальное — бэклог до триггера.
 
-1. Ближний слой: [[feat: Input action mapping]], [[feat: Audio play-queue stub]].
-2. Authoring: [[feat: Mouse viewport map edit]] — Edit во вьюпорте мышью (сейчас только ImGui-списки).
-3. Debug для агента (текст, не скрин): [[Logging and assert helpers]], [[feat: Debug snapshot JSON]], [[feat: Event why-not-fired]], [[feat: Headless input sequence probe]] — [[Agent Debug]]. Позже тулзы: [[research: Rat debug loopback MCP]].
-4. Следом за вводом/звуком: [[feat: Input rebind and gamepad]], [[research: Audio backend ADR]], [[feat: PlaySE event command]].
-5. По потребности (триггер в карточке): [[research: Entity model ECS vs scene vs hybrid]], [[feat: Player locomotion FSM]], [[feat: Edit undo/redo command stack]], [[feat: Gameplay notify observer]], [[feat: Object pool for short-lived FX]], [[feat: Spatial partition broadphase]].
+1. Ближний слой (Sprint 4): [[feat: Input action mapping]], [[feat: Audio play-queue stub]].
+2. Сразу за звуком (Sprint 4): [[feat: PlaySE event command]], [[feat: Gameplay notify observer]].
+3. Command в Edit (Sprint 4): [[feat: Edit undo/redo command stack]].
+4. State (Sprint 4): [[feat: Player locomotion FSM]] — каркас имён до клипов; физика прыжка не в FSM.
+5. Debug для агента (Sprint 4): [[Logging and assert helpers]], [[feat: Debug snapshot JSON]], [[feat: Event why-not-fired]], [[feat: Headless input sequence probe]] — [[Agent Debug]]. Тулзы: [[research: Rat debug loopback MCP]].
+6. Authoring (бэклог): [[feat: Mouse viewport map edit]].
+7. Следом за вводом/звуком (бэклог): [[feat: Input rebind and gamepad]], [[research: Audio backend ADR]].
+8. По потребности (триггер в карточке): [[research: Entity model ECS vs scene vs hybrid]], [[feat: Object pool for short-lived FX]], [[feat: Spatial partition broadphase]].
 
 ## Не делаем
 

@@ -18,9 +18,9 @@ tags: [engine]
 
 ## Уже не это
 
-Визуальный profiler, RenderDoc, ECS, мышь в Edit — другие карточки. Логирование как примитив — [[Logging and assert helpers]] (Sprint 0, пустая; дописать, не клонировать).
+Визуальный profiler, RenderDoc, ECS, мышь в Edit — другие карточки. Логирование как примитив — [[Logging and assert helpers]] (Sprint 4; дописать, не клонировать).
 
-## Бэклог
+## Sprint 4
 
 1. Наполнить [[Logging and assert helpers]] (файл + уровни, без синглтона).
 2. [[feat: Debug snapshot JSON]]
@@ -37,7 +37,7 @@ tags: [engine]
 
 | Зачем | Что | Когда |
 | --- | --- | --- |
-| Текст состояния | JSON snapshot + лог-файл | уже в бэклоге выше |
+| Текст состояния | JSON snapshot + лог-файл | Sprint 4 |
 | Как Godot `get_debug_output` | loopback в editor: snapshot / why-not / last log | [[research: Rat debug loopback MCP]] |
 | Картинка окна | скрин HWND `rat-editor` (не браузер) | тот же research; до loopback — опциональный Windows-capture MCP |
 | Сборка / тесты | уже есть: `ctest`, `compile_commands.json`, терминал Cursor | не нужен отдельный MCP |

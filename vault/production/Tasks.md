@@ -11,7 +11,7 @@ tags: [task]
 Area: `Engine` | `Game` | `Production`.
 Type: `Feature` | `Bug` | `Chore` | `Research`.
 
-Агент: Grep `status: In progress` или `sprint: Sprint 3` в `vault/production/tasks/`.
+Агент: Grep `status: In progress` или `sprint: Sprint 4` в `vault/production/tasks/`.
 
 ```dataview
 TABLE area, status, task_type, sprint
