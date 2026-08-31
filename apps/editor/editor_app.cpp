@@ -151,25 +151,42 @@ void EditorApp::draw_blocker_edit_ui() {
   }
 
   if (selected_blocker_ >= 0 && selected_blocker_ < static_cast<int>(blockers.size())) {
-    auto submit_blockers = [&]() {
+    auto selected_valid = [&]() {
+      return selected_blocker_ >= 0 && selected_blocker_ < static_cast<int>(blockers.size());
+    };
+    auto replace_selected_blocker = [&](BlockerDef next) {
+      if (!selected_valid()) {
+        return;
+      }
+      run_history(make_replace_blocker_command(static_cast<std::size_t>(selected_blocker_),
+                                               std::move(next)));
+    };
+    auto preview_selected_blocker = [&](BlockerDef next) {
+      if (!selected_valid()) {
+        return;
+      }
+      blockers[static_cast<std::size_t>(selected_blocker_)] = std::move(next);
       events_.set_blockers(blockers);
       sync_blockers_to_runtime();
       blockers = events_.map().blockers;
     };
-    auto selected_valid = [&]() {
-      return selected_blocker_ >= 0 && selected_blocker_ < static_cast<int>(blockers.size());
-    };
-
-    ImGui::Text("Selected %d", selected_blocker_);
-    auto apply_box = [&](Aabb2 next) {
-      if (!selected_valid()) {
+    auto commit_blocker_field_edit = [&]() {
+      if (!ImGui::IsItemDeactivatedAfterEdit() || !blocker_field_origin_ || !selected_valid()) {
         return;
       }
-      BlockerDef updated = blockers[static_cast<std::size_t>(selected_blocker_)];
-      updated.bounds = next;
-      blockers[static_cast<std::size_t>(selected_blocker_)] = updated;
-      submit_blockers();
+      BlockerDef next = blockers[static_cast<std::size_t>(selected_blocker_)];
+      blockers[static_cast<std::size_t>(selected_blocker_)] = *blocker_field_origin_;
+      events_.set_blockers(blockers);
+      blocker_field_origin_.reset();
+      replace_selected_blocker(std::move(next));
     };
+
+    if (blocker_field_origin_index_ != selected_blocker_) {
+      blocker_field_origin_.reset();
+      blocker_field_origin_index_ = selected_blocker_;
+    }
+
+    ImGui::Text("Selected %d", selected_blocker_);
 
     if (!selected_valid()) {
       return;
@@ -194,21 +211,31 @@ void EditorApp::draw_blocker_edit_ui() {
     }
 
     if (ImGui::Button("Grow +X")) {
-      apply_box(resize_aabb_on_grid(box, AabbEdge::MaxX, 1, tile));
+      BlockerDef next = current;
+      next.bounds = resize_aabb_on_grid(box, AabbEdge::MaxX, 1, tile);
+      replace_selected_blocker(std::move(next));
     }
     ImGui::SameLine();
     if (ImGui::Button("Shrink +X")) {
-      apply_box(resize_aabb_on_grid(box, AabbEdge::MaxX, -1, tile));
+      BlockerDef next = current;
+      next.bounds = resize_aabb_on_grid(box, AabbEdge::MaxX, -1, tile);
+      replace_selected_blocker(std::move(next));
     }
     if (ImGui::Button("Grow +Z")) {
-      apply_box(resize_aabb_on_grid(box, AabbEdge::MaxZ, 1, tile));
+      BlockerDef next = current;
+      next.bounds = resize_aabb_on_grid(box, AabbEdge::MaxZ, 1, tile);
+      replace_selected_blocker(std::move(next));
     }
     ImGui::SameLine();
     if (ImGui::Button("Shrink +Z")) {
-      apply_box(resize_aabb_on_grid(box, AabbEdge::MaxZ, -1, tile));
+      BlockerDef next = current;
+      next.bounds = resize_aabb_on_grid(box, AabbEdge::MaxZ, -1, tile);
+      replace_selected_blocker(std::move(next));
     }
     if (ImGui::Button("Snap to grid")) {
-      apply_box(snap_aabb_to_grid(box, tile));
+      BlockerDef next = current;
+      next.bounds = snap_aabb_to_grid(box, tile);
+      replace_selected_blocker(std::move(next));
     }
 
     if (!selected_valid()) {
@@ -236,14 +263,12 @@ void EditorApp::draw_blocker_edit_ui() {
           last_apply_error_ = "Invalid blocker vertical pair";
         } else {
           last_apply_error_.clear();
-          blockers[static_cast<std::size_t>(selected_blocker_)] = updated;
-          submit_blockers();
+          replace_selected_blocker(std::move(updated));
         }
       } else {
         (void)set_blocker_vertical_range(updated, false, std::nullopt, std::nullopt);
         last_apply_error_.clear();
-        blockers[static_cast<std::size_t>(selected_blocker_)] = updated;
-        submit_blockers();
+        replace_selected_blocker(std::move(updated));
       }
     }
 
@@ -255,26 +280,31 @@ void EditorApp::draw_blocker_edit_ui() {
     if (current.jumpable) {
       float base_y = current.base_y.value_or(0.0f);
       float top_y = current.top_y.value_or(base_y + 0.9f);
-      bool vertical_dirty = false;
-      if (ImGui::InputFloat("Base Y", &base_y, 0.05f, 0.25f, "%.3f")) {
-        vertical_dirty = true;
-      }
-      if (ImGui::InputFloat("Top Y", &top_y, 0.05f, 0.25f, "%.3f")) {
-        vertical_dirty = true;
-      }
-      if (top_y < base_y) {
-        top_y = base_y;
-      }
-      if (vertical_dirty) {
+      auto preview_vertical = [&]() {
+        if (top_y < base_y) {
+          top_y = base_y;
+        }
         BlockerDef updated = current;
         if (!set_blocker_vertical_range(updated, true, base_y, top_y)) {
           last_apply_error_ = "Invalid blocker vertical pair";
-        } else {
-          last_apply_error_.clear();
-          blockers[static_cast<std::size_t>(selected_blocker_)] = updated;
-          submit_blockers();
+          return;
         }
+        last_apply_error_.clear();
+        if (!blocker_field_origin_) {
+          blocker_field_origin_ = current;
+          blocker_field_origin_index_ = selected_blocker_;
+        }
+        preview_selected_blocker(std::move(updated));
+        current = blockers[static_cast<std::size_t>(selected_blocker_)];
+      };
+      if (ImGui::InputFloat("Base Y", &base_y, 0.05f, 0.25f, "%.3f")) {
+        preview_vertical();
       }
+      commit_blocker_field_edit();
+      if (ImGui::InputFloat("Top Y", &top_y, 0.05f, 0.25f, "%.3f")) {
+        preview_vertical();
+      }
+      commit_blocker_field_edit();
     } else {
       ImGui::TextUnformatted("Legacy full wall (no vertical pair).");
     }
@@ -460,12 +490,31 @@ void EditorApp::draw_event_edit_ui() {
   }
 
   if (selected_event_ >= 0 && selected_event_ < static_cast<int>(event_list.size())) {
-    auto apply_event = [&](EventDef next) {
+    auto replace_selected_event = [&](EventDef next) {
+      run_history(make_replace_event_command(static_cast<std::size_t>(selected_event_),
+                                             std::move(next)));
+    };
+    auto preview_selected_event = [&](EventDef next) {
       event_list[static_cast<std::size_t>(selected_event_)] = std::move(next);
       events_.set_events(event_list);
       sync_events_to_runtime();
       event_list = events_.map().events;
     };
+    auto commit_event_field_edit = [&]() {
+      if (!ImGui::IsItemDeactivatedAfterEdit() || !event_field_origin_) {
+        return;
+      }
+      EventDef next = event_list[static_cast<std::size_t>(selected_event_)];
+      event_list[static_cast<std::size_t>(selected_event_)] = *event_field_origin_;
+      events_.set_events(event_list);
+      event_field_origin_.reset();
+      replace_selected_event(std::move(next));
+    };
+
+    if (event_field_origin_index_ != selected_event_) {
+      event_field_origin_.reset();
+      event_field_origin_index_ = selected_event_;
+    }
 
     EventDef event = event_list[static_cast<std::size_t>(selected_event_)];
     ImGui::Text("id: %s", event.id.c_str());
@@ -476,7 +525,7 @@ void EditorApp::draw_event_edit_ui() {
     if (!event.tile.has_value() && !event.volume.has_value()) {
       if (ImGui::Button("Place on tile (0,0)")) {
         event.tile = TileCoord{0, 0};
-        apply_event(std::move(event));
+        replace_selected_event(std::move(event));
         event = event_list[static_cast<std::size_t>(selected_event_)];
       }
     } else {
@@ -527,22 +576,23 @@ void EditorApp::draw_event_edit_ui() {
       if (ImGui::Combo("Trigger", &trigger,
                        "action\0player_touch\0event_touch\0autorun\0parallel\0")) {
         page.trigger = static_cast<TriggerKind>(trigger);
-        apply_event(event);
+        replace_selected_event(event);
         event = event_list[static_cast<std::size_t>(selected_event_)];
       }
-      ImGui::TextWrapped("Conditions: %s", summarize_page_conditions(page).c_str());
+      EventPage& page_inspect = event.pages[static_cast<std::size_t>(selected_page_)];
+      ImGui::TextWrapped("Conditions: %s", summarize_page_conditions(page_inspect).c_str());
 
       int sw_i = -1;
-      for (int i = 0; i < static_cast<int>(page.conditions.size()); ++i) {
-        if (page.conditions[static_cast<std::size_t>(i)].type == ConditionType::Switch) {
+      for (int i = 0; i < static_cast<int>(page_inspect.conditions.size()); ++i) {
+        if (page_inspect.conditions[static_cast<std::size_t>(i)].type == ConditionType::Switch) {
           sw_i = i;
           break;
         }
       }
       if (sw_i < 0) {
         if (ImGui::Button("Add enable Switch")) {
-          (void)ensure_page_enable_switch(page, 1, true);
-          apply_event(event);
+          (void)ensure_page_enable_switch(page_inspect, 1, true);
+          replace_selected_event(event);
           event = event_list[static_cast<std::size_t>(selected_event_)];
         }
       } else {
@@ -550,20 +600,29 @@ void EditorApp::draw_event_edit_ui() {
                             .conditions[static_cast<std::size_t>(sw_i)];
         int switch_id = static_cast<int>(sw.id);
         bool on = sw.bool_value;
-        bool dirty = false;
+        const EventDef switch_snapshot = event;
         if (ImGui::InputInt("Enable SW id", &switch_id)) {
           if (switch_id < 0) {
             switch_id = 0;
           }
           sw.id = static_cast<std::uint32_t>(switch_id);
-          dirty = true;
+          if (!event_field_origin_) {
+            event_field_origin_ = switch_snapshot;
+            event_field_origin_index_ = selected_event_;
+          }
+          preview_selected_event(event);
+          event = event_list[static_cast<std::size_t>(selected_event_)];
         }
+        commit_event_field_edit();
+        if (selected_event_ >= 0 && selected_event_ < static_cast<int>(event_list.size())) {
+          event = event_list[static_cast<std::size_t>(selected_event_)];
+        }
+        Condition& sw_now = event.pages[static_cast<std::size_t>(selected_page_)]
+                                .conditions[static_cast<std::size_t>(sw_i)];
+        on = sw_now.bool_value;
         if (ImGui::Checkbox("Enable SW ON", &on)) {
-          sw.bool_value = on;
-          dirty = true;
-        }
-        if (dirty) {
-          apply_event(event);
+          sw_now.bool_value = on;
+          replace_selected_event(event);
           event = event_list[static_cast<std::size_t>(selected_event_)];
         }
       }
@@ -576,7 +635,7 @@ void EditorApp::draw_event_edit_ui() {
           cmd.op = CommandOp::ShowText;
           cmd.text = "New text";
           page_now.commands.insert(page_now.commands.begin(), std::move(cmd));
-          apply_event(event);
+          replace_selected_event(event);
           event = event_list[static_cast<std::size_t>(selected_event_)];
         }
       } else {
@@ -584,10 +643,16 @@ void EditorApp::draw_event_edit_ui() {
                            .commands[static_cast<std::size_t>(text_i)];
         char buf[512];
         std::snprintf(buf, sizeof(buf), "%s", cmd.text.c_str());
+        const EventDef text_snapshot = event;
         if (ImGui::InputTextMultiline("Show Text", buf, sizeof(buf), ImVec2(-1.0f, 60.0f))) {
           cmd.text = buf;
-          apply_event(event);
+          if (!event_field_origin_) {
+            event_field_origin_ = text_snapshot;
+            event_field_origin_index_ = selected_event_;
+          }
+          preview_selected_event(event);
         }
+        commit_event_field_edit();
       }
     }
   }

@@ -1,3 +1,4 @@
+#include <rat/blocker_edit.hpp>
 #include <rat/edit_history.hpp>
 #include <rat/event_edit.hpp>
 #include <rat/map_data.hpp>
@@ -178,6 +179,14 @@ TEST_CASE("blocker commands mutate blockers only; event commands mutate events o
   const auto move_event = rat::make_move_event_command(0, 1, 0, 1.0f);
   REQUIRE_FALSE(move_event->mutates_blockers());
   REQUIRE(move_event->mutates_events());
+
+  const auto replace_blocker = rat::make_replace_blocker_command(0, make_blocker(0.0f, 0.0f, 2.0f, 1.0f));
+  REQUIRE(replace_blocker->mutates_blockers());
+  REQUIRE_FALSE(replace_blocker->mutates_events());
+
+  const auto replace_event = rat::make_replace_event_command(0, rat::make_stub_event("e", 0, 0));
+  REQUIRE_FALSE(replace_event->mutates_blockers());
+  REQUIRE(replace_event->mutates_events());
 }
 
 TEST_CASE("execute undo redo of a blocker command report blockers only", "[unit][edit]") {
@@ -239,4 +248,84 @@ TEST_CASE("move event by one tile undo restores tile", "[unit][edit]") {
   REQUIRE(history.redo(map));
   REQUIRE(map.events[0].id == "npc");
   REQUIRE(map.events[0].tile->z == 1);
+}
+
+TEST_CASE("replace blocker AABB undo restores previous box and redo grows again", "[unit][edit]") {
+  rat::MapData map = make_tiny_map();
+  map.blockers.push_back(make_blocker(0.0f, 0.0f, 1.0f, 1.0f));
+  rat::BlockerDef grown = map.blockers[0];
+  grown.bounds = rat::resize_aabb_on_grid(grown.bounds, rat::AabbEdge::MaxX, 1, map.tile_size);
+  rat::EditHistory history;
+
+  const rat::EditApplyResult executed =
+      history.execute(map, rat::make_replace_blocker_command(0, grown));
+  REQUIRE(executed.applied);
+  REQUIRE(executed.mutates_blockers);
+  REQUIRE_FALSE(executed.mutates_events);
+  REQUIRE(map.blockers[0].bounds.min_x == Approx(0.0f));
+  REQUIRE(map.blockers[0].bounds.min_z == Approx(0.0f));
+  REQUIRE(map.blockers[0].bounds.max_x == Approx(2.0f));
+  REQUIRE(map.blockers[0].bounds.max_z == Approx(1.0f));
+
+  const rat::EditApplyResult undone = history.undo(map);
+  REQUIRE(undone.applied);
+  REQUIRE(undone.mutates_blockers);
+  REQUIRE_FALSE(undone.mutates_events);
+  REQUIRE(map.blockers[0].bounds.min_x == Approx(0.0f));
+  REQUIRE(map.blockers[0].bounds.min_z == Approx(0.0f));
+  REQUIRE(map.blockers[0].bounds.max_x == Approx(1.0f));
+  REQUIRE(map.blockers[0].bounds.max_z == Approx(1.0f));
+
+  REQUIRE(history.redo(map));
+  REQUIRE(map.blockers[0].bounds.max_x == Approx(2.0f));
+  REQUIRE(map.blockers[0].bounds.max_z == Approx(1.0f));
+}
+
+TEST_CASE("replace blocker jumpable vertical pair undo restores jumpable and range",
+          "[unit][edit]") {
+  rat::MapData map = make_tiny_map();
+  map.blockers.push_back(make_blocker(0.0f, 0.0f, 1.0f, 1.0f));
+  rat::BlockerDef jumpable = map.blockers[0];
+  REQUIRE(rat::set_blocker_vertical_range(jumpable, true, 0.25f, 1.25f));
+  rat::EditHistory history;
+
+  history.execute(map, rat::make_replace_blocker_command(0, jumpable));
+  REQUIRE(map.blockers[0].jumpable);
+  REQUIRE(map.blockers[0].base_y.has_value());
+  REQUIRE(map.blockers[0].top_y.has_value());
+  REQUIRE(*map.blockers[0].base_y == Approx(0.25f));
+  REQUIRE(*map.blockers[0].top_y == Approx(1.25f));
+
+  REQUIRE(history.undo(map));
+  REQUIRE_FALSE(map.blockers[0].jumpable);
+  REQUIRE_FALSE(map.blockers[0].base_y.has_value());
+  REQUIRE_FALSE(map.blockers[0].top_y.has_value());
+
+  REQUIRE(history.redo(map));
+  REQUIRE(map.blockers[0].jumpable);
+  REQUIRE(*map.blockers[0].base_y == Approx(0.25f));
+  REQUIRE(*map.blockers[0].top_y == Approx(1.25f));
+}
+
+TEST_CASE("replace event Show Text undo restores the old string", "[unit][edit]") {
+  rat::MapData map = make_tiny_map();
+  map.events.push_back(rat::make_stub_event("npc", 0, 0));
+  REQUIRE(map.events[0].pages[0].commands[0].text == "New event");
+  rat::EventDef edited = map.events[0];
+  edited.pages[0].commands[0].text = "Hello";
+  rat::EditHistory history;
+
+  const rat::EditApplyResult executed =
+      history.execute(map, rat::make_replace_event_command(0, edited));
+  REQUIRE(executed.applied);
+  REQUIRE_FALSE(executed.mutates_blockers);
+  REQUIRE(executed.mutates_events);
+  REQUIRE(map.events[0].pages[0].commands[0].text == "Hello");
+
+  REQUIRE(history.undo(map));
+  REQUIRE(map.events[0].pages[0].commands[0].text == "New event");
+  REQUIRE(map.events[0].id == "npc");
+
+  REQUIRE(history.redo(map));
+  REQUIRE(map.events[0].pages[0].commands[0].text == "Hello");
 }

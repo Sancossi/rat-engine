@@ -98,6 +98,38 @@ class MoveBlockerCommand final : public EditCommand {
   float tile_size_ = 1.0f;
 };
 
+class ReplaceBlockerCommand final : public EditCommand {
+ public:
+  ReplaceBlockerCommand(std::size_t index, BlockerDef next)
+      : index_(index), next_(std::move(next)) {}
+
+  void apply(MapData& map) override {
+    if (index_ >= map.blockers.size()) {
+      captured_ = false;
+      return;
+    }
+    previous_ = map.blockers[index_];
+    captured_ = true;
+    map.blockers[index_] = next_;
+  }
+
+  void revert(MapData& map) override {
+    if (!captured_ || index_ >= map.blockers.size()) {
+      return;
+    }
+    map.blockers[index_] = previous_;
+  }
+
+  [[nodiscard]] bool mutates_blockers() const override { return true; }
+  [[nodiscard]] bool mutates_events() const override { return false; }
+
+ private:
+  std::size_t index_ = 0;
+  BlockerDef next_{};
+  BlockerDef previous_{};
+  bool captured_ = false;
+};
+
 class PlaceEventCommand final : public EditCommand {
  public:
   explicit PlaceEventCommand(EventDef event) : event_(std::move(event)) {}
@@ -177,6 +209,37 @@ class MoveEventCommand final : public EditCommand {
   float tile_size_ = 1.0f;
 };
 
+class ReplaceEventCommand final : public EditCommand {
+ public:
+  ReplaceEventCommand(std::size_t index, EventDef next) : index_(index), next_(std::move(next)) {}
+
+  void apply(MapData& map) override {
+    if (index_ >= map.events.size()) {
+      captured_ = false;
+      return;
+    }
+    previous_ = map.events[index_];
+    captured_ = true;
+    map.events[index_] = next_;
+  }
+
+  void revert(MapData& map) override {
+    if (!captured_ || index_ >= map.events.size()) {
+      return;
+    }
+    map.events[index_] = previous_;
+  }
+
+  [[nodiscard]] bool mutates_blockers() const override { return false; }
+  [[nodiscard]] bool mutates_events() const override { return true; }
+
+ private:
+  std::size_t index_ = 0;
+  EventDef next_{};
+  EventDef previous_{};
+  bool captured_ = false;
+};
+
 }  // namespace
 
 std::unique_ptr<EditCommand> make_place_blocker_command(BlockerDef blocker) {
@@ -192,6 +255,10 @@ std::unique_ptr<EditCommand> make_move_blocker_command(std::size_t index, int ti
   return std::make_unique<MoveBlockerCommand>(index, tile_dx, tile_dz, tile_size);
 }
 
+std::unique_ptr<EditCommand> make_replace_blocker_command(std::size_t index, BlockerDef next) {
+  return std::make_unique<ReplaceBlockerCommand>(index, std::move(next));
+}
+
 std::unique_ptr<EditCommand> make_place_event_command(EventDef event) {
   return std::make_unique<PlaceEventCommand>(std::move(event));
 }
@@ -203,6 +270,10 @@ std::unique_ptr<EditCommand> make_delete_event_command(std::size_t index) {
 std::unique_ptr<EditCommand> make_move_event_command(std::size_t index, int tile_dx, int tile_dz,
                                                      float tile_size) {
   return std::make_unique<MoveEventCommand>(index, tile_dx, tile_dz, tile_size);
+}
+
+std::unique_ptr<EditCommand> make_replace_event_command(std::size_t index, EventDef next) {
+  return std::make_unique<ReplaceEventCommand>(index, std::move(next));
 }
 
 EditApplyResult EditHistory::execute(MapData& map, std::unique_ptr<EditCommand> command) {

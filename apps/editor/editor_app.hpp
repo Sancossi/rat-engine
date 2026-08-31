@@ -15,6 +15,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <optional>
 #include <string>
 
 struct GLFWwindow;
@@ -74,6 +75,10 @@ class EditorApp {
   int selected_blocker_ = -1;
   int selected_event_ = -1;
   int selected_page_ = 0;
+  std::optional<BlockerDef> blocker_field_origin_{};
+  int blocker_field_origin_index_ = -1;
+  std::optional<EventDef> event_field_origin_{};
+  int event_field_origin_index_ = -1;
   int height_tile_x_ = 0;
   int height_tile_z_ = 0;
   float height_step_ = 0.25f;
