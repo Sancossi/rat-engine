@@ -17,7 +17,7 @@ tags: [engine]
 | Input actions | Input | working | `InputFrame` via `map_input_frame`; GLFW only in editor adapter |
 | Asset loader | Assets | planned | |
 | Scene / entities | Scene | planned | [[research: Entity model ECS vs scene vs hybrid]] |
-| Audio | Platform | planned | [[feat: Audio play-queue stub]] |
+| Audio | Platform | stub | `QueuedAudio` + `AudioSink` (null/log); `EditorApp` drains once per display frame |
 | Edit gizmos | Input / Scene | planned | [[feat: Mouse viewport map edit]] |
 | Agent debug dump | Core | working | `write_debug_snapshot` → `rat-debug.json` (F3); log file `rat.log` |
 

@@ -1,5 +1,6 @@
 add_executable(rat_tests
   app_mode_test.cpp
+  audio_queue_test.cpp
   buffered_press_test.cpp
   blocker_edit_test.cpp
   camera_test.cpp

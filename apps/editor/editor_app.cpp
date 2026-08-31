@@ -648,6 +648,8 @@ bool EditorApp::init() {
   stderr_log_ = std::make_unique<StreamLogSink>(std::cerr);
   tee_log_ = std::make_unique<TeeLogSink>(*file_log_, *stderr_log_);
   logger_ = std::make_unique<Logger>(*tee_log_);
+  audio_sink_ = std::make_unique<LogAudioSink>(*logger_);
+  audio_ = std::make_unique<QueuedAudio>(*audio_sink_);
   if (file_log_->ok()) {
     log(*logger_, LogLevel::Info, "editor", std::string("log file ") + file_log_->path());
   } else {
@@ -750,6 +752,9 @@ int EditorApp::run() {
       dt = 0.1f;
     }
     update_simulation(dt);
+    if (audio_ != nullptr) {
+      audio_->drain();
+    }
 
     ImGui_ImplGlfw_NewFrame();
     imgui_bgfx::begin_frame(width_, height_);

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <rat/app_mode.hpp>
+#include <rat/audio.hpp>
 #include <rat/buffered_press.hpp>
 #include <rat/debug_snapshot.hpp>
 #include <rat/event_runtime.hpp>
@@ -56,6 +57,8 @@ class EditorApp {
   std::unique_ptr<StreamLogSink> stderr_log_;
   std::unique_ptr<TeeLogSink> tee_log_;
   std::unique_ptr<Logger> logger_;
+  std::unique_ptr<LogAudioSink> audio_sink_;
+  std::unique_ptr<QueuedAudio> audio_;
   PlayerBody player_{};
   GameState game_state_{};
   EventRuntime events_{};
