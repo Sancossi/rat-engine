@@ -3,7 +3,7 @@ type: task
 area: Engine
 status: Not started
 task_type: Feature
-sprint:
+sprint: Sprint 5
 due:
 tags: [task]
 ---
@@ -14,4 +14,4 @@ Intent: клетка height-grid как standable куб-стена. Сбоку 
 
 Acceptance: боковые грани на разрывах `ground_y`; инструмент «поставить куб» поднимает клетку на 1.0 (не на ramp); headless-тест геометрии + height edit.
 
-Depends: none. Next: [[feat: Grid edge barriers]].
+Depends: none. Next: [[feat: Grid edge barriers]]. Взято в [[Sprint 5 — Terrain and edge walls]].

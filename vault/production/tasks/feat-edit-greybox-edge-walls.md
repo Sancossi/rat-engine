@@ -3,7 +3,7 @@ type: task
 area: Engine
 status: Not started
 task_type: Feature
-sprint:
+sprint: Sprint 5
 due:
 tags: [task]
 ---
@@ -14,4 +14,4 @@ Intent: авторинг и видимость рёбер в Edit/greybox плю
 
 Acceptance: ImGui N/E/S/W + пресет на выбранной клетке; greybox рисует стенку ребра; в `grey_yard` есть куб, мини-ребро и полное ребро; save/load roundtrip.
 
-Depends: [[feat: Grid edge barriers]].
+Depends: [[feat: Grid edge barriers]]. Взято в [[Sprint 5 — Terrain and edge walls]].

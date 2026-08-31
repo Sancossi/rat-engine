@@ -1,9 +1,9 @@
 ---
 type: sprint
-status: Active
+status: Done
 dates: 2026-09-01/2026-09-14
 goal: Shared human/agent debug loop plus GPP Command, Event Queue, Observer, State
-current: true
+current: false
 tags: [sprint]
 ---
 
@@ -31,3 +31,7 @@ DoD:
 
 - Агент: [[Logging and assert helpers]] → [[feat: Input action mapping]] → [[feat: Debug snapshot JSON]] → [[feat: Event why-not-fired]] → [[feat: Headless input sequence probe]] → [[research: Rat debug loopback MCP]]
 - GPP: [[feat: Input action mapping]] → [[feat: Audio play-queue stub]] → [[feat: PlaySE event command]] / [[feat: Gameplay notify observer]]; параллельно [[feat: Edit undo/redo command stack]] и [[feat: Player locomotion FSM]]
+
+## Итог
+
+Sprint закрыт 2026-08-31. DoD выполнен: лог без синглтона, JSON snapshot, why-not-fired (включая start-lock `ok`), headless probe, заметка loopback MCP (остаёмся на файлах), `InputFrame`, audio queue, PlaySE, notify bus, undo/redo Edit, locomotion FSM. Follow-up polish с ревью — Done. Стены height-grid в Sprint 4 не брали → [[Sprint 5 — Terrain and edge walls]].

@@ -25,6 +25,6 @@ tags: [hub]
 
 ## Текущий спринт
 
-Смотри заметку спринта с `current: true` (сейчас [[Sprint 4 — Refactoring and AI workflow]]). Агент ищет `current: true` в `production/sprints/`.
+Смотри заметку спринта с `current: true` (сейчас [[Sprint 5 — Terrain and edge walls]]). Агент ищет `current: true` в `production/sprints/`.
 
 Доска: [[Task board]] — виды **Current sprint** (канбан спринта) и **In progress** (код / ревью / blocked). Статус в YAML заметки = колонка на доске.

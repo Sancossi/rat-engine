@@ -26,7 +26,7 @@ views:
     name: Current sprint
     filters:
       and:
-        - sprint == "Sprint 4"
+        - sprint == "Sprint 5"
         - status != "Archived"
     groupBy:
       property: formula.board_column
