@@ -76,7 +76,7 @@ TEST_CASE("PlaySE round-trips op and id through serialize", "[unit][events][play
   const auto serialized = rat::serialize_map_to_string(loaded.map);
   REQUIRE(serialized.ok);
   REQUIRE(serialized.json_text.find("\"play_se\"") != std::string::npos);
-  REQUIRE(serialized.json_text.find("\"id\"") != std::string::npos);
+  REQUIRE(serialized.json_text.find("\"id\": \"jump\"") != std::string::npos);
 
   const auto again = rat::load_map_from_string(serialized.json_text);
   REQUIRE(again.ok);
@@ -84,4 +84,31 @@ TEST_CASE("PlaySE round-trips op and id through serialize", "[unit][events][play
   REQUIRE(again.map.events[0].pages[0].commands.size() == 1);
   REQUIRE(again.map.events[0].pages[0].commands[0].op == rat::CommandOp::PlaySE);
   REQUIRE(again.map.events[0].pages[0].commands[0].text == "jump");
+}
+
+TEST_CASE("PlaySE loader rejects empty id", "[unit][events][playse]") {
+  constexpr const char* kEmptyId = R"({
+    "schema_version": 1,
+    "id": "t",
+    "width": 4,
+    "height": 4,
+    "events": [
+      {
+        "id": "sfx",
+        "tile": { "x": 0, "z": 0 },
+        "pages": [
+          {
+            "trigger": "autorun",
+            "commands": [
+              { "op": "play_se", "id": "" }
+            ]
+          }
+        ]
+      }
+    ]
+  })";
+
+  const auto loaded = rat::load_map_from_string(kEmptyId);
+  REQUIRE_FALSE(loaded.ok);
+  REQUIRE_FALSE(loaded.error.empty());
 }

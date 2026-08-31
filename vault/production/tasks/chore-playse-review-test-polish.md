@@ -15,3 +15,11 @@ Intent: minor из ревью [[feat: PlaySE event command]] (Approved): round-t
 Acceptance: `[playse]` ломается на пустом id; serialize/parse assert не ложно-зелёный из-за чужого `"id"`.
 
 Origin: [[feat: PlaySE event command]]
+
+## Resolution
+
+`[playse]` round-trip asserts `"play_se"` and `"id": "jump"` (not a bare `"id"`, which also matches the event id `"sfx"`). Loader rejects `{ "op": "play_se", "id": "" }` (`ok == false`, error non-empty). Parse already threw `play_se id must not be empty`; dump-side empty-id check not added (JSON round-trip cannot produce empty id). Runtime PlaySE unchanged.
+
+## Bugs found
+
+none.
