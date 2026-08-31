@@ -10,6 +10,14 @@ namespace rat {
 
 namespace {
 
+EditApplyResult result_from(const EditCommand& command) {
+  EditApplyResult result;
+  result.applied = true;
+  result.mutates_blockers = command.mutates_blockers();
+  result.mutates_events = command.mutates_events();
+  return result;
+}
+
 class PlaceBlockerCommand final : public EditCommand {
  public:
   explicit PlaceBlockerCommand(BlockerDef blocker) : blocker_(std::move(blocker)) {}
@@ -24,6 +32,9 @@ class PlaceBlockerCommand final : public EditCommand {
       map.blockers.erase(map.blockers.begin() + static_cast<std::ptrdiff_t>(index_));
     }
   }
+
+  [[nodiscard]] bool mutates_blockers() const override { return true; }
+  [[nodiscard]] bool mutates_events() const override { return false; }
 
  private:
   BlockerDef blocker_{};
@@ -51,6 +62,9 @@ class DeleteBlockerCommand final : public EditCommand {
     map.blockers.insert(map.blockers.begin() + static_cast<std::ptrdiff_t>(index_), removed_);
   }
 
+  [[nodiscard]] bool mutates_blockers() const override { return true; }
+  [[nodiscard]] bool mutates_events() const override { return false; }
+
  private:
   std::size_t index_ = 0;
   BlockerDef removed_{};
@@ -65,6 +79,9 @@ class MoveBlockerCommand final : public EditCommand {
   void apply(MapData& map) override { translate(map, tile_dx_, tile_dz_); }
 
   void revert(MapData& map) override { translate(map, -tile_dx_, -tile_dz_); }
+
+  [[nodiscard]] bool mutates_blockers() const override { return true; }
+  [[nodiscard]] bool mutates_events() const override { return false; }
 
  private:
   void translate(MapData& map, int dx, int dz) const {
@@ -96,6 +113,9 @@ class PlaceEventCommand final : public EditCommand {
     }
   }
 
+  [[nodiscard]] bool mutates_blockers() const override { return false; }
+  [[nodiscard]] bool mutates_events() const override { return true; }
+
  private:
   EventDef event_{};
   std::size_t index_ = 0;
@@ -122,6 +142,9 @@ class DeleteEventCommand final : public EditCommand {
     map.events.insert(map.events.begin() + static_cast<std::ptrdiff_t>(index_), removed_);
   }
 
+  [[nodiscard]] bool mutates_blockers() const override { return false; }
+  [[nodiscard]] bool mutates_events() const override { return true; }
+
  private:
   std::size_t index_ = 0;
   EventDef removed_{};
@@ -136,6 +159,9 @@ class MoveEventCommand final : public EditCommand {
   void apply(MapData& map) override { translate(map, tile_dx_, tile_dz_); }
 
   void revert(MapData& map) override { translate(map, -tile_dx_, -tile_dz_); }
+
+  [[nodiscard]] bool mutates_blockers() const override { return false; }
+  [[nodiscard]] bool mutates_events() const override { return true; }
 
  private:
   void translate(MapData& map, int dx, int dz) const {
@@ -179,35 +205,39 @@ std::unique_ptr<EditCommand> make_move_event_command(std::size_t index, int tile
   return std::make_unique<MoveEventCommand>(index, tile_dx, tile_dz, tile_size);
 }
 
-void EditHistory::execute(MapData& map, std::unique_ptr<EditCommand> command) {
+EditApplyResult EditHistory::execute(MapData& map, std::unique_ptr<EditCommand> command) {
   if (command == nullptr) {
-    return;
+    return {};
   }
   command->apply(map);
+  const EditApplyResult result = result_from(*command);
   undo_.push_back(std::move(command));
   redo_.clear();
+  return result;
 }
 
-bool EditHistory::undo(MapData& map) {
+EditApplyResult EditHistory::undo(MapData& map) {
   if (undo_.empty()) {
-    return false;
+    return {};
   }
   std::unique_ptr<EditCommand> command = std::move(undo_.back());
   undo_.pop_back();
   command->revert(map);
+  const EditApplyResult result = result_from(*command);
   redo_.push_back(std::move(command));
-  return true;
+  return result;
 }
 
-bool EditHistory::redo(MapData& map) {
+EditApplyResult EditHistory::redo(MapData& map) {
   if (redo_.empty()) {
-    return false;
+    return {};
   }
   std::unique_ptr<EditCommand> command = std::move(redo_.back());
   redo_.pop_back();
   command->apply(map);
+  const EditApplyResult result = result_from(*command);
   undo_.push_back(std::move(command));
-  return true;
+  return result;
 }
 
 void EditHistory::clear() {

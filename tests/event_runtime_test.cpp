@@ -887,3 +887,63 @@ TEST_CASE("Event runtime rejects set/adjust on ramp tile transactionally", "[uni
   REQUIRE(runtime.map().ramps[0].low_y == Catch::Approx(before_ramp.low_y));
   REQUIRE(runtime.map().ramps[0].high_y == Catch::Approx(before_ramp.high_y));
 }
+
+TEST_CASE("set_blockers keeps active message and autorun lock; set_events clears them",
+          "[unit][events]") {
+  constexpr const char* kJson = R"({
+    "schema_version": 1,
+    "id": "t",
+    "width": 4,
+    "height": 4,
+    "blockers": [{"min_x": 0, "min_z": 0, "max_x": 1, "max_z": 1}],
+    "events": [
+      {
+        "id": "intro",
+        "tile": { "x": 0, "z": 0 },
+        "pages": [
+          {
+            "trigger": "autorun",
+            "commands": [ { "op": "show_text", "text": "Hello" } ]
+          }
+        ]
+      }
+    ]
+  })";
+
+  const auto loaded = rat::load_map_from_string(kJson);
+  REQUIRE(loaded.ok);
+
+  rat::GameState state;
+  rat::EventRuntime runtime;
+  runtime.load(loaded.map);
+  runtime.update(state, rat::PlayerBody{}, false, 1.0f / 60.0f);
+  REQUIRE(runtime.active_message() == "Hello");
+  REQUIRE(runtime.player_input_blocked());
+
+  auto blockers = runtime.map().blockers;
+  REQUIRE(blockers.size() == 1);
+  blockers[0].bounds.max_x = 2.0f;
+  runtime.set_blockers(std::move(blockers));
+  REQUIRE(runtime.active_message() == "Hello");
+  REQUIRE(runtime.player_input_blocked());
+  REQUIRE(runtime.map().blockers[0].bounds.max_x == Catch::Approx(2.0f));
+
+  runtime.acknowledge_message();
+  runtime.update(state, rat::PlayerBody{}, false, 1.0f / 60.0f);
+  REQUIRE_FALSE(runtime.active_message().has_value());
+  REQUIRE_FALSE(runtime.player_input_blocked());
+
+  runtime.update(state, rat::PlayerBody{}, false, 1.0f / 60.0f);
+  REQUIRE_FALSE(runtime.active_message().has_value());
+
+  auto blockers_again = runtime.map().blockers;
+  runtime.set_blockers(std::move(blockers_again));
+  runtime.update(state, rat::PlayerBody{}, false, 1.0f / 60.0f);
+  REQUIRE_FALSE(runtime.active_message().has_value());
+
+  auto events = runtime.map().events;
+  runtime.set_events(std::move(events));
+  REQUIRE_FALSE(runtime.active_message().has_value());
+  runtime.update(state, rat::PlayerBody{}, false, 1.0f / 60.0f);
+  REQUIRE(runtime.active_message() == "Hello");
+}

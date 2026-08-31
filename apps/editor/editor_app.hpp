@@ -50,7 +50,7 @@ class EditorApp {
   void draw_event_edit_ui();
   void snap_player_to_ground_clear_jump();
   void rebuild_surface_query_cache();
-  void apply_edited_map(MapData map);
+  void apply_edited_map(MapData map, EditApplyResult mutation);
 
   static void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 

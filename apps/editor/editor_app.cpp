@@ -84,23 +84,30 @@ void EditorApp::sync_events_to_runtime() {
   engine_->greybox().set_selected_event_marker(marker);
 }
 
-void EditorApp::apply_edited_map(MapData map) {
+void EditorApp::apply_edited_map(MapData map, EditApplyResult mutation) {
+  if (!mutation.applied) {
+    return;
+  }
   const int n_blockers = static_cast<int>(map.blockers.size());
   const int n_events = static_cast<int>(map.events.size());
-  if (n_blockers <= 0) {
-    selected_blocker_ = -1;
-  } else if (selected_blocker_ >= n_blockers) {
-    selected_blocker_ = n_blockers - 1;
+  if (mutation.mutates_blockers) {
+    if (n_blockers <= 0) {
+      selected_blocker_ = -1;
+    } else if (selected_blocker_ >= n_blockers) {
+      selected_blocker_ = n_blockers - 1;
+    }
+    events_.set_blockers(std::move(map.blockers));
+    sync_blockers_to_runtime();
   }
-  if (n_events <= 0) {
-    selected_event_ = -1;
-  } else if (selected_event_ >= n_events) {
-    selected_event_ = n_events - 1;
+  if (mutation.mutates_events) {
+    if (n_events <= 0) {
+      selected_event_ = -1;
+    } else if (selected_event_ >= n_events) {
+      selected_event_ = n_events - 1;
+    }
+    events_.set_events(std::move(map.events));
+    sync_events_to_runtime();
   }
-  events_.set_blockers(std::move(map.blockers));
-  events_.set_events(std::move(map.events));
-  sync_blockers_to_runtime();
-  sync_events_to_runtime();
 }
 
 void EditorApp::draw_blocker_edit_ui() {
@@ -110,8 +117,8 @@ void EditorApp::draw_blocker_edit_ui() {
   auto blockers = events_.map().blockers;
   auto run_history = [&](std::unique_ptr<EditCommand> command) {
     MapData map = events_.map();
-    edit_history_.execute(map, std::move(command));
-    apply_edited_map(std::move(map));
+    const EditApplyResult result = edit_history_.execute(map, std::move(command));
+    apply_edited_map(std::move(map), result);
     blockers = events_.map().blockers;
   };
 
@@ -412,8 +419,8 @@ void EditorApp::draw_event_edit_ui() {
   auto event_list = events_.map().events;
   auto run_history = [&](std::unique_ptr<EditCommand> command) {
     MapData map = events_.map();
-    edit_history_.execute(map, std::move(command));
-    apply_edited_map(std::move(map));
+    const EditApplyResult result = edit_history_.execute(map, std::move(command));
+    apply_edited_map(std::move(map), result);
     event_list = events_.map().events;
   };
 
@@ -914,14 +921,16 @@ void EditorApp::update_simulation(float dt) {
   if (app_mode_ == AppMode::Edit) {
     if (input.undo_pressed) {
       MapData map = events_.map();
-      if (edit_history_.undo(map)) {
-        apply_edited_map(std::move(map));
+      const EditApplyResult result = edit_history_.undo(map);
+      if (result.applied) {
+        apply_edited_map(std::move(map), result);
       }
     }
     if (input.redo_pressed) {
       MapData map = events_.map();
-      if (edit_history_.redo(map)) {
-        apply_edited_map(std::move(map));
+      const EditApplyResult result = edit_history_.redo(map);
+      if (result.applied) {
+        apply_edited_map(std::move(map), result);
       }
     }
   }

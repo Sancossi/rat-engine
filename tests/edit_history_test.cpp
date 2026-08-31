@@ -153,6 +153,76 @@ TEST_CASE("place event and delete blocker round-trip ids and AABB", "[unit][edit
   REQUIRE(map.blockers[1].bounds.min_x == Approx(2.0f));
 }
 
+TEST_CASE("blocker commands mutate blockers only; event commands mutate events only",
+          "[unit][edit]") {
+  const auto place_blocker = rat::make_place_blocker_command(make_blocker(0.0f, 0.0f, 1.0f, 1.0f));
+  REQUIRE(place_blocker->mutates_blockers());
+  REQUIRE_FALSE(place_blocker->mutates_events());
+
+  const auto delete_blocker = rat::make_delete_blocker_command(0);
+  REQUIRE(delete_blocker->mutates_blockers());
+  REQUIRE_FALSE(delete_blocker->mutates_events());
+
+  const auto move_blocker = rat::make_move_blocker_command(0, 1, 0, 1.0f);
+  REQUIRE(move_blocker->mutates_blockers());
+  REQUIRE_FALSE(move_blocker->mutates_events());
+
+  const auto place_event = rat::make_place_event_command(rat::make_stub_event("e", 0, 0));
+  REQUIRE_FALSE(place_event->mutates_blockers());
+  REQUIRE(place_event->mutates_events());
+
+  const auto delete_event = rat::make_delete_event_command(0);
+  REQUIRE_FALSE(delete_event->mutates_blockers());
+  REQUIRE(delete_event->mutates_events());
+
+  const auto move_event = rat::make_move_event_command(0, 1, 0, 1.0f);
+  REQUIRE_FALSE(move_event->mutates_blockers());
+  REQUIRE(move_event->mutates_events());
+}
+
+TEST_CASE("execute undo redo of a blocker command report blockers only", "[unit][edit]") {
+  rat::MapData map = make_tiny_map();
+  rat::EditHistory history;
+
+  const rat::EditApplyResult executed =
+      history.execute(map, rat::make_place_blocker_command(make_blocker(0.0f, 0.0f, 1.0f, 1.0f)));
+  REQUIRE(executed.applied);
+  REQUIRE(executed.mutates_blockers);
+  REQUIRE_FALSE(executed.mutates_events);
+
+  const rat::EditApplyResult undone = history.undo(map);
+  REQUIRE(undone.applied);
+  REQUIRE(undone.mutates_blockers);
+  REQUIRE_FALSE(undone.mutates_events);
+
+  const rat::EditApplyResult redone = history.redo(map);
+  REQUIRE(redone.applied);
+  REQUIRE(redone.mutates_blockers);
+  REQUIRE_FALSE(redone.mutates_events);
+}
+
+TEST_CASE("execute undo redo of an event command report events only", "[unit][edit]") {
+  rat::MapData map = make_tiny_map();
+  map.events.push_back(rat::make_stub_event("npc", 1, 2));
+  rat::EditHistory history;
+
+  const rat::EditApplyResult executed =
+      history.execute(map, rat::make_move_event_command(0, 1, 0, map.tile_size));
+  REQUIRE(executed.applied);
+  REQUIRE_FALSE(executed.mutates_blockers);
+  REQUIRE(executed.mutates_events);
+
+  const rat::EditApplyResult undone = history.undo(map);
+  REQUIRE(undone.applied);
+  REQUIRE_FALSE(undone.mutates_blockers);
+  REQUIRE(undone.mutates_events);
+
+  const rat::EditApplyResult redone = history.redo(map);
+  REQUIRE(redone.applied);
+  REQUIRE_FALSE(redone.mutates_blockers);
+  REQUIRE(redone.mutates_events);
+}
+
 TEST_CASE("move event by one tile undo restores tile", "[unit][edit]") {
   rat::MapData map = make_tiny_map();
   map.events.push_back(rat::make_stub_event("npc", 1, 2));
