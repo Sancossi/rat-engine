@@ -1,5 +1,7 @@
 #include "rat/event_runtime.hpp"
 
+#include "rat/event_edit.hpp"
+
 #include <algorithm>
 #include <cmath>
 
@@ -141,10 +143,9 @@ Aabb2 EventRuntime::event_bounds(const EventDef& event) const {
     return *event.volume;
   }
   if (event.tile.has_value()) {
-    const float x = static_cast<float>(event.tile->x) * map_.tile_size;
-    const float z = static_cast<float>(event.tile->z) * map_.tile_size;
+    const Vec3 center = tile_center_world(*event.tile, map_.tile_size);
     const float h = 0.5f * map_.tile_size;
-    return Aabb2{x - h, z - h, x + h, z + h};
+    return Aabb2{center.x - h, center.z - h, center.x + h, center.z + h};
   }
   return Aabb2{0, 0, 0, 0};
 }

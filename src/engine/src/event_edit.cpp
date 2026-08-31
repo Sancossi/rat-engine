@@ -4,6 +4,11 @@
 
 namespace rat {
 
+Vec3 tile_center_world(TileCoord tile, float tile_size) {
+  return {(static_cast<float>(tile.x) + 0.5f) * tile_size, 0.0f,
+          (static_cast<float>(tile.z) + 0.5f) * tile_size};
+}
+
 EventDef make_stub_event(std::string id, int tile_x, int tile_z) {
   EventDef event;
   event.id = std::move(id);

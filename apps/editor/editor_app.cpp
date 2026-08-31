@@ -595,9 +595,7 @@ void EditorApp::update_simulation(float dt) {
         glfwGetKey(window_, GLFW_KEY_RIGHT) == GLFW_PRESS) {
       screen_x += 1.0f;
     }
-    const auto& cam = engine_->greybox().camera();
-    input = camera_relative_move(screen_x, screen_z, cam.eye,
-                                 {player_.x, 0.0f, player_.z});
+    input = world_aligned_move(screen_x, screen_z);
   }
 
   if (player_control_enabled(app_mode_)) {

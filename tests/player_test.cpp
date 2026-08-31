@@ -90,3 +90,17 @@ TEST_CASE("Camera-relative WASD for top-down uses world XZ axes", "[unit][player
   REQUIRE(right.axis_x == Approx(-1.0f));
   REQUIRE(right.axis_z == Approx(0.0f));
 }
+
+TEST_CASE("World-aligned WASD stays stable across camera switches", "[unit][player]") {
+  const auto forward = rat::world_aligned_move(0.0f, 1.0f);
+  REQUIRE(forward.axis_x == Approx(0.0f));
+  REQUIRE(forward.axis_z == Approx(-1.0f));
+
+  const auto left = rat::world_aligned_move(-1.0f, 0.0f);
+  REQUIRE(left.axis_x == Approx(1.0f));
+  REQUIRE(left.axis_z == Approx(0.0f));
+
+  const auto right = rat::world_aligned_move(1.0f, 0.0f);
+  REQUIRE(right.axis_x == Approx(-1.0f));
+  REQUIRE(right.axis_z == Approx(0.0f));
+}

@@ -51,6 +51,10 @@ MoveInput camera_relative_move(float screen_x, float screen_z, Vec3 eye, Vec3 fo
   return out;
 }
 
+MoveInput world_aligned_move(float screen_x, float screen_z) {
+  return MoveInput{-screen_x, -screen_z};
+}
+
 PlayerBody integrate_player(PlayerBody player, MoveInput input, float dt,
                             std::span<const Aabb2> blockers) {
   float ix = input.axis_x;

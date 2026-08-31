@@ -1,5 +1,6 @@
 #include "rat/hot_apply.hpp"
 
+#include "rat/event_edit.hpp"
 #include "rat/map_loader.hpp"
 
 namespace rat {
@@ -9,8 +10,7 @@ std::vector<Vec3> event_markers_from_map(const MapData& map) {
   markers.reserve(map.events.size());
   for (const EventDef& event : map.events) {
     if (event.tile.has_value()) {
-      markers.push_back({static_cast<float>(event.tile->x) * map.tile_size, 0.0f,
-                         static_cast<float>(event.tile->z) * map.tile_size});
+      markers.push_back(tile_center_world(*event.tile, map.tile_size));
     } else if (event.volume.has_value()) {
       markers.push_back({(event.volume->min_x + event.volume->max_x) * 0.5f, 0.0f,
                          (event.volume->min_z + event.volume->max_z) * 0.5f});

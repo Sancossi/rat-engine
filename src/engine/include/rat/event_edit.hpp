@@ -6,6 +6,7 @@
 
 namespace rat {
 
+[[nodiscard]] Vec3 tile_center_world(TileCoord tile, float tile_size);
 [[nodiscard]] EventDef make_stub_event(std::string id, int tile_x, int tile_z);
 
 // Moves tile coords and/or volume AABB by whole tiles.

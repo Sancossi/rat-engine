@@ -6,6 +6,12 @@
 
 using Catch::Approx;
 
+TEST_CASE("tile event world position is cell center", "[unit][event_edit]") {
+  const auto center = rat::tile_center_world({2, -1}, 1.0f);
+  REQUIRE(center.x == Approx(2.5f));
+  REQUIRE(center.z == Approx(-0.5f));
+}
+
 TEST_CASE("make_stub_event creates Action page on tile", "[unit][event_edit]") {
   const auto event = rat::make_stub_event("npc_new", 3, -1);
   REQUIRE(event.id == "npc_new");
@@ -60,5 +66,5 @@ TEST_CASE("EventRuntime set_events updates markers path via map", "[unit][event_
 
   const auto markers = rat::event_markers_from_map(runtime.map());
   REQUIRE(markers.size() == 1);
-  REQUIRE(markers[0].x == Approx(4.0f));
+  REQUIRE(markers[0].x == Approx(4.5f));
 }

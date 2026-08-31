@@ -66,8 +66,8 @@ TEST_CASE("Hot-apply replaces blockers events and map id", "[unit][hot_apply]") 
   REQUIRE(events.map().events[0].id == "npc_a");
   REQUIRE(blockers.size() == 1);
   REQUIRE(markers.size() == 1);
-  REQUIRE(markers[0].x == Approx(0.0f));
-  REQUIRE(markers[0].z == Approx(1.0f));
+  REQUIRE(markers[0].x == Approx(0.5f));
+  REQUIRE(markers[0].z == Approx(1.5f));
   REQUIRE(player.x == Approx(4.5f));
   REQUIRE(player.z == Approx(-2.0f));
 
@@ -77,8 +77,8 @@ TEST_CASE("Hot-apply replaces blockers events and map id", "[unit][hot_apply]") 
   REQUIRE(events.map().events[0].id == "npc_b");
   REQUIRE(blockers.size() == 2);
   REQUIRE(markers.size() == 1);
-  REQUIRE(markers[0].x == Approx(2.0f));
-  REQUIRE(markers[0].z == Approx(3.0f));
+  REQUIRE(markers[0].x == Approx(2.5f));
+  REQUIRE(markers[0].z == Approx(3.5f));
   REQUIRE(player.x == Approx(4.5f));
   REQUIRE(player.z == Approx(-2.0f));
 }

@@ -50,24 +50,24 @@ TEST_CASE("Headless mechanics: grey_yard cog quest end-to-end", "[mechanics][que
   drain_messages(runtime, state, player);
   REQUIRE(state.get_variable(0) == 1);
 
-  // Accept quest from foreman at (-2, 2).
-  player.x = -2.0f;
-  player.z = 2.0f;
+  // Accept quest from foreman at the center of tile (-2, 2).
+  player.x = -1.5f;
+  player.z = 2.5f;
   interact_at(runtime, state, player);
   REQUIRE(state.get_switch(1));
   REQUIRE_FALSE(state.has_item("rusty_cog"));
 
-  // Loot scrap east of crates at (6, 0).
-  player.x = 6.0f;
-  player.z = 0.0f;
+  // Loot scrap east of crates at the center of tile (6, 0).
+  player.x = 6.5f;
+  player.z = 0.5f;
   interact_at(runtime, state, player);
   REQUIRE(state.has_item("rusty_cog"));
   REQUIRE(state.get_self_switch("scrap_pile", 'A'));
   REQUIRE_FALSE(state.get_switch(3));
 
   // Turn in at foreman.
-  player.x = -2.0f;
-  player.z = 2.0f;
+  player.x = -1.5f;
+  player.z = 2.5f;
   interact_at(runtime, state, player);
   REQUIRE(state.get_switch(2));
   REQUIRE_FALSE(state.has_item("rusty_cog"));
