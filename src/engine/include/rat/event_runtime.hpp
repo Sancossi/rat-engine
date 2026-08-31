@@ -32,6 +32,10 @@ enum class EventWhyNot {
   OutOfActionRange,
   InputBlocked,
   AlreadyRunning,
+  AutorunLock,
+  ForegroundBusy,
+  ParallelLimit,
+  AlreadyInside,
 };
 
 [[nodiscard]] const char* event_why_not_name(EventWhyNot reason);

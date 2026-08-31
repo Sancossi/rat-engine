@@ -630,6 +630,14 @@ const char* event_why_not_name(EventWhyNot reason) {
       return "input_blocked";
     case EventWhyNot::AlreadyRunning:
       return "already_running";
+    case EventWhyNot::AutorunLock:
+      return "autorun_lock";
+    case EventWhyNot::ForegroundBusy:
+      return "foreground_busy";
+    case EventWhyNot::ParallelLimit:
+      return "parallel_limit";
+    case EventWhyNot::AlreadyInside:
+      return "already_inside";
   }
   return "not_overlapping";
 }
@@ -685,6 +693,25 @@ EventWhyNot EventRuntime::why_not_fired(std::string_view event_id, const GameSta
     if (!action_in_range(*event, player) || !interact_pressed) {
       return EventWhyNot::OutOfActionRange;
     }
+  }
+
+  if (trigger == TriggerKind::Autorun) {
+    if (player_input_blocked()) {
+      return EventWhyNot::ForegroundBusy;
+    }
+    if (autorun_lock_.contains(event->id)) {
+      return EventWhyNot::AutorunLock;
+    }
+  }
+
+  if (trigger == TriggerKind::Parallel) {
+    if (static_cast<int>(parallels_.size()) >= kMaxParallelEvents) {
+      return EventWhyNot::ParallelLimit;
+    }
+  }
+
+  if (trigger == TriggerKind::PlayerTouch && touch_inside_.contains(event->id)) {
+    return EventWhyNot::AlreadyInside;
   }
 
   return EventWhyNot::Ok;
