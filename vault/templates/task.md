@@ -13,3 +13,8 @@ tags: [task]
 Intent:
 
 Acceptance:
+
+## Resolution
+
+## Bugs found
+

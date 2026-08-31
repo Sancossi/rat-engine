@@ -24,6 +24,7 @@ Then:
 5. If there is no source item, link `Origin` to the current sprint note and
    briefly identify the review, test, acceptance pass, or chat request.
 6. Deduplicate before creating; update existing links instead of cloning notes.
+7. On the **source card**, add `Bugs found:` / `Follow-up:` and a **Resolution** section when that card is closed.
 
 Examples: height-mismatch test reveals a second event never fires → bug.
 Snapshot work needs a `why_not` field the card did not include → follow-up task.

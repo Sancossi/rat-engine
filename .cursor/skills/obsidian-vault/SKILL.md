@@ -24,6 +24,7 @@ Engineering artifacts stay in `docs/` (schemas, acceptance, `docs/superpowers/sp
 | `vault/game/` | GDD, Narrative, Art, Audio, Event System |
 | `vault/wiki/` | How we work, Glossary, Meeting Notes |
 | `vault/production/tasks/` | One task per file |
+| `vault/production/Task board.base` | Human kanban: Current sprint / In progress / Board / Sprints / Table |
 | `vault/production/bugs/` | One bug per file |
 | `vault/production/sprints/` | One sprint per file; exactly one has `current: true` |
 | `vault/production/roadmap/` | Milestones |

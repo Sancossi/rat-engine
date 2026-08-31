@@ -13,3 +13,11 @@ tags: [task]
 Intent: тонкий debug-порт у `rat-editor` (HTTP localhost или named pipe): snapshot, why-not, хвост лога, опционально скрин HWND — по образцу Godot MCP `run_project` / `get_debug_output` и Blender `get_viewport_screenshot`. Общий browser/Godot MCP окно GLFW не видит. Сначала файловый dump ([[feat: Debug snapshot JSON]]); MCP — обёртка. Контекст: [[Agent Debug]].
 
 Acceptance: короткая заметка с выбором (только файлы vs loopback + MCP) и 4–6 методов API; установку чужих MCP в Cursor не делать в этой карточке.
+
+## Resolution
+
+Остаёмся на файлах: `rat-debug.json`, `rat.log`, `run_input_sequence`. Loopback + MCP — позже, когда live-сессия упрётся в F3/диск. Заметка: [[Rat debug loopback MCP]] (4–6 методов-черновик). Чужие MCP не ставили.
+
+## Bugs found
+
+none.

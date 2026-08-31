@@ -36,4 +36,4 @@ Grep `type: bug` in `vault/production/bugs/`, then keep `status: Open` or `statu
 
 Reply with note titles + repo-relative paths. Quote frontmatter fields, not Notion URLs.
 
-Dataview blocks in index notes (`Tasks.md`, `Bugs.md`, …) are for humans in Obsidian. The agent must not depend on the Dataview plugin.
+Human boards in Obsidian: `Task board.base` views **Current sprint** and **In progress**. The agent must not depend on Bases or Dataview; Grep frontmatter.

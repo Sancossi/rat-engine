@@ -5,7 +5,7 @@ tags: [production]
 
 # Production
 
-Базы продакшена как папки заметок с YAML. Фильтры — через поиск по frontmatter или Dataview.
+Базы продакшена как папки заметок с YAML. Задачи — канбан [[Task board]] (Obsidian Bases). Остальные фильтры — поиск по frontmatter или Dataview.
 
 - [[Tasks]]
 - [[Sprints]]

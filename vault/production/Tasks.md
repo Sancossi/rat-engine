@@ -11,11 +11,13 @@ tags: [task]
 Area: `Engine` | `Game` | `Production`.
 Type: `Feature` | `Bug` | `Chore` | `Research`.
 
+Канбан: [[Task board]] (виды **Current sprint** / **In progress** / Board / Sprints / Table).
+
+- **Current sprint** — канбан `sprint: Sprint 4` (колонки Not started / In progress / Done). При смене `current: true` обновить фильтр `sprint == "Sprint N"` в `Task board.base`.
+- **In progress** — только карточки `status: In progress` (то, что сейчас в работе).
+
+Правка свойства в Base пишет YAML заметки.
+
 Агент: Grep `status: In progress` или `sprint: Sprint 4` в `vault/production/tasks/`.
 
-```dataview
-TABLE area, status, task_type, sprint
-FROM "production/tasks"
-WHERE type = "task"
-SORT status ASC, file.name ASC
-```
+![[Task board.base]]

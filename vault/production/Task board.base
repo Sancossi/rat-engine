@@ -1,0 +1,85 @@
+filters:
+  and:
+    - file.inFolder("production/tasks")
+    - file.ext == "md"
+    - type == "task"
+formulas:
+  board_column: if(status == "Not started", "1 · Not started", if(status == "In progress", "2 · In progress", if(status == "Done", "3 · Done", status)))
+  sprint_column: if(sprint, sprint, "Backlog")
+properties:
+  area:
+    displayName: Area
+  status:
+    displayName: Status
+  task_type:
+    displayName: Type
+  sprint:
+    displayName: Sprint
+  due:
+    displayName: Due
+  formula.board_column:
+    displayName: Status
+  formula.sprint_column:
+    displayName: Sprint
+views:
+  - type: cards
+    name: Current sprint
+    filters:
+      and:
+        - sprint == "Sprint 4"
+        - status != "Archived"
+    groupBy:
+      property: formula.board_column
+      direction: ASC
+    order:
+      - file.name
+      - area
+      - status
+      - task_type
+  - type: cards
+    name: In progress
+    filters:
+      and:
+        - status == "In progress"
+    groupBy:
+      property: formula.sprint_column
+      direction: ASC
+    order:
+      - file.name
+      - area
+      - task_type
+  - type: cards
+    name: Board
+    filters:
+      and:
+        - status != "Archived"
+    groupBy:
+      property: formula.board_column
+      direction: ASC
+    order:
+      - file.name
+      - area
+      - sprint
+      - task_type
+  - type: cards
+    name: Sprints
+    filters:
+      and:
+        - status != "Archived"
+    groupBy:
+      property: formula.sprint_column
+      direction: ASC
+    order:
+      - file.name
+      - status
+      - area
+      - task_type
+  - type: table
+    name: Table
+    order:
+      - file.name
+      - area
+      - status
+      - task_type
+      - sprint
+      - due

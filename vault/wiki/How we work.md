@@ -19,6 +19,7 @@ Knowledge and production live in the git vault (`vault/`). Open that folder as a
 ## Definition of Done
 
 - Код/контент в репо, задача `status: Done`.
+- На карточке заполнены **Resolution** и **Bugs found** (для любой Area / Type).
 - Для engine: [[Systems Index]] / ADR при необходимости.
 - Для game: [[GDD]] обновлён, если меняется опыт игрока.
 
@@ -41,5 +42,6 @@ Knowledge and production live in the git vault (`vault/`). Open that folder as a
 ## Как агент исполняет работу
 
 - Спринт и пачки карточек — **сабагентами** (один implementer на задачу, затем review).
-- **До** старта работы карточка `status: In progress` (и коммит); после приёмки — `Done`.
+- **До** старта работы карточка `status: In progress` (и коммит); после приёмки — `Done`. Колонка на [[Task board]] (виды **In progress** и **Current sprint**) должна совпадать с фактом.
+- На закрытой карточке — **Resolution** (что сделали / решение) и **Bugs found** (или `none`); отдельные баги — в `production/bugs/` с `Origin`.
 - Готовый срез **коммитится сразу**, без ожидания «закоммить».

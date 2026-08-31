@@ -12,7 +12,7 @@ tags: [hub]
 ## Как пользоваться
 
 1. Диздок и вики — [[Engine]], [[Rat Project]], [[Wiki]].
-2. Работа — [[Tasks]], [[Sprints]], [[Roadmap]], [[Bugs]].
+2. Работа — [[Task board]] (виды Current sprint / In progress), [[Tasks]], [[Sprints]], [[Roadmap]], [[Bugs]].
 3. Архитектурные решения — [[Decisions]].
 4. Секцию Rat Project переименуйте, когда появится название продукта.
 
@@ -26,3 +26,5 @@ tags: [hub]
 ## Текущий спринт
 
 Смотри заметку спринта с `current: true` (сейчас [[Sprint 4 — Refactoring and AI workflow]]). Агент ищет `current: true` в `production/sprints/`.
+
+Доска: [[Task board]] — виды **Current sprint** (канбан спринта) и **In progress** (карточки в работе). Статус в YAML заметки = колонка на доске.
