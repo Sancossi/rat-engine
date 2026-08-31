@@ -6,14 +6,13 @@ Human-readable schema for map/event data. Files live under `data/maps/<id>.json`
 
 | Field | Type | Required | Notes |
 |-------|------|----------|-------|
-| `schema_version` | int | yes | `1` (legacy flat map) or `2` (height grid + ramps + optional edge barriers) |
+| `schema_version` | int | yes | `1` (legacy flat map) or `2` (height grid + ramps) |
 | `id` | string | yes | Map id (e.g. `grey_yard`) |
 | `width` | int | yes | Helper grid width in tiles |
 | `height` | int | yes | Helper grid height in tiles |
 | `tile_size` | number | no | World units per tile (default `1`) |
 | `height_grid` | object | v2 only | Elevation grid, required for schema `2` |
 | `ramps` | array | v2 only | Optional ramp definitions for schema `2` |
-| `edge_barriers` | array | v2 only | Optional fences on cell edges; see EdgeBarrier |
 | `blockers` | array | no | Static blockers on XZ (legacy full walls + optional height-aware jumpables) |
 | `events` | array | no | Event definitions |
 
@@ -37,22 +36,6 @@ Human-readable schema for map/event data. Files live under `data/maps/<id>.json`
 | `direction` | string | yes | `north`, `east`, `south`, `west` |
 | `low_y` | number | yes | Height at low edge of the ramp |
 | `high_y` | number | yes | Height at high edge of the ramp, must be `>= low_y` |
-
-### EdgeBarrier (v2)
-
-Optional fences on the top rim of a height-grid cell. Not standable.
-
-```json
-{ "tile": { "x": 3, "z": 5 }, "direction": "north", "height": 0.45 }
-```
-
-| Field | Type | Required | Notes |
-|-------|------|----------|-------|
-| `tile` | object | yes | `{ "x": int, "z": int }` owner cell |
-| `direction` | string | yes | `north`, `east`, `south`, `west` (same as ramps) |
-| `height` | number | yes | Fence height above the owner's `ground_y`; must be `> 0` |
-
-World top is `ground_y(tile) + height`. Opposite directions that name the same shared edge are canonicalized on load (east/south of the in-grid owner; greater height wins). Barriers on ramp tiles are rejected. Edit presets: mini `0.45`, full `1.6`. Feet at or above the top may cross (jump clearance).
 
 ### Blocker
 
@@ -149,5 +132,5 @@ See `data/maps/grey_yard.json`.
   - `origin_x = 0`, `origin_z = 0`
   - `width = map.width`, `height = map.height`
   - every `ground_y` value is `0`
-- Loader accepts `schema_version: 2` and reads explicit `height_grid` + optional `ramps` + optional `edge_barriers`.
+- Loader accepts `schema_version: 2` and reads explicit `height_grid` + optional `ramps`.
 - For `schema_version: 2`, invalid `ground_y` length (not equal to `width * height`) is rejected.
