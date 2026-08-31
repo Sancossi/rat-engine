@@ -1,7 +1,7 @@
 ---
 type: task
 area: Engine
-status: In progress
+status: Done
 task_type: Chore
 sprint: Sprint 4
 due:
@@ -18,7 +18,7 @@ Origin: [[feat: Audio play-queue stub]]
 
 ## Resolution
 
-`QueuedAudio::drain()` moves `queue_` into a local batch before `apply`, so posts from a sink (including nested `play_*` / `stop` / `drain`) wait for the next `drain()` — no in-place iteration, no drain-until-empty loop. `audio.hpp` forward-declares `Logger`; `log.hpp` is included from `audio.cpp` and from the LogAudioSink test. Card stays In progress pending review.
+`QueuedAudio::drain()` moves `queue_` into a local batch before `apply`. Posts from `apply` land on the empty `queue_`. If `apply` itself calls `drain()`, that nested call is the next drain and applies those posts. No in-place iteration, no drain-until-empty loop. `audio.hpp` forward-declares `Logger`; `log.hpp` lives in `audio.cpp` and the LogAudioSink test. Review: Approved.
 
 ## Bugs found
 
