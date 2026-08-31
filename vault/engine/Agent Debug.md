@@ -29,7 +29,7 @@ tags: [engine]
 
 ## MCP и внешние тулзы
 
-Сначала файлы на диске (агент уже умеет `Read` / `Shell`). MCP — обёртка, не замена dump.
+Сначала файлы на диске (агент уже умеет `Read` / `Shell`). MCP — обёртка, не замена dump. Выбор зафиксирован в [[Rat debug loopback MCP]]: пока `rat-debug.json` / `rat.log` / probe; loopback не ставим.
 
 Подключено сейчас и **не** закрывает debug GLFW-окна: Notion (для этого репо запрещён), browser MCP (веб, не `rat-editor`), Godot MCP (чужой движок; ориентир API: run / debug output / screenshot), Blender MCP (арт позже; ориентир: `get_viewport_screenshot`).
 
@@ -38,8 +38,8 @@ tags: [engine]
 | Зачем | Что | Когда |
 | --- | --- | --- |
 | Текст состояния | JSON snapshot + лог-файл | Sprint 4 |
-| Как Godot `get_debug_output` | loopback в editor: snapshot / why-not / last log | [[research: Rat debug loopback MCP]] |
-| Картинка окна | скрин HWND `rat-editor` (не браузер) | тот же research; до loopback — опциональный Windows-capture MCP |
+| Как Godot `get_debug_output` | loopback позже (snapshot / why-not / log_tail) | [[Rat debug loopback MCP]] |
+| Картинка окна | скрин HWND `rat-editor` (не браузер) | тот же research; capture MCP не ставить, пока dump хватает |
 | Сборка / тесты | уже есть: `ctest`, `compile_commands.json`, терминал Cursor | не нужен отдельный MCP |
 | Доки bgfx/GLFW | Context7 / docs MCP | nice-to-have, не блокер |
 
