@@ -22,6 +22,7 @@ add_library(rat_core
   src/player_jump.cpp
   src/surface_query.cpp
   src/terrain_geometry.cpp
+  src/viewport_edit.cpp
 )
 
 add_library(rat::core ALIAS rat_core)

@@ -26,6 +26,7 @@ add_executable(rat_tests
   play_se_test.cpp
   surface_query_test.cpp
   terrain_geometry_test.cpp
+  viewport_edit_test.cpp
 )
 
 target_link_libraries(rat_tests

@@ -118,6 +118,58 @@ void EditorApp::discard_field_edit_origins() {
   event_field_origin_index_ = -1;
 }
 
+void EditorApp::execute_edit_command(std::unique_ptr<EditCommand> command) {
+  if (command == nullptr) {
+    return;
+  }
+  discard_field_edit_origins();
+  MapData map = events_.map();
+  const EditApplyResult result = edit_history_.execute(map, std::move(command));
+  apply_edited_map(std::move(map), result);
+}
+
+void EditorApp::clear_map_selection() {
+  selected_blocker_ = -1;
+  selected_event_ = -1;
+  selected_page_ = 0;
+  sync_blockers_to_runtime();
+  sync_events_to_runtime();
+}
+
+void EditorApp::select_blocker_from_map(int index) {
+  selected_blocker_ = index;
+  selected_event_ = -1;
+  selected_page_ = 0;
+  sync_blockers_to_runtime();
+  sync_events_to_runtime();
+}
+
+void EditorApp::select_event_from_map(int index) {
+  selected_blocker_ = -1;
+  selected_event_ = index;
+  selected_page_ = 0;
+  sync_blockers_to_runtime();
+  sync_events_to_runtime();
+}
+
+void EditorApp::run_drag_step_commands(const ViewportPick& pick, TileDelta delta) {
+  const float tile = events_.map().tile_size > 0.0f ? events_.map().tile_size : 1.0f;
+  while (delta.tile_dx != 0 || delta.tile_dz != 0) {
+    const int step_x = delta.tile_dx > 0 ? 1 : (delta.tile_dx < 0 ? -1 : 0);
+    const int step_z = delta.tile_dz > 0 ? 1 : (delta.tile_dz < 0 ? -1 : 0);
+    if (pick.kind == ViewportPickKind::Blocker) {
+      execute_edit_command(
+          make_move_blocker_command(pick.index, step_x, step_z, tile));
+      select_blocker_from_map(static_cast<int>(pick.index));
+    } else {
+      execute_edit_command(make_move_event_command(pick.index, step_x, step_z, tile));
+      select_event_from_map(static_cast<int>(pick.index));
+    }
+    delta.tile_dx -= step_x;
+    delta.tile_dz -= step_z;
+  }
+}
+
 void EditorApp::draw_blocker_edit_ui() {
   ImGui::Separator();
   ImGui::TextUnformatted("Blockers (Edit)");
@@ -1008,6 +1060,101 @@ void EditorApp::framebuffer_size_callback(GLFWwindow* window, int width, int hei
   }
 }
 
+void EditorApp::handle_edit_mouse_input(const ImGuiIO& io) {
+  if (window_ == nullptr || engine_ == nullptr || app_mode_ != AppMode::Edit) {
+    mouse_left_was_down_ = false;
+    drag_active_ = false;
+    return;
+  }
+
+  const bool left_down = glfwGetMouseButton(window_, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS;
+  if (io.WantCaptureMouse) {
+    mouse_left_was_down_ = left_down;
+    if (!left_down) {
+      drag_active_ = false;
+    }
+    return;
+  }
+
+  double cursor_x = 0.0;
+  double cursor_y = 0.0;
+  glfwGetCursorPos(window_, &cursor_x, &cursor_y);
+  const auto world_hit = unproject_to_ground_plane(engine_->greybox().camera(),
+                                                   static_cast<float>(cursor_x),
+                                                   static_cast<float>(cursor_y),
+                                                   static_cast<std::uint32_t>(width_ > 0 ? width_ : 1),
+                                                   static_cast<std::uint32_t>(height_ > 0 ? height_ : 1),
+                                                   0.0f);
+  if (!world_hit.has_value()) {
+    mouse_left_was_down_ = left_down;
+    if (!left_down) {
+      drag_active_ = false;
+    }
+    return;
+  }
+
+  const bool pressed = left_down && !mouse_left_was_down_;
+  const bool released = !left_down && mouse_left_was_down_;
+
+  if (pressed) {
+    drag_active_ = false;
+    const ViewportClickAction action =
+        resolve_viewport_click(events_.map(), viewport_tool_, *world_hit);
+    switch (action.kind) {
+      case ViewportClickActionKind::Deselect:
+        clear_map_selection();
+        break;
+      case ViewportClickActionKind::SelectBlocker:
+        select_blocker_from_map(static_cast<int>(action.index));
+        drag_pick_ = {ViewportPickKind::Blocker, action.index};
+        drag_last_tile_ = world_to_tile_xz(*world_hit, events_.map().tile_size);
+        drag_active_ = true;
+        break;
+      case ViewportClickActionKind::SelectEvent:
+        select_event_from_map(static_cast<int>(action.index));
+        drag_pick_ = {ViewportPickKind::Event, action.index};
+        drag_last_tile_ = world_to_tile_xz(*world_hit, events_.map().tile_size);
+        drag_active_ = true;
+        break;
+      case ViewportClickActionKind::PlaceBlocker: {
+        const float tile = events_.map().tile_size > 0.0f ? events_.map().tile_size : 1.0f;
+        BlockerDef blocker;
+        blocker.bounds = {
+            static_cast<float>(action.tile.x) * tile,
+            static_cast<float>(action.tile.z) * tile,
+            static_cast<float>(action.tile.x + 1) * tile,
+            static_cast<float>(action.tile.z + 1) * tile,
+        };
+        execute_edit_command(make_place_blocker_command(std::move(blocker)));
+        select_blocker_from_map(static_cast<int>(events_.map().blockers.size()) - 1);
+        break;
+      }
+      case ViewportClickActionKind::PlaceEvent: {
+        const std::string id = "stub_" + std::to_string(next_stub_event_++);
+        execute_edit_command(make_place_event_command(make_stub_event(id, action.tile.x, action.tile.z)));
+        select_event_from_map(static_cast<int>(events_.map().events.size()) - 1);
+        break;
+      }
+      case ViewportClickActionKind::None:
+        break;
+    }
+  }
+
+  if (left_down && drag_active_) {
+    const TileCoord tile = world_to_tile_xz(*world_hit, events_.map().tile_size);
+    const TileDelta delta = tile_delta_between(drag_last_tile_, tile);
+    if (delta.tile_dx != 0 || delta.tile_dz != 0) {
+      run_drag_step_commands(drag_pick_, delta);
+      drag_last_tile_ = tile;
+    }
+  }
+
+  if (released) {
+    drag_active_ = false;
+  }
+  mouse_left_was_down_ = left_down;
+}
+
 void EditorApp::update_simulation(float dt) {
   if (engine_ == nullptr || window_ == nullptr) {
     return;
@@ -1050,6 +1197,8 @@ void EditorApp::update_simulation(float dt) {
       }
     }
   }
+
+  handle_edit_mouse_input(io);
 
   push_buffered_press_if_allowed(interact_press_buffer_, input.interact_pressed,
                                  event_runtime_enabled(app_mode_), io.WantCaptureKeyboard, 0.1f);
@@ -1242,6 +1391,19 @@ void EditorApp::draw_ui() {
     ImGui::TextWrapped("%s", last_serialize_status_.c_str());
   }
   if (app_mode_ == AppMode::Edit) {
+    ImGui::Separator();
+    ImGui::TextUnformatted("Mouse map tool");
+    if (ImGui::RadioButton("Select", viewport_tool_ == ViewportTool::Select)) {
+      viewport_tool_ = ViewportTool::Select;
+    }
+    ImGui::SameLine();
+    if (ImGui::RadioButton("Place blocker", viewport_tool_ == ViewportTool::PlaceBlocker)) {
+      viewport_tool_ = ViewportTool::PlaceBlocker;
+    }
+    ImGui::SameLine();
+    if (ImGui::RadioButton("Place event", viewport_tool_ == ViewportTool::PlaceEvent)) {
+      viewport_tool_ = ViewportTool::PlaceEvent;
+    }
     draw_height_edit_ui();
     draw_blocker_edit_ui();
     draw_event_edit_ui();

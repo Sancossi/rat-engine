@@ -12,6 +12,7 @@
 #include <rat/log.hpp>
 #include <rat/player.hpp>
 #include <rat/surface_query.hpp>
+#include <rat/viewport_edit.hpp>
 
 #include <cstdint>
 #include <memory>
@@ -19,6 +20,7 @@
 #include <string>
 
 struct GLFWwindow;
+struct ImGuiIO;
 
 namespace rat {
 
@@ -49,10 +51,16 @@ class EditorApp {
   void draw_blocker_edit_ui();
   void draw_height_edit_ui();
   void draw_event_edit_ui();
+  void handle_edit_mouse_input(const ImGuiIO& io);
   void snap_player_to_ground_clear_jump();
   void rebuild_surface_query_cache();
   void apply_edited_map(MapData map, EditApplyResult mutation);
   void discard_field_edit_origins();
+  void execute_edit_command(std::unique_ptr<EditCommand> command);
+  void clear_map_selection();
+  void select_blocker_from_map(int index);
+  void select_event_from_map(int index);
+  void run_drag_step_commands(const ViewportPick& pick, TileDelta delta);
 
   static void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 
@@ -76,6 +84,11 @@ class EditorApp {
   int selected_blocker_ = -1;
   int selected_event_ = -1;
   int selected_page_ = 0;
+  ViewportTool viewport_tool_ = ViewportTool::Select;
+  bool mouse_left_was_down_ = false;
+  bool drag_active_ = false;
+  ViewportPick drag_pick_{};
+  TileCoord drag_last_tile_{};
   std::optional<BlockerDef> blocker_field_origin_{};
   int blocker_field_origin_index_ = -1;
   std::optional<EventDef> event_field_origin_{};
