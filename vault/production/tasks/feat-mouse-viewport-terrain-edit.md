@@ -1,7 +1,7 @@
 ---
 type: task
 area: Engine
-status: In review
+status: Done
 task_type: Feature
 sprint: Sprint 6
 due:
@@ -17,3 +17,13 @@ Acceptance: клик по клетке в режиме Place cube поднима
 Origin: [[feat: Edit and greybox edge walls]]
 
 Depends: [[feat: Mouse viewport map edit]], [[feat: Undo height-grid and edge edits]]. Взято в [[Sprint 6 — Viewport map edit]].
+
+## Resolution
+
+В Edit клик Place cube поднимает плоскую клетку на +1.0 через `make_place_map_tile_cube_command`; Fence ставит Mini 0.45 / Full 1.6 или Remove на направление из ImGui combo. Пикл — тот же `unproject` / `resolve_viewport_click`; клик по объекту выделяет. Ramp куб не поднимает. `WantCaptureMouse`; Play мышью не правит. Undo — существующий `EditHistory`.
+
+Проверка: `.\build\tests\rat_tests.exe "[viewport_edit]"`; в Edit — Place cube / Fence по клетке, Ctrl+Z.
+
+## Bugs found
+
+none.
