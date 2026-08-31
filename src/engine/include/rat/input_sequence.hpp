@@ -7,6 +7,7 @@
 #include "rat/player.hpp"
 
 #include <cstdint>
+#include <optional>
 #include <span>
 #include <string>
 
@@ -15,6 +16,7 @@ namespace rat {
 struct InputSequenceConfig {
   float dt = 1.0f / 120.0f;
   JumpTuning jump_tuning{};
+  // Default Play: Edit skips integrate and does not snap-to-ground (editor-only).
   AppMode app_mode = AppMode::Play;
   bool write_snapshot_each_step = false;
   std::string snapshot_dir;
@@ -25,6 +27,8 @@ struct InputSequenceResult {
   JumpState jump;
   GameState state;
   std::uint64_t sim_frame = 0;
+  std::uint64_t snapshots_written = 0;
+  std::optional<std::string> snapshot_error;
 };
 
 [[nodiscard]] InputSequenceResult run_input_sequence(

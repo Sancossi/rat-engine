@@ -33,9 +33,13 @@ InputSequenceResult run_input_sequence(const MapData& map, PlayerBody start_play
   EventRuntime events;
   events.load(map);
 
-  if (config.write_snapshot_each_step && !config.snapshot_dir.empty()) {
+  const bool want_snapshots = config.write_snapshot_each_step && !config.snapshot_dir.empty();
+  if (want_snapshots) {
     std::error_code ec;
     std::filesystem::create_directories(config.snapshot_dir, ec);
+    if (ec) {
+      result.snapshot_error = "failed to create snapshot_dir: " + ec.message();
+    }
   }
 
   SurfaceQuery surface(map);
@@ -94,12 +98,16 @@ InputSequenceResult run_input_sequence(const MapData& map, PlayerBody start_play
       }
     }
 
-    if (config.write_snapshot_each_step && !config.snapshot_dir.empty()) {
+    if (want_snapshots && !result.snapshot_error) {
       const DebugSnapshot snapshot =
           make_debug_snapshot(result.sim_frame, config.app_mode, result.player, result.jump, events,
                               result.state, frame.interact_pressed);
-      [[maybe_unused]] const bool wrote = write_debug_snapshot(
-          snapshot_step_path(config.snapshot_dir, result.sim_frame), snapshot);
+      const std::string path = snapshot_step_path(config.snapshot_dir, result.sim_frame);
+      if (write_debug_snapshot(path, snapshot)) {
+        ++result.snapshots_written;
+      } else {
+        result.snapshot_error = "failed to write snapshot: " + path;
+      }
     }
   }
 

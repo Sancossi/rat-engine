@@ -8,12 +8,33 @@
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
 
+#include <chrono>
 #include <filesystem>
+#include <fstream>
 #include <string>
 #include <system_error>
 #include <vector>
 
 using Catch::Approx;
+
+namespace {
+
+[[nodiscard]] std::filesystem::path unique_temp_path(std::string_view prefix) {
+  static int n = 0;
+  const auto stamp = std::chrono::steady_clock::now().time_since_epoch().count();
+  return std::filesystem::temp_directory_path() /
+         (std::string(prefix) + "-" + std::to_string(stamp) + "-" + std::to_string(++n));
+}
+
+struct RemoveAllGuard {
+  std::filesystem::path path;
+  ~RemoveAllGuard() {
+    std::error_code ec;
+    std::filesystem::remove_all(path, ec);
+  }
+};
+
+}  // namespace
 
 TEST_CASE("Headless input sequence on grey_yard is deterministic", "[probe][mechanics]") {
 #ifndef RAT_TEST_DATA_DIR
@@ -73,24 +94,58 @@ TEST_CASE("Headless input sequence writes a snapshot per step", "[probe]") {
   start.z = 1.5f;
   start.y = query.sample(start.x, start.z).y;
 
-  const auto dir = std::filesystem::temp_directory_path() / "rat-input-sequence-probe";
+  const RemoveAllGuard dir{unique_temp_path("rat-input-sequence-probe")};
   std::error_code ec;
-  std::filesystem::remove_all(dir, ec);
-  std::filesystem::create_directories(dir, ec);
+  std::filesystem::create_directories(dir.path, ec);
 
   rat::InputSequenceConfig config;
   config.write_snapshot_each_step = true;
-  config.snapshot_dir = dir.string();
+  config.snapshot_dir = dir.path.string();
 
   const std::vector<rat::InputFrame> steps(1);
   const rat::InputSequenceResult result = rat::run_input_sequence(loaded.map, start, steps, config);
   REQUIRE(result.sim_frame == 1);
+  CHECK_FALSE(result.snapshot_error.has_value());
+  CHECK(result.snapshots_written == 1);
 
-  const auto path = dir / "step-000001.json";
+  const auto path = dir.path / "step-000001.json";
   REQUIRE(std::filesystem::exists(path));
   const auto snapshot = rat::read_debug_snapshot(path.string());
   REQUIRE(snapshot.has_value());
   CHECK(snapshot->sim_frame == 1);
   CHECK(snapshot->player_x == Approx(start.x).margin(1e-4f));
   CHECK(snapshot->player_z == Approx(start.z).margin(1e-4f));
+}
+
+TEST_CASE("Headless input sequence reports snapshot write failure", "[probe]") {
+#ifndef RAT_TEST_DATA_DIR
+#error RAT_TEST_DATA_DIR must be defined
+#endif
+  const auto loaded =
+      rat::load_map_from_file(std::string(RAT_TEST_DATA_DIR) + "/maps/grey_yard.json");
+  REQUIRE(loaded.ok);
+
+  rat::SurfaceQuery query(loaded.map);
+  rat::PlayerBody start;
+  start.x = 1.5f;
+  start.z = 1.5f;
+  start.y = query.sample(start.x, start.z).y;
+
+  const RemoveAllGuard blocker{unique_temp_path("rat-input-sequence-probe-not-dir")};
+  {
+    std::ofstream out(blocker.path);
+    REQUIRE(static_cast<bool>(out));
+    out << "not a directory\n";
+  }
+
+  rat::InputSequenceConfig config;
+  config.write_snapshot_each_step = true;
+  config.snapshot_dir = (blocker.path / "nested").string();
+
+  const std::vector<rat::InputFrame> steps(1);
+  const rat::InputSequenceResult result = rat::run_input_sequence(loaded.map, start, steps, config);
+  REQUIRE(result.sim_frame == 1);
+  REQUIRE(result.snapshot_error.has_value());
+  CHECK_FALSE(result.snapshot_error->empty());
+  CHECK(result.snapshots_written == 0);
 }
