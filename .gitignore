@@ -9,3 +9,5 @@ compile_commands.json
 *.suo
 *.VC.db
 .DS_Store
+
+aqtinstall.log
