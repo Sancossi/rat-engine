@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <string>
+#include <string_view>
 #include <unordered_map>
 #include <vector>
 
@@ -36,6 +37,10 @@ class GameState {
   [[nodiscard]] int item_quantity(const std::string& id) const;
   [[nodiscard]] bool has_item(const std::string& id, int min_quantity = 1) const;
   [[nodiscard]] const std::vector<InventoryItem>& inventory() const { return inventory_; }
+
+  // Stub persistence: in-memory roundtrip (file I/O can wrap the same blob later).
+  [[nodiscard]] bool save_to_memory(std::string& out) const;
+  [[nodiscard]] bool load_from_memory(std::string_view data);
 
  private:
   std::unordered_map<std::uint32_t, bool> switches_;

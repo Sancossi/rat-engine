@@ -1,6 +1,9 @@
 #include <rat/game_state.hpp>
 
+#include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
+
+using Catch::Approx;
 
 TEST_CASE("GameState switches default to false", "[unit][gamestate]") {
   rat::GameState state;
@@ -43,4 +46,30 @@ TEST_CASE("GameState clear resets progress fields", "[unit][gamestate]") {
   REQUIRE(state.inventory().empty());
   REQUIRE(state.map_id().empty());
   REQUIRE(state.player_x() == 0.0f);
+}
+
+TEST_CASE("GameState save/load memory roundtrip", "[unit][gamestate]") {
+  rat::GameState original;
+  original.set_switch(10, true);
+  original.set_variable(3, 99);
+  original.add_item("door_key", 1, true);
+  original.add_item("potion", 2, false);
+  original.set_map_id("grey_yard");
+  original.set_player_position(4.5f, 0.0f, -2.0f);
+
+  std::string blob;
+  REQUIRE(original.save_to_memory(blob));
+  REQUIRE_FALSE(blob.empty());
+
+  rat::GameState restored;
+  REQUIRE(restored.load_from_memory(blob));
+  REQUIRE(restored.get_switch(10));
+  REQUIRE(restored.get_variable(3) == 99);
+  REQUIRE(restored.item_quantity("door_key") == 1);
+  REQUIRE(restored.item_quantity("potion") == 2);
+  REQUIRE(restored.inventory().at(0).key_item);
+  REQUIRE(restored.map_id() == "grey_yard");
+  REQUIRE(restored.player_x() == Approx(4.5f));
+  REQUIRE(restored.player_y() == Approx(0.0f));
+  REQUIRE(restored.player_z() == Approx(-2.0f));
 }
