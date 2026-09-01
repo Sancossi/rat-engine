@@ -58,6 +58,7 @@
             { "type": "variable", "id": 0, "op": "==", "value": 0 }
           ],
           "commands": [
+            { "op": "play_se", "id": "sfx/beep" },
             { "op": "show_text", "text": "Grey Yard — a steampunk workshop lot. Talk to the foreman." },
             { "op": "control_variable", "id": 0, "value": 1 },
             { "op": "wait", "frames": 1 }
@@ -170,5 +171,8 @@
         }
       ]
     }
+  ],
+  "assets": [
+    { "id": "sfx/beep", "kind": "audio_clip", "debug_name": "beep" }
   ]
 }

@@ -35,6 +35,8 @@ add_executable(rat-editor
   imgui_bgfx.hpp
   platform/native_window.cpp
   platform/native_window.hpp
+  platform/miniaudio_sink.cpp
+  platform/miniaudio_sink.hpp
   panels/blocker_panel.cpp
   panels/blocker_panel.hpp
   panels/terrain_panel.cpp
@@ -64,6 +66,7 @@ target_link_libraries(rat-editor
     glfw
     bgfx
     bx
+    miniaudio
 )
 
 target_compile_definitions(rat-editor
@@ -74,6 +77,8 @@ target_compile_definitions(rat-editor
 
 if(WIN32)
   target_link_libraries(rat-editor PRIVATE gdi32 user32 shell32)
+  # miniaudio.h (WAV decoder) conversion inside the amalgamated header
+  set_source_files_properties(platform/miniaudio_sink.cpp PROPERTIES COMPILE_OPTIONS /wd4244)
 endif()
 
 set_target_properties(rat-editor PROPERTIES

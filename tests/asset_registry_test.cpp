@@ -1,4 +1,6 @@
 #include <rat/asset.hpp>
+#include <rat/audio.hpp>
+#include <rat/file_store.hpp>
 #include <rat/map_document.hpp>
 #include <rat/map_loader.hpp>
 
@@ -229,6 +231,72 @@ TEST_CASE("memory loader loads by id when compiled path is unset", "[unit][asset
   REQUIRE(registry.state(id) == rat::AssetState::Ready);
   CHECK(registry.compiled_path(id).empty());
   CHECK(registry.resolve(id).cpu.bytes == std::vector<std::uint8_t>{7});
+}
+
+TEST_CASE("FileAssetLoader loads compiled path bytes through FileStore", "[unit][asset]") {
+  rat::MemoryFileStore files;
+  REQUIRE(files.write("audio/beep.wav", std::string("RIFF")).ok);
+  rat::FileAssetLoader loader(files);
+  rat::AssetRegistry registry(loader);
+
+  const rat::AssetId id = rat::make_asset_id("sfx/beep");
+  rat::AssetCatalogEntry entry;
+  entry.id = id;
+  entry.kind = rat::AssetKind::AudioClip;
+  entry.path.source = "unused/source.wav";
+  entry.path.compiled = "audio/beep.wav";
+  registry.register_asset(entry);
+  registry.request_load(id);
+  registry.pump_loads();
+
+  REQUIRE(registry.state(id) == rat::AssetState::Ready);
+  CHECK(registry.resolve(id).cpu.bytes ==
+        (std::vector<std::uint8_t>{'R', 'I', 'F', 'F'}));
+  CHECK(registry.resolve(id).path.source.empty());
+  CHECK(registry.compiled_path(id) == "audio/beep.wav");
+}
+
+TEST_CASE("FileAssetLoader fails when compiled and source paths are empty", "[unit][asset]") {
+  rat::MemoryFileStore files;
+  rat::FileAssetLoader loader(files);
+  rat::AssetRegistry registry(loader);
+  const rat::AssetId id = rat::make_asset_id("sfx/missing");
+  rat::AssetCatalogEntry entry;
+  entry.id = id;
+  entry.kind = rat::AssetKind::AudioClip;
+  registry.register_asset(entry);
+  registry.request_load(id);
+  registry.pump_loads();
+
+  REQUIRE(registry.state(id) == rat::AssetState::Failed);
+  CHECK_FALSE(registry.error(id).empty());
+}
+
+TEST_CASE("PlaySE catalog key resolves AudioClip CPU bytes in the registry", "[unit][audio][asset]") {
+  rat::MemoryFileStore files;
+  REQUIRE(files.write("audio/beep.wav", std::string("RIFF")).ok);
+  rat::FileAssetLoader loader(files);
+  rat::AssetRegistry registry(loader);
+  const rat::AssetId id = rat::make_asset_id("sfx/beep");
+  rat::AssetCatalogEntry entry;
+  entry.id = id;
+  entry.kind = rat::AssetKind::AudioClip;
+  entry.path.compiled = "audio/beep.wav";
+  registry.register_asset(entry);
+  registry.request_load(id);
+  registry.pump_loads();
+
+  rat::RecordingAudioSink sink;
+  rat::QueuedAudio audio(sink);
+  audio.play_sfx(id.key());
+  audio.drain();
+
+  REQUIRE(sink.commands().size() == 1);
+  CHECK(sink.commands()[0].id == "sfx/beep");
+  const rat::AssetView view = registry.resolve(rat::make_asset_id(sink.commands()[0].id));
+  CHECK(view.kind == rat::AssetKind::AudioClip);
+  CHECK(view.state == rat::AssetState::Ready);
+  CHECK_FALSE(view.cpu.bytes.empty());
 }
 
 TEST_CASE("map JSON round-trips stable AssetIds for gameplay kinds", "[unit][asset][map]") {

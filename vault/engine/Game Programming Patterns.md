@@ -29,7 +29,7 @@ tags: [engine]
 | Bytecode | EventRuntime opcodes | Уже правильный слой; follow-up [[feat: PlaySE event command]] |
 | Command (ввод) | сырой GLFW | [[feat: Input action mapping]] → [[feat: Input rebind and gamepad]] |
 | Command (редактор) | `EditHistory` / `EditCommand` (place/move/delete blockers+events) | Готово [[feat: Edit undo/redo command stack]] |
-| Event Queue (звук) | `QueuedAudio` FIFO; tests Recording/Null; editor miniaudio sink | Готово очередь; device [[ADR-013 Audio backend miniaudio]] → [[feat: Audio backend implementation]] |
+| Event Queue (звук) | `QueuedAudio` FIFO + overflow_count; tests Recording/Null; editor miniaudio sink | Готово [[feat: Audio backend implementation]] |
 | Service Locator | composition | Не заводить locator |
 | Singleton | нет | Так и держать |
 | State (FSM) | `locomotion_from` Idle/Walk/Jump/Fall; физика в `JumpState` | Готово [[feat: Player locomotion FSM]]; клипы — позже по [[ADR-009 RE-like segmented character hierarchy]] |

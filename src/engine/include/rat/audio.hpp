@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstddef>
+#include <cstdint>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -7,6 +9,8 @@
 namespace rat {
 
 class Logger;
+
+inline constexpr std::size_t kAudioQueueCapacity = 64;
 
 enum class AudioCommandKind { PlaySfx, PlayMusic, Stop };
 
@@ -61,10 +65,15 @@ class QueuedAudio : public Audio {
   void stop(std::string_view id = {}) override;
   // Posts from apply() stay on queue_ for the next drain(); this call does not loop until empty.
   void drain() override;
+  // Cumulative dropped posts; not reset by drain() so metrics can read it later.
+  [[nodiscard]] std::uint64_t overflow_count() const { return overflow_count_; }
 
  private:
+  void enqueue(AudioCommand command);
+
   AudioSink* sink_ = nullptr;
   std::vector<AudioCommand> queue_;
+  std::uint64_t overflow_count_ = 0;
 };
 
 }  // namespace rat

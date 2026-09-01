@@ -1,12 +1,14 @@
 #include "editor_app.hpp"
 
 #include "imgui_bgfx.hpp"
+#include "platform/miniaudio_sink.hpp"
 
 #include <rat/debug_snapshot.hpp>
 #include <rat/edit_history.hpp>
 #include <rat/engine.hpp>
 #include <rat/event_edit.hpp>
 #include <rat/event_runtime.hpp>
+#include <rat/file_store.hpp>
 #include <rat/height_edit.hpp>
 #include <rat/hot_apply.hpp>
 #include <rat/input.hpp>
@@ -137,6 +139,7 @@ bool EditorApp::hot_apply_map_path(const std::string& path, bool preserve_player
   engine_->set_event_markers(std::move(markers));
   engine_->set_player(session_.player());
   sync_selection_to_engine();
+  bind_session_assets();
   session_.set_app_mode(app_mode_);
   session_.clear_pending_input();
   previous_buttons_ = host_.sample_buttons();
@@ -166,12 +169,30 @@ bool EditorApp::save_map_path(const std::string& path) {
   return true;
 }
 
+void EditorApp::bind_session_assets() {
+  if (asset_registry_ == nullptr) {
+    return;
+  }
+  bind_map_assets(*asset_registry_, session_.events().map());
+  const AssetId beep = make_asset_id("sfx/beep");
+  AssetCatalogEntry overlay;
+  overlay.id = beep;
+  overlay.kind = AssetKind::AudioClip;
+  overlay.debug_name = "beep";
+  overlay.path.compiled = std::string(RAT_DATA_DIR) + "/audio/beep.wav";
+  asset_registry_->register_asset(std::move(overlay));
+  asset_registry_->request_load(beep);
+  asset_registry_->pump_loads();
+}
+
 bool EditorApp::init() {
   file_log_ = std::make_unique<FileLogSink>(default_log_path());
   stderr_log_ = std::make_unique<StreamLogSink>(std::cerr);
   tee_log_ = std::make_unique<TeeLogSink>(*file_log_, *stderr_log_);
   logger_ = std::make_unique<Logger>(*tee_log_);
-  audio_sink_ = std::make_unique<LogAudioSink>(*logger_);
+  asset_loader_ = std::make_unique<FileAssetLoader>(os_files());
+  asset_registry_ = std::make_unique<AssetRegistry>(*asset_loader_);
+  audio_sink_ = make_editor_audio_sink(*asset_registry_, *logger_);
   audio_ = std::make_unique<QueuedAudio>(*audio_sink_);
   session_.set_audio(audio_.get());
   session_.set_notify(&notify_bus_);

@@ -45,16 +45,24 @@ void RecordingAudioSink::apply(const AudioCommand& command) {
 
 QueuedAudio::QueuedAudio(AudioSink& sink) : sink_(&sink) {}
 
+void QueuedAudio::enqueue(AudioCommand command) {
+  if (queue_.size() >= kAudioQueueCapacity) {
+    ++overflow_count_;
+    return;
+  }
+  queue_.push_back(std::move(command));
+}
+
 void QueuedAudio::play_sfx(std::string_view id) {
-  queue_.push_back(AudioCommand{AudioCommandKind::PlaySfx, std::string(id)});
+  enqueue(AudioCommand{AudioCommandKind::PlaySfx, std::string(id)});
 }
 
 void QueuedAudio::play_music(std::string_view id) {
-  queue_.push_back(AudioCommand{AudioCommandKind::PlayMusic, std::string(id)});
+  enqueue(AudioCommand{AudioCommandKind::PlayMusic, std::string(id)});
 }
 
 void QueuedAudio::stop(std::string_view id) {
-  queue_.push_back(AudioCommand{AudioCommandKind::Stop, std::string(id)});
+  enqueue(AudioCommand{AudioCommandKind::Stop, std::string(id)});
 }
 
 void QueuedAudio::drain() {

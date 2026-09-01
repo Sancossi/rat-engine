@@ -1,5 +1,6 @@
 #include "rat/asset.hpp"
 
+#include "rat/file_store.hpp"
 #include "rat/map_data.hpp"
 
 #include <utility>
@@ -47,6 +48,29 @@ AssetLoader::Result MemoryAssetLoader::load(const AssetId& id, AssetKind, const 
   }
   result.ok = true;
   result.cpu = it->second.cpu;
+  return result;
+}
+
+FileAssetLoader::FileAssetLoader(FileStore& files) : files_(&files) {}
+
+AssetLoader::Result FileAssetLoader::load(const AssetId&, AssetKind, const AssetPath& path) {
+  Result result;
+  const std::string& file_path = !path.compiled.empty() ? path.compiled : path.source;
+  if (file_path.empty()) {
+    result.error = "asset has no compiled or source path";
+    return result;
+  }
+  if (files_ == nullptr) {
+    result.error = "asset file store is missing";
+    return result;
+  }
+  const FileReadResult read = files_->read(file_path);
+  if (!read.ok) {
+    result.error = read.error.empty() ? "asset file read failed" : read.error;
+    return result;
+  }
+  result.ok = true;
+  result.cpu.bytes = read.bytes.data;
   return result;
 }
 

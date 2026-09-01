@@ -158,6 +158,17 @@ class AssetRegistry {
 
 struct MapData;
 
+class FileStore;
+
+class FileAssetLoader : public AssetLoader {
+ public:
+  explicit FileAssetLoader(FileStore& files);
+  Result load(const AssetId& id, AssetKind kind, const AssetPath& path) override;
+
+ private:
+  FileStore* files_ = nullptr;
+};
+
 void bind_map_assets(AssetRegistry& registry, const MapData& map);
 
 }  // namespace rat

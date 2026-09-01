@@ -85,6 +85,48 @@ TEST_CASE("drain applies snapped batch only; nested play waits for next drain",
   CHECK(sink.applied[1].id == "nested");
 }
 
+TEST_CASE("queue posts beyond capacity increment overflow and drop extras", "[unit][audio]") {
+  rat::RecordingAudioSink sink;
+  rat::QueuedAudio audio(sink);
+
+  REQUIRE(audio.overflow_count() == 0);
+
+  for (std::size_t i = 0; i < rat::kAudioQueueCapacity; ++i) {
+    audio.play_sfx("ok");
+  }
+  REQUIRE(audio.overflow_count() == 0);
+
+  audio.play_sfx("dropped");
+  audio.play_music("dropped-music");
+  audio.stop("dropped-stop");
+  REQUIRE(audio.overflow_count() == 3);
+
+  audio.drain();
+
+  REQUIRE(sink.commands().size() == rat::kAudioQueueCapacity);
+  CHECK(sink.commands().front().id == "ok");
+  CHECK(sink.commands().back().id == "ok");
+  CHECK(audio.overflow_count() == 3);
+}
+
+TEST_CASE("overflow stays observable after a later drain of in-cap posts", "[unit][audio]") {
+  rat::RecordingAudioSink sink;
+  rat::QueuedAudio audio(sink);
+
+  for (std::size_t i = 0; i < rat::kAudioQueueCapacity + 1; ++i) {
+    audio.play_sfx("a");
+  }
+  REQUIRE(audio.overflow_count() == 1);
+  audio.drain();
+
+  audio.play_sfx("later");
+  audio.drain();
+
+  REQUIRE(sink.commands().size() == rat::kAudioQueueCapacity + 1);
+  CHECK(sink.commands().back().id == "later");
+  CHECK(audio.overflow_count() == 1);
+}
+
 TEST_CASE("LogAudioSink writes kind and id on channel audio", "[unit][audio]") {
   rat::MemoryLogSink memory;
   rat::Logger logger(memory);

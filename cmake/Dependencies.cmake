@@ -73,6 +73,28 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(nlohmann_json)
 
+if(RAT_BUILD_EDITOR)
+  # Header-only; the miniaudio repo has no CMakeLists. Pin a release tag.
+  # Full-args Populate is the CMake 3.30+ form (name-only Populate is CMP0169).
+  FetchContent_Populate(
+    miniaudio
+    GIT_REPOSITORY https://github.com/mackron/miniaudio.git
+    GIT_TAG        0.11.25
+    GIT_SHALLOW    TRUE
+    SOURCE_DIR     "${CMAKE_BINARY_DIR}/_deps/miniaudio-src"
+    BINARY_DIR     "${CMAKE_BINARY_DIR}/_deps/miniaudio-build"
+    SUBBUILD_DIR   "${CMAKE_BINARY_DIR}/_deps/miniaudio-subbuild"
+  )
+  if(NOT EXISTS "${miniaudio_SOURCE_DIR}/miniaudio.h")
+    message(FATAL_ERROR "miniaudio FetchContent did not produce miniaudio.h")
+  endif()
+  if(NOT TARGET miniaudio)
+    add_library(miniaudio INTERFACE)
+    add_library(miniaudio::miniaudio ALIAS miniaudio)
+    target_include_directories(miniaudio INTERFACE "${miniaudio_SOURCE_DIR}")
+  endif()
+endif()
+
 if(RAT_BUILD_TESTS)
   set(CATCH_INSTALL_DOCS OFF CACHE BOOL "" FORCE)
   set(CATCH_INSTALL_EXTRAS OFF CACHE BOOL "" FORCE)

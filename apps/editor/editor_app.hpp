@@ -8,6 +8,7 @@
 #include "platform/native_window.hpp"
 
 #include <rat/app_mode.hpp>
+#include <rat/asset.hpp>
 #include <rat/audio.hpp>
 #include <rat/debug_snapshot.hpp>
 #include <rat/gameplay_notify.hpp>
@@ -52,6 +53,7 @@ class EditorApp {
   void handle_edit_mouse_input(const ImGuiIO& io);
   void snap_player_to_ground_clear_jump();
   void run_drag_step_commands(const ViewportPick& pick, TileDelta delta);
+  void bind_session_assets();
 
   static void on_host_resize(void* user, int width, int height);
 
@@ -62,7 +64,9 @@ class EditorApp {
   std::unique_ptr<StreamLogSink> stderr_log_;
   std::unique_ptr<TeeLogSink> tee_log_;
   std::unique_ptr<Logger> logger_;
-  std::unique_ptr<LogAudioSink> audio_sink_;
+  std::unique_ptr<FileAssetLoader> asset_loader_;
+  std::unique_ptr<AssetRegistry> asset_registry_;
+  std::unique_ptr<AudioSink> audio_sink_;
   std::unique_ptr<QueuedAudio> audio_;
   SimulationSession session_{};
   EditorDocument document_{};

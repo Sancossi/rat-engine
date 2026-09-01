@@ -1,11 +1,11 @@
 # Enforces rat_core isolation from platform graphics.
-# Forbidden: GLFW, ImGui, bgfx (plus bx/bimg), and Win32 user32/gdi32.
+# Forbidden: GLFW, ImGui, bgfx (plus bx/bimg), Win32 user32/gdi32, and miniaudio.
 #
 # Dual-mode file:
 # - include() from CMakeLists.txt: walk LINK_LIBRARIES at configure time
 # - cmake -P with RAT_LINK_MANIFEST: re-check the written closure (ctest / custom target)
 
-set(_RAT_FORBIDDEN_LINK_NAMES glfw glfw3 imgui bgfx bx bimg gdi32 user32)
+set(_RAT_FORBIDDEN_LINK_NAMES glfw glfw3 imgui bgfx bx bimg gdi32 user32 miniaudio)
 
 if(CMAKE_SCRIPT_MODE_FILE)
   if(NOT DEFINED RAT_LINK_MANIFEST OR RAT_LINK_MANIFEST STREQUAL "")
@@ -25,11 +25,11 @@ if(CMAKE_SCRIPT_MODE_FILE)
       if(_name STREQUAL _forbidden)
         message(FATAL_ERROR
           "rat_core links forbidden library '${_name}' "
-          "(must not link GLFW, ImGui, bgfx, or Win32 user32/gdi32)")
+          "(must not link GLFW, ImGui, bgfx, Win32 user32/gdi32, or miniaudio)")
       endif()
     endforeach()
   endforeach()
-  message(STATUS "rat_core link closure has no GLFW/ImGui/bgfx/Win32")
+  message(STATUS "rat_core link closure has no GLFW/ImGui/bgfx/Win32/miniaudio")
   return()
 endif()
 
@@ -67,7 +67,7 @@ function(rat_token_is_forbidden token out_var)
     set(${out_var} FALSE PARENT_SCOPE)
     return()
   endif()
-  foreach(_forbidden IN ITEMS glfw glfw3 imgui bgfx bx bimg gdi32 user32)
+  foreach(_forbidden IN ITEMS glfw glfw3 imgui bgfx bx bimg gdi32 user32 miniaudio)
     if(t STREQUAL _forbidden)
       set(${out_var} TRUE PARENT_SCOPE)
       return()
@@ -125,7 +125,7 @@ function(rat_collect_link_closure target visited_var names_var)
       list(APPEND _names "${_tok}")
     endif()
     string(TOLOWER "${target}" _raw)
-    foreach(_forbidden IN ITEMS glfw glfw3 imgui bgfx bx bimg gdi32 user32)
+    foreach(_forbidden IN ITEMS glfw glfw3 imgui bgfx bx bimg gdi32 user32 miniaudio)
       if(_raw MATCHES "(^|[^a-z0-9_])${_forbidden}([^a-z0-9_]|$)")
         list(APPEND _names "${_forbidden}")
       endif()
@@ -162,7 +162,7 @@ function(rat_assert_no_platform_graphics target)
   if(NOT _hit STREQUAL "")
     message(FATAL_ERROR
       "${target} links forbidden library '${_hit}' "
-      "(must not link GLFW, ImGui, bgfx, or Win32 user32/gdi32). "
+      "(must not link GLFW, ImGui, bgfx, Win32 user32/gdi32, or miniaudio). "
       "Closure:\n  ${_manifest_text}")
   endif()
 
@@ -170,7 +170,7 @@ function(rat_assert_no_platform_graphics target)
     COMMAND "${CMAKE_COMMAND}"
       "-DRAT_LINK_MANIFEST=${_manifest}"
       -P "${RAT_CORE_LINK_CHECK_FILE}"
-    COMMENT "Verify ${target} does not link GLFW, ImGui, bgfx, or Win32"
+    COMMENT "Verify ${target} does not link GLFW, ImGui, bgfx, Win32, or miniaudio"
     VERBATIM
   )
 
