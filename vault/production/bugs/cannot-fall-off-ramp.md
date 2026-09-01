@@ -35,6 +35,8 @@ Follow-up from: [[ramp-climb-does-not-work]]
 
 Climb-фикс зондировал стены на Y клетки назначения; сход с рампы брал нижнего соседа и цеплялся за трапецию. `integrate_player_surface` теперь пробивает стены на `max(текущие ноги, dest Y)`. Verify: `.\build\tests\rat_tests.exe "*walk-off*"` и `[player]`. Review: Approved.
 
+Follow-up: [[stuck-after-fall-or-jump-into-elevation]] — play 2026-09-01, после фикса схода с рампы застревание при падении с возвышения или прыжке в упор.
+
 ## Bugs found
 
-none.
+- [[stuck-after-fall-or-jump-into-elevation]] — play 2026-09-01, застревание после падения с возвышения или прыжка в упор.
