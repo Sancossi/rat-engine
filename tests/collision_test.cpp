@@ -238,6 +238,36 @@ TEST_CASE("East Mini 0.45 fence still blocks at feet 0 with cylinder_hits_walls 
   REQUIRE_FALSE(rat::cylinder_hits_walls(on_top, world, 0.35f));
 }
 
+TEST_CASE("Off-center west approach misses ramp side where local height is under max_step_up",
+          "[collision]") {
+  rat::MapData map = make_grid(4, 3);
+  map.height_grid.ground_y[1 * 4 + 2] = 1.0f;
+  map.ramps.push_back({
+      .tile = rat::TileCoord{1, 1},
+      .direction = rat::RampDirection::East,
+      .low_y = 0.0f,
+      .high_y = 1.0f,
+  });
+  const rat::SurfaceQuery query(map);
+  const rat::CollisionWorld world = rat::bake_collision_world(map, query);
+
+  rat::CollisionBody low_west;
+  low_west.x = 1.2f;
+  low_west.y = 0.0f;
+  low_west.z = 1.3f;
+  low_west.radius = 0.4f;
+  low_west.height = rat::kPlayerCylinderHeight;
+  REQUIRE_FALSE(rat::cylinder_hits_walls(low_west, world, 0.35f));
+
+  rat::CollisionBody high_side;
+  high_side.x = 1.7f;
+  high_side.y = 0.0f;
+  high_side.z = 1.15f;
+  high_side.radius = 0.4f;
+  high_side.height = rat::kPlayerCylinderHeight;
+  REQUIRE(rat::cylinder_hits_walls(high_side, world, 0.35f));
+}
+
 TEST_CASE("circle_overlaps_aabb2 misses square corner and hits axis within radius", "[collision]") {
   const rat::Aabb2 box{0.0f, 0.0f, 1.0f, 1.0f};
   constexpr float kRadius = 0.4f;

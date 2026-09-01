@@ -279,6 +279,50 @@ TEST_CASE("SimulationSession tick posts Landed on airborne to grounded", "[unit]
   REQUIRE(std::find(kinds.begin(), kinds.end(), rat::GameplayNotifyKind::Landed) != kinds.end());
 }
 
+TEST_CASE("SimulationSession grey_yard west ramp approach crests the high cell",
+          "[unit][sim][surface]") {
+#ifndef RAT_TEST_DATA_DIR
+#error RAT_TEST_DATA_DIR must be defined
+#endif
+  const auto loaded =
+      rat::load_map_from_file(std::string(RAT_TEST_DATA_DIR) + "/maps/grey_yard.json");
+  REQUIRE(loaded.ok);
+
+  rat::SimulationSession session;
+  REQUIRE(session.load(loaded.map).ok);
+
+  rat::PlayerBody start;
+  start.x = 7.5f;
+  start.z = 8.3f;
+  start.y = 0.0f;
+  start.speed = 5.0f;
+  session.set_player(start);
+
+  session.tick({});
+  REQUIRE(session.events().active_message().has_value());
+  rat::InputFrame ack;
+  ack.interact_pressed = true;
+  session.tick(ack);
+  session.tick({});
+  session.tick({});
+  REQUIRE_FALSE(session.events().player_input_blocked());
+
+  rat::InputFrame walk;
+  walk.move = {1.0f, 0.0f};
+  for (int i = 0; i < 240; ++i) {
+    session.tick(walk);
+    if (session.player().x > 9.05f && session.player().x < 10.0f &&
+        session.player().y > 0.5f) {
+      break;
+    }
+  }
+
+  REQUIRE(session.player().x > 9.0f);
+  REQUIRE(session.player().x < 10.0f);
+  REQUIRE(session.player().y == Approx(1.0f).margin(0.06f));
+  REQUIRE(session.jump().grounded);
+}
+
 TEST_CASE("run_input_sequence adapter matches SimulationSession ticks on grey_yard",
           "[probe][sim][mechanics]") {
 #ifndef RAT_TEST_DATA_DIR

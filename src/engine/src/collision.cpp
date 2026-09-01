@@ -10,7 +10,8 @@ bool ranges_overlap(float min_a, float max_a, float min_b, float max_b) {
   return min_a < max_b && max_a > min_b;
 }
 
-bool circle_hits_segment(float cx, float cz, float radius, float ax, float az, float bx, float bz) {
+bool circle_hits_segment(float cx, float cz, float radius, float ax, float az, float bx, float bz,
+                         float& t_out) {
   const float abx = bx - ax;
   const float abz = bz - az;
   const float acx = cx - ax;
@@ -20,6 +21,7 @@ bool circle_hits_segment(float cx, float cz, float radius, float ax, float az, f
   if (ab_len2 > 0.0f) {
     t = std::clamp((acx * abx + acz * abz) / ab_len2, 0.0f, 1.0f);
   }
+  t_out = t;
   const float dx = cx - (ax + t * abx);
   const float dz = cz - (az + t * abz);
   return dx * dx + dz * dz <= radius * radius;
@@ -58,6 +60,10 @@ CollisionWorld bake_fence_world(std::span<const EdgeBarrierDef> barriers, const 
     FenceSolid solid;
     solid.y_lo = owner_top;
     solid.y_hi = owner_top + edge.height;
+    solid.ay_lo = solid.y_lo;
+    solid.ay_hi = solid.y_hi;
+    solid.by_lo = solid.y_lo;
+    solid.by_hi = solid.y_hi;
 
     switch (edge.direction) {
       case RampDirection::East:
@@ -103,8 +109,12 @@ void append_terrain_walls(CollisionWorld& world, const HeightGrid& grid,
     solid.az = face.z0;
     solid.bx = face.x1;
     solid.bz = face.z1;
-    solid.y_lo = std::min(face.y0_lo, face.y1_lo);
-    solid.y_hi = std::max(face.y0_hi, face.y1_hi);
+    solid.ay_lo = face.y0_lo;
+    solid.ay_hi = face.y0_hi;
+    solid.by_lo = face.y1_lo;
+    solid.by_hi = face.y1_hi;
+    solid.y_lo = std::min(solid.ay_lo, solid.by_lo);
+    solid.y_hi = std::max(solid.ay_hi, solid.by_hi);
     if (solid.y_lo == solid.y_hi) {
       continue;
     }
@@ -125,15 +135,26 @@ bool cylinder_hits_walls(const CollisionBody& body, const CollisionWorld& world,
     if (body.y + kFenceFeetClearanceEpsilon >= solid.y_hi) {
       continue;
     }
-    if ((solid.y_hi - solid.y_lo) <= max_step_up) {
+    float t = 0.0f;
+    if (!circle_hits_segment(body.x, body.z, body.radius, solid.ax, solid.az, solid.bx, solid.bz,
+                             t)) {
       continue;
     }
-    if (!ranges_overlap(body.y, body_top, solid.y_lo, solid.y_hi)) {
+    const float y_lo = solid.ay_lo + (solid.by_lo - solid.ay_lo) * t;
+    const float y_hi = solid.ay_hi + (solid.by_hi - solid.ay_hi) * t;
+    if (body.y + kFenceFeetClearanceEpsilon >= y_hi) {
       continue;
     }
-    if (circle_hits_segment(body.x, body.z, body.radius, solid.ax, solid.az, solid.bx, solid.bz)) {
-      return true;
+    if ((y_hi - y_lo) <= max_step_up) {
+      continue;
     }
+    if ((y_hi - body.y) <= max_step_up) {
+      continue;
+    }
+    if (!ranges_overlap(body.y, body_top, y_lo, y_hi)) {
+      continue;
+    }
+    return true;
   }
   return false;
 }

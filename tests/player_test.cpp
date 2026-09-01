@@ -313,7 +313,7 @@ TEST_CASE("Ramp side entry from north and south is blocked by step cap", "[unit]
     player.speed = 1.0f;
 
     player = rat::integrate_player_surface(player, rat::MoveInput{axis_x, axis_z}, 0.2f, {}, query,
-                                           kMaxStepUp);
+                                           kMaxStepUp, {}, &map);
     return player;
   };
 
@@ -326,6 +326,44 @@ TEST_CASE("Ramp side entry from north and south is blocked by step cap", "[unit]
   REQUIRE(from_south.y <= Approx(kMaxStepUp).margin(1e-4f));
 }
 
+TEST_CASE("Ramp west approach climbs to high cell with baked terrain walls",
+          "[unit][player][surface]") {
+  const rat::MapData map = make_east_ramp_side_entry_map();
+  const rat::SurfaceQuery query(map);
+
+  auto climb_from = [&](float start_z) {
+    rat::PlayerBody player;
+    player.x = 7.5f;
+    player.z = start_z;
+    player.y = query.sample(player.x, player.z).y;
+    player.speed = 5.0f;
+    rat::JumpState jump = rat::make_grounded_jump_state();
+    rat::PlayerFrameInput input;
+    input.move = {1.0f, 0.0f};
+    for (int i = 0; i < 200; ++i) {
+      const rat::PlayerFrameResult result = rat::integrate_player_frame_surface(
+          player, jump, input, 1.0f / 120.0f, {}, query, {}, 0.35f, {}, &map);
+      player = result.body;
+      jump = result.jump;
+      if (player.x > 9.05f && player.x < 10.0f && player.y > 0.5f) {
+        break;
+      }
+    }
+    return player;
+  };
+
+  const rat::PlayerBody center = climb_from(8.5f);
+  REQUIRE(center.x > 9.0f);
+  REQUIRE(center.y == Approx(1.0f).margin(0.06f));
+  REQUIRE(center.z == Approx(8.5f).margin(1e-4f));
+
+  // Still the west (low) approach — not north/south side entry — just off tile center.
+  const rat::PlayerBody off_center = climb_from(8.3f);
+  REQUIRE(off_center.x > 9.0f);
+  REQUIRE(off_center.y == Approx(1.0f).margin(0.06f));
+  REQUIRE(off_center.z == Approx(8.3f).margin(1e-4f));
+}
+
 TEST_CASE("Ramp low-edge and low-side diagonals remain allowed", "[unit][player][surface]") {
   const rat::MapData map = make_east_ramp_side_entry_map();
   const rat::SurfaceQuery query(map);
@@ -336,7 +374,8 @@ TEST_CASE("Ramp low-edge and low-side diagonals remain allowed", "[unit][player]
     player.z = start_z;
     player.y = query.sample(start_x, start_z).y;
     player.speed = 1.0f;
-    return rat::integrate_player_surface(player, rat::MoveInput{axis_x, axis_z}, 0.2f, {}, query, 0.35f);
+    return rat::integrate_player_surface(player, rat::MoveInput{axis_x, axis_z}, 0.2f, {}, query,
+                                           0.35f, {}, &map);
   };
 
   const rat::PlayerBody west_entry = step_once(7.95f, 8.5f, 1.0f, 0.0f);

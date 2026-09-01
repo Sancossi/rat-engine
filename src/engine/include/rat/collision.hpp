@@ -19,6 +19,10 @@ struct FenceSolid {
   float bz = 0.0f;
   float y_lo = 0.0f;
   float y_hi = 0.0f;
+  float ay_lo = 0.0f;
+  float ay_hi = 0.0f;
+  float by_lo = 0.0f;
+  float by_hi = 0.0f;
 };
 
 struct CollisionBody {
