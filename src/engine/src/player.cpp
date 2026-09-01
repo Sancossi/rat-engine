@@ -198,7 +198,8 @@ PlayerBody integrate_player_surface(PlayerBody player, MoveInput input, float dt
       const float old_z = player.z;
       player.x += tan_x * player.speed * dt;
       player.z += tan_z * player.speed * dt;
-      if (overlaps_any(player_bounds(player), blockers, player.y)) {
+      if (overlaps_any(player_bounds(player), blockers, player.y) ||
+          cylinder_hits_walls(collision_body_from_player(player), world, step_up_limit)) {
         player.x = old_x;
         player.z = old_z;
       }

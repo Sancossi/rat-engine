@@ -599,3 +599,22 @@ TEST_CASE("East ladder climb reaches slab with move only", "[unit][player][surfa
   }
   REQUIRE(player.y == Approx(0.0f).margin(0.1f));
 }
+
+TEST_CASE("East ladder tangent cannot walk through slab side", "[unit][player][surface]") {
+  rat::MapData map = make_surface_map(1, 1, {0.0f});
+  map.floor_slabs.push_back({{0, 0}, 2.0f, 0.25f});
+  map.ladders.push_back({{0, 0}, rat::RampDirection::East, 0.0f, 2.0f});
+  const rat::SurfaceQuery query(map);
+  rat::PlayerBody player;
+  player.x = 0.85f;
+  player.y = 1.875f;  // mid-thickness of the 0.25 slab (1.75–2.0)
+  player.z = 0.5f;
+  player.speed = 5.0f;
+  const float start_x = player.x;
+  rat::MoveInput tangent{0.0f, 1.0f};
+  for (int i = 0; i < 60; ++i) {
+    player = rat::integrate_player_surface(player, tangent, 1.0f / 60.0f, {}, query, 0.35f, {}, &map);
+  }
+  REQUIRE(player.x == Approx(start_x).margin(1e-3f));
+  REQUIRE(player.z < 1.0f - player.half_extent + 0.05f);
+}
