@@ -15,6 +15,7 @@ enum class ViewportTool {
   PlaceEvent,
   PlaceCube,
   PlaceFence,
+  PlaceSlab,
 };
 
 enum class ViewportPickKind {
@@ -36,6 +37,7 @@ enum class ViewportClickActionKind {
   PlaceEvent,
   PlaceCube,
   PlaceFence,
+  PlaceSlab,
 };
 
 struct ViewportClickAction {

@@ -16,6 +16,9 @@ struct TerrainPanelState {
   bool tile_sync_ready = false;
   int last_tile_x = 0;
   int last_tile_z = 0;
+  float slab_top_y = 1.6f;
+  float slab_thickness = kDefaultFloorSlabThickness;
+  int slab_top_preset_index = 0;
 };
 
 void draw_terrain_panel(EditorDocument& document, TerrainPanelState& state);

@@ -154,6 +154,46 @@ void draw_terrain_panel(EditorDocument& document, TerrainPanelState& state) {
   if (tile_has_ramp) {
     ImGui::EndDisabled();
   }
+
+  ImGui::Separator();
+  ImGui::TextUnformatted("Floor slab");
+  if (ImGui::RadioButton("Top Y 1.6", state.slab_top_preset_index == 0)) {
+    state.slab_top_preset_index = 0;
+    state.slab_top_y = 1.6f;
+  }
+  ImGui::SameLine();
+  if (ImGui::RadioButton("Top Y 2.0", state.slab_top_preset_index == 1)) {
+    state.slab_top_preset_index = 1;
+    state.slab_top_y = 2.0f;
+  }
+  ImGui::SameLine();
+  if (ImGui::RadioButton("Custom", state.slab_top_preset_index == 2)) {
+    state.slab_top_preset_index = 2;
+  }
+  if (state.slab_top_preset_index == 0) {
+    state.slab_top_y = 1.6f;
+  } else if (state.slab_top_preset_index == 1) {
+    state.slab_top_y = 2.0f;
+  }
+  if (state.slab_top_preset_index == 2) {
+    ImGui::InputFloat("Slab top Y", &state.slab_top_y, 0.05f, 0.25f, "%.3f");
+  } else {
+    ImGui::Text("Slab top Y: %.3f", state.slab_top_y);
+  }
+  if (state.slab_thickness <= 0.0f) {
+    state.slab_thickness = kDefaultFloorSlabThickness;
+  }
+  ImGui::InputFloat("Slab thickness", &state.slab_thickness, 0.05f, 0.25f, "%.3f");
+  if (state.slab_thickness <= 0.0f) {
+    state.slab_thickness = kDefaultFloorSlabThickness;
+  }
+  if (ImGui::Button("Toggle floor slab")) {
+    FloorSlabDef slab;
+    slab.tile = ramp_tile;
+    slab.top_y = state.slab_top_y;
+    slab.thickness = state.slab_thickness;
+    (void)run_height(make_upsert_map_floor_slab_command(std::move(slab)));
+  }
 }
 
 }  // namespace rat

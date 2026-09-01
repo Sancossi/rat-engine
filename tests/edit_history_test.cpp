@@ -441,3 +441,19 @@ TEST_CASE("failed place cube on legacy map keeps elevation snapshot unchanged", 
   REQUIRE(map.ramps[0].tile.z == 1);
   REQUIRE(map.edge_barriers.empty());
 }
+
+TEST_CASE("floor slab upsert toggles same top_y and undoes", "[unit][edit][height]") {
+  rat::MapData map = make_tiny_map();
+  REQUIRE(rat::upgrade_map_schema_for_elevation(map).ok);
+  rat::EditHistory history;
+  rat::FloorSlabDef slab{{0, 0}, 2.0f, 0.25f};
+  REQUIRE(history.execute(map, rat::make_upsert_map_floor_slab_command(slab)));
+  REQUIRE(map.schema_version == 3);
+  REQUIRE(map.floor_slabs.size() == 1);
+  REQUIRE(history.execute(map, rat::make_upsert_map_floor_slab_command(slab)));
+  REQUIRE(map.floor_slabs.empty());
+  REQUIRE(history.undo(map));
+  REQUIRE(map.floor_slabs.size() == 1);
+  REQUIRE(history.redo(map));
+  REQUIRE(map.floor_slabs.empty());
+}

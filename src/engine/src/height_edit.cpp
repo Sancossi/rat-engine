@@ -1,6 +1,7 @@
 #include "rat/height_edit.hpp"
 
 #include <algorithm>
+#include <cmath>
 #include <cstddef>
 #include <limits>
 #include <utility>
@@ -329,6 +330,35 @@ HeightEditResult remove_map_edge_barrier(MapData& map, TileCoord tile, RampDirec
   if (map.edge_barriers.size() == before) {
     return error_result("edge barrier not found for tile and direction");
   }
+  return ok_result();
+}
+
+HeightEditResult upsert_map_floor_slab(MapData& map, FloorSlabDef slab) {
+  const HeightEditResult upgraded = upgrade_map_schema_for_elevation(map);
+  if (!upgraded.ok) {
+    return upgraded;
+  }
+  if (slab.thickness <= 0.0f) {
+    return error_result("floor slab thickness must be > 0");
+  }
+  std::size_t ignored = 0;
+  const HeightEditResult indexed =
+      tile_to_index(map.height_grid, slab.tile.x, slab.tile.z, ignored);
+  if (!indexed.ok) {
+    return indexed;
+  }
+  if (map.schema_version < 3) {
+    map.schema_version = 3;
+  }
+  constexpr float kSameTopY = 1e-4f;
+  for (auto it = map.floor_slabs.begin(); it != map.floor_slabs.end(); ++it) {
+    if (it->tile.x == slab.tile.x && it->tile.z == slab.tile.z &&
+        std::fabs(it->top_y - slab.top_y) < kSameTopY) {
+      map.floor_slabs.erase(it);
+      return ok_result();
+    }
+  }
+  map.floor_slabs.push_back(std::move(slab));
   return ok_result();
 }
 

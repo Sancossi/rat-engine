@@ -257,3 +257,12 @@ TEST_CASE("place cube and fence on object still select", "[unit][viewport_edit]"
   REQUIRE(fence.kind == rat::ViewportClickActionKind::SelectBlocker);
   REQUIRE(fence.index == 0);
 }
+
+TEST_CASE("place slab on empty tile returns that tile", "[unit][viewport_edit]") {
+  rat::MapData map = make_test_map();
+  const rat::ViewportClickAction action =
+      rat::resolve_viewport_click(map, rat::ViewportTool::PlaceSlab, rat::Vec3{2.9f, 0.0f, -0.1f});
+  REQUIRE(action.kind == rat::ViewportClickActionKind::PlaceSlab);
+  REQUIRE(action.tile.x == 2);
+  REQUIRE(action.tile.z == -1);
+}

@@ -482,6 +482,16 @@ void EditorApp::handle_edit_mouse_input(const ImGuiIO& io) {
         }
         break;
       }
+      case ViewportClickActionKind::PlaceSlab: {
+        terrain_panel_.tile_x = action.tile.x;
+        terrain_panel_.tile_z = action.tile.z;
+        FloorSlabDef slab;
+        slab.tile = action.tile;
+        slab.top_y = terrain_panel_.slab_top_y;
+        slab.thickness = terrain_panel_.slab_thickness;
+        (void)document_.execute(make_upsert_map_floor_slab_command(std::move(slab)));
+        break;
+      }
       case ViewportClickActionKind::None:
         break;
     }
@@ -696,6 +706,10 @@ void EditorApp::draw_ui() {
     ImGui::SameLine();
     if (ImGui::RadioButton("Fence", viewport_tool_ == ViewportTool::PlaceFence)) {
       viewport_tool_ = ViewportTool::PlaceFence;
+    }
+    ImGui::SameLine();
+    if (ImGui::RadioButton("Floor slab", viewport_tool_ == ViewportTool::PlaceSlab)) {
+      viewport_tool_ = ViewportTool::PlaceSlab;
     }
     ImGui::TextUnformatted("Fence preset");
     ImGui::SameLine();

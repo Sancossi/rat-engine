@@ -109,8 +109,10 @@ void GreyboxScene::set_terrain_map(const MapData& map) {
   const std::vector<TerrainSideFace> side_faces = build_terrain_side_faces(terrain_geometry_);
   const std::vector<TerrainSideFace> fence_faces =
       build_edge_barrier_faces(terrain_geometry_, map.edge_barriers);
+  constexpr std::size_t kSlabQuadsPerSlab = 6;
+  const std::size_t slab_quads = map.floor_slabs.size() * kSlabQuadsPerSlab;
   if (!terrain_fill_quad_count_fits_u16(terrain_geometry_.tiles.size(), side_faces.size(),
-                                        fence_faces.size())) {
+                                        fence_faces.size() + slab_quads)) {
     // Safe fallback: keep legacy floor/grid if geometry is invalid or exceeds uint16 indexing.
     terrain_geometry_ = {};
     return;
@@ -123,6 +125,7 @@ void GreyboxScene::set_terrain_map(const MapData& map) {
 
   const std::uint32_t terrain_color = 0xff707070;
   const std::uint32_t fence_color = 0xff8a5a38;
+  const std::uint32_t slab_color = 0xff48a0c8;
   const std::uint32_t grid_color = 0xff3a3a3a;
   const std::uint32_t axis_x = 0xff5050d0;
   const std::uint32_t axis_z = 0xffd05050;
@@ -130,7 +133,7 @@ void GreyboxScene::set_terrain_map(const MapData& map) {
 
   if (!terrain_geometry_.tiles.empty()) {
     const std::size_t quad_count =
-        terrain_geometry_.tiles.size() + side_faces.size() + fence_faces.size();
+        terrain_geometry_.tiles.size() + side_faces.size() + fence_faces.size() + slab_quads;
     terrain_vertex_data_.reserve(quad_count * 4);
     terrain_indices_.reserve(quad_count * 6);
     std::uint32_t base_vertex = 0;
@@ -160,6 +163,27 @@ void GreyboxScene::set_terrain_map(const MapData& map) {
     for (const TerrainSideFace& face : fence_faces) {
       push_fill_quad(face.x0, face.y0_lo, face.z0, face.x0, face.y0_hi, face.z0, face.x1, face.y1_hi,
                      face.z1, face.x1, face.y1_lo, face.z1, fence_color);
+    }
+    const float ts = map.tile_size > 0.0f ? map.tile_size : 1.0f;
+    for (const FloorSlabDef& slab : map.floor_slabs) {
+      const float min_x = static_cast<float>(slab.tile.x) * ts;
+      const float min_z = static_cast<float>(slab.tile.z) * ts;
+      const float max_x = min_x + ts;
+      const float max_z = min_z + ts;
+      const float y_hi = slab.top_y;
+      const float y_lo = slab.top_y - slab.thickness;
+      push_fill_quad(min_x, y_hi, min_z, max_x, y_hi, min_z, max_x, y_hi, max_z, min_x, y_hi, max_z,
+                     slab_color);
+      push_fill_quad(min_x, y_lo, max_z, max_x, y_lo, max_z, max_x, y_lo, min_z, min_x, y_lo, min_z,
+                     slab_color);
+      push_fill_quad(min_x, y_lo, min_z, min_x, y_hi, min_z, max_x, y_hi, min_z, max_x, y_lo, min_z,
+                     slab_color);
+      push_fill_quad(max_x, y_lo, min_z, max_x, y_hi, min_z, max_x, y_hi, max_z, max_x, y_lo, max_z,
+                     slab_color);
+      push_fill_quad(max_x, y_lo, max_z, max_x, y_hi, max_z, min_x, y_hi, max_z, min_x, y_lo, max_z,
+                     slab_color);
+      push_fill_quad(min_x, y_lo, max_z, min_x, y_hi, max_z, min_x, y_hi, min_z, min_x, y_lo, min_z,
+                     slab_color);
     }
 
     const auto lines = build_terrain_grid_lines(terrain_geometry_, kLineOffset);

@@ -398,6 +398,43 @@ TEST_CASE("compile RuntimeMap after upsert_map_ramp drops fences on that tile",
   REQUIRE(runtime.map().edge_barriers.empty());
 }
 
+TEST_CASE("Upsert floor slab toggles same top_y and bumps schema to 3", "[unit][height_edit]") {
+  rat::MapData map = make_v2_map();
+  REQUIRE(map.schema_version == 2);
+  rat::FloorSlabDef slab;
+  slab.tile = {-2, 3};
+  slab.top_y = 2.0f;
+  slab.thickness = rat::kDefaultFloorSlabThickness;
+
+  const auto first = rat::upsert_map_floor_slab(map, slab);
+  REQUIRE(first.ok);
+  REQUIRE(map.schema_version == 3);
+  REQUIRE(map.floor_slabs.size() == 1);
+  REQUIRE(map.floor_slabs[0].tile.x == -2);
+  REQUIRE(map.floor_slabs[0].tile.z == 3);
+  REQUIRE(map.floor_slabs[0].top_y == Approx(2.0f));
+  REQUIRE(map.floor_slabs[0].thickness == Approx(rat::kDefaultFloorSlabThickness));
+
+  const auto toggled = rat::upsert_map_floor_slab(map, slab);
+  REQUIRE(toggled.ok);
+  REQUIRE(map.floor_slabs.empty());
+}
+
+TEST_CASE("Upsert floor slab adds a second slab at a different top_y", "[unit][height_edit]") {
+  rat::MapData map = make_v2_map();
+  rat::FloorSlabDef lower;
+  lower.tile = {-2, 3};
+  lower.top_y = 1.6f;
+  lower.thickness = 0.25f;
+  rat::FloorSlabDef upper = lower;
+  upper.top_y = 2.0f;
+  REQUIRE(rat::upsert_map_floor_slab(map, lower).ok);
+  REQUIRE(rat::upsert_map_floor_slab(map, upper).ok);
+  REQUIRE(map.floor_slabs.size() == 2);
+  REQUIRE(map.floor_slabs[0].top_y == Approx(1.6f));
+  REQUIRE(map.floor_slabs[1].top_y == Approx(2.0f));
+}
+
 TEST_CASE("Height edit schema upgrade keeps existing values", "[unit][height_edit]") {
   rat::MapData map;
   map.schema_version = 1;
