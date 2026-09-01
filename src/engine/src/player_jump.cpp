@@ -1,5 +1,6 @@
 #include "rat/player.hpp"
 
+#include "rat/collision.hpp"
 #include "rat/map_data.hpp"
 #include "rat/surface_query.hpp"
 
@@ -595,6 +596,15 @@ PlayerFrameResult integrate_player_frame_surface(PlayerBody player, JumpState ju
 
     if (jump.grounded) {
       depenetrate_grounded_overlap(player, blockers, effective_ground_y, input.move.axis_x, input.move.axis_z);
+      if (!sample_after.on_ramp) {
+        const CollisionWorld walls =
+            map != nullptr ? bake_collision_world(*map, surface_query)
+                           : bake_fence_world(edge_barriers, surface_query);
+        CollisionBody wall_body = collision_body_from_player(player);
+        depenetrate_cylinder_from_walls(wall_body, walls, std::max(0.0f, max_step_up));
+        player.x = wall_body.x;
+        player.z = wall_body.z;
+      }
       if (support_after.has_value()) {
         const float support_world_y = support_after->top_y;
         const std::optional<SupportCandidate> corrected_support = validate_active_support(

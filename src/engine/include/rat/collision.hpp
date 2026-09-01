@@ -50,6 +50,8 @@ void append_terrain_walls(CollisionWorld& world, const HeightGrid& grid,
 [[nodiscard]] bool cylinder_hits_fences(const CollisionBody& body, const CollisionWorld& world);
 [[nodiscard]] bool cylinder_hits_walls(const CollisionBody& body, const CollisionWorld& world,
                                        float max_step_up = 0.35f);
+void depenetrate_cylinder_from_walls(CollisionBody& body, const CollisionWorld& world,
+                                     float max_step_up = 0.35f);
 [[nodiscard]] bool circle_overlaps_aabb2(float cx, float cz, float radius, const Aabb2& box);
 
 }  // namespace rat

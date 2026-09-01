@@ -1623,3 +1623,106 @@ TEST_CASE("Jump hold across a 1.6 east fence never reaches the far tile",
   REQUIRE(body.x < 1.0f);
   REQUIRE(jump.support_blocker_index == -1);
 }
+
+TEST_CASE("Drop from baked cube lands on lower ground and can walk",
+          "[unit][player][jump][surface]") {
+  const rat::MapData map = make_surface_map(3, 1, {1.0f, 0.0f, 0.0f});
+  const rat::SurfaceQuery query(map);
+
+  rat::PlayerBody body;
+  body.x = 0.5f;
+  body.z = 0.5f;
+  body.y = 1.0f;
+  body.speed = 5.0f;
+  rat::JumpState jump = rat::make_grounded_jump_state();
+
+  rat::PlayerFrameInput east;
+  east.move = rat::MoveInput{1.0f, 0.0f};
+
+  for (int i = 0; i < 240; ++i) {
+    const rat::PlayerFrameResult result = rat::integrate_player_frame_surface(
+        body, jump, east, 1.0f / 60.0f, {}, query, {}, 0.35f, {}, &map);
+    body = result.body;
+    jump = result.jump;
+    if (jump.grounded && body.x > 1.0f && body.y < 0.1f) {
+      break;
+    }
+  }
+
+  REQUIRE(jump.grounded);
+  REQUIRE(body.x > 1.0f);
+  REQUIRE(body.y == Approx(0.0f).margin(1e-3f));
+  REQUIRE(query.sample(body.x, body.z).y == Approx(0.0f).margin(1e-3f));
+
+  const float x_landed = body.x;
+  for (int i = 0; i < 30; ++i) {
+    const rat::PlayerFrameResult result = rat::integrate_player_frame_surface(
+        body, jump, east, 1.0f / 60.0f, {}, query, {}, 0.35f, {}, &map);
+    body = result.body;
+    jump = result.jump;
+  }
+
+  REQUIRE(jump.grounded);
+  REQUIRE(body.x > x_landed + 0.5f);
+  REQUIRE(body.y == Approx(0.0f).margin(1e-3f));
+}
+
+TEST_CASE("Jump into baked elevation face stops XZ and drops without wedging",
+          "[unit][player][jump][surface]") {
+  const rat::MapData map = make_surface_map(2, 1, {0.0f, 1.0f});
+  const rat::SurfaceQuery query(map);
+
+  rat::PlayerBody body;
+  body.x = 0.55f;
+  body.z = 0.5f;
+  body.y = 0.0f;
+  // Slow enough that the apex cannot fully enter the high cell, so a fall
+  // while overlapping the face is the stuck case rather than a vault-on-top.
+  body.speed = 1.5f;
+  rat::JumpState jump = rat::make_grounded_jump_state();
+
+  rat::PlayerFrameInput east;
+  east.move = rat::MoveInput{1.0f, 0.0f};
+  for (int i = 0; i < 30; ++i) {
+    const rat::PlayerFrameResult result = rat::integrate_player_frame_surface(
+        body, jump, east, 1.0f / 60.0f, {}, query, {}, 0.35f, {}, &map);
+    body = result.body;
+    jump = result.jump;
+  }
+  REQUIRE(jump.grounded);
+  REQUIRE(body.x < 1.0f);
+  REQUIRE(body.y == Approx(0.0f).margin(1e-3f));
+
+  for (int i = 0; i < 180; ++i) {
+    rat::PlayerFrameInput input;
+    input.move = rat::MoveInput{1.0f, 0.0f};
+    input.jump_pressed = i == 0;
+    input.jump_held = true;
+    const rat::PlayerFrameResult result = rat::integrate_player_frame_surface(
+        body, jump, input, 1.0f / 60.0f, {}, query, {}, 0.35f, {}, &map);
+    body = result.body;
+    jump = result.jump;
+    if (i > 0 && jump.grounded) {
+      break;
+    }
+  }
+
+  REQUIRE(jump.grounded);
+  REQUIRE(body.y == Approx(0.0f).margin(1e-3f));
+  REQUIRE(body.x < 1.0f);
+  REQUIRE(query.sample(body.x, body.z).y == Approx(0.0f).margin(1e-3f));
+
+  const float x_landed = body.x;
+  rat::PlayerFrameInput west;
+  west.move = rat::MoveInput{-1.0f, 0.0f};
+  for (int i = 0; i < 30; ++i) {
+    const rat::PlayerFrameResult result = rat::integrate_player_frame_surface(
+        body, jump, west, 1.0f / 60.0f, {}, query, {}, 0.35f, {}, &map);
+    body = result.body;
+    jump = result.jump;
+  }
+
+  REQUIRE(jump.grounded);
+  REQUIRE(body.x < x_landed - 0.5f);
+  REQUIRE(body.y == Approx(0.0f).margin(1e-3f));
+}

@@ -2,6 +2,7 @@
 #include "rat/terrain_geometry.hpp"
 
 #include <algorithm>
+#include <cmath>
 
 namespace rat {
 namespace {
@@ -154,6 +155,72 @@ bool cylinder_hits_walls(const CollisionBody& body, const CollisionWorld& world,
     return true;
   }
   return false;
+}
+
+void depenetrate_cylinder_from_walls(CollisionBody& body, const CollisionWorld& world,
+                                     float max_step_up) {
+  constexpr int kMaxIters = 4;
+  const float body_top = body.y + body.height;
+  for (int iter = 0; iter < kMaxIters; ++iter) {
+    if (!cylinder_hits_walls(body, world, max_step_up)) {
+      return;
+    }
+    bool pushed = false;
+    for (const FenceSolid& solid : world.fences) {
+      if (body.y + kFenceFeetClearanceEpsilon >= solid.y_hi) {
+        continue;
+      }
+      float t = 0.0f;
+      if (!circle_hits_segment(body.x, body.z, body.radius, solid.ax, solid.az, solid.bx, solid.bz,
+                               t)) {
+        continue;
+      }
+      const float y_lo = solid.ay_lo + (solid.by_lo - solid.ay_lo) * t;
+      const float y_hi = solid.ay_hi + (solid.by_hi - solid.ay_hi) * t;
+      if (body.y + kFenceFeetClearanceEpsilon >= y_hi) {
+        continue;
+      }
+      if ((y_hi - y_lo) <= max_step_up) {
+        continue;
+      }
+      if (!ranges_overlap(body.y, body_top, y_lo, y_hi)) {
+        continue;
+      }
+      const float px = solid.ax + (solid.bx - solid.ax) * t;
+      const float pz = solid.az + (solid.bz - solid.az) * t;
+      float dx = body.x - px;
+      float dz = body.z - pz;
+      float dist = std::sqrt(dx * dx + dz * dz);
+      const float needed = body.radius + kFenceFeetClearanceEpsilon;
+      if (dist > 1e-8f) {
+        const float scale = needed / dist;
+        body.x = px + dx * scale;
+        body.z = pz + dz * scale;
+      } else {
+        dx = -(solid.bz - solid.az);
+        dz = solid.bx - solid.ax;
+        dist = std::sqrt(dx * dx + dz * dz);
+        if (dist <= 1e-8f) {
+          continue;
+        }
+        const float scale = needed / dist;
+        CollisionBody cand = body;
+        cand.x = px + dx * scale;
+        cand.z = pz + dz * scale;
+        if (cylinder_hits_walls(cand, world, max_step_up)) {
+          cand.x = px - dx * scale;
+          cand.z = pz - dz * scale;
+        }
+        body.x = cand.x;
+        body.z = cand.z;
+      }
+      pushed = true;
+      break;
+    }
+    if (!pushed) {
+      return;
+    }
+  }
 }
 
 bool cylinder_hits_fences(const CollisionBody& body, const CollisionWorld& world) {
