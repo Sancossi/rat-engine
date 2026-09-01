@@ -40,7 +40,12 @@ struct CollisionWorld {
 [[nodiscard]] CollisionBody collision_body_from_player(const PlayerBody& player);
 [[nodiscard]] CollisionWorld bake_fence_world(std::span<const EdgeBarrierDef> barriers,
                                               const SurfaceQuery& query);
+void append_terrain_walls(CollisionWorld& world, const HeightGrid& grid,
+                          std::span<const RampDef> ramps, float tile_size);
+[[nodiscard]] CollisionWorld bake_collision_world(const MapData& map, const SurfaceQuery& query);
 [[nodiscard]] bool cylinder_hits_fences(const CollisionBody& body, const CollisionWorld& world);
+[[nodiscard]] bool cylinder_hits_walls(const CollisionBody& body, const CollisionWorld& world,
+                                       float max_step_up = 0.35f);
 [[nodiscard]] bool circle_overlaps_aabb2(float cx, float cz, float radius, const Aabb2& box);
 
 }  // namespace rat

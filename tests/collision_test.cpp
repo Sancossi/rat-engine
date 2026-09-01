@@ -152,6 +152,92 @@ TEST_CASE("Bake skips height <= 0 barriers", "[collision]") {
   REQUIRE(world.fences.empty());
 }
 
+TEST_CASE("Bake 2x1 ground 0 vs 1 has a wall on x=1 with span 1", "[collision]") {
+  rat::MapData map = make_grid(2, 1);
+  map.height_grid.ground_y = {0.0f, 1.0f};
+  const rat::SurfaceQuery query(map);
+
+  const rat::CollisionWorld world = rat::bake_collision_world(map, query);
+
+  bool found = false;
+  for (const rat::FenceSolid& solid : world.fences) {
+    if (solid.ax == Approx(1.0f) && solid.bx == Approx(1.0f) &&
+        (solid.y_hi - solid.y_lo) == Approx(1.0f)) {
+      found = true;
+      break;
+    }
+  }
+  REQUIRE(found);
+}
+
+TEST_CASE("Cylinder hits 1.0 terrain wall at feet 0 and misses at feet 1", "[collision]") {
+  rat::MapData map = make_grid(2, 1);
+  map.height_grid.ground_y = {0.0f, 1.0f};
+  const rat::SurfaceQuery query(map);
+  const rat::CollisionWorld world = rat::bake_collision_world(map, query);
+
+  rat::CollisionBody at_low;
+  at_low.x = 0.7f;
+  at_low.y = 0.0f;
+  at_low.z = 0.5f;
+  at_low.radius = 0.4f;
+  at_low.height = rat::kPlayerCylinderHeight;
+  REQUIRE(rat::cylinder_hits_walls(at_low, world, 0.35f));
+
+  rat::CollisionBody at_high = at_low;
+  at_high.y = 1.0f;
+  REQUIRE_FALSE(rat::cylinder_hits_walls(at_high, world, 0.35f));
+}
+
+TEST_CASE("Cylinder does not hit 0.25 stair wall with max_step_up 0.35", "[collision]") {
+  rat::MapData map = make_grid(2, 1);
+  map.height_grid.ground_y = {0.0f, 0.25f};
+  const rat::SurfaceQuery query(map);
+  const rat::CollisionWorld world = rat::bake_collision_world(map, query);
+
+  rat::CollisionBody body;
+  body.x = 0.7f;
+  body.y = 0.0f;
+  body.z = 0.5f;
+  body.radius = 0.4f;
+  body.height = rat::kPlayerCylinderHeight;
+  REQUIRE_FALSE(rat::cylinder_hits_walls(body, world, 0.35f));
+}
+
+TEST_CASE("East Mini 0.45 fence still blocks at feet 0 with cylinder_hits_walls 0.35",
+          "[collision]") {
+  const rat::MapData map = make_grid(2, 2);
+  const rat::SurfaceQuery query(map);
+
+  rat::EdgeBarrierDef barrier;
+  barrier.tile = {0, 0};
+  barrier.direction = rat::RampDirection::East;
+  barrier.height = 0.45f;
+
+  const rat::CollisionWorld world =
+      rat::bake_fence_world(std::span<const rat::EdgeBarrierDef>(&barrier, 1), query);
+
+  rat::CollisionBody miss;
+  miss.x = 0.5f;
+  miss.y = 0.0f;
+  miss.z = 0.5f;
+  miss.radius = 0.4f;
+  miss.height = rat::kPlayerCylinderHeight;
+  REQUIRE_FALSE(rat::cylinder_hits_walls(miss, world, 0.35f));
+
+  rat::CollisionBody hit = miss;
+  hit.x = 0.7f;
+  REQUIRE(rat::cylinder_hits_walls(hit, world, 0.35f));
+
+  rat::CollisionBody adjacent = miss;
+  adjacent.x = 1.3f;
+  REQUIRE(rat::cylinder_hits_walls(adjacent, world, 0.35f));
+
+  rat::CollisionBody on_top = hit;
+  on_top.y = 0.45f;
+  REQUIRE_FALSE(rat::cylinder_hits_walls(on_top, world, 0.35f));
+}
+
 TEST_CASE("circle_overlaps_aabb2 misses square corner and hits axis within radius", "[collision]") {
   const rat::Aabb2 box{0.0f, 0.0f, 1.0f, 1.0f};
   constexpr float kRadius = 0.4f;

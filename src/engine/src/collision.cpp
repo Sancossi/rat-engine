@@ -1,4 +1,5 @@
 #include "rat/collision.hpp"
+#include "rat/terrain_geometry.hpp"
 
 #include <algorithm>
 
@@ -91,10 +92,40 @@ CollisionWorld bake_fence_world(std::span<const EdgeBarrierDef> barriers, const 
   return world;
 }
 
-bool cylinder_hits_fences(const CollisionBody& body, const CollisionWorld& world) {
+void append_terrain_walls(CollisionWorld& world, const HeightGrid& grid,
+                          std::span<const RampDef> ramps, float tile_size) {
+  const TerrainGeometry geometry = build_terrain_geometry(grid, ramps, tile_size);
+  const std::vector<TerrainSideFace> faces = build_terrain_side_faces(geometry);
+  world.fences.reserve(world.fences.size() + faces.size());
+  for (const TerrainSideFace& face : faces) {
+    FenceSolid solid;
+    solid.ax = face.x0;
+    solid.az = face.z0;
+    solid.bx = face.x1;
+    solid.bz = face.z1;
+    solid.y_lo = std::min(face.y0_lo, face.y1_lo);
+    solid.y_hi = std::max(face.y0_hi, face.y1_hi);
+    if (solid.y_lo == solid.y_hi) {
+      continue;
+    }
+    world.fences.push_back(solid);
+  }
+}
+
+CollisionWorld bake_collision_world(const MapData& map, const SurfaceQuery& query) {
+  CollisionWorld world = bake_fence_world(map.edge_barriers, query);
+  const float ts = query.tile_size() > 0.0f ? query.tile_size() : 1.0f;
+  append_terrain_walls(world, map.height_grid, map.ramps, ts);
+  return world;
+}
+
+bool cylinder_hits_walls(const CollisionBody& body, const CollisionWorld& world, float max_step_up) {
   const float body_top = body.y + body.height;
   for (const FenceSolid& solid : world.fences) {
     if (body.y + kFenceFeetClearanceEpsilon >= solid.y_hi) {
+      continue;
+    }
+    if ((solid.y_hi - solid.y_lo) <= max_step_up) {
       continue;
     }
     if (!ranges_overlap(body.y, body_top, solid.y_lo, solid.y_hi)) {
@@ -105,6 +136,10 @@ bool cylinder_hits_fences(const CollisionBody& body, const CollisionWorld& world
     }
   }
   return false;
+}
+
+bool cylinder_hits_fences(const CollisionBody& body, const CollisionWorld& world) {
+  return cylinder_hits_walls(body, world, 0.0f);
 }
 
 bool circle_overlaps_aabb2(float cx, float cz, float radius, const Aabb2& box) {
