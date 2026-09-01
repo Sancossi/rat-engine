@@ -1,7 +1,7 @@
 ---
 type: task
 area: Engine
-status: In review
+status: Done
 task_type: Feature
 sprint: Sprint 7
 due:
@@ -17,3 +17,12 @@ Acceptance: повтор одной записи даёт тот же checksum �
 Depends: [[feat: SimulationSession unified tick]]. Next: [[feat: MapDocument and RuntimeMap compile]].
 
 Origin: merged `docs/architecture-roadmap.md` (2026-09-01).
+
+## Resolution
+
+`ReplayHeader` / `TickInput` / `ReplayRecording` поверх `SimulationSession::tick`. Seed в хедере, FNV checksum runtime, snapshot F3/headless с tick/input/checksum, `first_diverging_tick` при мутации входа. Verify: `.\build\tests\rat_tests.exe "[replay]"` и `ctest`. Review: Approved.
+
+## Bugs found
+
+none (Minor: interact buffer не в хеше — не заводил отдельный баг).
+
