@@ -41,12 +41,13 @@ void EventRuntime::load(const RuntimeMap& runtime) {
   surface_query_ = std::make_unique<SurfaceQuery>(runtime_map_.data);
 }
 
-void EventRuntime::load(const MapData& map) {
-  const MapCompileResult compiled = compile_map_data(map);
+MapCompileResult EventRuntime::load(const MapData& map) {
+  MapCompileResult compiled = compile_map_data(map);
   if (!compiled.ok) {
-    return;
+    return compiled;
   }
   load(compiled.runtime);
+  return compiled;
 }
 
 void EventRuntime::set_audio(Audio* audio) {

@@ -53,7 +53,7 @@ class SimulationSession {
   SimulationSession() = default;
   explicit SimulationSession(SimulationConfig config);
 
-  SimulationLoadResult load(const MapData& map);
+  [[nodiscard]] SimulationLoadResult load(const MapData& map);
   void set_player(PlayerBody player);
   void set_app_mode(AppMode mode);
   void set_notify(GameplayNotifyBus* notify);

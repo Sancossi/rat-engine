@@ -120,7 +120,7 @@ TEST_CASE("record_tick stores InputFrame with tick_id and runtime checksum", "[u
   start.speed = 5.0f;
 
   rat::SimulationSession session;
-  session.load(map);
+  REQUIRE(session.load(map).ok);
   session.set_player(start);
 
   rat::ReplayRecording recording;
@@ -197,7 +197,7 @@ TEST_CASE("debug snapshot includes tick, input, and checksum", "[unit][debug][re
   map.height_grid.ground_y.assign(16, 0.0f);
 
   rat::SimulationSession session;
-  session.load(map);
+  REQUIRE(session.load(map).ok);
   rat::PlayerBody player;
   player.x = 1.5f;
   player.z = 1.5f;

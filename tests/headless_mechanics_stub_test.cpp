@@ -41,7 +41,7 @@ TEST_CASE("Headless mechanics: grey_yard cog quest end-to-end", "[mechanics][que
 
   rat::GameState state;
   rat::EventRuntime runtime;
-  runtime.load(loaded.map);
+  REQUIRE(runtime.load(loaded.map).ok);
 
   rat::PlayerBody player;
   player.x = 0.5f;

@@ -38,7 +38,7 @@ TEST_CASE("Event runtime autorun runs once and blocks until finished", "[unit][e
 
   rat::GameState state;
   rat::EventRuntime runtime;
-  runtime.load(loaded.map);
+  REQUIRE(runtime.load(loaded.map).ok);
   runtime.update(state, rat::PlayerBody{}, false, 1.0f / 60.0f);
 
   REQUIRE(runtime.player_input_blocked());
@@ -78,7 +78,7 @@ TEST_CASE("Event runtime action trigger requires interact near tile", "[unit][ev
 
   rat::GameState state;
   rat::EventRuntime runtime;
-  runtime.load(loaded.map);
+  REQUIRE(runtime.load(loaded.map).ok);
 
   rat::PlayerBody far;
   far.x = 0.0f;
@@ -122,7 +122,7 @@ TEST_CASE("Event runtime enforces Parallel limits", "[unit][events]") {
 
   rat::GameState state;
   rat::EventRuntime runtime;
-  runtime.load(loaded.map);
+  REQUIRE(runtime.load(loaded.map).ok);
   runtime.update(state, rat::PlayerBody{}, false, 1.0f / 60.0f);
 
   REQUIRE(runtime.active_parallel_count() <= 8);
@@ -163,7 +163,7 @@ TEST_CASE("Event runtime control_self_switch flips page conditions", "[unit][eve
 
   rat::GameState state;
   rat::EventRuntime runtime;
-  runtime.load(loaded.map);
+  REQUIRE(runtime.load(loaded.map).ok);
 
   rat::PlayerBody player;
   player.x = 1.5f;
@@ -227,7 +227,7 @@ TEST_CASE("Event runtime action and touch require matching height", "[unit][even
 
   rat::GameState state;
   rat::EventRuntime runtime;
-  runtime.load(loaded.map);
+  REQUIRE(runtime.load(loaded.map).ok);
 
   rat::PlayerBody player;
   player.x = 2.5f;
@@ -294,7 +294,7 @@ TEST_CASE("Event runtime transfer player resamples target height", "[unit][event
 
   rat::GameState state;
   rat::EventRuntime runtime;
-  runtime.load(loaded.map);
+  REQUIRE(runtime.load(loaded.map).ok);
 
   rat::PlayerBody player;
   player.x = 0.5f;
@@ -348,7 +348,7 @@ TEST_CASE("Event runtime allows action along same ramp surface", "[unit][events]
   REQUIRE(loaded.ok);
   rat::GameState state;
   rat::EventRuntime runtime;
-  runtime.load(loaded.map);
+  REQUIRE(runtime.load(loaded.map).ok);
 
   rat::PlayerBody player;
   player.x = 1.05f;
@@ -395,7 +395,7 @@ TEST_CASE("Event runtime allows jumping above same flat event ground", "[unit][e
   REQUIRE(loaded.ok);
   rat::GameState state;
   rat::EventRuntime runtime;
-  runtime.load(loaded.map);
+  REQUIRE(runtime.load(loaded.map).ok);
 
   rat::PlayerBody player;
   player.x = 1.5f;
@@ -442,7 +442,7 @@ TEST_CASE("Event runtime rejects player body below local ground", "[unit][events
   REQUIRE(loaded.ok);
   rat::GameState state;
   rat::EventRuntime runtime;
-  runtime.load(loaded.map);
+  REQUIRE(runtime.load(loaded.map).ok);
 
   rat::PlayerBody player;
   player.x = 1.5f;
@@ -501,7 +501,7 @@ TEST_CASE("Event runtime rejects adjacent lower flat to upper event for action a
   REQUIRE(loaded.ok);
   rat::GameState state;
   rat::EventRuntime runtime;
-  runtime.load(loaded.map);
+  REQUIRE(runtime.load(loaded.map).ok);
 
   rat::PlayerBody lower;
   lower.x = 1.5f;
@@ -551,7 +551,7 @@ TEST_CASE("Event runtime same ramp rise bypasses height delta", "[unit][events]"
   REQUIRE(loaded.ok);
   rat::GameState state;
   rat::EventRuntime runtime;
-  runtime.load(loaded.map);
+  REQUIRE(runtime.load(loaded.map).ok);
 
   rat::PlayerBody player;
   player.x = 1.0f;
@@ -598,7 +598,7 @@ TEST_CASE("Event runtime lower flat near ramp event is rejected", "[unit][events
   REQUIRE(loaded.ok);
   rat::GameState state;
   rat::EventRuntime runtime;
-  runtime.load(loaded.map);
+  REQUIRE(runtime.load(loaded.map).ok);
 
   rat::PlayerBody player;
   player.x = 0.9f;  // flat tile, still within action radius.
@@ -645,7 +645,7 @@ TEST_CASE("Event runtime ramp player near elevated flat event is rejected", "[un
   REQUIRE(loaded.ok);
   rat::GameState state;
   rat::EventRuntime runtime;
-  runtime.load(loaded.map);
+  REQUIRE(runtime.load(loaded.map).ok);
 
   rat::PlayerBody player;
   player.x = 2.95f;
@@ -693,7 +693,7 @@ TEST_CASE("Event runtime different adjacent ramps do not bypass delta", "[unit][
   REQUIRE(loaded.ok);
   rat::GameState state;
   rat::EventRuntime runtime;
-  runtime.load(loaded.map);
+  REQUIRE(runtime.load(loaded.map).ok);
 
   rat::PlayerBody player;
   player.x = 1.95f;
@@ -741,7 +741,7 @@ TEST_CASE("compile and reload after height edit rebuilds surface query", "[unit]
 
   rat::GameState state;
   rat::EventRuntime runtime;
-  runtime.load(loaded.map);
+  REQUIRE(runtime.load(loaded.map).ok);
 
   rat::PlayerBody player;
   player.x = 1.5f;
@@ -789,7 +789,7 @@ TEST_CASE("EventRuntime reload of compiled map clears interpreters", "[unit][eve
 
   rat::GameState state;
   rat::EventRuntime runtime;
-  runtime.load(loaded.map);
+  REQUIRE(runtime.load(loaded.map).ok);
   runtime.update(state, rat::PlayerBody{}, false, 1.0f / 60.0f);
   REQUIRE(runtime.active_message() == "Hello");
   REQUIRE(runtime.player_input_blocked());
@@ -827,7 +827,7 @@ TEST_CASE("player_overlaps uses circle vs event AABB not square corner", "[event
   map.events.push_back(event);
 
   rat::EventRuntime runtime;
-  runtime.load(map);
+  REQUIRE(runtime.load(map).ok);
   const rat::EventDef& vol = runtime.map().events[0];
 
   rat::PlayerBody corner;

@@ -42,7 +42,7 @@ TEST_CASE("PlaySE enqueues PlaySfx and applies only after drain", "[unit][events
   rat::QueuedAudio audio(sink);
   rat::GameState state;
   rat::EventRuntime runtime;
-  runtime.load(loaded.map);
+  REQUIRE(runtime.load(loaded.map).ok);
   runtime.set_audio(&audio);
 
   runtime.update(state, rat::PlayerBody{}, false, 1.0f / 60.0f);
@@ -62,7 +62,7 @@ TEST_CASE("PlaySE without audio is a no-op and is consumed", "[unit][events][pla
 
   rat::GameState state;
   rat::EventRuntime runtime;
-  runtime.load(loaded.map);
+  REQUIRE(runtime.load(loaded.map).ok);
   runtime.update(state, rat::PlayerBody{}, false, 1.0f / 60.0f);
 
   REQUIRE_FALSE(runtime.player_input_blocked());

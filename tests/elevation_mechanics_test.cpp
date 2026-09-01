@@ -204,7 +204,7 @@ TEST_CASE("Grey yard elevation slice: ramp, jumpable blocker, elevated action", 
 
   rat::EventRuntime runtime;
   rat::GameState state;
-  runtime.load(loaded.map);
+  REQUIRE(runtime.load(loaded.map).ok);
   rat::PlayerBody intro_player;
   intro_player.x = 0.5f;
   intro_player.z = 0.5f;
@@ -218,7 +218,7 @@ TEST_CASE("Grey yard elevation slice: ramp, jumpable blocker, elevated action", 
 
   rat::EventRuntime runtime_low;
   rat::GameState state_low;
-  runtime_low.load(loaded.map);
+  REQUIRE(runtime_low.load(loaded.map).ok);
   drain_messages(runtime_low, state_low, intro_player);
 
   rat::PlayerBody low_player;

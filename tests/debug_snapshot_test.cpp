@@ -43,7 +43,7 @@ TEST_CASE("write_debug_snapshot round-trips a headless fixture", "[unit][debug]"
   state.add_item("rusty_cog", 1, true);
 
   rat::EventRuntime runtime;
-  runtime.load(loaded.map);
+  REQUIRE(runtime.load(loaded.map).ok);
 
   rat::PlayerBody player;
   player.x = 0.5f;
@@ -141,7 +141,7 @@ TEST_CASE("make_debug_snapshot primary why-not follows selected_event_id", "[uni
 
   rat::GameState state;
   rat::EventRuntime runtime;
-  runtime.load(loaded.map);
+  REQUIRE(runtime.load(loaded.map).ok);
 
   rat::PlayerBody player;
   player.x = 2.5f;

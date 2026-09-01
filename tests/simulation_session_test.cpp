@@ -46,7 +46,7 @@ rat::PlayerBody make_start_player() {
 
 TEST_CASE("SimulationSession tick advances tick_id and integrates player", "[unit][sim]") {
   rat::SimulationSession session;
-  session.load(make_flat_map());
+  REQUIRE(session.load(make_flat_map()).ok);
   session.set_player(make_start_player());
 
   REQUIRE(session.tick_id() == 0);
@@ -70,7 +70,7 @@ TEST_CASE("drain_simulation_catch_up matches repeated ticks independent of displ
   frame.move = rat::world_aligned_move(0.0f, 1.0f);
 
   rat::SimulationSession stepped;
-  stepped.load(map);
+  REQUIRE(stepped.load(map).ok);
   stepped.set_player(start);
   constexpr int kTicks = 12;
   for (int i = 0; i < kTicks; ++i) {
@@ -78,7 +78,7 @@ TEST_CASE("drain_simulation_catch_up matches repeated ticks independent of displ
   }
 
   rat::SimulationSession hitch;
-  hitch.load(map);
+  REQUIRE(hitch.load(map).ok);
   hitch.set_player(start);
   float accumulator = hitch.config().dt * static_cast<float>(kTicks);
   const rat::SimulationCatchUpResult catch_up =
@@ -95,7 +95,7 @@ TEST_CASE("drain_simulation_catch_up matches repeated ticks independent of displ
 
 TEST_CASE("drain_simulation_catch_up diagnoses catch-up budget exceeded", "[unit][sim]") {
   rat::SimulationSession session;
-  session.load(make_flat_map());
+  REQUIRE(session.load(make_flat_map()).ok);
   session.set_player(make_start_player());
 
   const float dt = session.config().dt;
@@ -118,14 +118,14 @@ TEST_CASE("drain_simulation_catch_up applies jump edge on first tick only", "[un
   press.jump_pressed = true;
   press.jump_held = true;
   rat::SimulationSession hitch;
-  hitch.load(map);
+  REQUIRE(hitch.load(map).ok);
   hitch.set_player(start);
   float accumulator = hitch.config().dt * 3.0f;
   const rat::SimulationCatchUpResult catch_up =
       rat::drain_simulation_catch_up(hitch, accumulator, press);
 
   rat::SimulationSession once;
-  once.load(map);
+  REQUIRE(once.load(map).ok);
   once.set_player(start);
   once.tick(press);
   rat::InputFrame held;
@@ -134,7 +134,7 @@ TEST_CASE("drain_simulation_catch_up applies jump edge on first tick only", "[un
   once.tick(held);
 
   rat::SimulationSession retrigger;
-  retrigger.load(map);
+  REQUIRE(retrigger.load(map).ok);
   retrigger.set_player(start);
   for (int i = 0; i < 3; ++i) {
     retrigger.tick(press);
@@ -152,7 +152,7 @@ TEST_CASE("drain_simulation_catch_up applies jump edge on first tick only", "[un
 TEST_CASE("clear_pending_input drops jump buffer so keyboard capture cannot launch",
           "[unit][sim]") {
   rat::SimulationSession session;
-  session.load(make_flat_map());
+  REQUIRE(session.load(make_flat_map()).ok);
   session.set_player(make_start_player());
 
   rat::InputFrame jump;
@@ -186,7 +186,7 @@ TEST_CASE("clear_pending_input drops jump buffer so keyboard capture cannot laun
 
 TEST_CASE("tick does not drop jump buffer just because jump_pressed is false", "[unit][sim]") {
   rat::SimulationSession session;
-  session.load(make_flat_map());
+  REQUIRE(session.load(make_flat_map()).ok);
   session.set_player(make_start_player());
 
   rat::InputFrame jump;
@@ -207,7 +207,7 @@ TEST_CASE("tick does not drop jump buffer just because jump_pressed is false", "
 
 TEST_CASE("SimulationSession tick posts Landed on airborne to grounded", "[unit][sim]") {
   rat::SimulationSession session;
-  session.load(make_flat_map());
+  REQUIRE(session.load(make_flat_map()).ok);
   session.set_player(make_start_player());
 
   rat::GameplayNotifyBus bus;
@@ -271,7 +271,7 @@ TEST_CASE("run_input_sequence adapter matches SimulationSession ticks on grey_ya
   }
 
   rat::SimulationSession session;
-  session.load(loaded.map);
+  REQUIRE(session.load(loaded.map).ok);
   session.set_player(start);
   for (const rat::InputFrame& frame : steps) {
     session.tick(frame);

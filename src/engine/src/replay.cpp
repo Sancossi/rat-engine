@@ -244,7 +244,9 @@ ReplayRecording record_input_sequence(const MapData& map, const PlayerBody& star
   recording.header.start_player = start;
 
   SimulationSession session;
-  session.load(map);
+  if (!session.load(map).ok) {
+    return recording;
+  }
   session.set_player(start);
   recording.header.dt = session.config().dt;
 
@@ -282,7 +284,9 @@ ReplayPlayResult play_recording(SimulationSession& session, const ReplayRecordin
 
 ReplayPlayResult replay_input_sequence(const MapData& map, const ReplayRecording& recording) {
   SimulationSession session;
-  session.load(map);
+  if (!session.load(map).ok) {
+    return ReplayPlayResult{};
+  }
   session.set_player(recording.header.start_player);
   return play_recording(session, recording);
 }

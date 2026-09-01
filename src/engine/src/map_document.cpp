@@ -5,6 +5,7 @@
 #include <nlohmann/json.hpp>
 
 #include <cstddef>
+#include <fstream>
 #include <functional>
 #include <sstream>
 #include <unordered_map>
@@ -97,6 +98,9 @@ void add_error(std::vector<MapIssue>& issues, std::string json_path, std::string
 }
 
 void apply_v1_height_fallback(MapData& map) {
+  if (map.schema_version != 1) {
+    return;
+  }
   const bool grid_missing = map.height_grid.width <= 0 || map.height_grid.height <= 0;
   if (!grid_missing || map.width <= 0 || map.height <= 0) {
     return;
@@ -219,7 +223,9 @@ std::string format_map_issues(const std::vector<MapIssue>& issues) {
       oss << "; ";
     }
     first = false;
-    oss << issue.json_path << ": " << issue.message;
+    oss << issue.json_path << " ["
+        << (issue.severity == MapIssueSeverity::Error ? "error" : "warning") << "]: "
+        << issue.message;
   }
   return oss.str();
 }
@@ -386,19 +392,15 @@ MapDocumentLoadResult load_map_document_from_string(std::string_view json_text) 
 }
 
 MapDocumentLoadResult load_map_document_from_file(const std::string& path) {
-  const MapLoadResult loaded = load_map_from_file(path);
-  MapDocumentLoadResult result;
-  if (!loaded.ok) {
-    add_error(result.issues, "/", loaded.error.empty() ? "map file load failed" : loaded.error);
+  std::ifstream in(path, std::ios::binary);
+  if (!in) {
+    MapDocumentLoadResult result;
+    add_error(result.issues, "/", "failed to open map file: " + path);
     return result;
   }
-  result.issues = validate_map_document(loaded.map);
-  if (map_issues_have_errors(result.issues)) {
-    return result;
-  }
-  result.ok = true;
-  result.document = MapDocument(loaded.map);
-  return result;
+  std::ostringstream oss;
+  oss << in.rdbuf();
+  return load_map_document_from_string(oss.str());
 }
 
 }  // namespace rat

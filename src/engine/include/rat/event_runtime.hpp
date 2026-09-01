@@ -52,7 +52,7 @@ struct InterpreterDebug {
 class EventRuntime {
  public:
   void load(const RuntimeMap& runtime);
-  void load(const MapData& map);
+  [[nodiscard]] MapCompileResult load(const MapData& map);
   void set_audio(Audio* audio);  // nullable; not owned
   void set_notify(GameplayNotifyBus* notify);  // nullable; not owned
   void clear();

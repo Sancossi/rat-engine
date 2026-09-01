@@ -59,7 +59,7 @@ TEST_CASE("compile and reload events updates markers path via map", "[unit][even
   map.width = 4;
   map.height = 4;
   map.events.push_back(rat::make_stub_event("a", 0, 0));
-  runtime.load(map);
+  REQUIRE(runtime.load(map).ok);
 
   auto events = runtime.map().events;
   rat::translate_event_on_grid(events[0], 4, 0, 1.0f);

@@ -47,7 +47,7 @@ TEST_CASE("event_why_not_fired reports height when player elevation differs", "[
 
   rat::GameState state;
   rat::EventRuntime runtime;
-  runtime.load(loaded.map);
+  REQUIRE(runtime.load(loaded.map).ok);
 
   rat::PlayerBody player;
   player.x = 2.5f;
@@ -86,7 +86,7 @@ TEST_CASE("event_why_not_fired reports conditions when enable switch is off", "[
 
   rat::GameState state;
   rat::EventRuntime runtime;
-  runtime.load(loaded.map);
+  REQUIRE(runtime.load(loaded.map).ok);
 
   rat::PlayerBody player;
   player.x = 1.5f;
@@ -126,7 +126,7 @@ TEST_CASE("event_why_not_fired reports already_running for live foreground", "[u
 
   rat::GameState state;
   rat::EventRuntime runtime;
-  runtime.load(loaded.map);
+  REQUIRE(runtime.load(loaded.map).ok);
   runtime.update(state, rat::PlayerBody{}, false, 1.0f / 60.0f);
   REQUIRE(runtime.active_message() == "Hello");
 
@@ -161,7 +161,7 @@ TEST_CASE("event_why_not_fired reports ok for startable Action with interact", "
 
   rat::GameState state;
   rat::EventRuntime runtime;
-  runtime.load(loaded.map);
+  REQUIRE(runtime.load(loaded.map).ok);
 
   rat::PlayerBody near;
   near.x = 2.1f;
@@ -198,7 +198,7 @@ TEST_CASE("event_why_not_fired reports autorun_lock after spent autorun", "[unit
 
   rat::GameState state;
   rat::EventRuntime runtime;
-  runtime.load(loaded.map);
+  REQUIRE(runtime.load(loaded.map).ok);
 
   const rat::EventWhyNot before =
       rat::event_why_not_fired(runtime, "intro", state, rat::PlayerBody{}, false);
@@ -251,7 +251,7 @@ TEST_CASE("event_why_not_fired reports foreground_busy for blocked autorun", "[u
 
   rat::GameState state;
   rat::EventRuntime runtime;
-  runtime.load(loaded.map);
+  REQUIRE(runtime.load(loaded.map).ok);
   runtime.update(state, rat::PlayerBody{}, false, 1.0f / 60.0f);
   REQUIRE(runtime.active_message() == "Busy");
 
@@ -279,7 +279,7 @@ TEST_CASE("event_why_not_fired reports parallel_limit when cap is full", "[unit]
 
   rat::GameState state;
   rat::EventRuntime runtime;
-  runtime.load(loaded.map);
+  REQUIRE(runtime.load(loaded.map).ok);
   runtime.update(state, rat::PlayerBody{}, false, 1.0f / 60.0f);
   REQUIRE(runtime.active_parallel_count() == rat::kMaxParallelEvents);
 
@@ -316,7 +316,7 @@ TEST_CASE("event_why_not_fired reports ok for startable Parallel under cap", "[u
 
   rat::GameState state;
   rat::EventRuntime runtime;
-  runtime.load(loaded.map);
+  REQUIRE(runtime.load(loaded.map).ok);
 
   const rat::EventWhyNot reason =
       rat::event_why_not_fired(runtime, "loop", state, rat::PlayerBody{}, false);
@@ -349,7 +349,7 @@ TEST_CASE("event_why_not_fired reports ok for PlayerTouch on rising edge", "[uni
 
   rat::GameState state;
   rat::EventRuntime runtime;
-  runtime.load(loaded.map);
+  REQUIRE(runtime.load(loaded.map).ok);
 
   rat::PlayerBody player;
   player.x = 1.5f;
@@ -385,7 +385,7 @@ TEST_CASE("event_why_not_fired reports already_inside after player_touch edge", 
 
   rat::GameState state;
   rat::EventRuntime runtime;
-  runtime.load(loaded.map);
+  REQUIRE(runtime.load(loaded.map).ok);
 
   rat::PlayerBody player;
   player.x = 1.5f;
@@ -450,7 +450,7 @@ TEST_CASE("make_debug_snapshot lists why-not for every map event", "[unit][why][
 
   rat::GameState state;
   rat::EventRuntime runtime;
-  runtime.load(loaded.map);
+  REQUIRE(runtime.load(loaded.map).ok);
 
   rat::PlayerBody player;
   player.x = 2.5f;

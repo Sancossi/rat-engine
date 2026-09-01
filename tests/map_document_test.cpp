@@ -273,3 +273,54 @@ TEST_CASE("MapDocument save/load round-trip is semantically identical", "[unit][
   REQUIRE(again.ok);
   REQUIRE(again.json_text == serialized.json_text);
 }
+
+TEST_CASE("schema 1 missing height grid still compiles after v1 fallback", "[unit][mapdoc]") {
+  rat::MapData map;
+  map.schema_version = 1;
+  map.id = "v1_no_grid";
+  map.width = 2;
+  map.height = 2;
+  map.tile_size = 1.0f;
+
+  const rat::MapCompileResult compiled = rat::compile_map_data(map);
+  REQUIRE(compiled.ok);
+  REQUIRE(compiled.runtime.data.height_grid.width == 2);
+  REQUIRE(compiled.runtime.data.height_grid.height == 2);
+  REQUIRE(compiled.runtime.data.height_grid.ground_y.size() == 4);
+}
+
+TEST_CASE("schema 2 missing height grid fails compile the same as validate", "[unit][mapdoc]") {
+  rat::MapData map;
+  map.schema_version = 2;
+  map.id = "v2_no_grid";
+  map.width = 3;
+  map.height = 2;
+  map.tile_size = 1.0f;
+
+  const std::vector<rat::MapIssue> issues = rat::validate_map_document(map);
+  REQUIRE(has_error_at(issues, "/height_grid/width"));
+
+  const rat::MapCompileResult compiled = rat::compile_map_data(map);
+  REQUIRE_FALSE(compiled.ok);
+  REQUIRE(has_error_at(compiled.issues, "/height_grid/width"));
+}
+
+TEST_CASE("EventRuntime load of MapData reports compile failure and keeps previous map",
+          "[unit][mapdoc][events]") {
+  rat::MapData good = make_flat_document_map();
+  good.events.push_back(rat::make_stub_event("keep", 0, 0));
+  rat::EventRuntime runtime;
+  const rat::MapCompileResult loaded_good = runtime.load(good);
+  REQUIRE(loaded_good.ok);
+  REQUIRE(runtime.map().id == "doc_flat");
+  REQUIRE(runtime.map().events.size() == 1);
+
+  rat::MapData broken = good;
+  broken.events.push_back(rat::make_stub_event("keep", 1, 0));
+  const rat::MapCompileResult loaded_broken = runtime.load(broken);
+  REQUIRE_FALSE(loaded_broken.ok);
+  REQUIRE(has_error_at(loaded_broken.issues, "/events/1/id"));
+  REQUIRE(runtime.map().id == "doc_flat");
+  REQUIRE(runtime.map().events.size() == 1);
+  REQUIRE(runtime.map().events[0].id == "keep");
+}

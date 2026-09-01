@@ -31,7 +31,9 @@ InputSequenceResult run_input_sequence(const MapData& map, PlayerBody start_play
   sim_config.app_mode = config.app_mode;
 
   SimulationSession session(sim_config);
-  session.load(map);
+  if (!session.load(map).ok) {
+    return result;
+  }
   session.set_player(start_player);
 
   const bool want_snapshots = config.write_snapshot_each_step && !config.snapshot_dir.empty();

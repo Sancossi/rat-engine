@@ -103,7 +103,7 @@ TEST_CASE("Autorun ShowText then ChangeItems posts both notifies and still mutat
 
   rat::GameState state;
   rat::EventRuntime runtime;
-  runtime.load(loaded.map);
+  REQUIRE(runtime.load(loaded.map).ok);
   runtime.set_notify(&bus);
 
   runtime.update(state, rat::PlayerBody{}, false, 1.0f / 60.0f);
@@ -153,7 +153,7 @@ TEST_CASE("ChangeItems with negative delta does not post ItemPicked", "[unit][no
   rat::GameState state;
   state.add_item("rusty_cog", 1);
   rat::EventRuntime runtime;
-  runtime.load(loaded.map);
+  REQUIRE(runtime.load(loaded.map).ok);
   runtime.set_notify(&bus);
   runtime.update(state, rat::PlayerBody{}, false, 1.0f / 60.0f);
 
@@ -188,7 +188,7 @@ TEST_CASE("ShowText with null notify still shows message", "[unit][notify]") {
 
   rat::GameState state;
   rat::EventRuntime runtime;
-  runtime.load(loaded.map);
+  REQUIRE(runtime.load(loaded.map).ok);
   runtime.set_notify(nullptr);
   runtime.update(state, rat::PlayerBody{}, false, 1.0f / 60.0f);
 
