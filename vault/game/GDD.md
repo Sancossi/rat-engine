@@ -46,6 +46,7 @@ tags: [game, gdd]
 ### Secondary / support
 
 - Field action: столкновения, простые скиллы/интеракты на карте (без battle scene MVP)
+- Позже (не MVP): «физические» загадки — толкаемые ящики, напольные панели по массе, проваливающиеся полы, двери с разбегу — [[feat: Field physics puzzles]]
 - **Инвентарь:** модель ближе к **RPG Maker** (список предметов, stack/qty, key items; без сложных сетки-слотов как в Diablo)
 - Save / load состояния switches/variables + позиция + инвентарь
 
@@ -128,3 +129,4 @@ tags: [game, gdd]
 - [x] Parallel limits → **8 active / 32 cmds/frame / no nested** ([[ADR-008 Parallel and Autorun runtime limits]])
 - [ ] Ночь/день — нужна ли в MVP
 - [ ] Конкретные арт-референсы (игры/артисты)
+- [ ] Field physics puzzles (ящики / панели / провалы / двери с разбегу) — backlog [[feat: Field physics puzzles]]

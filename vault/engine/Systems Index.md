@@ -20,6 +20,7 @@ tags: [engine]
 | Audio | Platform | stub | `QueuedAudio` + `AudioSink` (null/log); `EditorApp` drains once per display frame |
 | Gameplay notify | Core | stub | GPP Observer: `GameplayNotifyBus` subscribe/post (ItemPicked / DialogShown / Landed); `EventRuntime::set_notify`; no locator |
 | Player locomotion | Core | stub | GPP State: `locomotion_from` Idle/Walk/Jump/Fall from `JumpState`+`MoveInput`; names are animation contract; jump physics stays in `JumpState` |
+| Collision world | Core | planned | Bodies vs static map; player cylinder first. Later crates/plates/doors: [[feat: Field physics puzzles]] |
 | Edit history | Core | working | GPP Command: `EditHistory` blockers/events plus height-grid/ramps/edges; Ctrl+Z/Y in Edit only; `clear()` on hot-apply |
 | Edit gizmos | Input / Scene | planned | [[feat: Mouse viewport map edit]] |
 | Agent debug dump | Core | working | `write_debug_snapshot` → `rat-debug.json` (F3); log file `rat.log` |

@@ -11,7 +11,7 @@ tags: [bug]
 
 Origin: chat (Sprint 6). Collision: [[feat: Grid edge barriers]]. Greybox: [[feat: Edit and greybox edge walls]].
 
-Proposed fix: player collision volume as the source of truth for movement hits (see body).
+Proposed fix: shared collision **bodies** (player = cylinder now; later crates/doors), not a player-only line test. Future puzzles: [[feat: Field physics puzzles]].
 
 ## Repro
 
@@ -29,4 +29,8 @@ Walk-through from the side. `blocked_by_edge_barriers` only rejects a step when 
 
 ## Notes
 
-Blockers already use an XZ AABB (`player_bounds`). Edge fences and height-grid step-up do not. Proposed: one player collider for all movement collisions.
+Blockers already use an XZ AABB (`player_bounds`). Edge fences and height-grid step-up do not.
+
+Agreed for the fix: **cylinder** radius `0.4√2` (covers old AABB corners), height **1.6** from feet. Walk / jump / landing / events use that volume.
+
+Later ([[feat: Field physics puzzles]]): same world query for pushable crates, floor weight plates, collapsing tiles, charge-break doors — so this slice must expose **body vs static world** (shape, mass, velocity), not `blocked_by_edge_barriers(center)`. Do not implement crates/plates/doors in this bug.
