@@ -187,6 +187,59 @@ TEST_CASE("drain_simulation_catch_up latches jump edge across a zero-tick displa
   CHECK_FALSE(session.jump().grounded);
 }
 
+TEST_CASE("drain_simulation_catch_up latches interact edge across a zero-tick display frame",
+          "[unit][sim]") {
+  // Editor samples interact as a display-frame edge, then drains. When that frame runs 0 ticks,
+  // previous_buttons_ already consumed the edge; the next drain has interact_pressed == false.
+  // Jump latches via note_jump_pressed(); interact must persist in interact_buffer_ the same way.
+  rat::MapData map = make_flat_map();
+  rat::EventDef npc;
+  npc.id = "npc";
+  npc.tile = rat::TileCoord{1, 1};
+  rat::EventPage page;
+  page.trigger = rat::TriggerKind::Action;
+  rat::Command cmd;
+  cmd.op = rat::CommandOp::ControlSwitch;
+  cmd.id = 5;
+  cmd.bool_value = true;
+  page.commands.push_back(cmd);
+  npc.pages.push_back(page);
+  map.events.push_back(npc);
+
+  rat::SimulationSession session;
+  REQUIRE(session.load(map).ok);
+  session.set_player(make_start_player());
+  REQUIRE(session.events().has_action_prompt(session.player(), session.state()));
+  REQUIRE_FALSE(session.state().get_switch(5));
+
+  rat::InputButtons down;
+  down.interact = true;
+  rat::InputButtons previous{};
+
+  const float display_dt = session.config().dt * 0.5f;
+  float accumulator = 0.0f;
+
+  const rat::InputFrame press = rat::map_input_frame(down, previous, {});
+  REQUIRE(press.interact_pressed);
+  previous = down;
+  accumulator += display_dt;
+  const rat::SimulationCatchUpResult skipped =
+      rat::drain_simulation_catch_up(session, accumulator, press);
+  REQUIRE(skipped.ticks_run == 0);
+  REQUIRE(session.tick_id() == 0);
+  REQUIRE_FALSE(session.state().get_switch(5));
+
+  const rat::InputFrame held = rat::map_input_frame(down, previous, {});
+  REQUIRE_FALSE(held.interact_pressed);
+  accumulator += display_dt;
+  const rat::SimulationCatchUpResult fired =
+      rat::drain_simulation_catch_up(session, accumulator, held);
+
+  CHECK(fired.ticks_run == 1);
+  CHECK(session.tick_id() == 1);
+  CHECK(session.state().get_switch(5));
+}
+
 TEST_CASE("clear_pending_input drops jump buffer so keyboard capture cannot launch",
           "[unit][sim]") {
   rat::SimulationSession session;

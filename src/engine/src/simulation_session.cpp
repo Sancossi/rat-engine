@@ -100,6 +100,11 @@ void SimulationSession::note_jump_pressed() {
   }
 }
 
+void SimulationSession::note_interact_pressed() {
+  push_buffered_press_if_allowed(interact_buffer_, true, event_runtime_enabled(config_.app_mode),
+                                 false, config_.interact_buffer_seconds);
+}
+
 SimulationTickResult SimulationSession::tick(const InputFrame& input) {
   SimulationTickResult result;
   ++tick_id_;
@@ -203,6 +208,9 @@ SimulationCatchUpResult drain_simulation_catch_up(SimulationSession& session, fl
   InputFrame tick_input = input;
   if (input.jump_pressed) {
     session.note_jump_pressed();
+  }
+  if (input.interact_pressed) {
+    session.note_interact_pressed();
   }
   for (int i = 0; i < to_run; ++i) {
     accumulator -= dt;
