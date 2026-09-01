@@ -46,7 +46,7 @@ GPP Event Queue для звука = геймплей постит `PlaySfx`, а�
 
 ## Очередь доработок
 
-Порядок — зависимости, не даты. Sprint 4 закрыл Agent Debug и ближний GPP-слой; текущая очередь — [[Sprint 7 — Engine architecture]].
+Порядок — зависимости, не даты. Sprint 4 закрыл Agent Debug и ближний GPP-слой; архитектурная очередь закрыта в [[Sprint 7 — Engine architecture]].
 
 1. Ближний слой (Sprint 4): [[feat: Input action mapping]], [[feat: Audio play-queue stub]].
 2. Сразу за звуком (Sprint 4): [[feat: PlaySE event command]], [[feat: Gameplay notify observer]].
