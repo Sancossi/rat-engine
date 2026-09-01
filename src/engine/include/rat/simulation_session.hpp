@@ -63,6 +63,9 @@ class SimulationSession {
   // Capture / reset: drop interact + jump pending and JumpState::jump_buffer_left.
   // Do not call just because this tick's jump_pressed is false.
   void clear_pending_input();
+  // Hold a jump edge until the next tick that runs player control. Used when a
+  // display frame sees jump_pressed but drain runs zero ticks.
+  void note_jump_pressed();
 
   SimulationTickResult tick(const InputFrame& input);
 
@@ -96,8 +99,9 @@ class SimulationSession {
   GameplayNotifyBus* notify_ = nullptr;
 };
 
-// Drain `accumulator` by calling `tick`. Edges on `input` apply to the first tick only so a
-// reused display-frame InputFrame does not retrigger jump/interact on catch-up ticks.
+// Drain `accumulator` by calling `tick`. Edges on `input` apply to the first tick that
+// runs so a reused display-frame InputFrame does not retrigger jump/interact. A jump edge
+// on a drain that runs zero ticks is latched via note_jump_pressed().
 [[nodiscard]] SimulationCatchUpResult drain_simulation_catch_up(
     SimulationSession& session, float& accumulator, const InputFrame& input,
     int max_ticks = kMaxCatchUpTicks);

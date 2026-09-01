@@ -92,6 +92,14 @@ void SimulationSession::clear_pending_input() {
   clear_buffered_press(interact_buffer_);
 }
 
+void SimulationSession::note_jump_pressed() {
+  const bool control = player_control_enabled(config_.app_mode);
+  const bool blocked = events_.player_input_blocked();
+  if (control && !blocked) {
+    jump_press_pending_ = true;
+  }
+}
+
 SimulationTickResult SimulationSession::tick(const InputFrame& input) {
   SimulationTickResult result;
   ++tick_id_;
@@ -193,6 +201,9 @@ SimulationCatchUpResult drain_simulation_catch_up(SimulationSession& session, fl
   const int to_run = std::min(available, max_ticks);
 
   InputFrame tick_input = input;
+  if (input.jump_pressed) {
+    session.note_jump_pressed();
+  }
   for (int i = 0; i < to_run; ++i) {
     accumulator -= dt;
     session.tick(tick_input);

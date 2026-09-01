@@ -149,6 +149,44 @@ TEST_CASE("drain_simulation_catch_up applies jump edge on first tick only", "[un
   CHECK(retrigger.jump().jump_buffer_left > 0.0f);
 }
 
+TEST_CASE("drain_simulation_catch_up latches jump edge across a zero-tick display frame",
+          "[unit][sim]") {
+  // Editor samples jump as a display-frame edge, then drains. When display FPS > sim rate
+  // (or leftover accumulator is short), that frame runs 0 ticks; previous_buttons_ already
+  // consumed the edge, so the next drain has jump_pressed == false.
+  rat::SimulationSession session;
+  REQUIRE(session.load(make_flat_map()).ok);
+  session.set_player(make_start_player());
+
+  rat::InputButtons down;
+  down.jump = true;
+  rat::InputButtons previous{};
+
+  const float display_dt = session.config().dt * 0.5f;
+  float accumulator = 0.0f;
+
+  const rat::InputFrame press = rat::map_input_frame(down, previous, {});
+  REQUIRE(press.jump_pressed);
+  previous = down;
+  accumulator += display_dt;
+  const rat::SimulationCatchUpResult skipped =
+      rat::drain_simulation_catch_up(session, accumulator, press);
+  REQUIRE(skipped.ticks_run == 0);
+  REQUIRE(session.tick_id() == 0);
+  REQUIRE(session.jump().grounded);
+
+  const rat::InputFrame held = rat::map_input_frame(down, previous, {});
+  REQUIRE_FALSE(held.jump_pressed);
+  REQUIRE(held.jump_held);
+  accumulator += display_dt;
+  const rat::SimulationCatchUpResult launched =
+      rat::drain_simulation_catch_up(session, accumulator, held);
+
+  CHECK(launched.ticks_run == 1);
+  CHECK(session.tick_id() == 1);
+  CHECK_FALSE(session.jump().grounded);
+}
+
 TEST_CASE("clear_pending_input drops jump buffer so keyboard capture cannot launch",
           "[unit][sim]") {
   rat::SimulationSession session;
