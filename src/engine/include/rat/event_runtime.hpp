@@ -1,8 +1,8 @@
 #pragma once
 
 #include "rat/game_state.hpp"
-#include "rat/height_edit.hpp"
 #include "rat/map_data.hpp"
+#include "rat/map_document.hpp"
 #include "rat/player.hpp"
 #include "rat/surface_query.hpp"
 
@@ -51,20 +51,10 @@ struct InterpreterDebug {
 
 class EventRuntime {
  public:
-  void load(MapData map);
+  void load(const RuntimeMap& runtime);
+  void load(const MapData& map);
   void set_audio(Audio* audio);  // nullable; not owned
   void set_notify(GameplayNotifyBus* notify);  // nullable; not owned
-  void set_blockers(std::vector<BlockerDef> blockers);
-  void set_events(std::vector<EventDef> events);
-  void set_elevation_data(int schema_version, HeightGrid height_grid, std::vector<RampDef> ramps,
-                          std::vector<EdgeBarrierDef> edge_barriers);
-  [[nodiscard]] HeightEditResult set_tile_elevation(int tile_x, int tile_z, float ground_y);
-  [[nodiscard]] HeightEditResult adjust_tile_elevation(int tile_x, int tile_z, float delta_y);
-  [[nodiscard]] HeightEditResult place_tile_cube(int tile_x, int tile_z);
-  [[nodiscard]] HeightEditResult upsert_ramp_elevation(const RampDef& ramp);
-  [[nodiscard]] HeightEditResult remove_ramp_elevation(TileCoord tile);
-  [[nodiscard]] HeightEditResult upsert_edge_barrier(const EdgeBarrierDef& edge);
-  [[nodiscard]] HeightEditResult remove_edge_barrier(TileCoord tile, RampDirection direction);
   void clear();
 
   // One simulation step. `interact_pressed` is edge-ish: true on the frame interact is pressed.
@@ -79,7 +69,8 @@ class EventRuntime {
   [[nodiscard]] int last_parallel_commands_executed() const {
     return last_parallel_commands_executed_;
   }
-  [[nodiscard]] const MapData& map() const { return map_; }
+  [[nodiscard]] const MapData& map() const { return runtime_map_.data; }
+  [[nodiscard]] const RuntimeMap& runtime_map() const { return runtime_map_; }
   [[nodiscard]] const std::vector<std::string>& warnings() const { return warnings_; }
   [[nodiscard]] std::vector<std::string> overlapping_event_ids(const PlayerBody& player) const;
   [[nodiscard]] std::optional<InterpreterDebug> foreground_debug() const;
@@ -121,14 +112,13 @@ class EventRuntime {
   void try_start_parallels(GameState& state);
   void try_start_action(GameState& state, const PlayerBody& player, bool interact_pressed);
   void try_start_player_touch(GameState& state, const PlayerBody& player);
-  void rebuild_surface_query_for_elevation();
 
   void start_page(const EventDef& event, int page_index, bool parallel, bool autorun);
   void step_interpreter(Interpreter& interp, GameState& state, int& command_budget);
   bool exec_command(Interpreter& interp, GameState& state, const Command& command);
   [[nodiscard]] InterpreterDebug to_debug(const Interpreter& interp) const;
 
-  MapData map_;
+  RuntimeMap runtime_map_;
   Audio* audio_ = nullptr;
   GameplayNotifyBus* notify_ = nullptr;
   std::optional<Interpreter> foreground_;  // autorun / action / touch (blocking)

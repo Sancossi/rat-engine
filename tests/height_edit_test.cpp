@@ -1,6 +1,7 @@
 #include <rat/event_runtime.hpp>
 #include <rat/height_edit.hpp>
 #include <rat/map_data.hpp>
+#include <rat/map_document.hpp>
 
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
@@ -232,13 +233,15 @@ TEST_CASE("Place cube rejects ramp tile without mutation", "[unit][height_edit]"
   REQUIRE(map.ramps[0].high_y == Approx(before_ramps[0].high_y));
 }
 
-TEST_CASE("EventRuntime place_tile_cube raises flat tile by 1.0", "[unit][height_edit]") {
+TEST_CASE("compile RuntimeMap after place_map_tile_cube raises flat tile by 1.0",
+          "[unit][height_edit]") {
   rat::MapData map = make_v2_map();
-  rat::EventRuntime runtime;
-  runtime.load(map);
-
-  const auto result = runtime.place_tile_cube(-1, 4);
+  const auto result = rat::place_map_tile_cube(map, -1, 4);
   REQUIRE(result.ok);
+  const rat::MapCompileResult compiled = rat::compile_map_data(map);
+  REQUIRE(compiled.ok);
+  rat::EventRuntime runtime;
+  runtime.load(compiled.runtime);
   REQUIRE(rat::get_tile_ground_y(runtime.map().height_grid, -1, 4).value == Approx(5.0f));
   REQUIRE(runtime.map().ramps.empty());
 }
@@ -350,43 +353,48 @@ TEST_CASE("Upsert ramp drops edge barriers on that tile", "[unit][height_edit]")
   REQUIRE(map.edge_barriers[0].direction == rat::RampDirection::West);
 }
 
-TEST_CASE("EventRuntime upsert and remove edge barrier", "[unit][height_edit]") {
+TEST_CASE("compile RuntimeMap after upsert and remove edge barrier", "[unit][height_edit]") {
   rat::MapData map = make_v2_map();
-  rat::EventRuntime runtime;
-  runtime.load(map);
-
   rat::EdgeBarrierDef edge;
   edge.tile = {-1, 4};
   edge.direction = rat::RampDirection::South;
   edge.height = rat::kEdgeBarrierMiniHeight;
-  const auto upserted = runtime.upsert_edge_barrier(edge);
+  const auto upserted = rat::upsert_map_edge_barrier(map, edge);
   REQUIRE(upserted.ok);
+  const rat::MapCompileResult compiled_up = rat::compile_map_data(map);
+  REQUIRE(compiled_up.ok);
+  rat::EventRuntime runtime;
+  runtime.load(compiled_up.runtime);
   REQUIRE(runtime.map().edge_barriers.size() == 1);
   REQUIRE(runtime.map().edge_barriers[0].height == Approx(rat::kEdgeBarrierMiniHeight));
 
-  const auto removed = runtime.remove_edge_barrier(edge.tile, edge.direction);
-  REQUIRE(removed.ok);
+  REQUIRE(rat::remove_map_edge_barrier(map, edge.tile, edge.direction).ok);
+  const rat::MapCompileResult compiled_down = rat::compile_map_data(map);
+  REQUIRE(compiled_down.ok);
+  runtime.load(compiled_down.runtime);
   REQUIRE(runtime.map().edge_barriers.empty());
 }
 
-TEST_CASE("EventRuntime upsert_ramp_elevation drops fences on that tile", "[unit][height_edit]") {
+TEST_CASE("compile RuntimeMap after upsert_map_ramp drops fences on that tile",
+          "[unit][height_edit]") {
   rat::MapData map = make_v2_map();
-  rat::EventRuntime runtime;
-  runtime.load(map);
-
   rat::EdgeBarrierDef edge;
   edge.tile = {-2, 3};
   edge.direction = rat::RampDirection::North;
   edge.height = rat::kEdgeBarrierFullHeight;
-  REQUIRE(runtime.upsert_edge_barrier(edge).ok);
-  REQUIRE(runtime.map().edge_barriers.size() == 1);
+  REQUIRE(rat::upsert_map_edge_barrier(map, edge).ok);
+  REQUIRE(map.edge_barriers.size() == 1);
 
   rat::RampDef ramp;
   ramp.tile = edge.tile;
   ramp.direction = rat::RampDirection::West;
   ramp.low_y = 0.5f;
   ramp.high_y = 1.5f;
-  REQUIRE(runtime.upsert_ramp_elevation(ramp).ok);
+  REQUIRE(rat::upsert_map_ramp(map, ramp).ok);
+  const rat::MapCompileResult compiled = rat::compile_map_data(map);
+  REQUIRE(compiled.ok);
+  rat::EventRuntime runtime;
+  runtime.load(compiled.runtime);
   REQUIRE(runtime.map().edge_barriers.empty());
 }
 

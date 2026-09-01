@@ -7,6 +7,7 @@
 #include <rat/gameplay_notify.hpp>
 #include <rat/input.hpp>
 #include <rat/log.hpp>
+#include <rat/map_document.hpp>
 #include <rat/simulation_session.hpp>
 #include <rat/viewport_edit.hpp>
 
@@ -71,6 +72,7 @@ class EditorApp {
   std::unique_ptr<LogAudioSink> audio_sink_;
   std::unique_ptr<QueuedAudio> audio_;
   SimulationSession session_{};
+  MapDocument document_{};
   GameplayNotifyBus notify_bus_{};
   EditHistory edit_history_{};
   AppMode app_mode_ = AppMode::Play;

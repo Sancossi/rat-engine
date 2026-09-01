@@ -6,10 +6,12 @@
 #include "rat/game_state.hpp"
 #include "rat/input.hpp"
 #include "rat/map_data.hpp"
+#include "rat/map_document.hpp"
 #include "rat/player.hpp"
 
 #include <cstdint>
 #include <memory>
+#include <vector>
 
 namespace rat {
 
@@ -41,12 +43,17 @@ struct SimulationCatchUpResult {
   bool budget_exceeded = false;
 };
 
+struct SimulationLoadResult {
+  bool ok = false;
+  std::vector<MapIssue> issues;
+};
+
 class SimulationSession {
  public:
   SimulationSession() = default;
   explicit SimulationSession(SimulationConfig config);
 
-  void load(const MapData& map);
+  SimulationLoadResult load(const MapData& map);
   void set_player(PlayerBody player);
   void set_app_mode(AppMode mode);
   void set_notify(GameplayNotifyBus* notify);

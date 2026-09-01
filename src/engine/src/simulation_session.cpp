@@ -1,6 +1,7 @@
 #include "rat/simulation_session.hpp"
 
 #include "rat/gameplay_notify.hpp"
+#include "rat/map_document.hpp"
 #include "rat/surface_query.hpp"
 
 #include <algorithm>
@@ -15,9 +16,17 @@ SimulationSession::SimulationSession(SimulationConfig config) : config_(std::mov
   jump_.jump_buffer_left = 0.0f;
 }
 
-void SimulationSession::load(const MapData& map) {
-  events_.load(map);
-  state_.set_map_id(map.id);
+SimulationLoadResult SimulationSession::load(const MapData& map) {
+  SimulationLoadResult result;
+  const MapCompileResult compiled = compile_map_data(map);
+  result.issues = compiled.issues;
+  if (!compiled.ok) {
+    result.ok = false;
+    return result;
+  }
+
+  events_.load(compiled.runtime);
+  state_.set_map_id(compiled.runtime.data.id);
   state_.set_player_position(player_.x, player_.y, player_.z);
   jump_ = make_grounded_jump_state();
   jump_.coyote_time_left = config_.jump_tuning.coyote_seconds;
@@ -25,6 +34,8 @@ void SimulationSession::load(const MapData& map) {
   tick_id_ = 0;
   clear_pending_input();
   rebuild_surface();
+  result.ok = true;
+  return result;
 }
 
 void SimulationSession::set_player(PlayerBody player) {

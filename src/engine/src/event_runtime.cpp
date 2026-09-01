@@ -4,6 +4,7 @@
 #include "rat/collision.hpp"
 #include "rat/event_edit.hpp"
 #include "rat/gameplay_notify.hpp"
+#include "rat/map_document.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -34,10 +35,18 @@ bool compare(int left, CompareOp op, int right) {
 
 }  // namespace
 
-void EventRuntime::load(MapData map) {
+void EventRuntime::load(const RuntimeMap& runtime) {
   clear();
-  map_ = std::move(map);
-  surface_query_ = std::make_unique<SurfaceQuery>(map_);
+  runtime_map_ = runtime;
+  surface_query_ = std::make_unique<SurfaceQuery>(runtime_map_.data);
+}
+
+void EventRuntime::load(const MapData& map) {
+  const MapCompileResult compiled = compile_map_data(map);
+  if (!compiled.ok) {
+    return;
+  }
+  load(compiled.runtime);
 }
 
 void EventRuntime::set_audio(Audio* audio) {
@@ -48,130 +57,8 @@ void EventRuntime::set_notify(GameplayNotifyBus* notify) {
   notify_ = notify;
 }
 
-void EventRuntime::set_blockers(std::vector<BlockerDef> blockers) {
-  map_.blockers = std::move(blockers);
-}
-
-void EventRuntime::set_events(std::vector<EventDef> events) {
-  map_.events = std::move(events);
-  // Drop live interpreters — page pointers / overlaps may be stale after moves.
-  foreground_.reset();
-  parallels_.clear();
-  active_message_.reset();
-  touch_inside_.clear();
-  parallel_started_.clear();
-  autorun_lock_.clear();
-  active_parallel_count_ = 0;
-  last_parallel_commands_executed_ = 0;
-  warnings_.clear();
-}
-
-void EventRuntime::set_elevation_data(int schema_version, HeightGrid height_grid,
-                                      std::vector<RampDef> ramps,
-                                      std::vector<EdgeBarrierDef> edge_barriers) {
-  map_.schema_version = schema_version;
-  map_.height_grid = std::move(height_grid);
-  map_.ramps = std::move(ramps);
-  map_.edge_barriers = std::move(edge_barriers);
-  rebuild_surface_query_for_elevation();
-}
-
-HeightEditResult EventRuntime::set_tile_elevation(int tile_x, int tile_z, float ground_y) {
-  MapData candidate = map_;
-  const HeightEditResult edited = set_map_tile_ground_y(candidate, tile_x, tile_z, ground_y);
-  if (!edited.ok) {
-    return edited;
-  }
-  map_.schema_version = candidate.schema_version;
-  map_.height_grid = std::move(candidate.height_grid);
-  map_.ramps = std::move(candidate.ramps);
-  rebuild_surface_query_for_elevation();
-  return edited;
-}
-
-HeightEditResult EventRuntime::adjust_tile_elevation(int tile_x, int tile_z, float delta_y) {
-  MapData candidate = map_;
-  const HeightEditResult edited = adjust_map_tile_ground_y(candidate, tile_x, tile_z, delta_y);
-  if (!edited.ok) {
-    return edited;
-  }
-  map_.schema_version = candidate.schema_version;
-  map_.height_grid = std::move(candidate.height_grid);
-  map_.ramps = std::move(candidate.ramps);
-  rebuild_surface_query_for_elevation();
-  return edited;
-}
-
-HeightEditResult EventRuntime::place_tile_cube(int tile_x, int tile_z) {
-  MapData candidate = map_;
-  const HeightEditResult edited = place_map_tile_cube(candidate, tile_x, tile_z);
-  if (!edited.ok) {
-    return edited;
-  }
-  map_.schema_version = candidate.schema_version;
-  map_.height_grid = std::move(candidate.height_grid);
-  map_.ramps = std::move(candidate.ramps);
-  rebuild_surface_query_for_elevation();
-  return edited;
-}
-
-HeightEditResult EventRuntime::upsert_ramp_elevation(const RampDef& ramp) {
-  MapData candidate = map_;
-  const HeightEditResult edited = upsert_map_ramp(candidate, ramp);
-  if (!edited.ok) {
-    return edited;
-  }
-  map_.schema_version = candidate.schema_version;
-  map_.height_grid = std::move(candidate.height_grid);
-  map_.ramps = std::move(candidate.ramps);
-  map_.edge_barriers = std::move(candidate.edge_barriers);
-  rebuild_surface_query_for_elevation();
-  return edited;
-}
-
-HeightEditResult EventRuntime::remove_ramp_elevation(TileCoord tile) {
-  MapData candidate = map_;
-  const HeightEditResult edited = remove_map_ramp(candidate, tile);
-  if (!edited.ok) {
-    return edited;
-  }
-  map_.schema_version = candidate.schema_version;
-  map_.height_grid = std::move(candidate.height_grid);
-  map_.ramps = std::move(candidate.ramps);
-  rebuild_surface_query_for_elevation();
-  return edited;
-}
-
-HeightEditResult EventRuntime::upsert_edge_barrier(const EdgeBarrierDef& edge) {
-  MapData candidate = map_;
-  const HeightEditResult edited = upsert_map_edge_barrier(candidate, edge);
-  if (!edited.ok) {
-    return edited;
-  }
-  map_.schema_version = candidate.schema_version;
-  map_.height_grid = std::move(candidate.height_grid);
-  map_.ramps = std::move(candidate.ramps);
-  map_.edge_barriers = std::move(candidate.edge_barriers);
-  rebuild_surface_query_for_elevation();
-  return edited;
-}
-
-HeightEditResult EventRuntime::remove_edge_barrier(TileCoord tile, RampDirection direction) {
-  MapData candidate = map_;
-  const HeightEditResult edited = remove_map_edge_barrier(candidate, tile, direction);
-  if (!edited.ok) {
-    return edited;
-  }
-  map_.schema_version = candidate.schema_version;
-  map_.height_grid = std::move(candidate.height_grid);
-  map_.ramps = std::move(candidate.ramps);
-  map_.edge_barriers = std::move(candidate.edge_barriers);
-  rebuild_surface_query_for_elevation();
-  return edited;
-}
-
 void EventRuntime::clear() {
-  map_ = {};
+  runtime_map_ = {};
   foreground_.reset();
   parallels_.clear();
   active_message_.reset();
@@ -184,14 +71,6 @@ void EventRuntime::clear() {
   surface_query_.reset();
 }
 
-void EventRuntime::rebuild_surface_query_for_elevation() {
-  if (!surface_query_) {
-    surface_query_ = std::make_unique<SurfaceQuery>(map_);
-    return;
-  }
-  *surface_query_ = SurfaceQuery(map_);
-}
-
 bool EventRuntime::player_input_blocked() const {
   return foreground_.has_value() || active_message_.has_value();
 }
@@ -200,7 +79,7 @@ bool EventRuntime::has_action_prompt(const PlayerBody& player, const GameState& 
   if (player_input_blocked()) {
     return false;
   }
-  for (const EventDef& event : map_.events) {
+  for (const EventDef& event : runtime_map_.data.events) {
     if (!action_in_range(event, player)) {
       continue;
     }
@@ -271,8 +150,8 @@ Aabb2 EventRuntime::event_bounds(const EventDef& event) const {
     return *event.volume;
   }
   if (event.tile.has_value()) {
-    const Vec3 center = tile_center_world(*event.tile, map_.tile_size);
-    const float h = 0.5f * map_.tile_size;
+    const Vec3 center = tile_center_world(*event.tile, runtime_map_.data.tile_size);
+    const float h = 0.5f * runtime_map_.data.tile_size;
     return Aabb2{center.x - h, center.z - h, center.x + h, center.z + h};
   }
   return Aabb2{0, 0, 0, 0};
@@ -285,7 +164,7 @@ SurfaceSample EventRuntime::event_surface_sample(const EventDef& event) const {
   }
   Vec3 center{};
   if (event.tile.has_value()) {
-    center = tile_center_world(*event.tile, map_.tile_size);
+    center = tile_center_world(*event.tile, runtime_map_.data.tile_size);
   } else if (event.volume.has_value()) {
     center.x = (event.volume->min_x + event.volume->max_x) * 0.5f;
     center.z = (event.volume->min_z + event.volume->max_z) * 0.5f;
@@ -299,7 +178,7 @@ bool EventRuntime::event_height_matches_player(const EventDef& event, const Play
   if (!surface_query_) {
     return true;
   }
-  const float tile = map_.tile_size > 0.0f ? map_.tile_size : 1.0f;
+  const float tile = runtime_map_.data.tile_size > 0.0f ? runtime_map_.data.tile_size : 1.0f;
   const float tolerance = kEventHeightToleranceTiles * tile;
   const SurfaceSample player_surface = surface_query_->sample(player.x, player.z);
   const SurfaceSample event_surface = event_surface_sample(event);
@@ -333,11 +212,11 @@ bool EventRuntime::action_in_range(const EventDef& event, const PlayerBody& play
     return false;
   }
   if (event.tile.has_value()) {
-    const Vec3 center = tile_center_world(*event.tile, map_.tile_size);
+    const Vec3 center = tile_center_world(*event.tile, runtime_map_.data.tile_size);
     const float dx = player.x - center.x;
     const float dz = player.z - center.z;
     constexpr float kActionRadiusInTiles = 0.65f;
-    const float radius = kActionRadiusInTiles * map_.tile_size;
+    const float radius = kActionRadiusInTiles * runtime_map_.data.tile_size;
     return dx * dx + dz * dz <= radius * radius;
   }
   // Explicit volumes keep authored AABB semantics.
@@ -363,7 +242,7 @@ void EventRuntime::try_start_autorun(GameState& state) {
   if (foreground_.has_value() || active_message_.has_value()) {
     return;
   }
-  for (const EventDef& event : map_.events) {
+  for (const EventDef& event : runtime_map_.data.events) {
     if (autorun_lock_.contains(event.id)) {
       continue;
     }
@@ -381,7 +260,7 @@ void EventRuntime::try_start_autorun(GameState& state) {
 }
 
 void EventRuntime::try_start_parallels(GameState& state) {
-  for (const EventDef& event : map_.events) {
+  for (const EventDef& event : runtime_map_.data.events) {
     if (parallel_started_.contains(event.id)) {
       continue;
     }
@@ -406,7 +285,7 @@ void EventRuntime::try_start_action(GameState& state, const PlayerBody& player,
   if (!interact_pressed || foreground_.has_value() || active_message_.has_value()) {
     return;
   }
-  for (const EventDef& event : map_.events) {
+  for (const EventDef& event : runtime_map_.data.events) {
     if (!action_in_range(event, player)) {
       continue;
     }
@@ -426,7 +305,7 @@ void EventRuntime::try_start_player_touch(GameState& state, const PlayerBody& pl
   if (foreground_.has_value() || active_message_.has_value()) {
     return;
   }
-  for (const EventDef& event : map_.events) {
+  for (const EventDef& event : runtime_map_.data.events) {
     const bool inside = player_overlaps(event, player);
     const bool was_inside = touch_inside_.contains(event.id);
     if (inside) {
@@ -600,7 +479,7 @@ void EventRuntime::update(GameState& state, const PlayerBody& player, bool inter
   // Keep lock while conditions would still select autorun to avoid busy-loop without wait.
   for (auto it = autorun_lock_.begin(); it != autorun_lock_.end();) {
     const EventDef* event = nullptr;
-    for (const EventDef& candidate : map_.events) {
+    for (const EventDef& candidate : runtime_map_.data.events) {
       if (candidate.id == *it) {
         event = &candidate;
         break;
@@ -639,7 +518,7 @@ InterpreterDebug EventRuntime::to_debug(const Interpreter& interp) const {
 
 std::vector<std::string> EventRuntime::overlapping_event_ids(const PlayerBody& player) const {
   std::vector<std::string> ids;
-  for (const EventDef& event : map_.events) {
+  for (const EventDef& event : runtime_map_.data.events) {
     if (player_overlaps(event, player)) {
       ids.push_back(event.id);
     }
@@ -696,7 +575,7 @@ const char* event_why_not_name(EventWhyNot reason) {
 EventWhyNot EventRuntime::why_not_fired(std::string_view event_id, const GameState& state,
                                          const PlayerBody& player, bool interact_pressed) const {
   const EventDef* event = nullptr;
-  for (const EventDef& candidate : map_.events) {
+  for (const EventDef& candidate : runtime_map_.data.events) {
     if (candidate.id == event_id) {
       event = &candidate;
       break;

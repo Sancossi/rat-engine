@@ -21,6 +21,7 @@ add_executable(rat_tests
   log_test.cpp
   hot_apply_test.cpp
   input_test.cpp
+  map_document_test.cpp
   map_loader_test.cpp
   player_jump_test.cpp
   player_test.cpp

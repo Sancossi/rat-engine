@@ -1,5 +1,7 @@
 #include <rat/event_edit.hpp>
+#include <rat/event_runtime.hpp>
 #include <rat/hot_apply.hpp>
+#include <rat/map_document.hpp>
 
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
@@ -50,7 +52,7 @@ TEST_CASE("event_marker_index skips events without placement", "[unit][event_edi
   REQUIRE(rat::event_marker_index(map, 2) == 1);
 }
 
-TEST_CASE("EventRuntime set_events updates markers path via map", "[unit][event_edit]") {
+TEST_CASE("compile and reload events updates markers path via map", "[unit][event_edit]") {
   rat::EventRuntime runtime;
   rat::MapData map;
   map.id = "t";
@@ -61,7 +63,10 @@ TEST_CASE("EventRuntime set_events updates markers path via map", "[unit][event_
 
   auto events = runtime.map().events;
   rat::translate_event_on_grid(events[0], 4, 0, 1.0f);
-  runtime.set_events(events);
+  map.events = events;
+  const rat::MapCompileResult compiled = rat::compile_map_data(map);
+  REQUIRE(compiled.ok);
+  runtime.load(compiled.runtime);
   REQUIRE(runtime.map().events[0].tile->x == 4);
 
   const auto markers = rat::event_markers_from_map(runtime.map());

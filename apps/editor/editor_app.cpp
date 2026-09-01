@@ -11,6 +11,7 @@
 #include <rat/height_edit.hpp>
 #include <rat/hot_apply.hpp>
 #include <rat/input.hpp>
+#include <rat/map_document.hpp>
 #include <rat/map_loader.hpp>
 #include <rat/replay.hpp>
 #include <rat/simulation_session.hpp>
@@ -103,13 +104,21 @@ void EditorApp::apply_edited_map(MapData map, EditApplyResult mutation) {
   }
   const int n_blockers = static_cast<int>(map.blockers.size());
   const int n_events = static_cast<int>(map.events.size());
+  document_.replace(map);
+  const MapCompileResult compiled = compile_map_document(document_);
+  if (!compiled.ok) {
+    last_apply_error_ = format_map_issues(compiled.issues);
+  } else {
+    last_apply_error_.clear();
+    session_.events().load(compiled.runtime);
+    session_.rebuild_surface();
+  }
   if (mutation.mutates_blockers) {
     if (n_blockers <= 0) {
       selected_blocker_ = -1;
     } else if (selected_blocker_ >= n_blockers) {
       selected_blocker_ = n_blockers - 1;
     }
-    session_.events().set_blockers(std::move(map.blockers));
     sync_blockers_to_runtime();
   }
   if (mutation.mutates_events) {
@@ -118,12 +127,9 @@ void EditorApp::apply_edited_map(MapData map, EditApplyResult mutation) {
     } else if (selected_event_ >= n_events) {
       selected_event_ = n_events - 1;
     }
-    session_.events().set_events(std::move(map.events));
     sync_events_to_runtime();
   }
   if (mutation.mutates_elevation) {
-    session_.events().set_elevation_data(map.schema_version, std::move(map.height_grid), std::move(map.ramps),
-                               std::move(map.edge_barriers));
     rebuild_surface_query_cache();
     if (engine_ != nullptr) {
       engine_->set_terrain_map(session_.events().map());
@@ -146,14 +152,14 @@ void EditorApp::execute_edit_command(std::unique_ptr<EditCommand> command) {
     return;
   }
   discard_field_edit_origins();
-  MapData map = session_.events().map();
+  MapData map = document_.data();
   const EditApplyResult result = edit_history_.execute(map, std::move(command));
   apply_edited_map(std::move(map), result);
 }
 
 bool EditorApp::run_height_history(std::unique_ptr<EditCommand> command) {
   discard_field_edit_origins();
-  MapData map = session_.events().map();
+  MapData map = document_.data();
   const EditApplyResult result = edit_history_.execute(map, std::move(command));
   if (!result.applied) {
     last_apply_error_ = result.error.empty() ? "Height edit failed" : result.error;
@@ -218,7 +224,7 @@ void EditorApp::draw_blocker_edit_ui() {
   auto blockers = session_.events().map().blockers;
   auto run_history = [&](std::unique_ptr<EditCommand> command) {
     discard_field_edit_origins();
-    MapData map = session_.events().map();
+    MapData map = document_.data();
     const EditApplyResult result = edit_history_.execute(map, std::move(command));
     apply_edited_map(std::move(map), result);
     blockers = session_.events().map().blockers;
@@ -266,8 +272,18 @@ void EditorApp::draw_blocker_edit_ui() {
       if (!selected_valid()) {
         return;
       }
-      blockers[static_cast<std::size_t>(selected_blocker_)] = std::move(next);
-      session_.events().set_blockers(blockers);
+      MapData preview = document_.data();
+      if (selected_blocker_ < 0 ||
+          static_cast<std::size_t>(selected_blocker_) >= preview.blockers.size()) {
+        return;
+      }
+      preview.blockers[static_cast<std::size_t>(selected_blocker_)] = std::move(next);
+      const MapCompileResult compiled = compile_map_data(preview);
+      if (!compiled.ok) {
+        return;
+      }
+      session_.events().load(compiled.runtime);
+      session_.rebuild_surface();
       sync_blockers_to_runtime();
       blockers = session_.events().map().blockers;
     };
@@ -276,8 +292,6 @@ void EditorApp::draw_blocker_edit_ui() {
         return;
       }
       BlockerDef next = blockers[static_cast<std::size_t>(selected_blocker_)];
-      blockers[static_cast<std::size_t>(selected_blocker_)] = *blocker_field_origin_;
-      session_.events().set_blockers(blockers);
       blocker_field_origin_.reset();
       replace_selected_blocker(std::move(next));
     };
@@ -573,7 +587,7 @@ void EditorApp::draw_event_edit_ui() {
   auto event_list = session_.events().map().events;
   auto run_history = [&](std::unique_ptr<EditCommand> command) {
     discard_field_edit_origins();
-    MapData map = session_.events().map();
+    MapData map = document_.data();
     const EditApplyResult result = edit_history_.execute(map, std::move(command));
     apply_edited_map(std::move(map), result);
     event_list = session_.events().map().events;
@@ -619,8 +633,18 @@ void EditorApp::draw_event_edit_ui() {
                                              std::move(next)));
     };
     auto preview_selected_event = [&](EventDef next) {
-      event_list[static_cast<std::size_t>(selected_event_)] = std::move(next);
-      session_.events().set_events(event_list);
+      MapData preview = document_.data();
+      if (selected_event_ < 0 ||
+          static_cast<std::size_t>(selected_event_) >= preview.events.size()) {
+        return;
+      }
+      preview.events[static_cast<std::size_t>(selected_event_)] = std::move(next);
+      const MapCompileResult compiled = compile_map_data(preview);
+      if (!compiled.ok) {
+        return;
+      }
+      session_.events().load(compiled.runtime);
+      session_.rebuild_surface();
       sync_events_to_runtime();
       event_list = session_.events().map().events;
     };
@@ -629,8 +653,6 @@ void EditorApp::draw_event_edit_ui() {
         return;
       }
       EventDef next = event_list[static_cast<std::size_t>(selected_event_)];
-      event_list[static_cast<std::size_t>(selected_event_)] = *event_field_origin_;
-      session_.events().set_events(event_list);
       event_field_origin_.reset();
       replace_selected_event(std::move(next));
     };
@@ -807,6 +829,7 @@ bool EditorApp::hot_apply_map_path(const std::string& path, bool preserve_player
 
   last_apply_error_.clear();
   map_path_ = path;
+  document_.replace(session_.events().map());
   selected_blocker_ = blockers.empty() ? -1 : 0;
   selected_event_ = session_.events().map().events.empty() ? -1 : 0;
   selected_page_ = 0;
@@ -842,7 +865,7 @@ bool EditorApp::save_map_path(const std::string& path) {
     last_apply_error_ = "map path is empty";
     return false;
   }
-  const MapFileResult result = save_map_to_file(session_.events().map(), path);
+  const MapFileResult result = save_map_to_file(document_.data(), path);
   if (!result.ok) {
     last_apply_error_ = result.error;
     last_serialize_status_.clear();
@@ -1223,14 +1246,14 @@ void EditorApp::update_simulation(float dt) {
 
   if (app_mode_ == AppMode::Edit) {
     if (input.undo_pressed) {
-      MapData map = session_.events().map();
+      MapData map = document_.data();
       const EditApplyResult result = edit_history_.undo(map);
       if (result.applied) {
         apply_edited_map(std::move(map), result);
       }
     }
     if (input.redo_pressed) {
-      MapData map = session_.events().map();
+      MapData map = document_.data();
       const EditApplyResult result = edit_history_.redo(map);
       if (result.applied) {
         apply_edited_map(std::move(map), result);

@@ -18,6 +18,7 @@ add_library(rat_core
   src/input_sequence.cpp
   src/locomotion.cpp
   src/log.cpp
+  src/map_document.cpp
   src/map_loader.cpp
   src/player.cpp
   src/player_jump.cpp

@@ -1,6 +1,7 @@
 #include "rat/hot_apply.hpp"
 
 #include "rat/event_edit.hpp"
+#include "rat/map_document.hpp"
 #include "rat/map_loader.hpp"
 
 namespace rat {
@@ -36,15 +37,21 @@ std::vector<Vec3> event_markers_from_map(const MapData& map) {
 
 HotApplyResult hot_apply_map(const MapData& map, HotApplyTargets& targets,
                              HotApplyOptions options) {
+  const MapCompileResult compiled = compile_map_data(map);
+  if (!compiled.ok) {
+    return HotApplyResult{false, format_map_issues(compiled.issues)};
+  }
+  const MapData& compiled_map = compiled.runtime.data;
+
   if (targets.cached_surface_query != nullptr) {
     if (*targets.cached_surface_query == nullptr) {
-      *targets.cached_surface_query = std::make_unique<SurfaceQuery>(map);
+      *targets.cached_surface_query = std::make_unique<SurfaceQuery>(compiled_map);
     } else {
-      **targets.cached_surface_query = SurfaceQuery(map);
+      **targets.cached_surface_query = SurfaceQuery(compiled_map);
     }
   }
 
-  SurfaceQuery local_query(map);
+  SurfaceQuery local_query(compiled_map);
   const SurfaceQuery* query = &local_query;
   if (targets.cached_surface_query != nullptr && *targets.cached_surface_query != nullptr) {
     query = targets.cached_surface_query->get();
@@ -53,10 +60,10 @@ HotApplyResult hot_apply_map(const MapData& map, HotApplyTargets& targets,
   const float keep_x = targets.player.x;
   const float keep_z = targets.player.z;
 
-  targets.events.load(map);
-  targets.state.set_map_id(map.id);
-  targets.blockers = map.blockers;
-  targets.event_markers = event_markers_from_map(map);
+  targets.events.load(compiled.runtime);
+  targets.state.set_map_id(compiled_map.id);
+  targets.blockers = compiled_map.blockers;
+  targets.event_markers = event_markers_from_map(compiled_map);
 
   if (options.preserve_player_position) {
     targets.player.x = keep_x;

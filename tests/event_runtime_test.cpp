@@ -1,5 +1,7 @@
 #include <rat/event_runtime.hpp>
 #include <rat/game_state.hpp>
+#include <rat/height_edit.hpp>
+#include <rat/map_document.hpp>
 #include <rat/map_loader.hpp>
 
 #include <catch2/catch_approx.hpp>
@@ -702,7 +704,7 @@ TEST_CASE("Event runtime different adjacent ramps do not bypass delta", "[unit][
   REQUIRE_FALSE(state.get_switch(34));
 }
 
-TEST_CASE("Event runtime elevation mutation rebuilds surface query safely", "[unit][events]") {
+TEST_CASE("compile and reload after height edit rebuilds surface query", "[unit][events]") {
   constexpr const char* kJson = R"({
     "schema_version": 2,
     "id": "runtime_mutation",
@@ -749,147 +751,19 @@ TEST_CASE("Event runtime elevation mutation rebuilds surface query safely", "[un
 
   runtime.update(state, player, true, 1.0f / 60.0f);
   REQUIRE(runtime.active_message() == "Hi");
-  REQUIRE(runtime.player_input_blocked());
 
-  const auto elevate = runtime.set_tile_elevation(1, 1, 2.0f);
-  REQUIRE(elevate.ok);
-  REQUIRE(runtime.active_message() == "Hi");
-  REQUIRE(runtime.player_input_blocked());
-
-  runtime.acknowledge_message();
-  runtime.update(state, player, false, 1.0f / 60.0f);
-  REQUIRE_FALSE(runtime.has_action_prompt(player, state));
+  rat::MapData edited = runtime.map();
+  REQUIRE(rat::set_map_tile_ground_y(edited, 1, 1, 2.0f).ok);
+  const rat::MapCompileResult compiled = rat::compile_map_data(edited);
+  REQUIRE(compiled.ok);
+  runtime.load(compiled.runtime);
+  REQUIRE_FALSE(runtime.active_message().has_value());
 
   player.y = 2.0f;
   REQUIRE(runtime.has_action_prompt(player, state));
 }
 
-TEST_CASE("Event runtime failed elevation mutation is transactional for legacy map",
-          "[unit][events]") {
-  constexpr const char* kJson = R"({
-    "schema_version": 1,
-    "id": "legacy_txn",
-    "width": 3,
-    "height": 3,
-    "events": [
-      {
-        "id": "talk",
-        "tile": { "x": 1, "z": 1 },
-        "pages": [
-          {
-            "trigger": "action",
-            "commands": [{ "op": "show_text", "text": "Legacy" }]
-          }
-        ]
-      }
-    ]
-  })";
-  const auto loaded = rat::load_map_from_string(kJson);
-  REQUIRE(loaded.ok);
-
-  rat::GameState state;
-  rat::EventRuntime runtime;
-  runtime.load(loaded.map);
-  const rat::MapData before = runtime.map();
-
-  rat::PlayerBody player;
-  player.x = 1.5f;
-  player.y = 0.0f;
-  player.z = 1.5f;
-  runtime.update(state, player, true, 1.0f / 60.0f);
-  REQUIRE(runtime.active_message() == "Legacy");
-  REQUIRE(runtime.player_input_blocked());
-
-  const auto failed_oor = runtime.set_tile_elevation(99, 99, 5.0f);
-  REQUIRE_FALSE(failed_oor.ok);
-  REQUIRE(runtime.map().schema_version == before.schema_version);
-  REQUIRE(runtime.map().height_grid.origin_x == before.height_grid.origin_x);
-  REQUIRE(runtime.map().height_grid.origin_z == before.height_grid.origin_z);
-  REQUIRE(runtime.map().height_grid.width == before.height_grid.width);
-  REQUIRE(runtime.map().height_grid.height == before.height_grid.height);
-  REQUIRE(runtime.map().height_grid.ground_y == before.height_grid.ground_y);
-  REQUIRE(runtime.map().ramps.empty());
-  REQUIRE(runtime.active_message() == "Legacy");
-  REQUIRE(runtime.player_input_blocked());
-
-  rat::RampDef invalid_ramp;
-  invalid_ramp.tile = rat::TileCoord{1, 1};
-  invalid_ramp.direction = static_cast<rat::RampDirection>(999);
-  invalid_ramp.low_y = 0.0f;
-  invalid_ramp.high_y = 1.0f;
-
-  const auto failed_ramp = runtime.upsert_ramp_elevation(invalid_ramp);
-  REQUIRE_FALSE(failed_ramp.ok);
-  REQUIRE(runtime.map().schema_version == before.schema_version);
-  REQUIRE(runtime.map().height_grid.ground_y == before.height_grid.ground_y);
-  REQUIRE(runtime.map().ramps.empty());
-  REQUIRE(runtime.active_message() == "Legacy");
-  REQUIRE(runtime.player_input_blocked());
-
-  runtime.acknowledge_message();
-  runtime.update(state, player, false, 1.0f / 60.0f);
-  REQUIRE_FALSE(runtime.active_message().has_value());
-}
-
-TEST_CASE("Event runtime rejects set/adjust on ramp tile transactionally", "[unit][events]") {
-  constexpr const char* kJson = R"({
-    "schema_version": 2,
-    "id": "runtime_ramp_guard",
-    "width": 3,
-    "height": 3,
-    "tile_size": 1.0,
-    "height_grid": {
-      "origin_x": 0,
-      "origin_z": 0,
-      "width": 3,
-      "height": 3,
-      "ground_y": [
-        0, 0, 0,
-        0, 0, 0,
-        0, 0, 0
-      ]
-    },
-    "ramps": [
-      { "tile": { "x": 1, "z": 1 }, "direction": "east", "low_y": 1.0, "high_y": 2.0 }
-    ],
-    "events": []
-  })";
-
-  const auto loaded = rat::load_map_from_string(kJson);
-  REQUIRE(loaded.ok);
-  rat::EventRuntime runtime;
-  runtime.load(loaded.map);
-
-  const auto before_grid = runtime.map().height_grid.ground_y;
-  const std::size_t before_ramp_count = runtime.map().ramps.size();
-  REQUIRE(before_ramp_count == 1);
-  const auto before_ramp = runtime.map().ramps[0];
-
-  const auto set_result = runtime.set_tile_elevation(1, 1, 9.0f);
-  REQUIRE_FALSE(set_result.ok);
-  REQUIRE_FALSE(set_result.error.empty());
-  REQUIRE(runtime.map().height_grid.ground_y == before_grid);
-  REQUIRE(runtime.map().ramps.size() == before_ramp_count);
-  REQUIRE(runtime.map().ramps[0].tile.x == before_ramp.tile.x);
-  REQUIRE(runtime.map().ramps[0].tile.z == before_ramp.tile.z);
-  REQUIRE(runtime.map().ramps[0].direction == before_ramp.direction);
-  REQUIRE(runtime.map().ramps[0].low_y == Catch::Approx(before_ramp.low_y));
-  REQUIRE(runtime.map().ramps[0].high_y == Catch::Approx(before_ramp.high_y));
-
-  const auto adjust_result = runtime.adjust_tile_elevation(1, 1, 1.0f);
-  REQUIRE_FALSE(adjust_result.ok);
-  REQUIRE_FALSE(adjust_result.error.empty());
-  REQUIRE(runtime.map().height_grid.ground_y == before_grid);
-  REQUIRE(runtime.map().ramps.size() == before_ramp_count);
-  REQUIRE(runtime.map().ramps[0].tile.x == before_ramp.tile.x);
-  REQUIRE(runtime.map().ramps[0].tile.z == before_ramp.tile.z);
-  REQUIRE(runtime.map().ramps[0].direction == before_ramp.direction);
-  REQUIRE(runtime.map().ramps[0].low_y == Catch::Approx(before_ramp.low_y));
-  REQUIRE(runtime.map().ramps[0].high_y == Catch::Approx(before_ramp.high_y));
-}
-
-TEST_CASE("set_blockers keeps active message and autorun lock; set_events clears them",
-          "[unit][events]") {
+TEST_CASE("EventRuntime reload of compiled map clears interpreters", "[unit][events]") {
   constexpr const char* kJson = R"({
     "schema_version": 1,
     "id": "t",
@@ -920,16 +794,13 @@ TEST_CASE("set_blockers keeps active message and autorun lock; set_events clears
   REQUIRE(runtime.active_message() == "Hello");
   REQUIRE(runtime.player_input_blocked());
 
-  auto blockers = runtime.map().blockers;
-  REQUIRE(blockers.size() == 1);
-  blockers[0].bounds.max_x = 2.0f;
-  runtime.set_blockers(std::move(blockers));
-  REQUIRE(runtime.active_message() == "Hello");
-  REQUIRE(runtime.player_input_blocked());
+  rat::MapData edited = runtime.map();
+  REQUIRE(edited.blockers.size() == 1);
+  edited.blockers[0].bounds.max_x = 2.0f;
+  const rat::MapCompileResult compiled = rat::compile_map_data(edited);
+  REQUIRE(compiled.ok);
+  runtime.load(compiled.runtime);
   REQUIRE(runtime.map().blockers[0].bounds.max_x == Catch::Approx(2.0f));
-
-  auto events = runtime.map().events;
-  runtime.set_events(std::move(events));
   REQUIRE_FALSE(runtime.active_message().has_value());
   REQUIRE_FALSE(runtime.player_input_blocked());
 
@@ -940,6 +811,7 @@ TEST_CASE("set_blockers keeps active message and autorun lock; set_events clears
 TEST_CASE("player_overlaps uses circle vs event AABB not square corner", "[event][collision]") {
   rat::MapData map;
   map.schema_version = 2;
+  map.id = "overlap";
   map.tile_size = 1.0f;
   map.width = 4;
   map.height = 4;
