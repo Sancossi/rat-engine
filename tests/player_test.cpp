@@ -326,6 +326,38 @@ TEST_CASE("Ramp side entry from north and south is blocked by step cap", "[unit]
   REQUIRE(from_south.y <= Approx(kMaxStepUp).margin(1e-4f));
 }
 
+TEST_CASE("Ramp open-side walk-off with baked walls leaves the footprint",
+          "[unit][player][surface]") {
+  const rat::MapData map = make_east_ramp_side_entry_map();
+  const rat::SurfaceQuery query(map);
+
+  rat::PlayerBody player;
+  player.x = 8.5f;
+  player.z = 8.5f;
+  player.y = query.sample(player.x, player.z).y;
+  player.speed = 5.0f;
+  rat::JumpState jump = rat::make_grounded_jump_state();
+  rat::PlayerFrameInput input;
+  input.move = {0.0f, -1.0f};
+
+  const float start_y = player.y;
+  REQUIRE(query.sample(player.x, player.z).on_ramp);
+  for (int i = 0; i < 60; ++i) {
+    const rat::PlayerFrameResult result = rat::integrate_player_frame_surface(
+        player, jump, input, 1.0f / 120.0f, {}, query, {}, 0.35f, {}, &map);
+    player = result.body;
+    jump = result.jump;
+    if (!query.sample(player.x, player.z).on_ramp) {
+      break;
+    }
+  }
+
+  REQUIRE(player.z < 8.0f);
+  REQUIRE_FALSE(query.sample(player.x, player.z).on_ramp);
+  REQUIRE_FALSE(jump.grounded);
+  REQUIRE(player.y == Approx(start_y).margin(0.2f));
+}
+
 TEST_CASE("Ramp west approach climbs to high cell with baked terrain walls",
           "[unit][player][surface]") {
   const rat::MapData map = make_east_ramp_side_entry_map();

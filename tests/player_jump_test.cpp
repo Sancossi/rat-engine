@@ -471,6 +471,120 @@ TEST_CASE("Ramp side walk-off becomes airborne and keeps world Y", "[unit][playe
   REQUIRE(result.body.y > before_world_y - 0.06f);
 }
 
+TEST_CASE("Ramp side walk-off with baked walls becomes airborne and keeps world Y",
+          "[unit][player][jump][surface]") {
+  rat::MapData map = make_surface_map(2, 2, {
+      0.0f, 0.0f,
+      0.0f, 0.0f,
+  });
+  map.ramps.push_back({
+      .tile = rat::TileCoord{0, 1},
+      .direction = rat::RampDirection::East,
+      .low_y = 0.0f,
+      .high_y = 1.0f,
+  });
+  const rat::SurfaceQuery query(map);
+
+  rat::PlayerBody body;
+  body.x = 0.75f;
+  body.z = 1.05f;
+  body.speed = 3.0f;
+  const rat::SurfaceSample before_sample = query.sample(body.x, body.z);
+  const float before_world_y = before_sample.y;
+
+  rat::JumpState jump = rat::make_grounded_jump_state();
+  rat::JumpTuning tuning;
+  tuning.gravity = 30.0f;
+  tuning.faster_fall_gravity = 30.0f;
+  tuning.coyote_seconds = 0.1f;
+
+  rat::PlayerFrameInput input;
+  input.move = rat::MoveInput{0.0f, -1.0f};
+  const rat::PlayerFrameResult result = rat::integrate_player_frame_surface(
+      body, jump, input, 1.0f / 30.0f, {}, query, tuning, 0.35f, {}, &map);
+  const rat::SurfaceSample after_sample = query.sample(result.body.x, result.body.z);
+
+  REQUIRE(before_sample.on_ramp);
+  REQUIRE_FALSE(after_sample.on_ramp);
+  REQUIRE(after_sample.y < before_sample.y - 0.05f);
+  REQUIRE_FALSE(result.jump.grounded);
+  REQUIRE(result.jump.coyote_time_left > 0.0f);
+  REQUIRE(result.body.y <= before_world_y + 1e-4f);
+  REQUIRE(result.body.y > before_world_y - 0.06f);
+}
+
+TEST_CASE("Ramp high-end walk-off with baked walls becomes airborne",
+          "[unit][player][jump][surface]") {
+  rat::MapData map = make_surface_map(3, 1, {0.0f, 0.0f, 0.0f});
+  map.ramps.push_back({
+      .tile = rat::TileCoord{1, 0},
+      .direction = rat::RampDirection::East,
+      .low_y = 0.0f,
+      .high_y = 1.0f,
+  });
+  const rat::SurfaceQuery query(map);
+
+  rat::PlayerBody body;
+  body.x = 1.95f;
+  body.z = 0.5f;
+  body.speed = 3.0f;
+  const rat::SurfaceSample before_sample = query.sample(body.x, body.z);
+
+  rat::JumpState jump = rat::make_grounded_jump_state();
+  rat::JumpTuning tuning;
+  tuning.gravity = 30.0f;
+  tuning.faster_fall_gravity = 30.0f;
+  tuning.coyote_seconds = 0.1f;
+
+  rat::PlayerFrameInput input;
+  input.move = rat::MoveInput{1.0f, 0.0f};
+  const rat::PlayerFrameResult result = rat::integrate_player_frame_surface(
+      body, jump, input, 1.0f / 30.0f, {}, query, tuning, 0.35f, {}, &map);
+  const rat::SurfaceSample after_sample = query.sample(result.body.x, result.body.z);
+
+  REQUIRE(before_sample.on_ramp);
+  REQUIRE_FALSE(after_sample.on_ramp);
+  REQUIRE(after_sample.y < before_sample.y - 0.05f);
+  REQUIRE_FALSE(result.jump.grounded);
+  REQUIRE(result.body.x >= 2.0f);
+}
+
+TEST_CASE("Ramp low-end walk-off from an elevated ramp becomes airborne",
+          "[unit][player][jump][surface]") {
+  rat::MapData map = make_surface_map(3, 1, {0.0f, 1.0f, 2.0f});
+  map.ramps.push_back({
+      .tile = rat::TileCoord{1, 0},
+      .direction = rat::RampDirection::East,
+      .low_y = 1.0f,
+      .high_y = 2.0f,
+  });
+  const rat::SurfaceQuery query(map);
+
+  rat::PlayerBody body;
+  body.x = 1.05f;
+  body.z = 0.5f;
+  body.speed = 3.0f;
+  const rat::SurfaceSample before_sample = query.sample(body.x, body.z);
+
+  rat::JumpState jump = rat::make_grounded_jump_state();
+  rat::JumpTuning tuning;
+  tuning.gravity = 30.0f;
+  tuning.faster_fall_gravity = 30.0f;
+  tuning.coyote_seconds = 0.1f;
+
+  rat::PlayerFrameInput input;
+  input.move = rat::MoveInput{-1.0f, 0.0f};
+  const rat::PlayerFrameResult result = rat::integrate_player_frame_surface(
+      body, jump, input, 1.0f / 30.0f, {}, query, tuning, 0.35f, {}, &map);
+  const rat::SurfaceSample after_sample = query.sample(result.body.x, result.body.z);
+
+  REQUIRE(before_sample.on_ramp);
+  REQUIRE_FALSE(after_sample.on_ramp);
+  REQUIRE(after_sample.y < before_sample.y - 0.05f);
+  REQUIRE_FALSE(result.jump.grounded);
+  REQUIRE(result.body.x < 1.0f);
+}
+
 TEST_CASE("Ramp descent stays grounded with ground follow", "[unit][player][jump]") {
   rat::MapData map = make_surface_map(1, 1, {0.0f});
   map.ramps.push_back({

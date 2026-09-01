@@ -159,7 +159,8 @@ PlayerBody integrate_player_surface(PlayerBody player, MoveInput input, float dt
       const bool step_ok = surface_step_allowed(current_sample, sample, step_up_limit);
       CollisionBody wall_body = collision_body_from_player(player);
       if (step_ok) {
-        wall_body.y = sample.y;
+        // Walk-off: keep current feet so the ledge/trapezoid top is skippable.
+        wall_body.y = std::max(player.y, sample.y);
         if (current_sample.on_ramp || sample.on_ramp) {
           wall_body.y += step_up_limit;
         }
@@ -180,7 +181,7 @@ PlayerBody integrate_player_surface(PlayerBody player, MoveInput input, float dt
       const bool step_ok = surface_step_allowed(current_sample, sample, step_up_limit);
       CollisionBody wall_body = collision_body_from_player(player);
       if (step_ok) {
-        wall_body.y = sample.y;
+        wall_body.y = std::max(player.y, sample.y);
         if (current_sample.on_ramp || sample.on_ramp) {
           wall_body.y += step_up_limit;
         }
