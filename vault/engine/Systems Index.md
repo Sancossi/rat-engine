@@ -14,7 +14,7 @@ tags: [engine]
 | Core runtime loop | Core | working | Init → update → render → shutdown. Fixed 120 Hz accumulator in `EditorApp` |
 | Logging | Core | working | `rat::Logger` + sink (file/`stderr`/memory); no locator. Default `rat.log` or `RAT_LOG_PATH` |
 | Window + swapchain | Platform / Render | working | GLFW + bgfx present |
-| Input actions | Input | working | `InputFrame` via `map_input_frame`; GLFW only in editor adapter |
+| Input actions | Input | working | `InputBindings` table + keyboard/gamepad adapters → `InputButtons` → `InputFrame`; JSON serialize; GLFW/joystick only in `NativeWindow` |
 | Asset loader | Assets | planned | |
 | Scene / entities | Scene | stub | [[ADR-012 Entity model EntityId and ComponentStore]]: `EntityId` + `ComponentStore` Transform/Renderable/Collider; player/events not migrated |
 | Audio | Platform | stub | `QueuedAudio` + `AudioSink` (null/log); `EditorApp` drains once per display frame |

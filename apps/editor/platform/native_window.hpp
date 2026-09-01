@@ -2,6 +2,7 @@
 
 #include <rat/clock.hpp>
 #include <rat/input.hpp>
+#include <rat/input_bindings.hpp>
 #include <rat/native_window_handle.hpp>
 
 struct GLFWwindow;
@@ -26,6 +27,8 @@ class NativeWindow {
   void poll();
   [[nodiscard]] double time() const;
   [[nodiscard]] InputButtons sample_buttons() const;
+  void set_input_bindings(InputBindings bindings);
+  [[nodiscard]] const InputBindings& input_bindings() const { return bindings_; }
   [[nodiscard]] bool mouse_left_down() const;
   void cursor_pos(double& x, double& y) const;
   void framebuffer_size(int& width, int& height) const;
@@ -42,6 +45,7 @@ class NativeWindow {
 
   SteadyClock owned_clock_{};
   const Clock* clock_ = nullptr;
+  InputBindings bindings_ = default_input_bindings();
   GLFWwindow* window_ = nullptr;
   void* user_ = nullptr;
   void (*resize_)(void* user, int width, int height) = nullptr;

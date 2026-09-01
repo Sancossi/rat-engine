@@ -22,6 +22,7 @@ add_executable(rat_tests
   height_edit_test.cpp
   headless_mechanics_stub_test.cpp
   input_sequence_probe_test.cpp
+  input_bindings_test.cpp
   locomotion_test.cpp
   log_test.cpp
   hot_apply_test.cpp

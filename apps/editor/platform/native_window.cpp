@@ -12,8 +12,146 @@
 #endif
 
 #include <cstdint>
+#include <cstddef>
+#include <string_view>
+#include <utility>
 
 namespace rat {
+namespace {
+
+[[nodiscard]] int glfw_key_named(std::string_view name) {
+  if (name.size() == 1) {
+    const char c = name[0];
+    if (c >= 'A' && c <= 'Z') {
+      return GLFW_KEY_A + (c - 'A');
+    }
+    if (c >= '0' && c <= '9') {
+      return GLFW_KEY_0 + (c - '0');
+    }
+  }
+  if (name.size() >= 2 && name[0] == 'F') {
+    int index = 0;
+    for (std::size_t i = 1; i < name.size(); ++i) {
+      if (name[i] < '0' || name[i] > '9') {
+        index = -1;
+        break;
+      }
+      index = index * 10 + (name[i] - '0');
+    }
+    if (index >= 1 && index <= 12) {
+      return GLFW_KEY_F1 + (index - 1);
+    }
+  }
+  if (name == "Space") {
+    return GLFW_KEY_SPACE;
+  }
+  if (name == "Up") {
+    return GLFW_KEY_UP;
+  }
+  if (name == "Down") {
+    return GLFW_KEY_DOWN;
+  }
+  if (name == "Left") {
+    return GLFW_KEY_LEFT;
+  }
+  if (name == "Right") {
+    return GLFW_KEY_RIGHT;
+  }
+  if (name == "Enter") {
+    return GLFW_KEY_ENTER;
+  }
+  if (name == "Tab") {
+    return GLFW_KEY_TAB;
+  }
+  if (name == "Escape") {
+    return GLFW_KEY_ESCAPE;
+  }
+  if (name == "Backspace") {
+    return GLFW_KEY_BACKSPACE;
+  }
+  if (name == "Period") {
+    return GLFW_KEY_PERIOD;
+  }
+  if (name == "Comma") {
+    return GLFW_KEY_COMMA;
+  }
+  if (name == "Minus") {
+    return GLFW_KEY_MINUS;
+  }
+  if (name == "Equal") {
+    return GLFW_KEY_EQUAL;
+  }
+  if (name == "Slash") {
+    return GLFW_KEY_SLASH;
+  }
+  if (name == "Semicolon") {
+    return GLFW_KEY_SEMICOLON;
+  }
+  if (name == "Apostrophe") {
+    return GLFW_KEY_APOSTROPHE;
+  }
+  return -1;
+}
+
+template <typename Fn>
+void for_each_sources(const InputBindings& bindings, Fn&& fn) {
+  fn(bindings.move_up);
+  fn(bindings.move_down);
+  fn(bindings.move_left);
+  fn(bindings.move_right);
+  fn(bindings.jump);
+  fn(bindings.interact);
+  fn(bindings.toggle_mode);
+  fn(bindings.hot_apply);
+  fn(bindings.cycle_camera);
+  fn(bindings.debug_snapshot);
+  fn(bindings.undo);
+  fn(bindings.redo);
+}
+
+[[nodiscard]] KeyboardState sample_keyboard(GLFWwindow* window, const InputBindings& bindings) {
+  KeyboardState state;
+  const auto down = [window](int key) { return glfwGetKey(window, key) == GLFW_PRESS; };
+  state.ctrl = down(GLFW_KEY_LEFT_CONTROL) || down(GLFW_KEY_RIGHT_CONTROL);
+  state.shift = down(GLFW_KEY_LEFT_SHIFT) || down(GLFW_KEY_RIGHT_SHIFT);
+  for_each_sources(bindings, [&](const ActionSources& sources) {
+    for (const KeyboardChord& chord : sources.keys) {
+      const int glfw_key = glfw_key_named(chord.key);
+      if (glfw_key < 0 || !down(glfw_key)) {
+        continue;
+      }
+      bool already = false;
+      for (const std::string& held : state.keys_down) {
+        if (held == chord.key) {
+          already = true;
+          break;
+        }
+      }
+      if (!already) {
+        state.keys_down.push_back(chord.key);
+      }
+    }
+  });
+  return state;
+}
+
+[[nodiscard]] GamepadState sample_gamepad() {
+  GamepadState pad;
+  GLFWgamepadstate raw{};
+  if (glfwGetGamepadState(GLFW_JOYSTICK_1, &raw) != GLFW_TRUE) {
+    return pad;
+  }
+  pad.connected = true;
+  for (int i = 0; i < kGamepadButtonCount; ++i) {
+    pad.buttons[static_cast<std::size_t>(i)] = raw.buttons[i] == GLFW_PRESS;
+  }
+  for (int i = 0; i < kGamepadAxisCount; ++i) {
+    pad.axes[static_cast<std::size_t>(i)] = raw.axes[i];
+  }
+  return pad;
+}
+
+}  // namespace
 
 NativeWindow::NativeWindow() : clock_(&owned_clock_) {}
 
@@ -77,27 +215,15 @@ double NativeWindow::time() const {
 }
 
 InputButtons NativeWindow::sample_buttons() const {
-  InputButtons buttons;
   if (window_ == nullptr) {
-    return buttons;
+    return {};
   }
-  const auto down = [this](int key) { return glfwGetKey(window_, key) == GLFW_PRESS; };
-  buttons.move_up = down(GLFW_KEY_W) || down(GLFW_KEY_UP);
-  buttons.move_down = down(GLFW_KEY_S) || down(GLFW_KEY_DOWN);
-  buttons.move_left = down(GLFW_KEY_A) || down(GLFW_KEY_LEFT);
-  buttons.move_right = down(GLFW_KEY_D) || down(GLFW_KEY_RIGHT);
-  buttons.jump = down(GLFW_KEY_SPACE);
-  buttons.interact = down(GLFW_KEY_E);
-  buttons.toggle_mode = down(GLFW_KEY_F2);
-  buttons.hot_apply = down(GLFW_KEY_F5);
-  buttons.cycle_camera = down(GLFW_KEY_C);
-  buttons.debug_snapshot = down(GLFW_KEY_F3);
-  const bool ctrl = down(GLFW_KEY_LEFT_CONTROL) || down(GLFW_KEY_RIGHT_CONTROL);
-  const bool shift = down(GLFW_KEY_LEFT_SHIFT) || down(GLFW_KEY_RIGHT_SHIFT);
-  const bool z = down(GLFW_KEY_Z);
-  buttons.undo = ctrl && z && !shift;
-  buttons.redo = ctrl && (down(GLFW_KEY_Y) || (shift && z));
-  return buttons;
+  return merge_input_buttons(map_keyboard_buttons(sample_keyboard(window_, bindings_), bindings_),
+                             map_gamepad_buttons(sample_gamepad(), bindings_));
+}
+
+void NativeWindow::set_input_bindings(InputBindings bindings) {
+  bindings_ = std::move(bindings);
 }
 
 bool NativeWindow::mouse_left_down() const {
