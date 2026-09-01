@@ -1,4 +1,4 @@
-# Map + Event JSON schema (v1 + v2)
+# Map + Event JSON schema (v1 + v2 + v3)
 
 Human-readable schema for map/event data. Files live under `data/maps/<id>.json`.
 
@@ -6,14 +6,16 @@ Human-readable schema for map/event data. Files live under `data/maps/<id>.json`
 
 | Field | Type | Required | Notes |
 |-------|------|----------|-------|
-| `schema_version` | int | yes | `1` (legacy flat map) or `2` (height grid + ramps) |
+| `schema_version` | int | yes | `1` (legacy flat map), `2` (height grid + ramps), or `3` (floor slabs + ladders) |
 | `id` | string | yes | Map id (e.g. `grey_yard`) |
 | `width` | int | yes | Helper grid width in tiles |
 | `height` | int | yes | Helper grid height in tiles |
 | `tile_size` | number | no | World units per tile (default `1`) |
-| `height_grid` | object | v2 only | Elevation grid, required for schema `2` |
-| `ramps` | array | v2 only | Optional ramp definitions for schema `2` |
-| `edge_barriers` | array | v2 only | Optional tile-edge fences for schema `2` |
+| `height_grid` | object | v2+ | Elevation grid, required for schema `2` and `3` |
+| `ramps` | array | v2+ | Optional ramp definitions for schema `2` and `3` |
+| `edge_barriers` | array | v2+ | Optional tile-edge fences for schema `2` and `3` |
+| `floor_slabs` | array | v3 | Optional airborne floor slabs for schema `3` |
+| `ladders` | array | v3 | Optional climbable ladders for schema `3` |
 | `blockers` | array | no | Static blockers on XZ (legacy full walls + optional height-aware jumpables) |
 | `events` | array | no | Event definitions |
 | `assets` | array | no | Stable `AssetId` refs (`id`, `kind`, optional `debug_name`). Kinds: `texture`, `audio_clip`, `mesh`, `material`. Gameplay looks up ids in `AssetRegistry`; omit when unused. |
@@ -61,6 +63,46 @@ Walk across the edge is blocked while feet are below `owner_top + height`. Mini 
 | `direction` | string | yes | `north`, `east`, `south`, `west` |
 | `low_y` | number | yes | Height at low edge of the ramp |
 | `high_y` | number | yes | Height at high edge of the ramp, must be `>= low_y` |
+
+### FloorSlabDef (v3)
+
+Airborne floor on one height-grid tile. Top at `top_y` is standable; bottom is `top_y - thickness` (a ceiling for the space below).
+
+| Field | Type | Required | Notes |
+|-------|------|----------|-------|
+| `tile` | object | yes | `{ "x": int, "z": int }` owner tile |
+| `top_y` | number | yes | World Y of the slab top |
+| `thickness` | number | no | Vertical thickness; default `0.25`. Must be `> 0` |
+
+```json
+{ "tile": { "x": 1, "z": 0 }, "top_y": 2.0, "thickness": 0.25 }
+```
+
+Document validation:
+
+- Reject `thickness <= 0` (`/floor_slabs/N/thickness`).
+- Reject a tile outside `height_grid` (`/floor_slabs/N/tile`). Loader still accepts out-of-grid tiles (same as ramps).
+- Two slabs on the same tile are valid if their Y ranges `[top_y - thickness, top_y]` do not overlap. Overlap is `a_lo < b_hi - 1e-4` and `b_lo < a_hi - 1e-4`; reported on the later slab (`/floor_slabs/N/top_y`).
+
+### LadderDef (v3)
+
+Climbable volume on one edge of a height-grid tile. Direction uses the same strings as ramps.
+
+| Field | Type | Required | Notes |
+|-------|------|----------|-------|
+| `tile` | object | yes | `{ "x": int, "z": int }` owner tile |
+| `direction` | string | yes | `north`, `east`, `south`, `west` |
+| `y_lo` | number | yes | Bottom of the climb span |
+| `y_hi` | number | yes | Top of the climb span; must be `> y_lo` |
+
+```json
+{ "tile": { "x": 0, "z": 0 }, "direction": "east", "y_lo": 0.0, "y_hi": 2.0 }
+```
+
+Document validation:
+
+- Reject `y_hi <= y_lo` (`/ladders/N/y_hi`).
+- Reject a tile outside `height_grid` (`/ladders/N/tile`). Loader still accepts out-of-grid tiles.
 
 ### Blocker
 
@@ -158,5 +200,8 @@ See `data/maps/grey_yard.json`.
   - `width = map.width`, `height = map.height`
   - every `ground_y` value is `0`
 - Loader accepts `schema_version: 2` and reads explicit `height_grid` + optional `ramps` + optional `edge_barriers`.
+- Loader accepts `schema_version: 3` and reads the same elevation fields as v2, plus optional `floor_slabs` and `ladders`. Missing slab/ladder arrays load as empty. `height_grid` is required (same as v2).
 - For `schema_version: 1`, `edge_barriers` is ignored if present.
-- For `schema_version: 2`, invalid `ground_y` length (not equal to `width * height`) is rejected.
+- For `schema_version: 1` and `2`, `floor_slabs` and `ladders` are ignored if present (empty vectors).
+- For `schema_version: 2` and `3`, invalid `ground_y` length (not equal to `width * height`) is rejected.
+- Serializer writes `height_grid` / `ramps` / `edge_barriers` when `schema_version >= 2`, and `floor_slabs` / `ladders` when `schema_version >= 3`. It does not bump the version.

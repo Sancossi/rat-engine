@@ -141,7 +141,7 @@ TEST_CASE("jumpable blocker without vertical pair reports blocker path", "[unit]
 
 TEST_CASE("schema error from JSON is structured with path", "[unit][mapdoc]") {
   const rat::MapDocumentLoadResult loaded =
-      rat::load_map_document_from_string(R"({"schema_version":3,"id":"x","width":1,"height":1})");
+      rat::load_map_document_from_string(R"({"schema_version":4,"id":"x","width":1,"height":1})");
   REQUIRE_FALSE(loaded.ok);
   REQUIRE(has_error_at(loaded.issues, "/schema_version"));
 }
@@ -303,6 +303,46 @@ TEST_CASE("schema 2 missing height grid fails compile the same as validate", "[u
   const rat::MapCompileResult compiled = rat::compile_map_data(map);
   REQUIRE_FALSE(compiled.ok);
   REQUIRE(has_error_at(compiled.issues, "/height_grid/width"));
+}
+
+TEST_CASE("two stacked slabs on one tile are valid; overlapping Y is an error", "[unit][mapdoc]") {
+  rat::MapData map = make_flat_document_map();
+  map.schema_version = 3;
+  map.floor_slabs.push_back({{0, 0}, 2.0f, 0.25f});
+  map.floor_slabs.push_back({{0, 0}, 4.0f, 0.25f});
+  REQUIRE_FALSE(rat::map_issues_have_errors(rat::validate_map_document(map)));
+
+  map.floor_slabs[1].top_y = 2.1f;
+  const std::vector<rat::MapIssue> issues = rat::validate_map_document(map);
+  REQUIRE(has_error_at(issues, "/floor_slabs/1/top_y"));
+}
+
+TEST_CASE("ladder with y_hi <= y_lo reports /ladders/0/y_hi", "[unit][mapdoc]") {
+  rat::MapData map = make_flat_document_map();
+  map.schema_version = 3;
+  map.ladders.push_back({{0, 0}, rat::RampDirection::East, 0.0f, 0.0f});
+  REQUIRE(has_error_at(rat::validate_map_document(map), "/ladders/0/y_hi"));
+}
+
+TEST_CASE("slab thickness <= 0 reports /floor_slabs/0/thickness", "[unit][mapdoc]") {
+  rat::MapData map = make_flat_document_map();
+  map.schema_version = 3;
+  map.floor_slabs.push_back({{0, 0}, 2.0f, 0.0f});
+  REQUIRE(has_error_at(rat::validate_map_document(map), "/floor_slabs/0/thickness"));
+}
+
+TEST_CASE("slab tile outside height grid reports /floor_slabs/0/tile", "[unit][mapdoc]") {
+  rat::MapData map = make_flat_document_map();
+  map.schema_version = 3;
+  map.floor_slabs.push_back({{9, 0}, 2.0f, 0.25f});
+  REQUIRE(has_error_at(rat::validate_map_document(map), "/floor_slabs/0/tile"));
+}
+
+TEST_CASE("ladder tile outside height grid reports /ladders/0/tile", "[unit][mapdoc]") {
+  rat::MapData map = make_flat_document_map();
+  map.schema_version = 3;
+  map.ladders.push_back({{9, 0}, rat::RampDirection::East, 0.0f, 1.6f});
+  REQUIRE(has_error_at(rat::validate_map_document(map), "/ladders/0/tile"));
 }
 
 TEST_CASE("EventRuntime load of MapData reports compile failure and keeps previous map",

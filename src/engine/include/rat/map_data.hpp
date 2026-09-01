@@ -80,6 +80,21 @@ struct EdgeBarrierDef {
   float height = 0.0f;
 };
 
+inline constexpr float kDefaultFloorSlabThickness = 0.25f;
+
+struct FloorSlabDef {
+  TileCoord tile;
+  float top_y = 0.0f;
+  float thickness = kDefaultFloorSlabThickness;
+};
+
+struct LadderDef {
+  TileCoord tile;
+  RampDirection direction = RampDirection::East;
+  float y_lo = 0.0f;
+  float y_hi = 1.6f;
+};
+
 struct BlockerDef {
   Aabb2 bounds{};
   std::optional<float> base_y{};
@@ -164,6 +179,8 @@ struct MapData {
   HeightGrid height_grid;
   std::vector<RampDef> ramps;
   std::vector<EdgeBarrierDef> edge_barriers;
+  std::vector<FloorSlabDef> floor_slabs;
+  std::vector<LadderDef> ladders;
   std::vector<BlockerDef> blockers;
   std::vector<EventDef> events;
   std::vector<MapAssetRef> assets;

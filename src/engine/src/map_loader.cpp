@@ -335,8 +335,8 @@ MapAssetRef parse_map_asset(const json& node) {
 MapData parse_map(const json& root) {
   MapData map;
   map.schema_version = root.at("schema_version").get<int>();
-  if (map.schema_version != 1 && map.schema_version != 2) {
-    throw std::runtime_error("unsupported schema_version (expected 1 or 2)");
+  if (map.schema_version != 1 && map.schema_version != 2 && map.schema_version != 3) {
+    throw std::runtime_error("unsupported schema_version (expected 1, 2, or 3)");
   }
   map.id = root.at("id").get<std::string>();
   map.width = root.at("width").get<int>();
@@ -396,6 +396,29 @@ MapData parse_map(const json& root) {
       }
     }
     canonicalize_edge_barriers(map);
+  }
+  if (map.schema_version >= 3) {
+    if (root.contains("floor_slabs")) {
+      for (const auto& node : root.at("floor_slabs")) {
+        FloorSlabDef out;
+        const auto& tile = node.at("tile");
+        out.tile = TileCoord{tile.at("x").get<int>(), tile.at("z").get<int>()};
+        out.top_y = node.at("top_y").get<float>();
+        out.thickness = node.value("thickness", kDefaultFloorSlabThickness);
+        map.floor_slabs.push_back(out);
+      }
+    }
+    if (root.contains("ladders")) {
+      for (const auto& node : root.at("ladders")) {
+        LadderDef out;
+        const auto& tile = node.at("tile");
+        out.tile = TileCoord{tile.at("x").get<int>(), tile.at("z").get<int>()};
+        out.direction = parse_ramp_direction(node.at("direction").get<std::string>());
+        out.y_lo = node.at("y_lo").get<float>();
+        out.y_hi = node.at("y_hi").get<float>();
+        map.ladders.push_back(out);
+      }
+    }
   }
   if (root.contains("blockers")) {
     for (const auto& blocker : root.at("blockers")) {
@@ -634,7 +657,7 @@ MapSerializeResult serialize_map_to_string(const MapData& map) {
               {"tile_size", map.tile_size},
               {"blockers", json::array()},
               {"events", json::array()}};
-    if (map.schema_version == 2) {
+    if (map.schema_version >= 2) {
       root["height_grid"] = json{{"origin_x", map.height_grid.origin_x},
                                  {"origin_z", map.height_grid.origin_z},
                                  {"width", map.height_grid.width},
@@ -652,6 +675,21 @@ MapSerializeResult serialize_map_to_string(const MapData& map) {
         root["edge_barriers"].push_back(json{{"tile", {{"x", edge.tile.x}, {"z", edge.tile.z}}},
                                              {"direction", ramp_direction_to_string(edge.direction)},
                                              {"height", edge.height}});
+      }
+    }
+    if (map.schema_version >= 3) {
+      root["floor_slabs"] = json::array();
+      for (const FloorSlabDef& slab : map.floor_slabs) {
+        root["floor_slabs"].push_back(json{{"tile", {{"x", slab.tile.x}, {"z", slab.tile.z}}},
+                                            {"top_y", slab.top_y},
+                                            {"thickness", slab.thickness}});
+      }
+      root["ladders"] = json::array();
+      for (const LadderDef& ladder : map.ladders) {
+        root["ladders"].push_back(json{{"tile", {{"x", ladder.tile.x}, {"z", ladder.tile.z}}},
+                                       {"direction", ramp_direction_to_string(ladder.direction)},
+                                       {"y_lo", ladder.y_lo},
+                                       {"y_hi", ladder.y_hi}});
       }
     }
     for (const BlockerDef& blocker : map.blockers) {

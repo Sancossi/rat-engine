@@ -234,8 +234,8 @@ std::vector<MapIssue> validate_map_document(const MapData& data) {
   if (data.id.empty()) {
     add_error(issues, "/id", "map id must not be empty");
   }
-  if (data.schema_version != 1 && data.schema_version != 2) {
-    add_error(issues, "/schema_version", "unsupported schema_version (expected 1 or 2)");
+  if (data.schema_version != 1 && data.schema_version != 2 && data.schema_version != 3) {
+    add_error(issues, "/schema_version", "unsupported schema_version (expected 1, 2, or 3)");
   }
   if (data.width <= 0 || data.height <= 0) {
     add_error(issues, "/width", "map width/height must be > 0");
@@ -292,6 +292,46 @@ std::vector<MapIssue> validate_map_document(const MapData& data) {
     const EdgeKey key{edge.tile.x, edge.tile.z, edge.direction};
     if (!edge_keys.insert(key).second) {
       add_error(issues, edge_path, "edge barrier tile and direction must be unique");
+    }
+  }
+
+  for (std::size_t i = 0; i < data.floor_slabs.size(); ++i) {
+    const FloorSlabDef& slab = data.floor_slabs[i];
+    const std::string slab_path = index_path("/floor_slabs", i);
+    if (slab.thickness <= 0.0f) {
+      add_error(issues, slab_path + "/thickness", "floor slab thickness must be > 0");
+    }
+    if (!tile_in_grid(data.height_grid, slab.tile.x, slab.tile.z)) {
+      add_error(issues, slab_path + "/tile", "floor slab tile is outside height grid");
+    }
+    const float a_lo = slab.top_y - slab.thickness;
+    const float a_hi = slab.top_y;
+    for (std::size_t j = 0; j < i; ++j) {
+      const FloorSlabDef& other = data.floor_slabs[j];
+      if (other.tile.x != slab.tile.x || other.tile.z != slab.tile.z) {
+        continue;
+      }
+      const float b_lo = other.top_y - other.thickness;
+      const float b_hi = other.top_y;
+      if (a_lo < b_hi - 1e-4f && b_lo < a_hi - 1e-4f) {
+        add_error(issues, slab_path + "/top_y",
+                  "floor slab Y range overlaps another slab on the same tile");
+        break;
+      }
+    }
+  }
+
+  for (std::size_t i = 0; i < data.ladders.size(); ++i) {
+    const LadderDef& ladder = data.ladders[i];
+    const std::string ladder_path = index_path("/ladders", i);
+    if (!valid_ramp_direction(ladder.direction)) {
+      add_error(issues, ladder_path + "/direction", "ladder direction is invalid");
+    }
+    if (ladder.y_hi <= ladder.y_lo) {
+      add_error(issues, ladder_path + "/y_hi", "ladder y_hi must be > y_lo");
+    }
+    if (!tile_in_grid(data.height_grid, ladder.tile.x, ladder.tile.z)) {
+      add_error(issues, ladder_path + "/tile", "ladder tile is outside height grid");
     }
   }
 
@@ -375,8 +415,8 @@ MapDocumentLoadResult load_map_document_from_string(std::string_view json_text) 
       return result;
     }
     const int version = root.at("schema_version").get<int>();
-    if (version != 1 && version != 2) {
-      add_error(result.issues, "/schema_version", "unsupported schema_version (expected 1 or 2)");
+    if (version != 1 && version != 2 && version != 3) {
+      add_error(result.issues, "/schema_version", "unsupported schema_version (expected 1, 2, or 3)");
       return result;
     }
   } catch (const std::exception& ex) {

@@ -66,7 +66,7 @@ TEST_CASE("Map loader parses minimal map JSON", "[unit][map]") {
 }
 
 TEST_CASE("Map loader rejects unknown schema version", "[unit][map]") {
-  const auto result = rat::load_map_from_string(R"({"schema_version":3,"id":"x","width":1,"height":1})");
+  const auto result = rat::load_map_from_string(R"({"schema_version":4,"id":"x","width":1,"height":1})");
   REQUIRE_FALSE(result.ok);
   REQUIRE_FALSE(result.error.empty());
 }
@@ -833,4 +833,114 @@ TEST_CASE("Serializer keeps v1 payload free of edge_barriers", "[unit][map]") {
   const auto serialized = rat::serialize_map_to_string(map);
   REQUIRE(serialized.ok);
   REQUIRE(serialized.json_text.find("\"edge_barriers\"") == std::string::npos);
+}
+
+TEST_CASE("Map loader v2 omits floor_slabs and ladders", "[unit][map]") {
+  constexpr const char* kJson = R"({
+    "schema_version": 2,
+    "id": "v2_empty_slabs",
+    "width": 1,
+    "height": 1,
+    "height_grid": {
+      "origin_x": 0, "origin_z": 0, "width": 1, "height": 1, "ground_y": [0.0]
+    },
+    "events": []
+  })";
+  const auto loaded = rat::load_map_from_string(kJson);
+  REQUIRE(loaded.ok);
+  REQUIRE(loaded.map.floor_slabs.empty());
+  REQUIRE(loaded.map.ladders.empty());
+}
+
+TEST_CASE("Map loader v3 roundtrips floor slab and ladder", "[unit][map]") {
+  constexpr const char* kJson = R"({
+    "schema_version": 3,
+    "id": "house",
+    "width": 2,
+    "height": 2,
+    "height_grid": {
+      "origin_x": 0, "origin_z": 0, "width": 2, "height": 2,
+      "ground_y": [0.0, 0.0, 0.0, 0.0]
+    },
+    "floor_slabs": [
+      { "tile": { "x": 1, "z": 2 }, "top_y": 2.0, "thickness": 0.25 }
+    ],
+    "ladders": [
+      { "tile": { "x": 0, "z": 0 }, "direction": "east", "y_lo": 0.0, "y_hi": 2.0 }
+    ],
+    "events": []
+  })";
+  const auto loaded = rat::load_map_from_string(kJson);
+  REQUIRE(loaded.ok);
+  REQUIRE(loaded.map.schema_version == 3);
+  REQUIRE(loaded.map.floor_slabs.size() == 1);
+  REQUIRE(loaded.map.floor_slabs[0].tile.x == 1);
+  REQUIRE(loaded.map.floor_slabs[0].tile.z == 2);
+  REQUIRE(loaded.map.floor_slabs[0].top_y == Catch::Approx(2.0f));
+  REQUIRE(loaded.map.floor_slabs[0].thickness == Catch::Approx(0.25f));
+  REQUIRE(loaded.map.ladders.size() == 1);
+  REQUIRE(loaded.map.ladders[0].direction == rat::RampDirection::East);
+  REQUIRE(loaded.map.ladders[0].y_hi == Catch::Approx(2.0f));
+
+  const auto serialized = rat::serialize_map_to_string(loaded.map);
+  REQUIRE(serialized.ok);
+  const auto again = rat::load_map_from_string(serialized.json_text);
+  REQUIRE(again.ok);
+  REQUIRE(again.map.floor_slabs.size() == 1);
+  REQUIRE(again.map.ladders[0].tile.x == 0);
+}
+
+TEST_CASE("v3 slab missing thickness defaults to 0.25", "[unit][map]") {
+  constexpr const char* kJson = R"({
+    "schema_version": 3,
+    "id": "thin",
+    "width": 1, "height": 1,
+    "height_grid": {
+      "origin_x": 0, "origin_z": 0, "width": 1, "height": 1, "ground_y": [0.0]
+    },
+    "floor_slabs": [ { "tile": { "x": 0, "z": 0 }, "top_y": 1.6 } ],
+    "events": []
+  })";
+  const auto loaded = rat::load_map_from_string(kJson);
+  REQUIRE(loaded.ok);
+  REQUIRE(loaded.map.floor_slabs[0].thickness == Catch::Approx(rat::kDefaultFloorSlabThickness));
+}
+
+TEST_CASE("Map loader v2 ignores floor_slabs and ladders keys", "[unit][map]") {
+  constexpr const char* kJson = R"({
+    "schema_version": 2,
+    "id": "v2_ignore_slabs",
+    "width": 1,
+    "height": 1,
+    "height_grid": {
+      "origin_x": 0, "origin_z": 0, "width": 1, "height": 1, "ground_y": [0.0]
+    },
+    "floor_slabs": [ { "tile": { "x": 0, "z": 0 }, "top_y": 2.0, "thickness": 0.25 } ],
+    "ladders": [
+      { "tile": { "x": 0, "z": 0 }, "direction": "east", "y_lo": 0.0, "y_hi": 2.0 }
+    ],
+    "events": []
+  })";
+  const auto loaded = rat::load_map_from_string(kJson);
+  REQUIRE(loaded.ok);
+  REQUIRE(loaded.map.floor_slabs.empty());
+  REQUIRE(loaded.map.ladders.empty());
+}
+
+TEST_CASE("v3 missing slab and ladder arrays loads empty", "[unit][map]") {
+  constexpr const char* kJson = R"({
+    "schema_version": 3,
+    "id": "v3_empty",
+    "width": 1,
+    "height": 1,
+    "height_grid": {
+      "origin_x": 0, "origin_z": 0, "width": 1, "height": 1, "ground_y": [0.0]
+    },
+    "events": []
+  })";
+  const auto loaded = rat::load_map_from_string(kJson);
+  REQUIRE(loaded.ok);
+  REQUIRE(loaded.map.schema_version == 3);
+  REQUIRE(loaded.map.floor_slabs.empty());
+  REQUIRE(loaded.map.ladders.empty());
 }
