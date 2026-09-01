@@ -20,4 +20,4 @@ Origin: chat (collider design) + chat 2026-09-02 (многоэтажный до�
 
 Spec: `docs/superpowers/specs/2026-09-02-stacked-floors-colliders-design.md`
 Plan: `docs/superpowers/plans/2026-09-02-stacked-floors-colliders.md`
-Follow-up: [[feat: Step off ladder onto same-tile floor]]
+Follow-up: [[feat: Step off ladder onto same-tile floor]], [[events-match-ground-while-on-slab]]
