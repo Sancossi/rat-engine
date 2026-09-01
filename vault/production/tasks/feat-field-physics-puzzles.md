@@ -14,4 +14,4 @@ Intent: небольшие «физические» загадки на карт
 
 Acceptance (позже): ящик — динамическое тело, толкается игроком и упирается в стены/заборы/кубы; панель на полу срабатывает от массы/стоящего тела; плита может обрушиться под весом; дверь-solid ломается при ударе со скоростью выше порога. Тела — POD в collision world, не ECS. Контекст: [[GDD]] field action, [[edge-walls-passable-from-adjacent-side]], [[research: Entity model ECS vs scene vs hybrid]].
 
-Origin: chat (collider design). Collision slice: [[edge-walls-passable-from-adjacent-side]].
+Origin: chat (collider design). Collision slice: [[edge-walls-passable-from-adjacent-side]]. Stacked floors later: [[feat: Stacked surfaces caves and basements]].
