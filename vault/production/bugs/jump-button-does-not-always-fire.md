@@ -1,7 +1,7 @@
 ---
 type: bug
 area: Engine
-status: Investigating
+status: Fixed
 severity: Medium
 sprint: Sprint 7
 tags: [bug]
@@ -29,3 +29,12 @@ Jump sometimes does nothing.
 Suspect leftover from unified tick: `WantCaptureKeyboard` / `clear_pending_input` vs `jump_buffer_left`, or catch-up consuming `jump_pressed` only on the first drain tick. Headless `[sim]` stayed green.
 
 Follow-up from: [[feat: SimulationSession unified tick]]
+
+## Resolution
+
+Display-кадр с `jump_pressed` при 0 sim-ticks терял ребро Space (`previous_buttons_` съедал edge до `tick`). `drain_simulation_catch_up` теперь зовёт `note_jump_pressed()` даже при `to_run == 0`. Verify: `.\build\tests\rat_tests.exe "*zero-tick*"` и `[sim]`. Review: Approved.
+
+## Bugs found
+
+none.
+
