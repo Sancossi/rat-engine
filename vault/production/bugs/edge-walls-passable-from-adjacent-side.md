@@ -1,7 +1,7 @@
 ---
 type: bug
 area: Engine
-status: Investigating
+status: Fixed
 severity: Medium
 sprint: Sprint 6
 tags: [bug]
@@ -39,3 +39,13 @@ Agreed for the fix: **cylinder** radius **0.4** (diameter 0.8, fits a 1-tile cor
 This bug slice: `CollisionWorld` API + fence solids + player cylinder vs fences. Cubes/ramps stay on `SurfaceQuery` until [[feat: Bake height-grid and ramps to collision solids]]. No crates, caves, or ECS.
 
 Spec: `docs/superpowers/specs/2026-09-01-collision-world-fence-solids-design.md`
+
+## Resolution
+
+`CollisionWorld` печёт заборы в XZ-сегменты; игрок — цилиндр радиус 0.4, высота 1.6. Ходьба и прыжок бьются о сегмент, не о пересечение центра с плоскостью. PlayerTouch — круг vs AABB события. Кубы и рампы пока `SurfaceQuery` ([[feat: Bake height-grid and ramps to collision solids]]).
+
+Проверка: `.\build\tests\rat_tests.exe "[collision]"` и `"[player][edge]"`; в Play — пройти вдоль забора с соседней клетки.
+
+## Bugs found
+
+none.
