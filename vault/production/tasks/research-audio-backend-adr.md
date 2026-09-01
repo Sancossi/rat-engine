@@ -1,7 +1,7 @@
 ---
 type: task
 area: Engine
-status: In review
+status: Done
 task_type: Research
 sprint: Sprint 7
 due:
@@ -19,3 +19,11 @@ Depends: [[feat: Input rebind and gamepad]]. Next: [[feat: Audio backend impleme
 Origin: [[feat: Audio play-queue stub]] + merged `docs/architecture-roadmap.md` (2026-09-01).
 
 ADR: [[ADR-013 Audio backend miniaudio]] (Accepted). miniaudio as `AudioSink`; tests keep Recording/Null; clips `AssetId`. Status unchanged until review.
+
+## Resolution
+
+ADR-013: miniaudio (WASAPI на Windows, Pulse/ALSA на Linux) как единственный device-`AudioSink`. `QueuedAudio` и composition root `EditorApp` без locator. Тесты оставляют Recording/Null; `rat_tests` не открывает устройство. Клипы — `AssetId`. FetchContent — [[feat: Audio backend implementation]]. Verify: read ADR-013. Review: Approved.
+
+## Bugs found
+
+none.
