@@ -3,6 +3,7 @@
 #include "rat/app_mode.hpp"
 #include "rat/event_runtime.hpp"
 #include "rat/game_state.hpp"
+#include "rat/input.hpp"
 #include "rat/player.hpp"
 
 #include <cstdint>
@@ -43,13 +44,17 @@ struct DebugSnapshot {
   std::vector<std::string> warnings;
   std::string event_why_not_reason;
   std::vector<EventWhyNotEntry> event_why_not;
+  std::uint64_t checksum = 0;
+  InputFrame input{};
 };
 
 [[nodiscard]] DebugSnapshot make_debug_snapshot(std::uint64_t sim_frame, AppMode mode,
                                                 const PlayerBody& player, const JumpState& jump,
                                                 const EventRuntime& events, const GameState& state,
                                                 bool interact_pressed = false,
-                                                std::string_view selected_event_id = {});
+                                                std::string_view selected_event_id = {},
+                                                const InputFrame& input = {},
+                                                std::uint64_t checksum = 0);
 
 [[nodiscard]] bool write_debug_snapshot(std::string_view path, const DebugSnapshot& snapshot);
 [[nodiscard]] std::optional<DebugSnapshot> read_debug_snapshot(std::string_view path);

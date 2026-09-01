@@ -21,6 +21,7 @@ add_library(rat_core
   src/map_loader.cpp
   src/player.cpp
   src/player_jump.cpp
+  src/replay.cpp
   src/simulation_session.cpp
   src/surface_query.cpp
   src/terrain_geometry.cpp

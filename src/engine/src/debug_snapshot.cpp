@@ -95,6 +95,12 @@ json dump_snapshot(const DebugSnapshot& snapshot) {
     why_not.push_back(json{{"id", entry.id}, {"reason", entry.reason}});
   }
   root["event_why_not"] = why_not;
+  root["checksum"] = snapshot.checksum;
+  root["input"] = json{{"axis_x", snapshot.input.move.axis_x},
+                       {"axis_z", snapshot.input.move.axis_z},
+                       {"jump_pressed", snapshot.input.jump_pressed},
+                       {"jump_held", snapshot.input.jump_held},
+                       {"interact_pressed", snapshot.input.interact_pressed}};
   return root;
 }
 
@@ -156,6 +162,15 @@ DebugSnapshot load_snapshot(const json& root) {
       });
     }
   }
+  snapshot.checksum = root.value("checksum", static_cast<std::uint64_t>(0));
+  if (root.contains("input") && root["input"].is_object()) {
+    const json& input = root["input"];
+    snapshot.input.move.axis_x = input.value("axis_x", 0.0f);
+    snapshot.input.move.axis_z = input.value("axis_z", 0.0f);
+    snapshot.input.jump_pressed = input.value("jump_pressed", false);
+    snapshot.input.jump_held = input.value("jump_held", false);
+    snapshot.input.interact_pressed = input.value("interact_pressed", false);
+  }
   return snapshot;
 }
 
@@ -164,7 +179,8 @@ DebugSnapshot load_snapshot(const json& root) {
 DebugSnapshot make_debug_snapshot(std::uint64_t sim_frame, AppMode mode, const PlayerBody& player,
                                   const JumpState& jump, const EventRuntime& events,
                                   const GameState& state, bool interact_pressed,
-                                  std::string_view selected_event_id) {
+                                  std::string_view selected_event_id, const InputFrame& input,
+                                  std::uint64_t checksum) {
   DebugSnapshot snapshot;
   snapshot.sim_frame = sim_frame;
   snapshot.app_mode = app_mode_name(mode);
@@ -210,6 +226,8 @@ DebugSnapshot make_debug_snapshot(std::uint64_t sim_frame, AppMode mode, const P
       snapshot.event_why_not_reason = snapshot.event_why_not.front().reason;
     }
   }
+  snapshot.input = input;
+  snapshot.checksum = checksum;
   return snapshot;
 }
 

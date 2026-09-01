@@ -12,6 +12,7 @@
 #include <rat/hot_apply.hpp>
 #include <rat/input.hpp>
 #include <rat/map_loader.hpp>
+#include <rat/replay.hpp>
 #include <rat/simulation_session.hpp>
 #include <rat/surface_query.hpp>
 
@@ -1255,7 +1256,8 @@ void EditorApp::update_simulation(float dt) {
     }
     const DebugSnapshot snapshot =
         make_debug_snapshot(session_.tick_id(), app_mode_, session_.player(), session_.jump(),
-                            session_.events(), session_.state(), input.interact_pressed, selected_id);
+                            session_.events(), session_.state(), input.interact_pressed, selected_id,
+                            input, runtime_checksum(session_, 0));
     const std::string path = default_debug_snapshot_path();
     if (write_debug_snapshot(path, snapshot)) {
       if (logger_ != nullptr) {

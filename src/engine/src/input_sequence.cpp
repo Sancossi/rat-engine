@@ -1,6 +1,7 @@
 #include "rat/input_sequence.hpp"
 
 #include "rat/debug_snapshot.hpp"
+#include "rat/replay.hpp"
 #include "rat/simulation_session.hpp"
 
 #include <cstdio>
@@ -46,9 +47,10 @@ InputSequenceResult run_input_sequence(const MapData& map, PlayerBody start_play
     session.tick(frame);
 
     if (want_snapshots && !result.snapshot_error) {
-      const DebugSnapshot snapshot =
-          make_debug_snapshot(session.tick_id(), config.app_mode, session.player(), session.jump(),
-                              session.events(), session.state(), frame.interact_pressed);
+      const DebugSnapshot snapshot = make_debug_snapshot(
+          session.tick_id(), config.app_mode, session.player(), session.jump(), session.events(),
+          session.state(), frame.interact_pressed, {}, frame,
+          runtime_checksum(session, 0));
       const std::string path = snapshot_step_path(config.snapshot_dir, session.tick_id());
       if (write_debug_snapshot(path, snapshot)) {
         ++result.snapshots_written;
