@@ -1,9 +1,9 @@
 ---
 type: sprint
-status: Active
+status: Done
 dates: 2026-09-29/2026-10-12
 goal: Mouse viewport authoring plus undo for height-grid and edge fences
-current: true
+current: false
 tags: [sprint]
 ---
 
@@ -22,3 +22,11 @@ DoD:
 Порядок:
 
 - [[feat: Mouse viewport map edit]] → [[feat: Undo height-grid and edge edits]] → [[edge-walls-hang-in-the-air]] → [[feat: Mouse viewport terrain edit]] → [[edge-walls-passable-from-adjacent-side]] → [[feat: Bake height-grid and ramps to collision solids]]
+
+## Итог
+
+DoD выполнен 2026-09-01. Мышь: select/drag/place, `WantCaptureMouse`. Undo height-grid, ramps и edge fences через `EditHistory`. Viewport Place cube и пресеты ребра. Greybox заборы на углах клетки, боковые грани height-grid до Y=0. Cylinder vs baked fence segments; side faces куба в `CollisionWorld`. Архитектурный срез не брали → [[Sprint 7 — Engine architecture]].
+
+## Bugs found
+
+none новых на закрытии. Follow-up collision: [[edge-walls-passable-from-adjacent-side]], [[feat: Bake height-grid and ramps to collision solids]] — Fixed/Done в этом спринте.

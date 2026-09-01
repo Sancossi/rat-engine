@@ -46,16 +46,16 @@ GPP Event Queue для звука = геймплей постит `PlaySfx`, а�
 
 ## Очередь доработок
 
-Порядок — зависимости, не даты. [[Sprint 4 — Refactoring and AI workflow]] ест Agent Debug и ближний GPP-слой движка; остальное — бэклог до триггера.
+Порядок — зависимости, не даты. Sprint 4 закрыл Agent Debug и ближний GPP-слой; текущая очередь — [[Sprint 7 — Engine architecture]].
 
 1. Ближний слой (Sprint 4): [[feat: Input action mapping]], [[feat: Audio play-queue stub]].
 2. Сразу за звуком (Sprint 4): [[feat: PlaySE event command]], [[feat: Gameplay notify observer]].
 3. Command в Edit (Sprint 4): [[feat: Edit undo/redo command stack]].
 4. State (Sprint 4): [[feat: Player locomotion FSM]] — готово (`locomotion_from`); клипы не в этой карточке.
 5. Debug для агента (Sprint 4): [[Logging and assert helpers]], [[feat: Debug snapshot JSON]], [[feat: Event why-not-fired]], [[feat: Headless input sequence probe]] — [[Agent Debug]]. Тулзы: [[research: Rat debug loopback MCP]].
-6. Authoring (Sprint 6): [[feat: Mouse viewport map edit]] → [[feat: Undo height-grid and edge edits]] → [[feat: Mouse viewport terrain edit]].
-7. Следом за вводом/звуком (бэклог): [[feat: Input rebind and gamepad]], [[research: Audio backend ADR]].
-8. По потребности (триггер в карточке): [[research: Entity model ECS vs scene vs hybrid]], [[feat: Object pool for short-lived FX]], [[feat: Spatial partition broadphase]].
+6. Authoring (Sprint 6, Done): [[feat: Mouse viewport map edit]] → [[feat: Undo height-grid and edge edits]] → [[feat: Mouse viewport terrain edit]].
+7. Архитектура (Sprint 7): [[feat: SimulationSession unified tick]] → [[feat: Replay recording and checksum]] → [[feat: MapDocument and RuntimeMap compile]] → [[chore: Decompose EditorApp]]; ввод/звук: [[feat: Input rebind and gamepad]], [[research: Audio backend ADR]]; entity ADR: [[research: Entity model ECS vs scene vs hybrid]].
+8. По потребности после метрик: [[feat: Object pool for short-lived FX]], [[feat: Spatial partition broadphase]].
 
 ## Не делаем
 

@@ -37,6 +37,8 @@ flowchart TB
 
 Сверка игровых паттернов (цикл, ввод, звук, event VM) — [[Game Programming Patterns]].
 
+Целевая нарезка библиотек и этапы — [architecture roadmap](../../docs/architecture-roadmap.md), очередь в [[Sprint 7 — Engine architecture]].
+
 ## Open questions
 
 - Entity model: ECS vs scene-graph vs hybrid? — [[research: Entity model ECS vs scene vs hybrid]]
