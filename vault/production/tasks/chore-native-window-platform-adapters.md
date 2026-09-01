@@ -1,7 +1,7 @@
 ---
 type: task
 area: Engine
-status: In review
+status: Done
 task_type: Chore
 sprint: Sprint 7
 due:
@@ -17,3 +17,11 @@ Acceptance: `rat_core` / `SimulationSession` не видят HWND/Win32; editor 
 Depends: [[feat: RenderWorld packets and instrumentation]]. Next: [[feat: Input rebind and gamepad]].
 
 Origin: merged `docs/architecture-roadmap.md` (2026-09-01).
+
+## Resolution
+
+`GlfwHost` свёрнут в `NativeWindow`: HWND/X11 спрятаны за `void*` handle. Editor отдаёт в симуляцию только `InputFrame`. Часы — `Clock`/`SteadyClock`; карты, snapshot и replay идут через `FileStore`, не через размазанный fopen. Verify: `.\build\tests\rat_tests.exe "[clock],[file],[platform]"` и `ctest`. Review: Approved.
+
+## Bugs found
+
+none.
