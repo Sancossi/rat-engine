@@ -19,7 +19,8 @@ class SurfaceQuery;
 
 inline constexpr float kSimulationFixedDt = 1.0f / 120.0f;
 inline constexpr float kMaxCatchUpSeconds = 0.2f;
-inline constexpr int kMaxCatchUpTicks = 24;  // 0.2s at 120 Hz
+inline constexpr int kMaxCatchUpTicks =
+    static_cast<int>(kMaxCatchUpSeconds / kSimulationFixedDt + 0.5f);
 
 struct SimulationConfig {
   float dt = kSimulationFixedDt;
@@ -52,6 +53,8 @@ class SimulationSession {
   void set_audio(Audio* audio);
   void rebuild_surface();
   void reset_jump_grounded();
+  // Capture / reset: drop interact + jump pending and JumpState::jump_buffer_left.
+  // Do not call just because this tick's jump_pressed is false.
   void clear_pending_input();
 
   SimulationTickResult tick(const InputFrame& input);

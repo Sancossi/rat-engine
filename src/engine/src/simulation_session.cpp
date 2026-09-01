@@ -77,6 +77,7 @@ void SimulationSession::reset_jump_grounded() {
 
 void SimulationSession::clear_pending_input() {
   jump_press_pending_ = false;
+  jump_.jump_buffer_left = 0.0f;
   clear_buffered_press(interact_buffer_);
 }
 

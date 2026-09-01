@@ -111,20 +111,98 @@ TEST_CASE("drain_simulation_catch_up diagnoses catch-up budget exceeded", "[unit
 }
 
 TEST_CASE("drain_simulation_catch_up applies jump edge on first tick only", "[unit][sim]") {
+  const rat::MapData map = make_flat_map();
+  const rat::PlayerBody start = make_start_player();
+
+  rat::InputFrame press;
+  press.jump_pressed = true;
+  press.jump_held = true;
+  rat::SimulationSession hitch;
+  hitch.load(map);
+  hitch.set_player(start);
+  float accumulator = hitch.config().dt * 3.0f;
+  const rat::SimulationCatchUpResult catch_up =
+      rat::drain_simulation_catch_up(hitch, accumulator, press);
+
+  rat::SimulationSession once;
+  once.load(map);
+  once.set_player(start);
+  once.tick(press);
+  rat::InputFrame held;
+  held.jump_held = true;
+  once.tick(held);
+  once.tick(held);
+
+  rat::SimulationSession retrigger;
+  retrigger.load(map);
+  retrigger.set_player(start);
+  for (int i = 0; i < 3; ++i) {
+    retrigger.tick(press);
+  }
+
+  CHECK(catch_up.ticks_run == 3);
+  CHECK(hitch.tick_id() == 3);
+  CHECK_FALSE(hitch.jump().grounded);
+  CHECK(hitch.jump().jump_buffer_left == Approx(0.0f).margin(1e-6f));
+  CHECK(hitch.player().y == Approx(once.player().y).margin(1e-5f));
+  CHECK(hitch.jump().vertical_speed == Approx(once.jump().vertical_speed).margin(1e-5f));
+  CHECK(retrigger.jump().jump_buffer_left > 0.0f);
+}
+
+TEST_CASE("clear_pending_input drops jump buffer so keyboard capture cannot launch",
+          "[unit][sim]") {
   rat::SimulationSession session;
   session.load(make_flat_map());
   session.set_player(make_start_player());
 
-  rat::InputFrame frame;
-  frame.jump_pressed = true;
-  frame.jump_held = true;
-  float accumulator = session.config().dt * 3.0f;
-  const rat::SimulationCatchUpResult catch_up =
-      rat::drain_simulation_catch_up(session, accumulator, frame);
+  rat::InputFrame jump;
+  jump.jump_pressed = true;
+  jump.jump_held = true;
+  REQUIRE_FALSE(session.tick(jump).landed);
+  REQUIRE_FALSE(session.jump().grounded);
 
-  CHECK(catch_up.ticks_run == 3);
-  CHECK(session.tick_id() == 3);
-  CHECK_FALSE(session.jump().grounded);
+  rat::InputFrame buffer;
+  buffer.jump_pressed = true;
+  session.tick(buffer);
+  REQUIRE(session.jump().jump_buffer_left > 0.0f);
+  REQUIRE_FALSE(session.jump().grounded);
+
+  // Editor maps WantCaptureKeyboard to a gated InputFrame + this helper.
+  session.clear_pending_input();
+  REQUIRE(session.jump().jump_buffer_left == Approx(0.0f).margin(1e-6f));
+
+  bool landed = false;
+  for (int i = 0; i < 600; ++i) {
+    const rat::SimulationTickResult result = session.tick({});
+    if (result.landed) {
+      landed = true;
+      REQUIRE(session.jump().grounded);
+      break;
+    }
+  }
+  REQUIRE(landed);
+  REQUIRE(session.jump().grounded);
+}
+
+TEST_CASE("tick does not drop jump buffer just because jump_pressed is false", "[unit][sim]") {
+  rat::SimulationSession session;
+  session.load(make_flat_map());
+  session.set_player(make_start_player());
+
+  rat::InputFrame jump;
+  jump.jump_pressed = true;
+  jump.jump_held = true;
+  REQUIRE_FALSE(session.tick(jump).landed);
+
+  rat::InputFrame buffer;
+  buffer.jump_pressed = true;
+  session.tick(buffer);
+  const float buffered = session.jump().jump_buffer_left;
+  REQUIRE(buffered > 0.0f);
+
+  session.tick({});
+  CHECK(session.jump().jump_buffer_left > 0.0f);
+  CHECK(session.jump().jump_buffer_left < buffered);
 }
 
 TEST_CASE("SimulationSession tick posts Landed on airborne to grounded", "[unit][sim]") {

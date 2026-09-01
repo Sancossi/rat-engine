@@ -16,7 +16,7 @@ namespace rat {
 struct InputSequenceConfig {
   float dt = 1.0f / 120.0f;
   JumpTuning jump_tuning{};
-  // Default Play: Edit skips integrate and does not snap-to-ground (editor-only).
+  // Default Play. Edit skips player control and snaps to ground each tick.
   AppMode app_mode = AppMode::Play;
   bool write_snapshot_each_step = false;
   std::string snapshot_dir;
