@@ -46,9 +46,21 @@ struct WalkableBox {
   float y_hi = 0.0f;  // standable top; underside is ceiling
 };
 
+struct WalkableRamp {
+  TileCoord tile;
+  RampDirection direction = RampDirection::East;
+  float low_y = 0.0f;
+  float high_y = 0.0f;
+  float min_x = 0.0f;
+  float min_z = 0.0f;
+  float max_x = 0.0f;
+  float max_z = 0.0f;
+};
+
 struct CollisionWorld {
   std::vector<FenceSolid> fences;
   std::vector<WalkableBox> boxes;
+  std::vector<WalkableRamp> ramps;
 };
 
 [[nodiscard]] CollisionBody collision_body_from_player(const PlayerBody& player);
@@ -59,6 +71,8 @@ void append_terrain_walls(CollisionWorld& world, const HeightGrid& grid,
 void append_ground_boxes(CollisionWorld& world, const HeightGrid& grid,
                          std::span<const RampDef> ramps, float tile_size);
 void append_floor_slabs(CollisionWorld& world, std::span<const FloorSlabDef> slabs, float tile_size);
+[[nodiscard]] float ramp_surface_y(const WalkableRamp& ramp, float x, float z);
+void append_ramp_prisms(CollisionWorld& world, std::span<const RampDef> ramps, float tile_size);
 [[nodiscard]] CollisionWorld bake_collision_world(const MapData& map, const SurfaceQuery& query);
 [[nodiscard]] bool cylinder_hits_fences(const CollisionBody& body, const CollisionWorld& world);
 [[nodiscard]] bool cylinder_hits_walls(const CollisionBody& body, const CollisionWorld& world,

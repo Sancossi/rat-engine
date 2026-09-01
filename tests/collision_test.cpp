@@ -318,6 +318,21 @@ TEST_CASE("Bake ground box for a 1.0 cell and skip ramp tiles", "[collision]") {
   REQUIRE(world.boxes.empty());  // prism comes in Task 3
 }
 
+TEST_CASE("West ramp prism interpolates like SurfaceQuery and replaces the ground box",
+          "[collision]") {
+  rat::MapData map = make_grid(1, 1, 0.0f);
+  map.ramps.push_back({.tile = {0, 0},
+                       .direction = rat::RampDirection::West,
+                       .low_y = 0.0f,
+                       .high_y = 1.0f});
+  const rat::SurfaceQuery query(map);
+  const rat::CollisionWorld world = rat::bake_collision_world(map, query);
+  REQUIRE(world.boxes.empty());
+  REQUIRE(world.ramps.size() == 1);
+  REQUIRE(rat::ramp_surface_y(world.ramps[0], 0.0f, 0.5f) == Approx(query.sample(0.0f, 0.5f).y).margin(1e-4f));
+  REQUIRE(rat::ramp_surface_y(world.ramps[0], 1.0f, 0.5f) == Approx(query.sample(1.0f, 0.5f).y).margin(1e-4f));
+}
+
 TEST_CASE("Bake floor slab is a thin box not filled to Y=0", "[collision]") {
   rat::MapData map = make_grid(1, 1, 0.0f);
   map.floor_slabs.push_back({{0, 0}, 2.0f, 0.25f});

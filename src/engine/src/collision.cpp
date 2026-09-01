@@ -182,11 +182,52 @@ void append_floor_slabs(CollisionWorld& world, std::span<const FloorSlabDef> sla
   }
 }
 
+float ramp_surface_y(const WalkableRamp& ramp, float x, float z) {
+  const float span_x = ramp.max_x - ramp.min_x;
+  const float span_z = ramp.max_z - ramp.min_z;
+  const float frac_x = span_x != 0.0f ? std::clamp((x - ramp.min_x) / span_x, 0.0f, 1.0f) : 0.0f;
+  const float frac_z = span_z != 0.0f ? std::clamp((z - ramp.min_z) / span_z, 0.0f, 1.0f) : 0.0f;
+  float t = 0.0f;
+  switch (ramp.direction) {
+    case RampDirection::North:
+      t = 1.0f - frac_z;
+      break;
+    case RampDirection::East:
+      t = frac_x;
+      break;
+    case RampDirection::South:
+      t = frac_z;
+      break;
+    case RampDirection::West:
+      t = 1.0f - frac_x;
+      break;
+  }
+  return ramp.low_y + (ramp.high_y - ramp.low_y) * std::clamp(t, 0.0f, 1.0f);
+}
+
+void append_ramp_prisms(CollisionWorld& world, std::span<const RampDef> ramps, float tile_size) {
+  const float ts = tile_size > 0.0f ? tile_size : 1.0f;
+  world.ramps.reserve(world.ramps.size() + ramps.size());
+  for (const RampDef& ramp : ramps) {
+    WalkableRamp prism;
+    prism.tile = ramp.tile;
+    prism.direction = ramp.direction;
+    prism.low_y = ramp.low_y;
+    prism.high_y = ramp.high_y;
+    prism.min_x = static_cast<float>(ramp.tile.x) * ts;
+    prism.min_z = static_cast<float>(ramp.tile.z) * ts;
+    prism.max_x = prism.min_x + ts;
+    prism.max_z = prism.min_z + ts;
+    world.ramps.push_back(prism);
+  }
+}
+
 CollisionWorld bake_collision_world(const MapData& map, const SurfaceQuery& query) {
   CollisionWorld world = bake_fence_world(map.edge_barriers, query);
   const float ts = query.tile_size() > 0.0f ? query.tile_size() : 1.0f;
   append_terrain_walls(world, map.height_grid, map.ramps, ts);
   append_ground_boxes(world, map.height_grid, map.ramps, ts);
+  append_ramp_prisms(world, map.ramps, ts);
   append_floor_slabs(world, map.floor_slabs, ts);
   return world;
 }
