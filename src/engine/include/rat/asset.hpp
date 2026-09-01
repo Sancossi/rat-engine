@@ -133,6 +133,7 @@ class AssetRegistry {
   [[nodiscard]] std::string compiled_path(const AssetId& id) const;
   [[nodiscard]] AssetView resolve(const AssetId& id) const;
   [[nodiscard]] GpuHandleStatus gpu_status(GpuHandle handle) const;
+  [[nodiscard]] int last_gpu_uploads() const { return last_gpu_uploads_; }
 
  private:
   struct Record {
@@ -153,6 +154,7 @@ class AssetRegistry {
   std::unordered_map<std::string, Record> records_;
   std::vector<AssetId> pending_loads_;
   std::uint64_t next_gpu_ = 0;
+  int last_gpu_uploads_ = 0;
   std::unordered_map<std::uint64_t, GpuHandleStatus> gpu_states_;
 };
 

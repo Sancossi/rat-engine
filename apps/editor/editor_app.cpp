@@ -553,10 +553,16 @@ void EditorApp::simulate(float dt) {
         document_.selected_event() < static_cast<int>(event_list.size())) {
       selected_id = event_list[static_cast<std::size_t>(document_.selected_event())].id;
     }
+    const RenderWorld world = capture_render_world(session_);
+    FrameMetricsSources sources;
+    sources.session = &session_;
+    sources.render = &world;
+    sources.assets = asset_registry_.get();
+    sources.audio = audio_.get();
     const DebugSnapshot snapshot =
         make_debug_snapshot(session_.tick_id(), app_mode_, session_.player(), session_.jump(),
                             session_.events(), session_.state(), input.interact_pressed, selected_id,
-                            input, runtime_checksum(session_, 0));
+                            input, runtime_checksum(session_, 0), collect_frame_metrics(sources));
     const std::string path = default_debug_snapshot_path();
     if (write_debug_snapshot(path, snapshot)) {
       if (logger_ != nullptr) {

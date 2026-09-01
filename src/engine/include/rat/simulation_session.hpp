@@ -2,6 +2,7 @@
 
 #include "rat/app_mode.hpp"
 #include "rat/buffered_press.hpp"
+#include "rat/clock.hpp"
 #include "rat/event_runtime.hpp"
 #include "rat/game_state.hpp"
 #include "rat/input.hpp"
@@ -58,6 +59,7 @@ class SimulationSession {
   void set_app_mode(AppMode mode);
   void set_notify(GameplayNotifyBus* notify);
   void set_audio(Audio* audio);
+  void set_clock(Clock* clock);
   void rebuild_surface();
   void reset_jump_grounded();
   // Capture / reset: drop interact + jump pending and JumpState::jump_buffer_left.
@@ -85,6 +87,8 @@ class SimulationSession {
   [[nodiscard]] JumpTuning& jump_tuning() { return config_.jump_tuning; }
   [[nodiscard]] const JumpTuning& jump_tuning() const { return config_.jump_tuning; }
   [[nodiscard]] std::unique_ptr<SurfaceQuery>& surface_query() { return surface_; }
+  [[nodiscard]] const SurfaceQuery* surface() const { return surface_.get(); }
+  [[nodiscard]] double last_tick_seconds() const { return last_tick_seconds_; }
 
  private:
   void ensure_surface();
@@ -100,6 +104,9 @@ class SimulationSession {
   bool jump_press_pending_ = false;
   std::unique_ptr<SurfaceQuery> surface_;
   GameplayNotifyBus* notify_ = nullptr;
+  Clock* clock_ = nullptr;
+  SteadyClock steady_{};
+  double last_tick_seconds_ = 0.0;
 };
 
 // Drain `accumulator` by calling `tick`. Edges on `input` apply to the first tick that

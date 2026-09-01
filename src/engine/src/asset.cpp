@@ -109,6 +109,7 @@ GpuHandle AssetRegistry::allocate_gpu() {
   GpuHandle handle;
   handle.generation = ++next_gpu_;
   gpu_states_[handle.generation] = GpuHandleStatus::Live;
+  ++last_gpu_uploads_;
   return handle;
 }
 
@@ -161,6 +162,7 @@ void AssetRegistry::request_load(const AssetId& id) {
 }
 
 void AssetRegistry::pump_loads() {
+  last_gpu_uploads_ = 0;
   const std::vector<AssetId> batch = std::move(pending_loads_);
   pending_loads_.clear();
   for (const AssetId& id : batch) {

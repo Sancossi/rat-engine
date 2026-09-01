@@ -1,3 +1,4 @@
+#include <rat/clock.hpp>
 #include <rat/gameplay_notify.hpp>
 #include <rat/input.hpp>
 #include <rat/input_sequence.hpp>
@@ -419,4 +420,15 @@ TEST_CASE("run_input_sequence adapter matches SimulationSession ticks on grey_ya
   CHECK(seq.player.z == Approx(session.player().z).margin(1e-5f));
   CHECK(seq.state.get_variable(0) == session.state().get_variable(0));
   CHECK(seq.jump.grounded == session.jump().grounded);
+}
+
+TEST_CASE("SimulationSession tick duration follows FakeClock auto-advance",
+          "[unit][sim][metrics]") {
+  rat::FakeClock clock;
+  clock.set_auto_advance_seconds(0.004);
+  rat::SimulationSession session;
+  session.set_clock(&clock);
+  REQUIRE(session.load(make_flat_map()).ok);
+  session.tick({});
+  CHECK(session.last_tick_seconds() == Approx(0.004));
 }

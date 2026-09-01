@@ -64,11 +64,13 @@ void* FrameAllocator::allocate(std::size_t bytes, std::size_t alignment) {
     storage_.resize(end);
   }
   used_ = end;
+  ++allocation_count_;
   return storage_.data() + offset;
 }
 
 void FrameAllocator::reset() {
   used_ = 0;
+  allocation_count_ = 0;
 }
 
 void DeferredGpuFreeQueue::queue(GpuHandle handle) {

@@ -68,6 +68,7 @@ void EventRuntime::clear() {
   autorun_lock_.clear();
   active_parallel_count_ = 0;
   last_parallel_commands_executed_ = 0;
+  last_commands_executed_ = 0;
   warnings_.clear();
   surface_query_.reset();
 }
@@ -407,6 +408,7 @@ void EventRuntime::step_interpreter(Interpreter& interp, GameState& state, int& 
 
     const Command& command = (*frame.commands)[frame.index];
     ++frame.index;
+    ++last_commands_executed_;
     if (interp.parallel) {
       --command_budget;
       ++last_parallel_commands_executed_;
@@ -433,6 +435,7 @@ void EventRuntime::step_interpreter(Interpreter& interp, GameState& state, int& 
 void EventRuntime::update(GameState& state, const PlayerBody& player, bool interact_pressed,
                           float /*dt*/) {
   last_parallel_commands_executed_ = 0;
+  last_commands_executed_ = 0;
 
   try_start_autorun(state);
   try_start_parallels(state);

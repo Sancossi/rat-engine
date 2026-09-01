@@ -29,6 +29,18 @@ struct EventWhyNotEntry {
   std::string reason;
 };
 
+struct FrameMetrics {
+  double simulation_tick_seconds = 0.0;
+  int event_commands = 0;
+  int draw_calls = 0;
+  std::uint64_t transient_bytes = 0;
+  int transient_allocations = 0;
+  int asset_uploads = 0;
+  int audio_queue_depth = 0;
+  std::uint64_t audio_overflow_count = 0;
+  int collision_candidates = 0;
+};
+
 struct DebugSnapshot {
   std::uint64_t sim_frame = 0;
   std::string app_mode;
@@ -47,6 +59,7 @@ struct DebugSnapshot {
   std::vector<EventWhyNotEntry> event_why_not;
   std::uint64_t checksum = 0;
   InputFrame input{};
+  FrameMetrics metrics{};
 };
 
 [[nodiscard]] DebugSnapshot make_debug_snapshot(std::uint64_t sim_frame, AppMode mode,
@@ -55,7 +68,24 @@ struct DebugSnapshot {
                                                 bool interact_pressed = false,
                                                 std::string_view selected_event_id = {},
                                                 const InputFrame& input = {},
-                                                std::uint64_t checksum = 0);
+                                                std::uint64_t checksum = 0,
+                                                FrameMetrics metrics = {});
+
+class SimulationSession;
+struct RenderWorld;
+class FrameAllocator;
+class AssetRegistry;
+class QueuedAudio;
+
+struct FrameMetricsSources {
+  const SimulationSession* session = nullptr;
+  const RenderWorld* render = nullptr;
+  const FrameAllocator* frame = nullptr;
+  const AssetRegistry* assets = nullptr;
+  const QueuedAudio* audio = nullptr;
+};
+
+[[nodiscard]] FrameMetrics collect_frame_metrics(const FrameMetricsSources& sources);
 
 [[nodiscard]] bool write_debug_snapshot(std::string_view path, const DebugSnapshot& snapshot);
 [[nodiscard]] bool write_debug_snapshot(std::string_view path, const DebugSnapshot& snapshot,

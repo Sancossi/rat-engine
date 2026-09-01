@@ -59,6 +59,10 @@ void SimulationSession::set_audio(Audio* audio) {
   events_.set_audio(audio);
 }
 
+void SimulationSession::set_clock(Clock* clock) {
+  clock_ = clock;
+}
+
 void SimulationSession::rebuild_surface() {
   surface_ = std::make_unique<SurfaceQuery>(events_.map());
 }
@@ -107,6 +111,8 @@ void SimulationSession::note_interact_pressed() {
 
 SimulationTickResult SimulationSession::tick(const InputFrame& input) {
   SimulationTickResult result;
+  Clock& clock = clock_ != nullptr ? *clock_ : steady_;
+  const double tick_start = clock.now_seconds();
   ++tick_id_;
   result.tick_id = tick_id_;
 
@@ -190,6 +196,7 @@ SimulationTickResult SimulationSession::tick(const InputFrame& input) {
   }
 
   consume_then_tick_buffered_press(interact_buffer_, false, dt);
+  last_tick_seconds_ = clock.now_seconds() - tick_start;
   return result;
 }
 

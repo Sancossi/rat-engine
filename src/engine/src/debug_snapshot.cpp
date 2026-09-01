@@ -1,7 +1,13 @@
 #include "rat/debug_snapshot.hpp"
 
 #include "rat/app_mode.hpp"
+#include "rat/asset.hpp"
+#include "rat/audio.hpp"
+#include "rat/collision.hpp"
 #include "rat/file_store.hpp"
+#include "rat/render_world.hpp"
+#include "rat/simulation_session.hpp"
+#include "rat/surface_query.hpp"
 
 #include <nlohmann/json.hpp>
 
@@ -101,6 +107,15 @@ json dump_snapshot(const DebugSnapshot& snapshot) {
                        {"jump_pressed", snapshot.input.jump_pressed},
                        {"jump_held", snapshot.input.jump_held},
                        {"interact_pressed", snapshot.input.interact_pressed}};
+  root["metrics"] = json{{"simulation_tick_seconds", snapshot.metrics.simulation_tick_seconds},
+                         {"event_commands", snapshot.metrics.event_commands},
+                         {"draw_calls", snapshot.metrics.draw_calls},
+                         {"transient_bytes", snapshot.metrics.transient_bytes},
+                         {"transient_allocations", snapshot.metrics.transient_allocations},
+                         {"asset_uploads", snapshot.metrics.asset_uploads},
+                         {"audio_queue_depth", snapshot.metrics.audio_queue_depth},
+                         {"audio_overflow_count", snapshot.metrics.audio_overflow_count},
+                         {"collision_candidates", snapshot.metrics.collision_candidates}};
   return root;
 }
 
@@ -171,6 +186,19 @@ DebugSnapshot load_snapshot(const json& root) {
     snapshot.input.jump_held = input.value("jump_held", false);
     snapshot.input.interact_pressed = input.value("interact_pressed", false);
   }
+  if (root.contains("metrics") && root["metrics"].is_object()) {
+    const json& metrics = root["metrics"];
+    snapshot.metrics.simulation_tick_seconds = metrics.value("simulation_tick_seconds", 0.0);
+    snapshot.metrics.event_commands = metrics.value("event_commands", 0);
+    snapshot.metrics.draw_calls = metrics.value("draw_calls", 0);
+    snapshot.metrics.transient_bytes = metrics.value("transient_bytes", static_cast<std::uint64_t>(0));
+    snapshot.metrics.transient_allocations = metrics.value("transient_allocations", 0);
+    snapshot.metrics.asset_uploads = metrics.value("asset_uploads", 0);
+    snapshot.metrics.audio_queue_depth = metrics.value("audio_queue_depth", 0);
+    snapshot.metrics.audio_overflow_count =
+        metrics.value("audio_overflow_count", static_cast<std::uint64_t>(0));
+    snapshot.metrics.collision_candidates = metrics.value("collision_candidates", 0);
+  }
   return snapshot;
 }
 
@@ -180,7 +208,7 @@ DebugSnapshot make_debug_snapshot(std::uint64_t sim_frame, AppMode mode, const P
                                   const JumpState& jump, const EventRuntime& events,
                                   const GameState& state, bool interact_pressed,
                                   std::string_view selected_event_id, const InputFrame& input,
-                                  std::uint64_t checksum) {
+                                  std::uint64_t checksum, FrameMetrics metrics) {
   DebugSnapshot snapshot;
   snapshot.sim_frame = sim_frame;
   snapshot.app_mode = app_mode_name(mode);
@@ -228,6 +256,7 @@ DebugSnapshot make_debug_snapshot(std::uint64_t sim_frame, AppMode mode, const P
   }
   snapshot.input = input;
   snapshot.checksum = checksum;
+  snapshot.metrics = metrics;
   return snapshot;
 }
 
@@ -259,6 +288,34 @@ std::optional<DebugSnapshot> read_debug_snapshot(std::string_view path, const Fi
 
 std::string default_debug_snapshot_path() {
   return "rat-debug.json";
+}
+
+FrameMetrics collect_frame_metrics(const FrameMetricsSources& sources) {
+  FrameMetrics metrics;
+  if (sources.session != nullptr) {
+    metrics.simulation_tick_seconds = sources.session->last_tick_seconds();
+    metrics.event_commands = sources.session->events().last_commands_executed();
+    if (const SurfaceQuery* surface = sources.session->surface(); surface != nullptr) {
+      const CollisionWorld world =
+          bake_collision_world(sources.session->events().map(), *surface);
+      metrics.collision_candidates = static_cast<int>(world.fences.size());
+    }
+  }
+  if (sources.render != nullptr) {
+    metrics.draw_calls = static_cast<int>(sources.render->packets.size());
+  }
+  if (sources.frame != nullptr) {
+    metrics.transient_bytes = sources.frame->used();
+    metrics.transient_allocations = static_cast<int>(sources.frame->allocation_count());
+  }
+  if (sources.assets != nullptr) {
+    metrics.asset_uploads = sources.assets->last_gpu_uploads();
+  }
+  if (sources.audio != nullptr) {
+    metrics.audio_queue_depth = static_cast<int>(sources.audio->queue_depth());
+    metrics.audio_overflow_count = sources.audio->overflow_count();
+  }
+  return metrics;
 }
 
 }  // namespace rat

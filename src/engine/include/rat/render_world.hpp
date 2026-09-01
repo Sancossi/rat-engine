@@ -68,10 +68,12 @@ class FrameAllocator {
   void* allocate(std::size_t bytes, std::size_t alignment = alignof(std::max_align_t));
   void reset();
   [[nodiscard]] std::size_t used() const { return used_; }
+  [[nodiscard]] std::size_t allocation_count() const { return allocation_count_; }
 
  private:
   std::vector<std::uint8_t> storage_;
   std::size_t used_ = 0;
+  std::size_t allocation_count_ = 0;
 };
 
 class DeferredGpuFreeQueue {

@@ -69,6 +69,7 @@ class EventRuntime {
   [[nodiscard]] int last_parallel_commands_executed() const {
     return last_parallel_commands_executed_;
   }
+  [[nodiscard]] int last_commands_executed() const { return last_commands_executed_; }
   [[nodiscard]] const MapData& map() const { return runtime_map_.data; }
   [[nodiscard]] const RuntimeMap& runtime_map() const { return runtime_map_; }
   [[nodiscard]] const std::vector<std::string>& warnings() const { return warnings_; }
@@ -129,6 +130,7 @@ class EventRuntime {
   std::unordered_set<std::string> autorun_lock_;
   int active_parallel_count_ = 0;
   int last_parallel_commands_executed_ = 0;
+  int last_commands_executed_ = 0;
   std::vector<std::string> warnings_;
   std::unique_ptr<SurfaceQuery> surface_query_;
 };

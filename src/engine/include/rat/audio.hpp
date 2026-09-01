@@ -67,6 +67,7 @@ class QueuedAudio : public Audio {
   void drain() override;
   // Cumulative dropped posts; not reset by drain() so metrics can read it later.
   [[nodiscard]] std::uint64_t overflow_count() const { return overflow_count_; }
+  [[nodiscard]] std::size_t queue_depth() const { return queue_.size(); }
 
  private:
   void enqueue(AudioCommand command);

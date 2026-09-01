@@ -1,11 +1,21 @@
 #include <rat/app_mode.hpp>
+#include <rat/asset.hpp>
+#include <rat/audio.hpp>
+#include <rat/clock.hpp>
+#include <rat/collision.hpp>
 #include <rat/debug_snapshot.hpp>
 #include <rat/event_runtime.hpp>
 #include <rat/game_state.hpp>
+#include <rat/map_data.hpp>
 #include <rat/map_loader.hpp>
 #include <rat/player.hpp>
+#include <rat/render_world.hpp>
+#include <rat/simulation_session.hpp>
+#include <rat/surface_query.hpp>
 
+#include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
+#include <nlohmann/json.hpp>
 
 #include <filesystem>
 #include <string>
@@ -169,4 +179,167 @@ TEST_CASE("make_debug_snapshot primary why-not follows selected_event_id", "[uni
       1, rat::AppMode::Play, player, rat::make_grounded_jump_state(), runtime, state, true, "missing");
   CHECK(unknown.event_why_not_reason == fallback.event_why_not_reason);
   REQUIRE(unknown.event_why_not.size() == 2);
+}
+
+TEST_CASE("write_debug_snapshot round-trips numeric frame metrics", "[unit][debug][metrics]") {
+  rat::EventRuntime runtime;
+  rat::GameState state;
+  rat::PlayerBody player;
+
+  rat::FrameMetrics metrics;
+  metrics.simulation_tick_seconds = 0.008;
+  metrics.event_commands = 3;
+  metrics.draw_calls = 5;
+  metrics.transient_bytes = 128;
+  metrics.transient_allocations = 2;
+  metrics.asset_uploads = 1;
+  metrics.audio_queue_depth = 4;
+  metrics.audio_overflow_count = 7;
+  metrics.collision_candidates = 9;
+
+  const rat::DebugSnapshot written = rat::make_debug_snapshot(
+      7, rat::AppMode::Play, player, rat::make_grounded_jump_state(), runtime, state, false, {}, {},
+      0, metrics);
+
+  const auto path = std::filesystem::temp_directory_path() / "rat-debug-metrics-test.json";
+  std::error_code ec;
+  std::filesystem::remove(path, ec);
+  REQUIRE(rat::write_debug_snapshot(path.string(), written));
+
+  const auto raw = rat::os_files().read(path.string());
+  REQUIRE(raw.ok);
+  const nlohmann::json root = nlohmann::json::parse(raw.bytes.as_text());
+  REQUIRE(root.contains("metrics"));
+  REQUIRE(root["metrics"].is_object());
+  const nlohmann::json& node = root["metrics"];
+  CHECK(node["simulation_tick_seconds"].is_number());
+  CHECK(node["event_commands"].is_number());
+  CHECK(node["draw_calls"].is_number());
+  CHECK(node["transient_bytes"].is_number());
+  CHECK(node["transient_allocations"].is_number());
+  CHECK(node["asset_uploads"].is_number());
+  CHECK(node["audio_queue_depth"].is_number());
+  CHECK(node["audio_overflow_count"].is_number());
+  CHECK(node["collision_candidates"].is_number());
+
+  const auto read = rat::read_debug_snapshot(path.string());
+  REQUIRE(read.has_value());
+  CHECK(read->metrics.simulation_tick_seconds == Catch::Approx(0.008));
+  CHECK(read->metrics.event_commands == 3);
+  CHECK(read->metrics.draw_calls == 5);
+  CHECK(read->metrics.transient_bytes == 128);
+  CHECK(read->metrics.transient_allocations == 2);
+  CHECK(read->metrics.asset_uploads == 1);
+  CHECK(read->metrics.audio_queue_depth == 4);
+  CHECK(read->metrics.audio_overflow_count == 7);
+  CHECK(read->metrics.collision_candidates == 9);
+
+  std::filesystem::remove(path, ec);
+}
+
+TEST_CASE("collect_frame_metrics fills snapshot JSON from FakeClock and live systems",
+          "[unit][debug][metrics]") {
+  rat::MapData map;
+  map.schema_version = 2;
+  map.id = "metrics_live";
+  map.width = 2;
+  map.height = 1;
+  map.tile_size = 1.0f;
+  map.height_grid.origin_x = 0;
+  map.height_grid.origin_z = 0;
+  map.height_grid.width = 2;
+  map.height_grid.height = 1;
+  map.height_grid.ground_y = {0.0f, 1.0f};
+
+  rat::EventDef autorun;
+  autorun.id = "boot";
+  autorun.tile = rat::TileCoord{0, 0};
+  rat::EventPage page;
+  page.trigger = rat::TriggerKind::Autorun;
+  rat::Command sw;
+  sw.op = rat::CommandOp::ControlSwitch;
+  sw.id = 1;
+  sw.bool_value = true;
+  rat::Command var;
+  var.op = rat::CommandOp::ControlVariable;
+  var.id = 0;
+  var.int_value = 4;
+  page.commands.push_back(sw);
+  page.commands.push_back(var);
+  autorun.pages.push_back(page);
+  map.events.push_back(autorun);
+
+  rat::FakeClock clock;
+  clock.set_auto_advance_seconds(0.004);
+  rat::SimulationSession session;
+  session.set_clock(&clock);
+  REQUIRE(session.load(map).ok);
+  session.tick({});
+
+  const rat::RenderWorld world = rat::capture_render_world(session);
+  rat::FrameAllocator frame;
+  (void)frame.allocate(16);
+  (void)frame.allocate(8);
+
+  rat::MemoryAssetLoader loader;
+  const rat::AssetId tex = rat::make_asset_id("tex/metrics");
+  rat::AssetCpuData cpu;
+  cpu.bytes = {1, 2};
+  loader.set(tex, cpu);
+  rat::AssetRegistry assets(loader);
+  rat::AssetCatalogEntry entry;
+  entry.id = tex;
+  entry.kind = rat::AssetKind::Texture;
+  assets.register_asset(entry);
+  assets.request_load(tex);
+  assets.pump_loads();
+
+  rat::RecordingAudioSink sink;
+  rat::QueuedAudio audio(sink);
+  audio.play_sfx("a");
+  audio.play_sfx("b");
+  audio.play_sfx("c");
+
+  rat::FrameMetricsSources sources;
+  sources.session = &session;
+  sources.render = &world;
+  sources.frame = &frame;
+  sources.assets = &assets;
+  sources.audio = &audio;
+  const rat::FrameMetrics metrics = rat::collect_frame_metrics(sources);
+
+  CHECK(metrics.simulation_tick_seconds == Catch::Approx(0.004));
+  CHECK(metrics.event_commands == 2);
+  CHECK(metrics.draw_calls == static_cast<int>(world.packets.size()));
+  CHECK(metrics.draw_calls >= 1);
+  CHECK(metrics.transient_bytes == frame.used());
+  CHECK(metrics.transient_allocations == 2);
+  CHECK(metrics.asset_uploads == 1);
+  CHECK(metrics.audio_queue_depth == 3);
+  CHECK(metrics.audio_overflow_count == 0);
+  const rat::CollisionWorld collision =
+      rat::bake_collision_world(session.events().map(), *session.surface_query());
+  CHECK(metrics.collision_candidates == static_cast<int>(collision.fences.size()));
+  CHECK(metrics.collision_candidates >= 1);
+
+  const rat::DebugSnapshot snapshot = rat::make_debug_snapshot(
+      session.tick_id(), rat::AppMode::Play, session.player(), session.jump(), session.events(),
+      session.state(), false, {}, {}, 0, metrics);
+
+  const auto path = std::filesystem::temp_directory_path() / "rat-debug-metrics-live.json";
+  std::error_code ec;
+  std::filesystem::remove(path, ec);
+  REQUIRE(rat::write_debug_snapshot(path.string(), snapshot));
+  const auto raw = rat::os_files().read(path.string());
+  REQUIRE(raw.ok);
+  const nlohmann::json root = nlohmann::json::parse(raw.bytes.as_text());
+  REQUIRE(root["metrics"].is_object());
+  for (const char* key : {"simulation_tick_seconds", "event_commands", "draw_calls",
+                          "transient_bytes", "transient_allocations", "asset_uploads",
+                          "audio_queue_depth", "audio_overflow_count", "collision_candidates"}) {
+    REQUIRE(root["metrics"].contains(key));
+    CHECK(root["metrics"][key].is_number());
+  }
+
+  std::filesystem::remove(path, ec);
 }
