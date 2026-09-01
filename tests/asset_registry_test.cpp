@@ -186,6 +186,51 @@ TEST_CASE("resolve view has no source path; gameplay uses AssetId only", "[unit]
   CHECK(registry.source_path(id).source == "editor/only/ground.png");
 }
 
+TEST_CASE("catalog stores source and compiled independently; resolve leaks neither", "[unit][asset]") {
+  rat::MemoryAssetLoader loader;
+  const rat::AssetId id = rat::make_asset_id("tex/ground");
+  loader.set(id, rat::AssetCpuData{{1}});
+
+  rat::AssetRegistry registry(loader);
+  rat::AssetCatalogEntry entry;
+  entry.id = id;
+  entry.kind = rat::AssetKind::Texture;
+  entry.debug_name = "ground";
+  entry.path.source = "editor/only/ground.png";
+  entry.path.compiled = "cooked/ground.ktx";
+  registry.register_asset(entry);
+  registry.request_load(id);
+  registry.pump_loads();
+
+  REQUIRE(registry.state(id) == rat::AssetState::Ready);
+
+  const rat::AssetView view = registry.resolve(id);
+  CHECK(view.path.source.empty());
+  CHECK(view.path.compiled.empty());
+  CHECK(registry.source_path(id).source == "editor/only/ground.png");
+  CHECK(registry.source_path(id).compiled.empty());
+  CHECK(registry.compiled_path(id) == "cooked/ground.ktx");
+}
+
+TEST_CASE("memory loader loads by id when compiled path is unset", "[unit][asset]") {
+  rat::MemoryAssetLoader loader;
+  const rat::AssetId id = rat::make_asset_id("tex/ground");
+  loader.set(id, rat::AssetCpuData{{7}});
+
+  rat::AssetRegistry registry(loader);
+  rat::AssetCatalogEntry entry;
+  entry.id = id;
+  entry.kind = rat::AssetKind::Texture;
+  entry.path.source = "editor/only/ground.png";
+  registry.register_asset(entry);
+  registry.request_load(id);
+  registry.pump_loads();
+
+  REQUIRE(registry.state(id) == rat::AssetState::Ready);
+  CHECK(registry.compiled_path(id).empty());
+  CHECK(registry.resolve(id).cpu.bytes == std::vector<std::uint8_t>{7});
+}
+
 TEST_CASE("map JSON round-trips stable AssetIds for gameplay kinds", "[unit][asset][map]") {
   constexpr const char* kJson = R"({
     "schema_version": 1,

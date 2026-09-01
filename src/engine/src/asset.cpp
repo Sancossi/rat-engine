@@ -106,7 +106,10 @@ void AssetRegistry::register_asset(AssetCatalogEntry entry) {
       existing->entry.debug_name = std::move(entry.debug_name);
     }
     if (!entry.path.source.empty()) {
-      existing->entry.path = std::move(entry.path);
+      existing->entry.path.source = std::move(entry.path.source);
+    }
+    if (!entry.path.compiled.empty()) {
+      existing->entry.path.compiled = std::move(entry.path.compiled);
     }
     if (entry.fallback.valid()) {
       existing->entry.fallback = std::move(entry.fallback);
@@ -197,11 +200,20 @@ std::string AssetRegistry::error(const AssetId& id) const {
 }
 
 AssetPath AssetRegistry::source_path(const AssetId& id) const {
+  AssetPath path;
+  const Record* record = find(id);
+  if (record != nullptr) {
+    path.source = record->entry.path.source;
+  }
+  return path;
+}
+
+std::string AssetRegistry::compiled_path(const AssetId& id) const {
   const Record* record = find(id);
   if (record == nullptr) {
     return {};
   }
-  return record->entry.path;
+  return record->entry.path.compiled;
 }
 
 AssetView AssetRegistry::resolve(const AssetId& id) const {

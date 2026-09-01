@@ -51,6 +51,7 @@ struct AssetId {
 
 struct AssetPath {
   std::string source;
+  std::string compiled;
 };
 
 struct AssetCpuData {
@@ -129,6 +130,7 @@ class AssetRegistry {
   [[nodiscard]] AssetState state(const AssetId& id) const;
   [[nodiscard]] std::string error(const AssetId& id) const;
   [[nodiscard]] AssetPath source_path(const AssetId& id) const;
+  [[nodiscard]] std::string compiled_path(const AssetId& id) const;
   [[nodiscard]] AssetView resolve(const AssetId& id) const;
   [[nodiscard]] GpuHandleStatus gpu_status(GpuHandle handle) const;
 
