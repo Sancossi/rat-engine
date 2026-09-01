@@ -1,7 +1,7 @@
 ---
 type: task
 area: Engine
-status: In review
+status: Done
 task_type: Feature
 sprint: Sprint 7
 due:
@@ -17,3 +17,11 @@ Acceptance: PlaySE слышен в editor; тесты подменяют sink б
 Depends: [[research: Audio backend ADR]], [[feat: Asset registry and first load vertical]]. Next: [[chore: Engine frame metrics]].
 
 Origin: merged `docs/architecture-roadmap.md` (2026-09-01).
+
+## Resolution
+
+`QueuedAudio` ограничен 64 слотами; лишние посты увеличивают `overflow_count()`. Editor линкует miniaudio 0.11.25 только в `rat-editor`; `MiniaudioSink` играет клипы по `AssetId` (`data/audio/beep.wav`, grey_yard `sfx/beep`). Init fail → `LogAudioSink`. `rat_tests` без устройства. Verify: `.\build\tests\rat_tests.exe "[audio]"` / `"[asset]"` и `ctest`. Review: Approved.
+
+## Bugs found
+
+none.
