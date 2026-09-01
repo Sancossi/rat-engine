@@ -1,7 +1,7 @@
 ---
 type: task
 area: Engine
-status: In review
+status: Done
 task_type: Feature
 sprint: Sprint 7
 due:
@@ -17,3 +17,11 @@ Acceptance: те же `InputFrame` actions с другой раскладки и
 Depends: [[chore: NativeWindow platform adapters]]. Next: [[research: Audio backend ADR]]. Взято в [[Sprint 7 — Engine architecture]].
 
 Origin: [[feat: Input action mapping]] + merged `docs/architecture-roadmap.md` (2026-09-01).
+
+## Resolution
+
+Таблица `InputBindings` в `rat_core`: те же `InputFrame` с ребинда клавиш и логического геймпада; дефолт WASD+стрелки/Space/E. JSON schema_version 1; `NativeWindow` семплирует связанные GLFW-клавиши и `glfwGetGamepadState`. Симуляция по-прежнему только `InputFrame`. Verify: `.\build\tests\rat_tests.exe "[bindings]"` и `ctest`. Review: Approved.
+
+## Bugs found
+
+none.
