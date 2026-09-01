@@ -14,8 +14,19 @@ CI (GitHub Actions) builds `rat_core`, `rat-editor`, and Catch2 on **Windows** a
 | `docs/sprint1-acceptance.md` | Sprint 1 playthrough checklist |
 | `tests` | Catch2 unit + headless mechanics tests |
 | `cmake/Dependencies.cmake` | FetchContent: bgfx.cmake, GLFW, ImGui, Catch2, nlohmann/json |
+| `cmake/library-graph.md` | Library graph: `rat_core` → json; `rat_engine` → core + bgfx; editor → engine + glfw + imgui |
 | `docs/superpowers/specs/` | Design notes |
 | `vault/` | Obsidian hub: wiki, GDD, tasks, bugs, ADR (open this folder as a vault) |
+
+## Library graph
+
+| Target | Links |
+|--------|--------|
+| `rat_core` | `nlohmann_json` only (no GLFW, ImGui, bgfx, Win32) |
+| `rat_engine` | `rat_core` + bgfx + bx + bimg |
+| `rat-editor` | `rat_engine` + glfw + imgui (`apps/editor`) |
+
+CMake writes the `rat_core` link closure and fails configure / `rat_core_link_check` / ctest `rat_core_no_platform_graphics` if a forbidden library appears. See `cmake/library-graph.md`.
 
 ## Prerequisites
 
@@ -100,5 +111,5 @@ Do not treat Notion as the source of truth for this project.
 
 - GLFW window uses `GLFW_NO_API`. Windows passes HWND to bgfx (D3D11); Linux passes X11 `Display*` / `Window` (`ndt` / `nwh`).
 - ImGui is rendered through a small `imgui_bgfx` bridge (bgfx embedded shaders).
-- `rat_core` has no GLFW/ImGui/bgfx; `rat_engine` adds rendering.
+- `rat_core` has no GLFW/ImGui/bgfx; `rat_engine` adds rendering. Graph: `cmake/library-graph.md`. CMake fails configure/ctest if `rat_core` grows a GLFW/ImGui/bgfx/Win32 link (`rat_core_link_check`, ctest `rat_core_no_platform_graphics`).
 - GitHub Actions (`.github/workflows/ci.yml`) builds and runs Catch2 on `windows-latest` and `ubuntu-latest`.
