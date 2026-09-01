@@ -17,3 +17,5 @@ Chat 2026-09-02 (play/author): полноценная многоуровнева
 Acceptance (позже): два пола в одной XZ; цилиндр стоит на опоре в диапазоне Y; потолок — solid; дыра в верхнем полу ведёт вниз; можно поставить airborne tile. Рампы и земля тоже пекутся в walkable солиды (верх/клин), не только боковые грани. По лестнице можно подняться и спуститься.
 
 Origin: chat (collider design) + chat 2026-09-02 (многоэтажный дом). Depends: [[edge-walls-passable-from-adjacent-side]], [[feat: Bake height-grid and ramps to collision solids]]. Related: [[feat: Field physics puzzles]], [[S3: Height-grid map schema and ground query]], [[feat: Grid edge barriers]].
+
+Spec: `docs/superpowers/specs/2026-09-02-stacked-floors-colliders-design.md`
