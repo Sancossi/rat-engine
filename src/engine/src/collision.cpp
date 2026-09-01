@@ -28,6 +28,15 @@ bool circle_hits_segment(float cx, float cz, float radius, float ax, float az, f
   return dx * dx + dz * dz <= radius * radius;
 }
 
+bool tile_has_ramp(std::span<const RampDef> ramps, int world_x, int world_z) {
+  for (const RampDef& ramp : ramps) {
+    if (ramp.tile.x == world_x && ramp.tile.z == world_z) {
+      return true;
+    }
+  }
+  return false;
+}
+
 }  // namespace
 
 CollisionBody collision_body_from_player(const PlayerBody& player) {
@@ -123,10 +132,62 @@ void append_terrain_walls(CollisionWorld& world, const HeightGrid& grid,
   }
 }
 
+void append_ground_boxes(CollisionWorld& world, const HeightGrid& grid,
+                         std::span<const RampDef> ramps, float tile_size) {
+  const int width = std::max(0, grid.width);
+  const int height = std::max(0, grid.height);
+  const float ts = tile_size > 0.0f ? tile_size : 1.0f;
+  if (width <= 0 || height <= 0) {
+    return;
+  }
+  const std::size_t expected = static_cast<std::size_t>(width) * static_cast<std::size_t>(height);
+  if (grid.ground_y.size() != expected) {
+    return;
+  }
+
+  world.boxes.reserve(world.boxes.size() + expected);
+  for (int z = 0; z < height; ++z) {
+    for (int x = 0; x < width; ++x) {
+      const int world_x = grid.origin_x + x;
+      const int world_z = grid.origin_z + z;
+      if (tile_has_ramp(ramps, world_x, world_z)) {
+        continue;
+      }
+      const std::size_t index = static_cast<std::size_t>(z) * static_cast<std::size_t>(width) +
+                                static_cast<std::size_t>(x);
+      WalkableBox box;
+      box.min_x = static_cast<float>(world_x) * ts;
+      box.min_z = static_cast<float>(world_z) * ts;
+      box.max_x = box.min_x + ts;
+      box.max_z = box.min_z + ts;
+      box.y_lo = 0.0f;
+      box.y_hi = grid.ground_y[index];
+      world.boxes.push_back(box);
+    }
+  }
+}
+
+void append_floor_slabs(CollisionWorld& world, std::span<const FloorSlabDef> slabs, float tile_size) {
+  const float ts = tile_size > 0.0f ? tile_size : 1.0f;
+  world.boxes.reserve(world.boxes.size() + slabs.size());
+  for (const FloorSlabDef& slab : slabs) {
+    WalkableBox box;
+    box.min_x = static_cast<float>(slab.tile.x) * ts;
+    box.min_z = static_cast<float>(slab.tile.z) * ts;
+    box.max_x = box.min_x + ts;
+    box.max_z = box.min_z + ts;
+    box.y_hi = slab.top_y;
+    box.y_lo = slab.top_y - slab.thickness;
+    world.boxes.push_back(box);
+  }
+}
+
 CollisionWorld bake_collision_world(const MapData& map, const SurfaceQuery& query) {
   CollisionWorld world = bake_fence_world(map.edge_barriers, query);
   const float ts = query.tile_size() > 0.0f ? query.tile_size() : 1.0f;
   append_terrain_walls(world, map.height_grid, map.ramps, ts);
+  append_ground_boxes(world, map.height_grid, map.ramps, ts);
+  append_floor_slabs(world, map.floor_slabs, ts);
   return world;
 }
 
