@@ -12,6 +12,7 @@ namespace rat {
 
 constexpr float kPlayerCylinderHeight = 1.6f;
 constexpr float kFenceFeetClearanceEpsilon = 1e-4f;
+inline constexpr float kLadderInset = 0.3f;
 
 struct FenceSolid {
   float ax = 0.0f;
@@ -59,10 +60,21 @@ struct WalkableRamp {
   float max_z = 0.0f;
 };
 
+struct LadderVolume {
+  float min_x = 0.0f;
+  float min_z = 0.0f;
+  float max_x = 0.0f;
+  float max_z = 0.0f;
+  float y_lo = 0.0f;
+  float y_hi = 0.0f;
+  RampDirection face = RampDirection::East;
+};
+
 struct CollisionWorld {
   std::vector<FenceSolid> fences;
   std::vector<WalkableBox> boxes;
   std::vector<WalkableRamp> ramps;
+  std::vector<LadderVolume> ladders;
 };
 
 [[nodiscard]] CollisionBody collision_body_from_player(const PlayerBody& player);
@@ -75,6 +87,9 @@ void append_ground_boxes(CollisionWorld& world, const HeightGrid& grid,
 void append_floor_slabs(CollisionWorld& world, std::span<const FloorSlabDef> slabs, float tile_size);
 [[nodiscard]] float ramp_surface_y(const WalkableRamp& ramp, float x, float z);
 void append_ramp_prisms(CollisionWorld& world, std::span<const RampDef> ramps, float tile_size);
+void append_ladders(CollisionWorld& world, std::span<const LadderDef> ladders, float tile_size);
+[[nodiscard]] const LadderVolume* overlapping_ladder(const CollisionBody& body,
+                                                     const CollisionWorld& world);
 [[nodiscard]] CollisionWorld bake_collision_world(const MapData& map, const SurfaceQuery& query);
 
 struct SolidSupport {

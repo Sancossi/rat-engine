@@ -580,3 +580,22 @@ TEST_CASE("Player stands on airborne slab and falls walking off", "[unit][player
   REQUIRE(player.x > 1.2f);
   REQUIRE(player.y == Approx(0.0f).margin(0.05f));
 }
+
+TEST_CASE("East ladder climb reaches slab with move only", "[unit][player][surface]") {
+  rat::MapData map = make_surface_map(1, 1, {0.0f});
+  map.floor_slabs.push_back({{0, 0}, 2.0f, 0.25f});
+  map.ladders.push_back({{0, 0}, rat::RampDirection::East, 0.0f, 2.0f});
+  const rat::SurfaceQuery query(map);
+  rat::PlayerBody player;
+  player.x = 0.85f; player.y = 0.0f; player.z = 0.5f; player.speed = 5.0f;
+  rat::MoveInput into{1.0f, 0.0f};
+  for (int i = 0; i < 80; ++i) {
+    player = rat::integrate_player_surface(player, into, 1.0f / 60.0f, {}, query, 0.35f, {}, &map);
+  }
+  REQUIRE(player.y == Approx(2.0f).margin(0.05f));
+  rat::MoveInput away{-1.0f, 0.0f};
+  for (int i = 0; i < 80; ++i) {
+    player = rat::integrate_player_surface(player, away, 1.0f / 60.0f, {}, query, 0.35f, {}, &map);
+  }
+  REQUIRE(player.y == Approx(0.0f).margin(0.1f));
+}

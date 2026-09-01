@@ -247,6 +247,61 @@ void append_ramp_prisms(CollisionWorld& world, std::span<const RampDef> ramps, f
   }
 }
 
+void append_ladders(CollisionWorld& world, std::span<const LadderDef> ladders, float tile_size) {
+  const float ts = tile_size > 0.0f ? tile_size : 1.0f;
+  world.ladders.reserve(world.ladders.size() + ladders.size());
+  for (const LadderDef& def : ladders) {
+    const float ox = static_cast<float>(def.tile.x) * ts;
+    const float oz = static_cast<float>(def.tile.z) * ts;
+    LadderVolume volume;
+    volume.y_lo = def.y_lo;
+    volume.y_hi = def.y_hi;
+    volume.face = def.direction;
+    switch (def.direction) {
+      case RampDirection::East:
+        volume.min_x = ox + ts - kLadderInset;
+        volume.max_x = ox + ts;
+        volume.min_z = oz;
+        volume.max_z = oz + ts;
+        break;
+      case RampDirection::West:
+        volume.min_x = ox;
+        volume.max_x = ox + kLadderInset;
+        volume.min_z = oz;
+        volume.max_z = oz + ts;
+        break;
+      case RampDirection::South:
+        volume.min_x = ox;
+        volume.max_x = ox + ts;
+        volume.min_z = oz + ts - kLadderInset;
+        volume.max_z = oz + ts;
+        break;
+      case RampDirection::North:
+        volume.min_x = ox;
+        volume.max_x = ox + ts;
+        volume.min_z = oz;
+        volume.max_z = oz + kLadderInset;
+        break;
+    }
+    world.ladders.push_back(volume);
+  }
+}
+
+const LadderVolume* overlapping_ladder(const CollisionBody& body, const CollisionWorld& world) {
+  constexpr float kLadderYEpsilon = 1e-4f;
+  for (const LadderVolume& volume : world.ladders) {
+    const Aabb2 xz{volume.min_x, volume.min_z, volume.max_x, volume.max_z};
+    if (!circle_overlaps_aabb2(body.x, body.z, body.radius, xz)) {
+      continue;
+    }
+    if (body.y + kLadderYEpsilon < volume.y_lo || body.y - kLadderYEpsilon > volume.y_hi) {
+      continue;
+    }
+    return &volume;
+  }
+  return nullptr;
+}
+
 CollisionWorld bake_collision_world(const MapData& map, const SurfaceQuery& query) {
   CollisionWorld world = bake_fence_world(map.edge_barriers, query);
   const float ts = query.tile_size() > 0.0f ? query.tile_size() : 1.0f;
@@ -254,6 +309,7 @@ CollisionWorld bake_collision_world(const MapData& map, const SurfaceQuery& quer
   append_ground_boxes(world, map.height_grid, map.ramps, ts);
   append_ramp_prisms(world, map.ramps, ts);
   append_floor_slabs(world, map.floor_slabs, ts);
+  append_ladders(world, map.ladders, ts);
   return world;
 }
 

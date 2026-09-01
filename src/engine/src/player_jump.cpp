@@ -360,6 +360,59 @@ PlayerFrameResult integrate_player_frame_surface(PlayerBody player, JumpState ju
   for (int i = 0; i < substeps; ++i) {
     const bool jump_pressed_this_substep = input.jump_pressed && i == 0;
     const bool was_grounded = jump.grounded;
+    if (overlapping_ladder(collision_body_from_player(player), collision_world) != nullptr) {
+      player = integrate_player_surface(player, input.move, step_dt, blockers, surface_query,
+                                        max_step_up, edge_barriers, map);
+      if (overlapping_ladder(collision_body_from_player(player), collision_world) != nullptr) {
+        jump.grounded = true;
+        jump.vertical_speed = 0.0f;
+        jump.jump_offset = 0.0f;
+        jump.coyote_time_left = coyote_seconds;
+        jump.support_blocker_index = kInvalidSupportBlockerIndex;
+        if (!was_grounded) {
+          landed = true;
+        }
+        continue;
+      }
+      const std::optional<SolidSupport> ladder_support =
+          query_solid_support(collision_world, player.x, player.z, player.half_extent, player.y,
+                              step_up_limit);
+      if (ladder_support.has_value()) {
+        player.y = ladder_support->y;
+        jump.grounded = true;
+        jump.vertical_speed = 0.0f;
+        jump.jump_offset = 0.0f;
+        jump.coyote_time_left = coyote_seconds;
+        jump.support_blocker_index = kInvalidSupportBlockerIndex;
+        if (!was_grounded) {
+          landed = true;
+        }
+        continue;
+      }
+      jump.grounded = false;
+      jump.vertical_speed = 0.0f;
+      jump.support_blocker_index = kInvalidSupportBlockerIndex;
+      const SurfaceSample air = standing_sample(surface_query, solids, player.x, player.z,
+                                                player.half_extent, player.y, step_up_limit);
+      jump.jump_offset = std::max(0.0f, player.y - air.y);
+      jump.coyote_time_left = coyote_seconds;
+      const float gravity = gravity_down;
+      jump.vertical_speed -= gravity * step_dt;
+      jump.vertical_speed = std::max(jump.vertical_speed, -max_fall);
+      jump.jump_offset += jump.vertical_speed * step_dt;
+      if (jump.jump_offset <= 0.0f) {
+        jump.jump_offset = 0.0f;
+        jump.vertical_speed = 0.0f;
+        jump.grounded = true;
+        player.y = air.y;
+        if (!was_grounded) {
+          landed = true;
+        }
+      } else {
+        player.y = air.y + jump.jump_offset;
+      }
+      continue;
+    }
     bool walked_off_drop = false;
     const SurfaceSample sample_before = standing_sample(
         surface_query, solids, player.x, player.z, player.half_extent, player.y, step_up_limit);
