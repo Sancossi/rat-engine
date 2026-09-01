@@ -41,5 +41,6 @@ struct CollisionWorld {
 [[nodiscard]] CollisionWorld bake_fence_world(std::span<const EdgeBarrierDef> barriers,
                                               const SurfaceQuery& query);
 [[nodiscard]] bool cylinder_hits_fences(const CollisionBody& body, const CollisionWorld& world);
+[[nodiscard]] bool circle_overlaps_aabb2(float cx, float cz, float radius, const Aabb2& box);
 
 }  // namespace rat

@@ -107,4 +107,12 @@ bool cylinder_hits_fences(const CollisionBody& body, const CollisionWorld& world
   return false;
 }
 
+bool circle_overlaps_aabb2(float cx, float cz, float radius, const Aabb2& box) {
+  const float closest_x = std::clamp(cx, box.min_x, box.max_x);
+  const float closest_z = std::clamp(cz, box.min_z, box.max_z);
+  const float dx = cx - closest_x;
+  const float dz = cz - closest_z;
+  return dx * dx + dz * dz <= radius * radius;
+}
+
 }  // namespace rat

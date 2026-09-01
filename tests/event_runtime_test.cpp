@@ -936,3 +936,39 @@ TEST_CASE("set_blockers keeps active message and autorun lock; set_events clears
   runtime.update(state, rat::PlayerBody{}, false, 1.0f / 60.0f);
   REQUIRE(runtime.active_message() == "Hello");
 }
+
+TEST_CASE("player_overlaps uses circle vs event AABB not square corner", "[event][collision]") {
+  rat::MapData map;
+  map.schema_version = 2;
+  map.tile_size = 1.0f;
+  map.width = 4;
+  map.height = 4;
+  map.height_grid.origin_x = 0;
+  map.height_grid.origin_z = 0;
+  map.height_grid.width = 4;
+  map.height_grid.height = 4;
+  map.height_grid.ground_y.assign(16, 0.0f);
+
+  rat::EventDef event;
+  event.id = "vol";
+  event.volume = rat::Aabb2{0.0f, 0.0f, 1.0f, 1.0f};
+  map.events.push_back(event);
+
+  rat::EventRuntime runtime;
+  runtime.load(map);
+  const rat::EventDef& vol = runtime.map().events[0];
+
+  rat::PlayerBody corner;
+  corner.x = 1.35f;
+  corner.y = 0.0f;
+  corner.z = 1.35f;
+  corner.half_extent = 0.4f;
+  REQUIRE_FALSE(runtime.player_overlaps(vol, corner));
+
+  rat::PlayerBody axis;
+  axis.x = 1.3f;
+  axis.y = 0.0f;
+  axis.z = 0.5f;
+  axis.half_extent = 0.4f;
+  REQUIRE(runtime.player_overlaps(vol, axis));
+}

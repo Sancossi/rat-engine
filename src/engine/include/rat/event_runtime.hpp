@@ -86,6 +86,7 @@ class EventRuntime {
   [[nodiscard]] std::vector<InterpreterDebug> parallel_debug() const;
   [[nodiscard]] EventWhyNot why_not_fired(std::string_view event_id, const GameState& state,
                                             const PlayerBody& player, bool interact_pressed) const;
+  [[nodiscard]] bool player_overlaps(const EventDef& event, const PlayerBody& player) const;
 
  private:
   struct StackFrame {
@@ -114,7 +115,6 @@ class EventRuntime {
   [[nodiscard]] SurfaceSample event_surface_sample(const EventDef& event) const;
   [[nodiscard]] bool event_height_matches_player(const EventDef& event,
                                                  const PlayerBody& player) const;
-  [[nodiscard]] bool player_overlaps(const EventDef& event, const PlayerBody& player) const;
   [[nodiscard]] bool action_in_range(const EventDef& event, const PlayerBody& player) const;
 
   void try_start_autorun(GameState& state);

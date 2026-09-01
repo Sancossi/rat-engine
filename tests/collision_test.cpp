@@ -151,3 +151,11 @@ TEST_CASE("Bake skips height <= 0 barriers", "[collision]") {
 
   REQUIRE(world.fences.empty());
 }
+
+TEST_CASE("circle_overlaps_aabb2 misses square corner and hits axis within radius", "[collision]") {
+  const rat::Aabb2 box{0.0f, 0.0f, 1.0f, 1.0f};
+  constexpr float kRadius = 0.4f;
+
+  REQUIRE_FALSE(rat::circle_overlaps_aabb2(1.35f, 1.35f, kRadius, box));
+  REQUIRE(rat::circle_overlaps_aabb2(1.3f, 0.5f, kRadius, box));
+}

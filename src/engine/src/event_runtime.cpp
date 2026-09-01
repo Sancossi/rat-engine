@@ -1,6 +1,7 @@
 #include "rat/event_runtime.hpp"
 
 #include "rat/audio.hpp"
+#include "rat/collision.hpp"
 #include "rat/event_edit.hpp"
 #include "rat/gameplay_notify.hpp"
 
@@ -324,9 +325,7 @@ bool EventRuntime::player_overlaps(const EventDef& event, const PlayerBody& play
     return false;
   }
   const Aabb2 box = event_bounds(event);
-  const Aabb2 body{player.x - player.half_extent, player.z - player.half_extent,
-                   player.x + player.half_extent, player.z + player.half_extent};
-  return aabb_overlap(box, body);
+  return circle_overlaps_aabb2(player.x, player.z, player.half_extent, box);
 }
 
 bool EventRuntime::action_in_range(const EventDef& event, const PlayerBody& player) const {
