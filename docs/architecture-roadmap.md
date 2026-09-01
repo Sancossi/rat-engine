@@ -319,4 +319,3 @@ Spatial partition, object pools, SoA, dirty flags, frequency tiers и job system
 - [Fix Your Timestep](https://gafferongames.com/post/fix_your_timestep/)
 - [The Mature Optimization Handbook](https://carlos.bueno.org/optimization/)
 - [RenderDoc](https://renderdoc.org/)
-
