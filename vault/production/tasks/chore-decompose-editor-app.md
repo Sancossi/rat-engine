@@ -1,7 +1,7 @@
 ---
 type: task
 area: Engine
-status: In review
+status: Done
 task_type: Chore
 sprint: Sprint 7
 due:
@@ -17,3 +17,12 @@ Acceptance: в `EditorApp` нет игровой физики; панели не
 Depends: [[feat: MapDocument and RuntimeMap compile]]. Next: [[feat: Asset registry and first load vertical]].
 
 Origin: merged `docs/architecture-roadmap.md` (2026-09-01).
+
+## Resolution
+
+`GlfwHost`, `FrameCoordinator`, `EditorDocument` (`rat_editor_logic`) и панели blocker/terrain/event. `EditorApp` — composition root + Play chrome; tick в `SimulationSession`. Документные операции без окна: `[editordoc]`. Verify: `.\build\tests\rat_tests.exe "[editordoc]"` и `ctest`. Review: Approved.
+
+## Bugs found
+
+none.
+
