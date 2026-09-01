@@ -1,7 +1,7 @@
 ---
 type: bug
 area: Engine
-status: In review
+status: Fixed
 severity: Medium
 sprint: Sprint 7
 tags: [bug]
@@ -30,3 +30,11 @@ The player stays stuck to the ramp and cannot fall off.
 Not a clone of [[ramp-climb-does-not-work]] (ascent) or [[ramp-allows-entry-from-side]] (side-entry lift). Suspect the climb fix (candidate Y before wall-test / trapezoid sample) still treating ramp Y as support outside the walk-off.
 
 Follow-up from: [[ramp-climb-does-not-work]]
+
+## Resolution
+
+Climb-фикс зондировал стены на Y клетки назначения; сход с рампы брал нижнего соседа и цеплялся за трапецию. `integrate_player_surface` теперь пробивает стены на `max(текущие ноги, dest Y)`. Verify: `.\build\tests\rat_tests.exe "*walk-off*"` и `[player]`. Review: Approved.
+
+## Bugs found
+
+none.
