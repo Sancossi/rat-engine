@@ -19,3 +19,4 @@ Acceptance (позже): два пола в одной XZ; цилиндр сто
 Origin: chat (collider design) + chat 2026-09-02 (многоэтажный дом). Depends: [[edge-walls-passable-from-adjacent-side]], [[feat: Bake height-grid and ramps to collision solids]]. Related: [[feat: Field physics puzzles]], [[S3: Height-grid map schema and ground query]], [[feat: Grid edge barriers]].
 
 Spec: `docs/superpowers/specs/2026-09-02-stacked-floors-colliders-design.md`
+Plan: `docs/superpowers/plans/2026-09-02-stacked-floors-colliders.md`
