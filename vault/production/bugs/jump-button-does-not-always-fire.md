@@ -34,6 +34,8 @@ Follow-up from: [[feat: SimulationSession unified tick]]
 
 Display-кадр с `jump_pressed` при 0 sim-ticks терял ребро Space (`previous_buttons_` съедал edge до `tick`). `drain_simulation_catch_up` теперь зовёт `note_jump_pressed()` даже при `to_run == 0`. Verify: `.\build\tests\rat_tests.exe "*zero-tick*"` и `[sim]`. Review: Approved.
 
+Follow-up: [[interact-button-does-not-always-fire]] — тот же catch-up edge, E не защёлкнут при `to_run == 0`.
+
 ## Bugs found
 
 none.

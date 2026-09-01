@@ -34,7 +34,9 @@ Follow-up from: [[feat: SimulationSession unified tick]]
 
 Bake клал бок рампы AABB высотой 1.0; западный заход упирался в стену. Endpoint Y + candidate Y до wall-теста. Глобальный lip-skip убран — Mini 0.45 снова бьётся при `y≈0.10`. Verify: `.\build\tests\rat_tests.exe "[collision]"` и west-climb в `[player]` / `[sim]`. Review: Approved after Mini-fence lip fix.
 
+Follow-up: [[cannot-fall-off-ramp]] — play 2026-09-01, после фикса подъёма нельзя упасть с рампы.
+
 ## Bugs found
 
-none.
+- [[cannot-fall-off-ramp]] — play 2026-09-01, нельзя упасть с рампы.
 
