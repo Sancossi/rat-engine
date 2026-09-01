@@ -14,6 +14,7 @@ add_executable(rat_tests
   event_inspect_test.cpp
   event_runtime_test.cpp
   event_why_not_test.cpp
+  entity_test.cpp
   game_state_test.cpp
   gameplay_notify_test.cpp
   height_edit_test.cpp

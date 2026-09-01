@@ -33,7 +33,7 @@ tags: [engine]
 | Service Locator | composition | Не заводить locator |
 | Singleton | нет | Так и держать |
 | State (FSM) | `locomotion_from` Idle/Walk/Jump/Fall; физика в `JumpState` | Готово [[feat: Player locomotion FSM]]; клипы — позже по [[ADR-009 RE-like segmented character hierarchy]] |
-| Component / ECS | open question | [[research: Entity model ECS vs scene vs hybrid]] — ADR до любого ECS-кода |
+| Component / ECS | гибрид EntityId + ComponentStore | [[ADR-012 Entity model EntityId and ComponentStore]]; игрок/события пока POD. Не archetype |
 | Observer | `GameplayNotifyBus` subscribe/post | stub; side channel (ItemPicked / DialogShown / Landed), not opcode interpreter. [[feat: Gameplay notify observer]] |
 | Object Pool | нет | [[feat: Object pool for short-lived FX]] с field-action FX |
 | Spatial Partition | height grid + linear blockers | [[feat: Spatial partition broadphase]] после профиля |
@@ -59,4 +59,4 @@ GPP Event Queue для звука = геймплей постит `PlaySfx`, а�
 
 ## Не делаем
 
-Глобальный Service Locator, Singleton, Data Locality / Dirty Flag без профиля, ECS в коде до ADR.
+Глобальный Service Locator, Singleton, Data Locality / Dirty Flag без профиля, archetype ECS / job system.

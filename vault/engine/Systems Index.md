@@ -16,7 +16,7 @@ tags: [engine]
 | Window + swapchain | Platform / Render | working | GLFW + bgfx present |
 | Input actions | Input | working | `InputFrame` via `map_input_frame`; GLFW only in editor adapter |
 | Asset loader | Assets | planned | |
-| Scene / entities | Scene | planned | [[research: Entity model ECS vs scene vs hybrid]] |
+| Scene / entities | Scene | stub | [[ADR-012 Entity model EntityId and ComponentStore]]: `EntityId` + `ComponentStore` Transform/Renderable/Collider; player/events not migrated |
 | Audio | Platform | stub | `QueuedAudio` + `AudioSink` (null/log); `EditorApp` drains once per display frame |
 | Gameplay notify | Core | stub | GPP Observer: `GameplayNotifyBus` subscribe/post (ItemPicked / DialogShown / Landed); `EventRuntime::set_notify`; no locator |
 | Player locomotion | Core | stub | GPP State: `locomotion_from` Idle/Walk/Jump/Fall from `JumpState`+`MoveInput`; names are animation contract; jump physics stays in `JumpState` |

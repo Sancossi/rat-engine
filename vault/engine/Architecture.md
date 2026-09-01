@@ -39,7 +39,10 @@ flowchart TB
 
 Целевая нарезка библиотек и этапы — [architecture roadmap](../../docs/architecture-roadmap.md), очередь в [[Sprint 7 — Engine architecture]].
 
+## Entity model
+
+Закрыто [[ADR-012 Entity model EntityId and ComponentStore]]: гибрид `EntityId` + generation и `ComponentStore` для Transform / Renderable / Collider. Игрок, события и `SimulationSession` остаются POD до отдельной миграции. Не scene-graph identity и не archetype ECS. Критерии расширения — в ADR. Исследование: [[research: Entity model ECS vs scene vs hybrid]].
+
 ## Open questions
 
-- Entity model: ECS vs scene-graph vs hybrid? — [[research: Entity model ECS vs scene vs hybrid]]
 - Scripting layer в MVP или позже?

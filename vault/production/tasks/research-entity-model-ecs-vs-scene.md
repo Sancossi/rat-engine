@@ -19,3 +19,5 @@ Acceptance: ADR (следующий номер после ADR-011) с выбор
 Depends: [[feat: Asset registry and first load vertical]]. Next: [[feat: RenderWorld packets and instrumentation]]. Взято в [[Sprint 7 — Engine architecture]].
 
 Origin: [[Architecture]] open question + merged `docs/architecture-roadmap.md` (2026-09-01).
+
+ADR: [[ADR-012 Entity model EntityId and ComponentStore]] (Accepted). `EntityId` + `ComponentStore` in `rat_core`; player/events/`SimulationSession` not migrated.
