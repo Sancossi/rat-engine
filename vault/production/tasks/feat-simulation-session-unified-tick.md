@@ -1,7 +1,7 @@
 ---
 type: task
 area: Engine
-status: In review
+status: Done
 task_type: Feature
 sprint: Sprint 7
 due:
@@ -17,3 +17,12 @@ Acceptance: editor и headless зовут одну реализацию tick; р
 Depends: [[chore: rat_core isolation from platform graphics]]. Next: [[feat: Replay recording and checksum]].
 
 Origin: merged `docs/architecture-roadmap.md` (2026-09-01).
+
+## Resolution
+
+`SimulationSession::tick(InputFrame)` in `rat_core` owns player, jump, GameState, EventRuntime, `tick_id`. Editor catch-up and `run_input_sequence` share that tick; accumulator stays in the shell. `WantCaptureKeyboard` zeros `jump_buffer_left` via `clear_pending_input`. Verify: `.\build\tests\rat_tests.exe "[sim]"` and `ctest`. Review: Approved after capture-buffer fix.
+
+## Bugs found
+
+none (Important jump-buffer-on-ImGui capture fixed before Done).
+
