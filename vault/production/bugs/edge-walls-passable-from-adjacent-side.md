@@ -33,4 +33,4 @@ Blockers already use an XZ AABB (`player_bounds`). Edge fences and height-grid s
 
 Agreed for the fix: **cylinder** radius **0.4** (diameter 0.8, fits a 1-tile corridor), height **1.6** from feet. Walk / jump / landing / events use that volume. Not ECS: a `CollisionBody` list + static map query. Entity-model ADR stays [[research: Entity model ECS vs scene vs hybrid]].
 
-Later ([[feat: Field physics puzzles]], [[feat: Stacked surfaces caves and basements]]): same world query for crates/plates/doors and stacked floors. This slice must not bake “one Y per XZ” into the body API. Do not implement caves or crates in this bug.
+Runtime target: map authoring (height-grid, ramps, fences) **bakes** to 3D solids; player/crates are dynamic bodies against that world. Terrain tools stay for editing. Multi-level is stacked layers + extra volumes, not voxels ([[feat: Stacked surfaces caves and basements]]).
