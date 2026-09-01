@@ -4,6 +4,7 @@
 #include "rat/player.hpp"
 #include "rat/surface_query.hpp"
 
+#include <optional>
 #include <span>
 #include <vector>
 
@@ -23,6 +24,7 @@ struct FenceSolid {
   float ay_hi = 0.0f;
   float by_lo = 0.0f;
   float by_hi = 0.0f;
+  bool apply_max_step_up_skip = true;
 };
 
 struct CollisionBody {
@@ -74,6 +76,17 @@ void append_floor_slabs(CollisionWorld& world, std::span<const FloorSlabDef> sla
 [[nodiscard]] float ramp_surface_y(const WalkableRamp& ramp, float x, float z);
 void append_ramp_prisms(CollisionWorld& world, std::span<const RampDef> ramps, float tile_size);
 [[nodiscard]] CollisionWorld bake_collision_world(const MapData& map, const SurfaceQuery& query);
+
+struct SolidSupport {
+  float y = 0.0f;
+  bool on_ramp = false;
+};
+
+[[nodiscard]] std::optional<SolidSupport> query_solid_support(
+    const CollisionWorld& world, float x, float z, float radius, float feet_y,
+    float max_step_up);
+[[nodiscard]] bool cylinder_hits_ceiling(const CollisionBody& body, const CollisionWorld& world);
+
 [[nodiscard]] bool cylinder_hits_fences(const CollisionBody& body, const CollisionWorld& world);
 [[nodiscard]] bool cylinder_hits_walls(const CollisionBody& body, const CollisionWorld& world,
                                        float max_step_up = 0.35f);

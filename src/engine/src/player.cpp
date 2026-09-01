@@ -5,6 +5,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <optional>
 
 namespace rat {
 namespace {
@@ -43,6 +44,26 @@ CollisionWorld bake_integrate_world(std::span<const EdgeBarrierDef> edge_barrier
     return bake_collision_world(*map, query);
   }
   return bake_fence_world(edge_barriers, query);
+}
+
+SurfaceSample standing_sample(const SurfaceQuery& surface_query, const CollisionWorld& world,
+                              const MapData* map, float x, float z, float radius, float feet_y,
+                              float max_step_up) {
+  if (map == nullptr) {
+    return surface_query.sample(x, z);
+  }
+  SurfaceSample sample;
+  // Uncapped step so the current cell's top matches SurfaceQuery (ramp snap from y=0).
+  // Movement still applies max_step_up via surface_step_allowed.
+  (void)max_step_up;
+  const std::optional<SolidSupport> support =
+      query_solid_support(world, x, z, radius, feet_y, 1.0e6f);
+  if (support.has_value()) {
+    sample.y = support->y;
+    sample.on_ramp = support->on_ramp;
+    sample.ramp_index = support->on_ramp ? 0 : -1;
+  }
+  return sample;
 }
 
 }  // namespace
@@ -146,16 +167,20 @@ PlayerBody integrate_player_surface(PlayerBody player, MoveInput input, float dt
   const float step_dx = dx / static_cast<float>(steps);
   const float step_dz = dz / static_cast<float>(steps);
   const float step_up_limit = std::max(0.0f, max_step_up);
-  SurfaceSample current_sample = surface_query.sample(player.x, player.z);
-  player.y = current_sample.y;
   const CollisionWorld world = bake_integrate_world(edge_barriers, surface_query, map);
+  SurfaceSample current_sample =
+      standing_sample(surface_query, world, map, player.x, player.z, player.half_extent, player.y,
+                      step_up_limit);
+  player.y = current_sample.y;
 
   // Keep deterministic axis slide semantics: resolve X, then resolve Z per substep.
   for (int i = 0; i < steps; ++i) {
     if (std::abs(step_dx) > 1e-6f) {
       const float old_x = player.x;
       player.x += step_dx;
-      const SurfaceSample sample = surface_query.sample(player.x, player.z);
+      const SurfaceSample sample =
+          standing_sample(surface_query, world, map, player.x, player.z, player.half_extent,
+                          player.y, step_up_limit);
       const bool step_ok = surface_step_allowed(current_sample, sample, step_up_limit);
       CollisionBody wall_body = collision_body_from_player(player);
       if (step_ok) {
@@ -177,7 +202,9 @@ PlayerBody integrate_player_surface(PlayerBody player, MoveInput input, float dt
     if (std::abs(step_dz) > 1e-6f) {
       const float old_z = player.z;
       player.z += step_dz;
-      const SurfaceSample sample = surface_query.sample(player.x, player.z);
+      const SurfaceSample sample =
+          standing_sample(surface_query, world, map, player.x, player.z, player.half_extent,
+                          player.y, step_up_limit);
       const bool step_ok = surface_step_allowed(current_sample, sample, step_up_limit);
       CollisionBody wall_body = collision_body_from_player(player);
       if (step_ok) {

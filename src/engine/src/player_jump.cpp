@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <limits>
 #include <optional>
 
 namespace rat {
@@ -268,6 +269,53 @@ void depenetrate_grounded_overlap(PlayerBody& body, std::span<const BlockerDef> 
   }
 }
 
+SurfaceSample standing_sample(const SurfaceQuery& query, const CollisionWorld* solids, float x, float z,
+                              float radius, float feet_y, float max_step_up) {
+  if (solids == nullptr) {
+    return query.sample(x, z);
+  }
+  SurfaceSample sample;
+  (void)max_step_up;
+  const std::optional<SolidSupport> support =
+      query_solid_support(*solids, x, z, radius, feet_y, 1.0e6f);
+  if (support.has_value()) {
+    sample.y = support->y;
+    sample.on_ramp = support->on_ramp;
+    sample.ramp_index = support->on_ramp ? 0 : -1;
+  }
+  return sample;
+}
+
+void clamp_to_ceiling(PlayerBody& player, JumpState& jump, const CollisionWorld& world,
+                      float ground_y) {
+  CollisionBody body = collision_body_from_player(player);
+  if (!cylinder_hits_ceiling(body, world)) {
+    return;
+  }
+  float lowest = std::numeric_limits<float>::infinity();
+  const float head = body.y + body.height;
+  for (const WalkableBox& box : world.boxes) {
+    const Aabb2 xz{box.min_x, box.min_z, box.max_x, box.max_z};
+    if (!circle_overlaps_aabb2(body.x, body.z, body.radius, xz)) {
+      continue;
+    }
+    if (body.y < box.y_lo && head > box.y_lo && body.y < box.y_hi) {
+      lowest = std::min(lowest, box.y_lo);
+    }
+  }
+  if (lowest == std::numeric_limits<float>::infinity()) {
+    return;
+  }
+  const float max_feet = lowest - body.height;
+  if (player.y > max_feet) {
+    player.y = max_feet;
+    if (jump.vertical_speed > 0.0f) {
+      jump.vertical_speed = 0.0f;
+    }
+    jump.jump_offset = std::max(0.0f, player.y - ground_y);
+  }
+}
+
 }  // namespace
 
 JumpState make_grounded_jump_state() {
@@ -301,13 +349,20 @@ PlayerFrameResult integrate_player_frame_surface(PlayerBody player, JumpState ju
   const float max_fall = clamp_nonnegative(tuning.max_fall_speed);
   const float coyote_seconds = clamp_nonnegative(tuning.coyote_seconds);
   const float input_buffer_seconds = clamp_nonnegative(tuning.input_buffer_seconds);
+  const float step_up_limit = std::max(0.0f, max_step_up);
+  constexpr float kAirborneTerrainProbe = 1.0e6f;
+  const CollisionWorld collision_world =
+      map != nullptr ? bake_collision_world(*map, surface_query)
+                     : bake_fence_world(edge_barriers, surface_query);
+  const CollisionWorld* solids = map != nullptr ? &collision_world : nullptr;
 
   bool landed = false;
   for (int i = 0; i < substeps; ++i) {
     const bool jump_pressed_this_substep = input.jump_pressed && i == 0;
     const bool was_grounded = jump.grounded;
     bool walked_off_drop = false;
-    const SurfaceSample sample_before = surface_query.sample(player.x, player.z);
+    const SurfaceSample sample_before = standing_sample(
+        surface_query, solids, player.x, player.z, player.half_extent, player.y, step_up_limit);
     float feet_world_before = jump.grounded ? player.y : (sample_before.y + clamp_nonnegative(jump.jump_offset));
     feet_world_before = std::max(feet_world_before, sample_before.y);
     std::optional<SupportCandidate> support_before;
@@ -368,7 +423,9 @@ PlayerFrameResult integrate_player_frame_surface(PlayerBody player, JumpState ju
         const MoveInput move_x{ix > 0.0f ? 1.0f : -1.0f, 0.0f};
         player = integrate_player(player, move_x, step_dt * std::abs(ix), blockers, edge_barriers,
                                   &surface_query, map);
-        const SurfaceSample candidate_x = surface_query.sample(player.x, player.z);
+        const SurfaceSample candidate_x =
+            standing_sample(surface_query, solids, player.x, player.z, player.half_extent,
+                            feet_world_before, solids != nullptr ? kAirborneTerrainProbe : step_up_limit);
         if (candidate_x.y > feet_world_before + kFeetPenetrationEpsilon) {
           player = before_x;
         }
@@ -379,13 +436,16 @@ PlayerFrameResult integrate_player_frame_surface(PlayerBody player, JumpState ju
         const MoveInput move_z{0.0f, iz > 0.0f ? 1.0f : -1.0f};
         player = integrate_player(player, move_z, step_dt * std::abs(iz), blockers, edge_barriers,
                                   &surface_query, map);
-        const SurfaceSample candidate_z = surface_query.sample(player.x, player.z);
+        const SurfaceSample candidate_z =
+            standing_sample(surface_query, solids, player.x, player.z, player.half_extent,
+                            feet_world_before, solids != nullptr ? kAirborneTerrainProbe : step_up_limit);
         if (candidate_z.y > feet_world_before + kFeetPenetrationEpsilon) {
           player = before_z;
         }
       }
     }
-    SurfaceSample sample_after = surface_query.sample(player.x, player.z);
+    SurfaceSample sample_after = standing_sample(surface_query, solids, player.x, player.z,
+                                                 player.half_extent, player.y, step_up_limit);
     float ground_y = sample_after.y;
     if (!jump.grounded) {
       const std::optional<SupportCandidate> landing = find_descending_support_landing(
@@ -472,7 +532,8 @@ PlayerFrameResult integrate_player_frame_surface(PlayerBody player, JumpState ju
           jump.support_blocker_index = kInvalidSupportBlockerIndex;
         } else {
           player = before_move;
-          sample_after = surface_query.sample(player.x, player.z);
+          sample_after = standing_sample(surface_query, solids, player.x, player.z,
+                                         player.half_extent, player.y, step_up_limit);
           ground_y = sample_after.y;
           jump.support_blocker_index = support_before->index;
           support_after = validate_active_support(player, blockers, jump.support_blocker_index,
@@ -500,7 +561,8 @@ PlayerFrameResult integrate_player_frame_surface(PlayerBody player, JumpState ju
           support_after.reset();
         } else {
           player = before_move;
-          sample_after = surface_query.sample(player.x, player.z);
+          sample_after = standing_sample(surface_query, solids, player.x, player.z,
+                                         player.half_extent, player.y, step_up_limit);
           ground_y = sample_after.y;
           support_after = validate_active_support(player, blockers, jump.support_blocker_index, feet_world_before);
         }
@@ -593,15 +655,15 @@ PlayerFrameResult integrate_player_frame_surface(PlayerBody player, JumpState ju
 
     const float effective_ground_y = support_after.has_value() ? support_after->top_y : ground_y;
     player.y = effective_ground_y + std::max(0.0f, jump.jump_offset);
+    if (solids != nullptr) {
+      clamp_to_ceiling(player, jump, *solids, effective_ground_y);
+    }
 
     if (jump.grounded) {
       depenetrate_grounded_overlap(player, blockers, effective_ground_y, input.move.axis_x, input.move.axis_z);
       if (!sample_after.on_ramp) {
-        const CollisionWorld walls =
-            map != nullptr ? bake_collision_world(*map, surface_query)
-                           : bake_fence_world(edge_barriers, surface_query);
         CollisionBody wall_body = collision_body_from_player(player);
-        depenetrate_cylinder_from_walls(wall_body, walls, std::max(0.0f, max_step_up));
+        depenetrate_cylinder_from_walls(wall_body, collision_world, std::max(0.0f, max_step_up));
         player.x = wall_body.x;
         player.z = wall_body.z;
       }
@@ -612,7 +674,9 @@ PlayerFrameResult integrate_player_frame_surface(PlayerBody player, JumpState ju
         if (corrected_support.has_value()) {
           player.y = corrected_support->top_y;
         } else {
-          const SurfaceSample corrected = surface_query.sample(player.x, player.z);
+          const SurfaceSample corrected =
+              standing_sample(surface_query, solids, player.x, player.z, player.half_extent,
+                              player.y, step_up_limit);
           if (corrected.y < support_world_y - kFeetClearanceEpsilon) {
             jump.grounded = false;
             jump.vertical_speed = 0.0f;
@@ -626,7 +690,9 @@ PlayerFrameResult integrate_player_frame_surface(PlayerBody player, JumpState ju
           }
         }
       } else {
-        const SurfaceSample corrected = surface_query.sample(player.x, player.z);
+        const SurfaceSample corrected =
+            standing_sample(surface_query, solids, player.x, player.z, player.half_extent,
+                            player.y, step_up_limit);
         player.y = corrected.y;
       }
     }

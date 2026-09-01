@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <optional>
 
 namespace rat {
 namespace {
@@ -35,6 +36,28 @@ bool tile_has_ramp(std::span<const RampDef> ramps, int world_x, int world_z) {
     }
   }
   return false;
+}
+
+void append_slab_side_fences(CollisionWorld& world, const WalkableBox& box) {
+  auto add_edge = [&](float ax, float az, float bx, float bz) {
+    FenceSolid solid;
+    solid.ax = ax;
+    solid.az = az;
+    solid.bx = bx;
+    solid.bz = bz;
+    solid.y_lo = box.y_lo;
+    solid.y_hi = box.y_hi;
+    solid.ay_lo = box.y_lo;
+    solid.ay_hi = box.y_hi;
+    solid.by_lo = box.y_lo;
+    solid.by_hi = box.y_hi;
+    solid.apply_max_step_up_skip = false;
+    world.fences.push_back(solid);
+  };
+  add_edge(box.min_x, box.min_z, box.min_x, box.max_z);
+  add_edge(box.max_x, box.min_z, box.max_x, box.max_z);
+  add_edge(box.min_x, box.min_z, box.max_x, box.min_z);
+  add_edge(box.min_x, box.max_z, box.max_x, box.max_z);
 }
 
 }  // namespace
@@ -170,6 +193,7 @@ void append_ground_boxes(CollisionWorld& world, const HeightGrid& grid,
 void append_floor_slabs(CollisionWorld& world, std::span<const FloorSlabDef> slabs, float tile_size) {
   const float ts = tile_size > 0.0f ? tile_size : 1.0f;
   world.boxes.reserve(world.boxes.size() + slabs.size());
+  world.fences.reserve(world.fences.size() + slabs.size() * 4);
   for (const FloorSlabDef& slab : slabs) {
     WalkableBox box;
     box.min_x = static_cast<float>(slab.tile.x) * ts;
@@ -178,6 +202,7 @@ void append_floor_slabs(CollisionWorld& world, std::span<const FloorSlabDef> sla
     box.max_z = box.min_z + ts;
     box.y_hi = slab.top_y;
     box.y_lo = slab.top_y - slab.thickness;
+    append_slab_side_fences(world, box);
     world.boxes.push_back(box);
   }
 }
@@ -248,7 +273,7 @@ bool cylinder_hits_walls(const CollisionBody& body, const CollisionWorld& world,
     if (body.y + kFenceFeetClearanceEpsilon >= y_hi) {
       continue;
     }
-    if ((y_hi - y_lo) <= max_step_up) {
+    if (solid.apply_max_step_up_skip && (y_hi - y_lo) <= max_step_up) {
       continue;
     }
     if (!ranges_overlap(body.y, body_top, y_lo, y_hi)) {
@@ -282,7 +307,7 @@ void depenetrate_cylinder_from_walls(CollisionBody& body, const CollisionWorld& 
       if (body.y + kFenceFeetClearanceEpsilon >= y_hi) {
         continue;
       }
-      if ((y_hi - y_lo) <= max_step_up) {
+      if (solid.apply_max_step_up_skip && (y_hi - y_lo) <= max_step_up) {
         continue;
       }
       if (!ranges_overlap(body.y, body_top, y_lo, y_hi)) {
@@ -327,6 +352,66 @@ void depenetrate_cylinder_from_walls(CollisionBody& body, const CollisionWorld& 
 
 bool cylinder_hits_fences(const CollisionBody& body, const CollisionWorld& world) {
   return cylinder_hits_walls(body, world, 0.0f);
+}
+
+std::optional<SolidSupport> query_solid_support(const CollisionWorld& world, float x, float z,
+                                                 float radius, float feet_y, float max_step_up) {
+  std::optional<SolidSupport> best;
+  auto consider = [&](float candidate, bool on_ramp) {
+    const bool within_step = candidate <= feet_y + max_step_up;
+    const bool landing_or_on_top = feet_y + 1e-4f >= candidate;
+    if (!within_step && !landing_or_on_top) {
+      return;
+    }
+    if (!best.has_value() || candidate > best->y) {
+      best = SolidSupport{candidate, on_ramp};
+    }
+  };
+
+  for (const WalkableBox& box : world.boxes) {
+    const Aabb2 xz{box.min_x, box.min_z, box.max_x, box.max_z};
+    if (!circle_overlaps_aabb2(x, z, radius, xz)) {
+      continue;
+    }
+    // Stand like SurfaceQuery: the probe point must be on the tile, so a jump
+    // into a neighboring face does not land on that cell's top.
+    if (x < box.min_x || x >= box.max_x || z < box.min_z || z >= box.max_z) {
+      continue;
+    }
+    if (feet_y + 1e-4f < box.y_lo) {
+      continue;
+    }
+    consider(box.y_hi, false);
+  }
+
+  for (const WalkableRamp& ramp : world.ramps) {
+    const Aabb2 xz{ramp.min_x, ramp.min_z, ramp.max_x, ramp.max_z};
+    if (!circle_overlaps_aabb2(x, z, radius, xz)) {
+      continue;
+    }
+    // Point must stay on the tile so walk-off matches SurfaceQuery (center leaves => fall).
+    if (x < ramp.min_x || x >= ramp.max_x || z < ramp.min_z || z >= ramp.max_z) {
+      continue;
+    }
+    consider(ramp_surface_y(ramp, x, z), true);
+  }
+
+  return best;
+}
+
+bool cylinder_hits_ceiling(const CollisionBody& body, const CollisionWorld& world) {
+  for (const WalkableBox& box : world.boxes) {
+    const Aabb2 xz{box.min_x, box.min_z, box.max_x, box.max_z};
+    if (!circle_overlaps_aabb2(body.x, body.z, body.radius, xz)) {
+      continue;
+    }
+    // Feet below the underside (not standing on the top). Head may still have a
+    // small gap (1.6 capsule under a 1.75 slab); Play clamps when the head crosses.
+    if (body.y < box.y_lo && body.y < box.y_hi) {
+      return true;
+    }
+  }
+  return false;
 }
 
 bool circle_overlaps_aabb2(float cx, float cz, float radius, const Aabb2& box) {

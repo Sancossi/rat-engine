@@ -347,3 +347,25 @@ TEST_CASE("Bake floor slab is a thin box not filled to Y=0", "[collision]") {
   }
   REQUIRE(found_slab);
 }
+
+TEST_CASE("Cylinder head hits slab underside; feet on top do not", "[collision]") {
+  rat::MapData map = make_grid(1, 1, 0.0f);
+  map.floor_slabs.push_back({{0, 0}, 2.0f, 0.25f});
+  const rat::CollisionWorld world = rat::bake_collision_world(map, rat::SurfaceQuery(map));
+  rat::CollisionBody under;
+  under.x = 0.5f; under.y = 0.0f; under.z = 0.5f;
+  under.height = 1.6f;
+  REQUIRE(rat::cylinder_hits_ceiling(under, world));
+  rat::CollisionBody on_top = under;
+  on_top.y = 2.0f;
+  REQUIRE_FALSE(rat::cylinder_hits_ceiling(on_top, world));
+}
+
+TEST_CASE("Thin slab side blocks at mid-thickness even though span < max_step_up", "[collision]") {
+  rat::MapData map = make_grid(2, 1, 0.0f);
+  map.floor_slabs.push_back({{1, 0}, 2.0f, 0.25f});
+  const rat::CollisionWorld world = rat::bake_collision_world(map, rat::SurfaceQuery(map));
+  rat::CollisionBody body;
+  body.x = 0.7f; body.y = 1.8f; body.z = 0.5f;
+  REQUIRE(rat::cylinder_hits_walls(body, world, 0.35f));
+}

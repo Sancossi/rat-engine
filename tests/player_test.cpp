@@ -564,3 +564,19 @@ TEST_CASE("Stair 0.25 still walks up when map walls are baked", "[unit][player][
   REQUIRE(player.x < 2.0f);
   REQUIRE(player.y == Approx(0.25f));
 }
+
+TEST_CASE("Player stands on airborne slab and falls walking off", "[unit][player][surface]") {
+  rat::MapData map = make_surface_map(2, 1, {0.0f, 0.0f});
+  map.floor_slabs.push_back({{0, 0}, 2.0f, 0.25f});
+  const rat::SurfaceQuery query(map);
+  rat::PlayerBody player;
+  player.x = 0.5f; player.y = 2.0f; player.z = 0.5f; player.speed = 5.0f;
+  player = rat::integrate_player_surface(player, {}, 1.0f / 60.0f, {}, query, 0.35f, {}, &map);
+  REQUIRE(player.y == Approx(2.0f).margin(1e-3f));
+  rat::MoveInput east{1.0f, 0.0f};
+  for (int i = 0; i < 40; ++i) {
+    player = rat::integrate_player_surface(player, east, 1.0f / 60.0f, {}, query, 0.35f, {}, &map);
+  }
+  REQUIRE(player.x > 1.2f);
+  REQUIRE(player.y == Approx(0.0f).margin(0.05f));
+}

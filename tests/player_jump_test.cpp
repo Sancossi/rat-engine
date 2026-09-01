@@ -1726,3 +1726,23 @@ TEST_CASE("Jump into baked elevation face stops XZ and drops without wedging",
   REQUIRE(body.x < x_landed - 0.5f);
   REQUIRE(body.y == Approx(0.0f).margin(1e-3f));
 }
+
+TEST_CASE("Jump under a slab does not rise through the underside", "[unit][player][jump]") {
+  rat::MapData map = make_surface_map(1, 1, {0.0f});
+  map.floor_slabs.push_back({{0, 0}, 2.0f, 0.25f});
+  const rat::SurfaceQuery query(map);
+  rat::PlayerBody body;
+  body.x = 0.5f; body.y = 0.0f; body.z = 0.5f;
+  rat::JumpState jump = rat::make_grounded_jump_state();
+  rat::PlayerFrameInput input;
+  input.jump_pressed = true;
+  input.jump_held = true;
+  for (int i = 0; i < 90; ++i) {
+    const auto result = rat::integrate_player_frame_surface(
+        body, jump, input, 1.0f / 60.0f, {}, query, {}, 0.35f, {}, &map);
+    body = result.body;
+    jump = result.jump;
+    input.jump_pressed = false;
+    REQUIRE(body.y + 1.6f <= 1.75f + 1e-3f);
+  }
+}
