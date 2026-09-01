@@ -1,6 +1,8 @@
 # rat-engine
 
-Game engine bootstrap: **bgfx** renderer + **GLFW** window + **Dear ImGui** mini-editor (Windows x64 / Direct3D11).
+Game engine bootstrap: **bgfx** renderer + **GLFW** window + **Dear ImGui** mini-editor.
+
+CI (GitHub Actions) builds `rat_core`, `rat-editor`, and Catch2 on **Windows** and **Linux**. Tests are headless; the editor GUI is not launched.
 
 ## Layout
 
@@ -15,17 +17,27 @@ Game engine bootstrap: **bgfx** renderer + **GLFW** window + **Dear ImGui** mini
 | `docs/superpowers/specs/` | Design notes |
 | `vault/` | Obsidian hub: wiki, GDD, tasks, bugs, ADR (open this folder as a vault) |
 
-## Prerequisites (Windows)
+## Prerequisites
 
-1. Visual Studio 2022/2025 Build Tools with C++ workload  
-2. CMake 3.24+  
+**Windows**
+
+1. Visual Studio 2022/2025 Build Tools with C++ workload
+2. CMake 3.24+ and Ninja
 3. Network on first configure (FetchContent)
 
 No Qt install required.
 
+**Linux**
+
+1. g++ (C++20), CMake 3.24+, Ninja
+2. X11 / OpenGL headers so GLFW and bgfx can **compile** (Ubuntu: `ninja-build pkg-config xorg-dev libgl1-mesa-dev libglu1-mesa-dev`)
+3. Network on first configure (FetchContent)
+
+`rat-editor` on Linux uses GLFW **X11** native window/display handles (`nwh` / `ndt`). CI installs those headers on `ubuntu-latest` and does not run the editor (no display / no xvfb). A Wayland-only environment is not required.
+
 ## Build
 
-From a **x64 Native Tools** / VS developer prompt:
+Same configure line on Windows and Linux. On Windows, use an **x64 Native Tools** / VS developer prompt:
 
 ```powershell
 cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
@@ -39,10 +51,16 @@ cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DRAT_BUILD_EDITOR=OFF
 cmake --build build --target rat_engine
 ```
 
-Run:
+Run (Windows):
 
 ```powershell
 .\build\apps\editor\rat-editor.exe
+```
+
+Run (Linux):
+
+```bash
+./build/apps/editor/rat-editor
 ```
 
 You should see ImGui Hierarchy/Inspector docks and a dark-blue clear with `rat-engine` debug text.
@@ -55,8 +73,19 @@ cmake --build build --target rat_tests
 ctest --test-dir build --output-on-failure
 ```
 
-- **Unit:** `GameState` and future pure logic (no GLFW/bgfx).  
-- **Mechanics:** headless event/quest scenarios (stub ready; fill with Event runtime v1).  
+Headless grey_yard smoke (no GLFW/bgfx):
+
+```powershell
+.\build\tests\rat_tests.exe "[smoke]"
+```
+
+```bash
+./build/tests/rat_tests "[smoke]"
+```
+
+- **Unit:** `GameState` and future pure logic (no GLFW/bgfx).
+- **Mechanics:** headless event/quest scenarios (stub ready; fill with Event runtime v1).
+- **Smoke:** `[smoke]` loads `data/maps/grey_yard.json` without a window.
 - Disable with `-DRAT_BUILD_TESTS=OFF`.
 
 ## Knowledge vault (Obsidian)
@@ -69,6 +98,7 @@ Do not treat Notion as the source of truth for this project.
 
 ## Notes
 
-- GLFW window uses `GLFW_NO_API`; HWND is passed to bgfx (D3D11).  
-- ImGui is rendered through a small `imgui_bgfx` bridge (bgfx embedded shaders).  
+- GLFW window uses `GLFW_NO_API`. Windows passes HWND to bgfx (D3D11); Linux passes X11 `Display*` / `Window` (`ndt` / `nwh`).
+- ImGui is rendered through a small `imgui_bgfx` bridge (bgfx embedded shaders).
 - `rat_core` has no GLFW/ImGui/bgfx; `rat_engine` adds rendering.
+- GitHub Actions (`.github/workflows/ci.yml`) builds and runs Catch2 on `windows-latest` and `ubuntu-latest`.

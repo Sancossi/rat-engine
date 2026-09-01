@@ -1,0 +1,55 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  windows:
+    name: windows
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup MSVC
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Install Ninja
+        run: choco install ninja --yes
+
+      - name: Configure
+        run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: cmake --build build --config Release --target rat_core rat-editor rat_tests
+
+      - name: Test
+        run: ctest --test-dir build --output-on-failure
+
+      - name: Smoke
+        run: .\build\tests\rat_tests.exe "[smoke]"
+
+  linux:
+    name: linux
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install X11 and OpenGL headers
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ninja-build pkg-config xorg-dev libgl1-mesa-dev libglu1-mesa-dev
+
+      - name: Configure
+        run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: cmake --build build --config Release --target rat_core rat-editor rat_tests
+
+      - name: Test
+        run: ctest --test-dir build --output-on-failure
+
+      - name: Smoke
+        run: ./build/tests/rat_tests "[smoke]"

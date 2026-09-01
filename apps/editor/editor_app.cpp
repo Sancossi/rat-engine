@@ -17,10 +17,18 @@
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
 
+#if defined(_WIN32)
 #define GLFW_EXPOSE_NATIVE_WIN32
+#elif defined(__linux__)
+#define GLFW_EXPOSE_NATIVE_X11
+#endif
 #include <GLFW/glfw3.h>
 #include <GLFW/glfw3native.h>
+#ifdef None
+#undef None
+#endif
 
+#include <cstdint>
 #include <cstdio>
 #include <iostream>
 #include <memory>
@@ -898,7 +906,15 @@ bool EditorApp::init() {
   engine_ = new Engine();
 
   RendererConfig config;
+#if defined(_WIN32)
   config.window.nwh = glfwGetWin32Window(window_);
+#elif defined(__linux__)
+  config.window.ndt = glfwGetX11Display();
+  config.window.nwh =
+      reinterpret_cast<void*>(static_cast<std::uintptr_t>(glfwGetX11Window(window_)));
+#else
+#error Native window handles are only wired for Win32 and Linux X11
+#endif
   config.width = static_cast<std::uint32_t>(width_ > 0 ? width_ : 1);
   config.height = static_cast<std::uint32_t>(height_ > 0 ? height_ : 1);
   config.vsync = true;
