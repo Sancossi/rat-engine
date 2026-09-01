@@ -20,8 +20,8 @@ tags: [engine]
 | Audio | Platform | working | [[ADR-013 Audio backend miniaudio]]: `QueuedAudio` + `AudioSink`; tests swap Recording/Null; `EditorApp` owns `MiniaudioSink` (fallback `LogAudioSink`) and drains once per frame; clips `AssetId` |
 | Gameplay notify | Core | stub | GPP Observer: `GameplayNotifyBus` subscribe/post (ItemPicked / DialogShown / Landed); `EventRuntime::set_notify`; no locator |
 | Player locomotion | Core | stub | GPP State: `locomotion_from` Idle/Walk/Jump/Fall from `JumpState`+`MoveInput`; names are animation contract; jump physics stays in `JumpState` |
-| Collision world | Core | working | Fence + terrain side-face bake; cylinder vs segments with max_step_up skip; event overlap is circle vs AABB. Later crates/layers: [[feat: Field physics puzzles]], [[feat: Stacked surfaces caves and basements]]. Not ECS |
-| Edit history | Core | working | GPP Command: `EditHistory` blockers/events plus height-grid/ramps/edges; Ctrl+Z/Y in Edit only; `clear()` on hot-apply |
+| Collision world | Core | working | `bake_collision_world`: fences, terrain walls, ground walkable boxes, floor slab AABBs (side fences), ramp prisms, ladder volumes. Play: support/ceiling/fall from solids when map passed; ladder climb (+Y into volume). Cylinder vs fences with max_step_up skip; event overlap circle vs AABB. Later: [[feat: Field physics puzzles]], [[feat: Stacked surfaces caves and basements]]. Not ECS |
+| Edit history | Core | working | GPP Command: `EditHistory` blockers/events plus height-grid/ramps/edges/floor-slabs/ladders; Ctrl+Z/Y in Edit only; `clear()` on hot-apply |
 | Edit gizmos | Input / Scene | planned | [[feat: Mouse viewport map edit]] |
 | Agent debug dump | Core | working | `write_debug_snapshot` → `rat-debug.json` (F3); log file `rat.log` |
 
