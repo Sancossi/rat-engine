@@ -1,7 +1,7 @@
 ---
 type: bug
 area: Engine
-status: In review
+status: Fixed
 severity: Medium
 sprint: Sprint 7
 tags: [bug]
@@ -29,3 +29,11 @@ Interact sometimes does nothing.
 Jump already latches a display-frame edge when catch-up runs 0 sim-ticks (`note_jump_pressed`). Interact is still a one-frame `interact_pressed` edge: `drain_simulation_catch_up` clears it after the first tick and does not latch it when `to_run == 0`. Headless `[sim]` can stay green.
 
 Follow-up from: [[feat: SimulationSession unified tick]]
+
+## Resolution
+
+Display-кадр с `interact_pressed` при 0 sim-ticks терял ребро E (`previous_buttons_` съедал edge до `tick`). `drain_simulation_catch_up` теперь зовёт `note_interact_pressed()` даже при `to_run == 0`; буфер не чистится, когда края нет. Verify: `.\build\tests\rat_tests.exe "*latches interact*"` и `[sim]`. Review: Approved.
+
+## Bugs found
+
+none.
