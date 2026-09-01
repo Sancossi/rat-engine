@@ -1,9 +1,9 @@
 ---
 type: sprint
-status: Active
+status: Done
 dates: 2026-10-13/2026-10-26
 goal: Split simulation, authoring, render, and platform adapters per architecture roadmap
-current: true
+current: false
 tags: [sprint]
 ---
 
@@ -25,3 +25,11 @@ DoD:
 Порядок:
 
 - [[chore: CI Windows/Linux and grey_yard smoke]] → [[chore: rat_core isolation from platform graphics]] → [[feat: SimulationSession unified tick]] → [[feat: Replay recording and checksum]] → [[feat: MapDocument and RuntimeMap compile]] → [[jump-button-does-not-always-fire]] → [[ramp-climb-does-not-work]] → [[chore: Decompose EditorApp]] → [[feat: Asset registry and first load vertical]] → [[interact-button-does-not-always-fire]] → [[cannot-fall-off-ramp]] → [[research: Entity model ECS vs scene vs hybrid]] → [[feat: RenderWorld packets and instrumentation]] → [[chore: NativeWindow platform adapters]] → [[feat: Input rebind and gamepad]] → [[research: Audio backend ADR]] → [[feat: Audio backend implementation]] → [[chore: Engine frame metrics]]
+
+## Итог
+
+DoD выполнен 2026-09-01. CI + `rat_core` без GLFW/ImGui/bgfx; один `SimulationSession::tick(InputFrame)` и replay checksum; `MapDocument` → `RuntimeMap`; `EditorApp` — composition root. Карты на `AssetId`; [[ADR-012 Entity model EntityId and ComponentStore]]; renderer ест `RenderWorld` packets. `NativeWindow` / `InputBindings` / [[ADR-013 Audio backend miniaudio]] + miniaudio в editor; метрики в debug snapshot. Play-баги спринта Fixed: jump, interact, ramp climb, walk-off. Вне скоупа остались archetype ECS, RHI, jobs; spatial partition и object pool — бэклог до замера.
+
+## Bugs found
+
+none новых на закрытии. Play follow-up в этом спринте: [[jump-button-does-not-always-fire]], [[interact-button-does-not-always-fire]], [[ramp-climb-does-not-work]], [[cannot-fall-off-ramp]] — Fixed.
