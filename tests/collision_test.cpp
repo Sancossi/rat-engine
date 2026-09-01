@@ -238,6 +238,35 @@ TEST_CASE("East Mini 0.45 fence still blocks at feet 0 with cylinder_hits_walls 
   REQUIRE_FALSE(rat::cylinder_hits_walls(on_top, world, 0.35f));
 }
 
+TEST_CASE("East Mini 0.45 fence still blocks when feet are slightly above 0", "[collision]") {
+  const rat::MapData map = make_grid(2, 2);
+  const rat::SurfaceQuery query(map);
+
+  rat::EdgeBarrierDef barrier;
+  barrier.tile = {0, 0};
+  barrier.direction = rat::RampDirection::East;
+  barrier.height = 0.45f;
+
+  const rat::CollisionWorld world =
+      rat::bake_fence_world(std::span<const rat::EdgeBarrierDef>(&barrier, 1), query);
+
+  rat::CollisionBody airborne;
+  airborne.x = 0.7f;
+  airborne.y = 0.10f;
+  airborne.z = 0.5f;
+  airborne.radius = 0.4f;
+  airborne.height = rat::kPlayerCylinderHeight;
+  REQUIRE(rat::cylinder_hits_walls(airborne, world, 0.35f));
+
+  rat::CollisionBody adjacent;
+  adjacent.x = 1.3f;
+  adjacent.y = 0.10f;
+  adjacent.z = 0.5f;
+  adjacent.radius = 0.4f;
+  adjacent.height = rat::kPlayerCylinderHeight;
+  REQUIRE(rat::cylinder_hits_walls(adjacent, world, 0.35f));
+}
+
 TEST_CASE("Off-center west approach misses ramp side where local height is under max_step_up",
           "[collision]") {
   rat::MapData map = make_grid(4, 3);

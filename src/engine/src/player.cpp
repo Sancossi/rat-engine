@@ -155,36 +155,42 @@ PlayerBody integrate_player_surface(PlayerBody player, MoveInput input, float dt
     if (std::abs(step_dx) > 1e-6f) {
       const float old_x = player.x;
       player.x += step_dx;
-      if (overlaps_any(player_bounds(player), blockers, player.y) ||
-          cylinder_hits_walls(collision_body_from_player(player), world, step_up_limit)) {
+      const SurfaceSample sample = surface_query.sample(player.x, player.z);
+      const bool step_ok = surface_step_allowed(current_sample, sample, step_up_limit);
+      CollisionBody wall_body = collision_body_from_player(player);
+      if (step_ok) {
+        wall_body.y = sample.y;
+        if (current_sample.on_ramp || sample.on_ramp) {
+          wall_body.y += step_up_limit;
+        }
+      }
+      if (!step_ok || overlaps_any(player_bounds(player), blockers, player.y) ||
+          cylinder_hits_walls(wall_body, world, step_up_limit)) {
         player.x = old_x;
       } else {
-        const SurfaceSample sample = surface_query.sample(player.x, player.z);
-        if (surface_step_allowed(current_sample, sample, step_up_limit)) {
-          current_sample = sample;
-          player.y = sample.y;
-        } else {
-          player.x = old_x;
-          player.y = current_sample.y;
-        }
+        current_sample = sample;
+        player.y = sample.y;
       }
     }
 
     if (std::abs(step_dz) > 1e-6f) {
       const float old_z = player.z;
       player.z += step_dz;
-      if (overlaps_any(player_bounds(player), blockers, player.y) ||
-          cylinder_hits_walls(collision_body_from_player(player), world, step_up_limit)) {
+      const SurfaceSample sample = surface_query.sample(player.x, player.z);
+      const bool step_ok = surface_step_allowed(current_sample, sample, step_up_limit);
+      CollisionBody wall_body = collision_body_from_player(player);
+      if (step_ok) {
+        wall_body.y = sample.y;
+        if (current_sample.on_ramp || sample.on_ramp) {
+          wall_body.y += step_up_limit;
+        }
+      }
+      if (!step_ok || overlaps_any(player_bounds(player), blockers, player.y) ||
+          cylinder_hits_walls(wall_body, world, step_up_limit)) {
         player.z = old_z;
       } else {
-        const SurfaceSample sample = surface_query.sample(player.x, player.z);
-        if (surface_step_allowed(current_sample, sample, step_up_limit)) {
-          current_sample = sample;
-          player.y = sample.y;
-        } else {
-          player.z = old_z;
-          player.y = current_sample.y;
-        }
+        current_sample = sample;
+        player.y = sample.y;
       }
     }
   }

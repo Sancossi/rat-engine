@@ -148,9 +148,6 @@ bool cylinder_hits_walls(const CollisionBody& body, const CollisionWorld& world,
     if ((y_hi - y_lo) <= max_step_up) {
       continue;
     }
-    if ((y_hi - body.y) <= max_step_up) {
-      continue;
-    }
     if (!ranges_overlap(body.y, body_top, y_lo, y_hi)) {
       continue;
     }
