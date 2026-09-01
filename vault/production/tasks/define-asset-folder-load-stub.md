@@ -1,7 +1,7 @@
 ---
 type: task
 area: Engine
-status: In review
+status: Done
 task_type: Feature
 sprint: Sprint 7
 roadmap: Tool / asset pipeline
@@ -19,3 +19,11 @@ Acceptance: карты и gameplay ссылаются на стабильные 
 Depends: [[chore: Decompose EditorApp]]. Next: [[research: Entity model ECS vs scene vs hybrid]].
 
 Origin: Sprint 0 stub + merged `docs/architecture-roadmap.md` (2026-09-01).
+
+## Resolution
+
+`AssetId` / `AssetRegistry` / `MemoryAssetLoader` in `rat_core`. Catalog splits source vs compiled vs CPU vs GPU-stub; `resolve()` does not leak paths. Maps bind stable ids; Failed + fallback does not abort; headless swaps the loader without GPU/FS. GPU destroy after `end_frame`. Verify: `.\build\tests\rat_tests.exe "[asset]"` and `ctest`. Review: Approved after compiled-path split.
+
+## Bugs found
+
+none.
