@@ -17,3 +17,5 @@ Acceptance: ADR Accepted с Windows-primary и способом подмены s
 Depends: [[feat: Input rebind and gamepad]]. Next: [[feat: Audio backend implementation]]. Взято в [[Sprint 7 — Engine architecture]].
 
 Origin: [[feat: Audio play-queue stub]] + merged `docs/architecture-roadmap.md` (2026-09-01).
+
+ADR: [[ADR-013 Audio backend miniaudio]] (Accepted). miniaudio as `AudioSink`; tests keep Recording/Null; clips `AssetId`. Status unchanged until review.
