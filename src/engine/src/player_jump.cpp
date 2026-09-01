@@ -281,7 +281,7 @@ SurfaceSample standing_sample(const SurfaceQuery& query, const CollisionWorld* s
   if (support.has_value()) {
     sample.y = support->y;
     sample.on_ramp = support->on_ramp;
-    sample.ramp_index = support->on_ramp ? 0 : -1;
+    sample.ramp_index = support->on_ramp ? support->ramp_index : -1;
   }
   return sample;
 }
@@ -307,6 +307,13 @@ void clamp_to_ceiling(PlayerBody& player, JumpState& jump, const CollisionWorld&
     return;
   }
   const float max_feet = lowest - body.height;
+  if (max_feet < ground_y) {
+    player.y = ground_y;
+    jump.vertical_speed = 0.0f;
+    jump.jump_offset = 0.0f;
+    jump.grounded = true;
+    return;
+  }
   if (player.y > max_feet) {
     player.y = max_feet;
     if (jump.vertical_speed > 0.0f) {

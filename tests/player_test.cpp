@@ -600,6 +600,43 @@ TEST_CASE("East ladder climb reaches slab with move only", "[unit][player][surfa
   REQUIRE(player.y == Approx(0.0f).margin(0.1f));
 }
 
+TEST_CASE("Neighboring ramps with a rise above max_step_up cannot be climbed",
+          "[unit][player][surface]") {
+  rat::MapData map = make_surface_map(2, 1, {0.0f, 0.0f});
+  map.ramps.push_back({
+      .tile = rat::TileCoord{0, 0},
+      .direction = rat::RampDirection::East,
+      .low_y = 0.0f,
+      .high_y = 0.1f,
+  });
+  map.ramps.push_back({
+      .tile = rat::TileCoord{1, 0},
+      .direction = rat::RampDirection::East,
+      .low_y = 0.8f,
+      .high_y = 1.0f,
+  });
+  const rat::SurfaceQuery query(map);
+  constexpr float kMaxStepUp = 0.35f;
+
+  rat::PlayerBody player;
+  player.x = 0.85f;
+  player.z = 0.5f;
+  player.y = query.sample(player.x, player.z).y;
+  player.speed = 2.0f;
+
+  const rat::SurfaceSample from = query.sample(player.x, player.z);
+  const rat::SurfaceSample to = query.sample(1.1f, 0.5f);
+  REQUIRE(from.on_ramp);
+  REQUIRE(to.on_ramp);
+  REQUIRE(from.ramp_index != to.ramp_index);
+  REQUIRE(to.y - from.y > kMaxStepUp);
+
+  player = rat::integrate_player_surface(player, rat::MoveInput{1.0f, 0.0f}, 0.2f, {}, query,
+                                         kMaxStepUp, {}, &map);
+  REQUIRE(player.x < 1.0f);
+  REQUIRE(player.y < 0.8f);
+}
+
 TEST_CASE("East ladder tangent cannot walk through slab side", "[unit][player][surface]") {
   rat::MapData map = make_surface_map(1, 1, {0.0f});
   map.floor_slabs.push_back({{0, 0}, 2.0f, 0.25f});

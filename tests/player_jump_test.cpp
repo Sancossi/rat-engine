@@ -1746,3 +1746,30 @@ TEST_CASE("Jump under a slab does not rise through the underside", "[unit][playe
     REQUIRE(body.y + 1.6f <= 1.75f + 1e-3f);
   }
 }
+
+TEST_CASE("Jump under a 1.6 slab does not shove feet below support", "[unit][player][jump]") {
+  rat::MapData map = make_surface_map(1, 1, {0.0f});
+  map.floor_slabs.push_back({{0, 0}, 1.6f, 0.25f});
+  const rat::SurfaceQuery query(map);
+  rat::PlayerBody body;
+  body.x = 0.5f;
+  body.y = 0.0f;
+  body.z = 0.5f;
+  rat::JumpState jump = rat::make_grounded_jump_state();
+  rat::PlayerFrameInput input;
+  input.jump_pressed = true;
+  input.jump_held = true;
+  constexpr float kYLo = 1.6f - 0.25f;
+  constexpr float kDt = 1.0f / 120.0f;
+  for (int i = 0; i < 180; ++i) {
+    const auto result = rat::integrate_player_frame_surface(
+        body, jump, input, kDt, {}, query, {}, 0.35f, {}, &map);
+    body = result.body;
+    jump = result.jump;
+    input.jump_pressed = false;
+    REQUIRE(body.y >= 0.0f);
+    if (!jump.grounded) {
+      REQUIRE(body.y + 1.6f <= kYLo + 1e-3f);
+    }
+  }
+}

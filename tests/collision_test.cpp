@@ -348,6 +348,32 @@ TEST_CASE("Bake floor slab is a thin box not filled to Y=0", "[collision]") {
   REQUIRE(found_slab);
 }
 
+TEST_CASE("query_solid_support reports distinct ramp indices", "[collision]") {
+  rat::MapData map = make_grid(2, 1, 0.0f);
+  map.ramps.push_back({
+      .tile = rat::TileCoord{0, 0},
+      .direction = rat::RampDirection::East,
+      .low_y = 0.0f,
+      .high_y = 0.1f,
+  });
+  map.ramps.push_back({
+      .tile = rat::TileCoord{1, 0},
+      .direction = rat::RampDirection::East,
+      .low_y = 0.8f,
+      .high_y = 1.0f,
+  });
+  const rat::CollisionWorld world = rat::bake_collision_world(map, rat::SurfaceQuery(map));
+  const auto first = rat::query_solid_support(world, 0.85f, 0.5f, 0.4f, 0.0f, 1.0e6f);
+  const auto second = rat::query_solid_support(world, 1.1f, 0.5f, 0.4f, 0.8f, 1.0e6f);
+  REQUIRE(first.has_value());
+  REQUIRE(second.has_value());
+  REQUIRE(first->on_ramp);
+  REQUIRE(second->on_ramp);
+  REQUIRE(first->ramp_index >= 0);
+  REQUIRE(second->ramp_index >= 0);
+  REQUIRE(first->ramp_index != second->ramp_index);
+}
+
 TEST_CASE("Cylinder head hits slab underside; feet on top do not", "[collision]") {
   rat::MapData map = make_grid(1, 1, 0.0f);
   map.floor_slabs.push_back({{0, 0}, 2.0f, 0.25f});

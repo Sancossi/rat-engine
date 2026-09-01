@@ -58,6 +58,7 @@ struct WalkableRamp {
   float min_z = 0.0f;
   float max_x = 0.0f;
   float max_z = 0.0f;
+  int ramp_index = -1;
 };
 
 struct LadderVolume {
@@ -95,6 +96,7 @@ void append_ladders(CollisionWorld& world, std::span<const LadderDef> ladders, f
 struct SolidSupport {
   float y = 0.0f;
   bool on_ramp = false;
+  int ramp_index = -1;
 };
 
 [[nodiscard]] std::optional<SolidSupport> query_solid_support(

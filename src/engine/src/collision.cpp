@@ -243,6 +243,7 @@ void append_ramp_prisms(CollisionWorld& world, std::span<const RampDef> ramps, f
     prism.min_z = static_cast<float>(ramp.tile.z) * ts;
     prism.max_x = prism.min_x + ts;
     prism.max_z = prism.min_z + ts;
+    prism.ramp_index = static_cast<int>(world.ramps.size());
     world.ramps.push_back(prism);
   }
 }
@@ -413,14 +414,14 @@ bool cylinder_hits_fences(const CollisionBody& body, const CollisionWorld& world
 std::optional<SolidSupport> query_solid_support(const CollisionWorld& world, float x, float z,
                                                  float radius, float feet_y, float max_step_up) {
   std::optional<SolidSupport> best;
-  auto consider = [&](float candidate, bool on_ramp) {
+  auto consider = [&](float candidate, bool on_ramp, int ramp_index) {
     const bool within_step = candidate <= feet_y + max_step_up;
     const bool landing_or_on_top = feet_y + 1e-4f >= candidate;
     if (!within_step && !landing_or_on_top) {
       return;
     }
     if (!best.has_value() || candidate > best->y) {
-      best = SolidSupport{candidate, on_ramp};
+      best = SolidSupport{candidate, on_ramp, ramp_index};
     }
   };
 
@@ -437,7 +438,7 @@ std::optional<SolidSupport> query_solid_support(const CollisionWorld& world, flo
     if (feet_y + 1e-4f < box.y_lo) {
       continue;
     }
-    consider(box.y_hi, false);
+    consider(box.y_hi, false, -1);
   }
 
   for (const WalkableRamp& ramp : world.ramps) {
@@ -449,7 +450,7 @@ std::optional<SolidSupport> query_solid_support(const CollisionWorld& world, flo
     if (x < ramp.min_x || x >= ramp.max_x || z < ramp.min_z || z >= ramp.max_z) {
       continue;
     }
-    consider(ramp_surface_y(ramp, x, z), true);
+    consider(ramp_surface_y(ramp, x, z), true, ramp.ramp_index);
   }
 
   return best;
