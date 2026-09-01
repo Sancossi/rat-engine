@@ -1,9 +1,9 @@
 ---
 type: task
 area: Engine
-status: Not started
+status: In progress
 task_type: Feature
-sprint:
+sprint: Sprint 6
 due:
 tags: [task]
 ---
@@ -12,4 +12,7 @@ tags: [task]
 
 Intent: после [[edge-walls-passable-from-adjacent-side]] подключить кубы height-grid и рампы к тому же `CollisionWorld`, что и заборы. Edit-представление не меняется; bake на load/hot-apply. Origin: collider design (chat).
 
-Acceptance: бок куба не проходив цилиндром с соседней клетки; рампа — клин-solid (верх walkable); `SurfaceQuery.sample` не обязателен для шага, если опора берётся из solids. Пещеры/слои — [[feat: Stacked surfaces caves and basements]], не эта карточка.
+Acceptance: бок куба +1.0 не проходив цилиндром с соседней клетки; лестница `max_step_up` 0.35 ходит; низ рампы проходим, бок — solid из `build_terrain_side_faces`. Y под ногами всё ещё `SurfaceQuery.sample` (клин как опора — [[feat: Stacked surfaces caves and basements]]).
+
+Spec: `docs/superpowers/specs/2026-09-01-bake-terrain-collision-solids-design.md`
+
