@@ -2,16 +2,12 @@
 
 #include <rat/app_mode.hpp>
 #include <rat/audio.hpp>
-#include <rat/buffered_press.hpp>
 #include <rat/debug_snapshot.hpp>
 #include <rat/edit_history.hpp>
-#include <rat/event_runtime.hpp>
-#include <rat/game_state.hpp>
 #include <rat/gameplay_notify.hpp>
 #include <rat/input.hpp>
 #include <rat/log.hpp>
-#include <rat/player.hpp>
-#include <rat/surface_query.hpp>
+#include <rat/simulation_session.hpp>
 #include <rat/viewport_edit.hpp>
 
 #include <cstdint>
@@ -74,10 +70,8 @@ class EditorApp {
   std::unique_ptr<Logger> logger_;
   std::unique_ptr<LogAudioSink> audio_sink_;
   std::unique_ptr<QueuedAudio> audio_;
-  PlayerBody player_{};
-  GameState game_state_{};
+  SimulationSession session_{};
   GameplayNotifyBus notify_bus_{};
-  EventRuntime events_{};
   EditHistory edit_history_{};
   AppMode app_mode_ = AppMode::Play;
   std::string map_path_;
@@ -112,14 +106,8 @@ class EditorApp {
   int height_ = 720;
   bool running_ = false;
   InputButtons previous_buttons_{};
-  BufferedPress interact_press_buffer_{};
-  bool jump_press_pending_ = false;
-  JumpState jump_state_ = make_grounded_jump_state();
-  JumpTuning jump_tuning_{};
-  std::unique_ptr<SurfaceQuery> surface_query_cache_;
   float fixed_accumulator_ = 0.0f;
   double last_time_ = 0.0;
-  std::uint64_t sim_frame_ = 0;
 };
 
 }  // namespace rat

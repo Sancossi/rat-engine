@@ -1,0 +1,209 @@
+#include <rat/gameplay_notify.hpp>
+#include <rat/input.hpp>
+#include <rat/input_sequence.hpp>
+#include <rat/map_data.hpp>
+#include <rat/map_loader.hpp>
+#include <rat/player.hpp>
+#include <rat/simulation_session.hpp>
+#include <rat/surface_query.hpp>
+
+#include <catch2/catch_approx.hpp>
+#include <catch2/catch_test_macros.hpp>
+
+#include <algorithm>
+#include <string>
+#include <vector>
+
+using Catch::Approx;
+
+namespace {
+
+rat::MapData make_flat_map() {
+  rat::MapData map;
+  map.schema_version = 2;
+  map.id = "sim_flat";
+  map.width = 4;
+  map.height = 4;
+  map.tile_size = 1.0f;
+  map.height_grid.origin_x = 0;
+  map.height_grid.origin_z = 0;
+  map.height_grid.width = 4;
+  map.height_grid.height = 4;
+  map.height_grid.ground_y.assign(16, 0.0f);
+  return map;
+}
+
+rat::PlayerBody make_start_player() {
+  rat::PlayerBody player;
+  player.x = 1.5f;
+  player.y = 0.0f;
+  player.z = 1.5f;
+  player.speed = 5.0f;
+  return player;
+}
+
+}  // namespace
+
+TEST_CASE("SimulationSession tick advances tick_id and integrates player", "[unit][sim]") {
+  rat::SimulationSession session;
+  session.load(make_flat_map());
+  session.set_player(make_start_player());
+
+  REQUIRE(session.tick_id() == 0);
+
+  rat::InputFrame frame;
+  frame.move = rat::world_aligned_move(0.0f, 1.0f);
+  const rat::SimulationTickResult result = session.tick(frame);
+
+  CHECK(result.tick_id == 1);
+  CHECK(session.tick_id() == 1);
+  CHECK(session.player().z < 1.5f);
+  CHECK(session.state().player_z() == Approx(session.player().z).margin(1e-5f));
+  CHECK(session.state().map_id() == "sim_flat");
+}
+
+TEST_CASE("drain_simulation_catch_up matches repeated ticks independent of display FPS",
+          "[unit][sim]") {
+  const rat::MapData map = make_flat_map();
+  const rat::PlayerBody start = make_start_player();
+  rat::InputFrame frame;
+  frame.move = rat::world_aligned_move(0.0f, 1.0f);
+
+  rat::SimulationSession stepped;
+  stepped.load(map);
+  stepped.set_player(start);
+  constexpr int kTicks = 12;
+  for (int i = 0; i < kTicks; ++i) {
+    stepped.tick(frame);
+  }
+
+  rat::SimulationSession hitch;
+  hitch.load(map);
+  hitch.set_player(start);
+  float accumulator = hitch.config().dt * static_cast<float>(kTicks);
+  const rat::SimulationCatchUpResult catch_up =
+      rat::drain_simulation_catch_up(hitch, accumulator, frame);
+
+  CHECK(catch_up.ticks_run == kTicks);
+  CHECK_FALSE(catch_up.budget_exceeded);
+  CHECK(accumulator < hitch.config().dt);
+  CHECK(hitch.tick_id() == static_cast<std::uint64_t>(kTicks));
+  CHECK(hitch.player().x == Approx(stepped.player().x).margin(1e-5f));
+  CHECK(hitch.player().y == Approx(stepped.player().y).margin(1e-5f));
+  CHECK(hitch.player().z == Approx(stepped.player().z).margin(1e-5f));
+}
+
+TEST_CASE("drain_simulation_catch_up diagnoses catch-up budget exceeded", "[unit][sim]") {
+  rat::SimulationSession session;
+  session.load(make_flat_map());
+  session.set_player(make_start_player());
+
+  const float dt = session.config().dt;
+  float accumulator = dt * static_cast<float>(rat::kMaxCatchUpTicks + 10);
+  rat::InputFrame frame;
+  const rat::SimulationCatchUpResult catch_up =
+      rat::drain_simulation_catch_up(session, accumulator, frame);
+
+  CHECK(catch_up.budget_exceeded);
+  CHECK(catch_up.ticks_run == rat::kMaxCatchUpTicks);
+  CHECK(session.tick_id() == static_cast<std::uint64_t>(rat::kMaxCatchUpTicks));
+  CHECK(accumulator < dt);
+}
+
+TEST_CASE("drain_simulation_catch_up applies jump edge on first tick only", "[unit][sim]") {
+  rat::SimulationSession session;
+  session.load(make_flat_map());
+  session.set_player(make_start_player());
+
+  rat::InputFrame frame;
+  frame.jump_pressed = true;
+  frame.jump_held = true;
+  float accumulator = session.config().dt * 3.0f;
+  const rat::SimulationCatchUpResult catch_up =
+      rat::drain_simulation_catch_up(session, accumulator, frame);
+
+  CHECK(catch_up.ticks_run == 3);
+  CHECK(session.tick_id() == 3);
+  CHECK_FALSE(session.jump().grounded);
+}
+
+TEST_CASE("SimulationSession tick posts Landed on airborne to grounded", "[unit][sim]") {
+  rat::SimulationSession session;
+  session.load(make_flat_map());
+  session.set_player(make_start_player());
+
+  rat::GameplayNotifyBus bus;
+  std::vector<rat::GameplayNotifyKind> kinds;
+  bus.subscribe([&kinds](const rat::GameplayNotify& notify) { kinds.push_back(notify.kind); });
+  session.set_notify(&bus);
+
+  rat::InputFrame jump;
+  jump.jump_pressed = true;
+  jump.jump_held = true;
+  REQUIRE_FALSE(session.tick(jump).landed);
+  REQUIRE_FALSE(session.jump().grounded);
+
+  bool saw_land = false;
+  rat::InputFrame held;
+  held.jump_held = true;
+  for (int i = 0; i < 600; ++i) {
+    if (i > 8) {
+      held.jump_held = false;
+    }
+    const rat::SimulationTickResult result = session.tick(held);
+    if (result.landed) {
+      saw_land = true;
+      REQUIRE(session.jump().grounded);
+      break;
+    }
+    REQUIRE_FALSE(session.jump().grounded);
+  }
+
+  REQUIRE(saw_land);
+  REQUIRE(std::find(kinds.begin(), kinds.end(), rat::GameplayNotifyKind::Landed) != kinds.end());
+}
+
+TEST_CASE("run_input_sequence adapter matches SimulationSession ticks on grey_yard",
+          "[probe][sim][mechanics]") {
+#ifndef RAT_TEST_DATA_DIR
+#error RAT_TEST_DATA_DIR must be defined
+#endif
+  const auto loaded =
+      rat::load_map_from_file(std::string(RAT_TEST_DATA_DIR) + "/maps/grey_yard.json");
+  REQUIRE(loaded.ok);
+
+  rat::SurfaceQuery query(loaded.map);
+  rat::PlayerBody start;
+  start.x = 1.5f;
+  start.z = 1.5f;
+  start.y = query.sample(start.x, start.z).y;
+  start.speed = 5.0f;
+
+  std::vector<rat::InputFrame> steps;
+  steps.push_back({});
+  rat::InputFrame interact;
+  interact.interact_pressed = true;
+  steps.push_back(interact);
+  steps.push_back({});
+  steps.push_back({});
+  rat::InputFrame move;
+  move.move = rat::world_aligned_move(0.0f, 1.0f);
+  for (int i = 0; i < 12; ++i) {
+    steps.push_back(move);
+  }
+
+  rat::SimulationSession session;
+  session.load(loaded.map);
+  session.set_player(start);
+  for (const rat::InputFrame& frame : steps) {
+    session.tick(frame);
+  }
+
+  const rat::InputSequenceResult seq = rat::run_input_sequence(loaded.map, start, steps);
+  CHECK(seq.sim_frame == session.tick_id());
+  CHECK(seq.player.x == Approx(session.player().x).margin(1e-5f));
+  CHECK(seq.player.y == Approx(session.player().y).margin(1e-5f));
+  CHECK(seq.player.z == Approx(session.player().z).margin(1e-5f));
+  CHECK(seq.state.get_variable(0) == session.state().get_variable(0));
+  CHECK(seq.jump.grounded == session.jump().grounded);
+}
