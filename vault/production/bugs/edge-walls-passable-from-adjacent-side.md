@@ -13,6 +13,9 @@ Origin: chat (Sprint 6). Collision: [[feat: Grid edge barriers]]. Greybox: [[fea
 
 Proposed fix: shared collision **bodies** (player = cylinder now; later crates/doors), not a player-only line test. Future puzzles: [[feat: Field physics puzzles]].
 
+Follow-up: [[feat: Bake height-grid and ramps to collision solids]]
+Follow-up: [[feat: Stacked surfaces caves and basements]]
+
 ## Repro
 
 1. Open `grey_yard` (or Place cube + Mini/Full fence on one edge).
@@ -33,4 +36,4 @@ Blockers already use an XZ AABB (`player_bounds`). Edge fences and height-grid s
 
 Agreed for the fix: **cylinder** radius **0.4** (diameter 0.8, fits a 1-tile corridor), height **1.6** from feet. Walk / jump / landing / events use that volume. Not ECS: a `CollisionBody` list + static map query. Entity-model ADR stays [[research: Entity model ECS vs scene vs hybrid]].
 
-Runtime target: map authoring (height-grid, ramps, fences) **bakes** to 3D solids; player/crates are dynamic bodies against that world. Terrain tools stay for editing. Multi-level is stacked layers + extra volumes, not voxels ([[feat: Stacked surfaces caves and basements]]).
+This bug slice: `CollisionWorld` API + fence solids + player cylinder vs fences. Cubes/ramps stay on `SurfaceQuery` until [[feat: Bake height-grid and ramps to collision solids]]. No crates, caves, or ECS.
