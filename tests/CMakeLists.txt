@@ -4,6 +4,7 @@ add_executable(rat_tests
   buffered_press_test.cpp
   blocker_edit_test.cpp
   camera_test.cpp
+  collision_test.cpp
   debug_snapshot_test.cpp
   elevation_mechanics_test.cpp
   edit_history_test.cpp

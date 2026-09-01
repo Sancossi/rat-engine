@@ -4,6 +4,7 @@ add_library(rat_core
   src/buffered_press.cpp
   src/blocker_edit.cpp
   src/camera.cpp
+  src/collision.cpp
   src/debug_snapshot.cpp
   src/edit_history.cpp
   src/event_edit.cpp
