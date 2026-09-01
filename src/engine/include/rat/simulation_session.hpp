@@ -111,3 +111,7 @@ class SimulationSession {
     int max_ticks = kMaxCatchUpTicks);
 
 }  // namespace rat
+
+#if defined(HWND) || defined(_WINDOWS_) || defined(GLFW_TRUE) || defined(__glfw3_h__)
+#error SimulationSession must not include Win32 HWND or GLFW
+#endif

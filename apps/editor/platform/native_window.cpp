@@ -1,4 +1,4 @@
-#include "glfw_host.hpp"
+#include "native_window.hpp"
 
 #if defined(_WIN32)
 #define GLFW_EXPOSE_NATIVE_WIN32
@@ -15,11 +15,15 @@
 
 namespace rat {
 
-GlfwHost::~GlfwHost() {
+NativeWindow::NativeWindow() : clock_(&owned_clock_) {}
+
+NativeWindow::NativeWindow(const Clock& clock) : clock_(&clock) {}
+
+NativeWindow::~NativeWindow() {
   destroy();
 }
 
-bool GlfwHost::create(int width, int height, const char* title) {
+bool NativeWindow::create(int width, int height, const char* title) {
   if (window_ != nullptr) {
     return true;
   }
@@ -31,10 +35,15 @@ bool GlfwHost::create(int width, int height, const char* title) {
   glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
   window_ = glfwCreateWindow(width, height, title != nullptr ? title : "rat-editor", nullptr,
                              nullptr);
-  return window_ != nullptr;
+  if (window_ == nullptr) {
+    return false;
+  }
+  glfwSetWindowUserPointer(window_, this);
+  glfwSetFramebufferSizeCallback(window_, glfw_framebuffer_size);
+  return true;
 }
 
-void GlfwHost::destroy() {
+void NativeWindow::destroy() {
   if (window_ != nullptr) {
     glfwDestroyWindow(window_);
     window_ = nullptr;
@@ -45,25 +54,29 @@ void GlfwHost::destroy() {
   }
 }
 
-bool GlfwHost::should_close() const {
+bool NativeWindow::is_open() const {
+  return window_ != nullptr;
+}
+
+bool NativeWindow::should_close() const {
   return window_ == nullptr || glfwWindowShouldClose(window_) == GLFW_TRUE;
 }
 
-void GlfwHost::request_close() {
+void NativeWindow::request_close() {
   if (window_ != nullptr) {
     glfwSetWindowShouldClose(window_, GLFW_TRUE);
   }
 }
 
-void GlfwHost::poll() {
+void NativeWindow::poll() {
   glfwPollEvents();
 }
 
-double GlfwHost::time() const {
-  return glfwGetTime();
+double NativeWindow::time() const {
+  return clock_ != nullptr ? clock_->now_seconds() : 0.0;
 }
 
-InputButtons GlfwHost::sample_buttons() const {
+InputButtons NativeWindow::sample_buttons() const {
   InputButtons buttons;
   if (window_ == nullptr) {
     return buttons;
@@ -87,11 +100,11 @@ InputButtons GlfwHost::sample_buttons() const {
   return buttons;
 }
 
-bool GlfwHost::mouse_left_down() const {
+bool NativeWindow::mouse_left_down() const {
   return window_ != nullptr && glfwGetMouseButton(window_, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS;
 }
 
-void GlfwHost::cursor_pos(double& x, double& y) const {
+void NativeWindow::cursor_pos(double& x, double& y) const {
   if (window_ == nullptr) {
     x = 0.0;
     y = 0.0;
@@ -100,7 +113,7 @@ void GlfwHost::cursor_pos(double& x, double& y) const {
   glfwGetCursorPos(window_, &x, &y);
 }
 
-void GlfwHost::framebuffer_size(int& width, int& height) const {
+void NativeWindow::framebuffer_size(int& width, int& height) const {
   if (window_ == nullptr) {
     width = 1;
     height = 1;
@@ -109,8 +122,8 @@ void GlfwHost::framebuffer_size(int& width, int& height) const {
   glfwGetFramebufferSize(window_, &width, &height);
 }
 
-NativeWindow GlfwHost::native_window() const {
-  NativeWindow native;
+NativeWindowHandle NativeWindow::handle() const {
+  NativeWindowHandle native;
   if (window_ == nullptr) {
     return native;
   }
@@ -125,15 +138,18 @@ NativeWindow GlfwHost::native_window() const {
   return native;
 }
 
-void GlfwHost::set_user_pointer(void* user) {
-  if (window_ != nullptr) {
-    glfwSetWindowUserPointer(window_, user);
-  }
+void NativeWindow::set_user_pointer(void* user) {
+  user_ = user;
 }
 
-void GlfwHost::set_framebuffer_size_callback(void (*callback)(GLFWwindow*, int, int)) {
-  if (window_ != nullptr) {
-    glfwSetFramebufferSizeCallback(window_, callback);
+void NativeWindow::set_resize_callback(void (*callback)(void* user, int width, int height)) {
+  resize_ = callback;
+}
+
+void NativeWindow::glfw_framebuffer_size(GLFWwindow* window, int width, int height) {
+  auto* self = static_cast<NativeWindow*>(glfwGetWindowUserPointer(window));
+  if (self != nullptr && self->resize_ != nullptr) {
+    self->resize_(self->user_, width, height);
   }
 }
 

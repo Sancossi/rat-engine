@@ -1,5 +1,6 @@
 #pragma once
 
+#include "rat/file_store.hpp"
 #include "rat/map_data.hpp"
 
 #include <cstdint>
@@ -61,5 +62,7 @@ struct MapDocumentLoadResult {
 
 [[nodiscard]] MapDocumentLoadResult load_map_document_from_string(std::string_view json_text);
 [[nodiscard]] MapDocumentLoadResult load_map_document_from_file(const std::string& path);
+[[nodiscard]] MapDocumentLoadResult load_map_document_from_file(const std::string& path,
+                                                                const FileStore& files);
 
 }  // namespace rat

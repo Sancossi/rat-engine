@@ -5,7 +5,6 @@
 #include <nlohmann/json.hpp>
 
 #include <cstddef>
-#include <fstream>
 #include <functional>
 #include <sstream>
 #include <unordered_map>
@@ -403,15 +402,18 @@ MapDocumentLoadResult load_map_document_from_string(std::string_view json_text) 
 }
 
 MapDocumentLoadResult load_map_document_from_file(const std::string& path) {
-  std::ifstream in(path, std::ios::binary);
-  if (!in) {
+  return load_map_document_from_file(path, os_files());
+}
+
+MapDocumentLoadResult load_map_document_from_file(const std::string& path, const FileStore& files) {
+  const FileReadResult read = files.read(path);
+  if (!read.ok) {
     MapDocumentLoadResult result;
-    add_error(result.issues, "/", "failed to open map file: " + path);
+    add_error(result.issues, "/",
+              read.error.empty() ? "failed to open map file: " + path : read.error);
     return result;
   }
-  std::ostringstream oss;
-  oss << in.rdbuf();
-  return load_map_document_from_string(oss.str());
+  return load_map_document_from_string(read.bytes.as_text());
 }
 
 }  // namespace rat

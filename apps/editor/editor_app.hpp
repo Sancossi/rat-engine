@@ -5,7 +5,7 @@
 #include "panels/blocker_panel.hpp"
 #include "panels/event_panel.hpp"
 #include "panels/terrain_panel.hpp"
-#include "platform/glfw_host.hpp"
+#include "platform/native_window.hpp"
 
 #include <rat/app_mode.hpp>
 #include <rat/audio.hpp>
@@ -19,7 +19,6 @@
 #include <memory>
 #include <string>
 
-struct GLFWwindow;
 struct ImGuiIO;
 
 namespace rat {
@@ -54,9 +53,9 @@ class EditorApp {
   void snap_player_to_ground_clear_jump();
   void run_drag_step_commands(const ViewportPick& pick, TileDelta delta);
 
-  static void framebuffer_size_callback(GLFWwindow* window, int width, int height);
+  static void on_host_resize(void* user, int width, int height);
 
-  GlfwHost host_{};
+  NativeWindow host_{};
   FrameCoordinator coordinator_{};
   Engine* engine_ = nullptr;
   std::unique_ptr<FileLogSink> file_log_;

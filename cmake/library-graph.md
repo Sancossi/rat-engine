@@ -5,7 +5,7 @@ Gameplay stays free of windowing and GPU backends. CMake enforces this on `rat_c
 ```
 nlohmann_json
       ^
-  rat_core              gameplay / maps / input math — json only
+  rat_core              gameplay / maps / Clock / FileStore — json only
      ^    ^             no GLFW, ImGui, bgfx, Win32 (user32/gdi32)
 rat_engine  rat_editor_logic
      ^    ^             engine: bgfx + bx + bimg

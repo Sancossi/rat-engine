@@ -33,8 +33,8 @@ add_executable(rat-editor
   editor_app.hpp
   imgui_bgfx.cpp
   imgui_bgfx.hpp
-  platform/glfw_host.cpp
-  platform/glfw_host.hpp
+  platform/native_window.cpp
+  platform/native_window.hpp
   panels/blocker_panel.cpp
   panels/blocker_panel.hpp
   panels/terrain_panel.cpp

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "rat/file_store.hpp"
 #include "rat/game_state.hpp"
 #include "rat/input.hpp"
 #include "rat/map_data.hpp"
@@ -60,6 +61,10 @@ void record_tick(ReplayRecording& recording, std::uint64_t tick_id, const InputF
                                                      const ReplayRecording& recording);
 
 [[nodiscard]] bool write_replay(std::string_view path, const ReplayRecording& recording);
+[[nodiscard]] bool write_replay(std::string_view path, const ReplayRecording& recording,
+                                FileStore& files);
 [[nodiscard]] std::optional<ReplayRecording> read_replay(std::string_view path);
+[[nodiscard]] std::optional<ReplayRecording> read_replay(std::string_view path,
+                                                         const FileStore& files);
 
 }  // namespace rat

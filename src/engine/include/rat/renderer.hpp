@@ -1,15 +1,12 @@
 #pragma once
 
+#include "rat/native_window_handle.hpp"
+
 #include <cstdint>
 
 namespace rat {
 
 struct RenderWorld;
-
-struct NativeWindowHandle {
-  void* nwh = nullptr;
-  void* ndt = nullptr; // display / native display type (unused on Win32)
-};
 
 struct RendererConfig {
   NativeWindowHandle window;

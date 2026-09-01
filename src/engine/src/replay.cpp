@@ -1,10 +1,11 @@
 #include "rat/replay.hpp"
 
+#include "rat/file_store.hpp"
+
 #include <nlohmann/json.hpp>
 
 #include <cstdint>
 #include <cstring>
-#include <fstream>
 #include <string>
 #include <vector>
 
@@ -292,22 +293,25 @@ ReplayPlayResult replay_input_sequence(const MapData& map, const ReplayRecording
 }
 
 bool write_replay(std::string_view path, const ReplayRecording& recording) {
-  std::ofstream out{std::string(path), std::ios::out | std::ios::trunc};
-  if (!out) {
-    return false;
-  }
-  out << dump_recording(recording).dump(2) << '\n';
-  return static_cast<bool>(out);
+  return write_replay(path, recording, os_files());
+}
+
+bool write_replay(std::string_view path, const ReplayRecording& recording, FileStore& files) {
+  const std::string json_text = dump_recording(recording).dump(2) + '\n';
+  return files.write(path, json_text).ok;
 }
 
 std::optional<ReplayRecording> read_replay(std::string_view path) {
-  std::ifstream in{std::string(path)};
-  if (!in) {
+  return read_replay(path, os_files());
+}
+
+std::optional<ReplayRecording> read_replay(std::string_view path, const FileStore& files) {
+  const FileReadResult read = files.read(path);
+  if (!read.ok) {
     return std::nullopt;
   }
   try {
-    json root;
-    in >> root;
+    const json root = json::parse(read.bytes.as_text());
     return load_recording(root);
   } catch (...) {
     return std::nullopt;

@@ -3,8 +3,6 @@
 #include <nlohmann/json.hpp>
 
 #include <cstddef>
-#include <fstream>
-#include <sstream>
 #include <stdexcept>
 #include <vector>
 
@@ -435,13 +433,15 @@ MapLoadResult load_map_from_string(std::string_view json_text) {
 }
 
 MapLoadResult load_map_from_file(const std::string& path) {
-  std::ifstream in(path, std::ios::binary);
-  if (!in) {
-    return fail("failed to open map file: " + path);
+  return load_map_from_file(path, os_files());
+}
+
+MapLoadResult load_map_from_file(const std::string& path, const FileStore& files) {
+  const FileReadResult read = files.read(path);
+  if (!read.ok) {
+    return fail(read.error.empty() ? "failed to open map file: " + path : read.error);
   }
-  std::ostringstream oss;
-  oss << in.rdbuf();
-  return load_map_from_string(oss.str());
+  return load_map_from_string(read.bytes.as_text());
 }
 
 namespace {
@@ -683,19 +683,21 @@ MapSerializeResult serialize_map_to_string(const MapData& map) {
 }
 
 MapFileResult save_map_to_file(const MapData& map, const std::string& path) {
+  return save_map_to_file(map, path, os_files());
+}
+
+MapFileResult save_map_to_file(const MapData& map, const std::string& path, FileStore& files) {
   const MapSerializeResult serialized = serialize_map_to_string(map);
   if (!serialized.ok) {
     return MapFileResult{false, serialized.error};
   }
 
-  std::ofstream out(path, std::ios::binary | std::ios::trunc);
-  if (!out) {
-    return MapFileResult{false, "failed to open map file for writing: " + path};
-  }
-  out << serialized.json_text << '\n';
-  out.flush();
-  if (!out) {
-    return MapFileResult{false, "failed to write map file: " + path};
+  std::string payload = serialized.json_text;
+  payload += '\n';
+  const FileWriteResult written = files.write(path, payload);
+  if (!written.ok) {
+    return MapFileResult{false, written.error.empty() ? "failed to write map file: " + path
+                                                      : written.error};
   }
   return MapFileResult{true, {}};
 }

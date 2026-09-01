@@ -2,6 +2,7 @@
 
 #include "rat/app_mode.hpp"
 #include "rat/event_runtime.hpp"
+#include "rat/file_store.hpp"
 #include "rat/game_state.hpp"
 #include "rat/input.hpp"
 #include "rat/player.hpp"
@@ -57,7 +58,11 @@ struct DebugSnapshot {
                                                 std::uint64_t checksum = 0);
 
 [[nodiscard]] bool write_debug_snapshot(std::string_view path, const DebugSnapshot& snapshot);
+[[nodiscard]] bool write_debug_snapshot(std::string_view path, const DebugSnapshot& snapshot,
+                                        FileStore& files);
 [[nodiscard]] std::optional<DebugSnapshot> read_debug_snapshot(std::string_view path);
+[[nodiscard]] std::optional<DebugSnapshot> read_debug_snapshot(std::string_view path,
+                                                               const FileStore& files);
 [[nodiscard]] std::string default_debug_snapshot_path();
 
 }  // namespace rat

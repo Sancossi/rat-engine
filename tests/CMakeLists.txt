@@ -5,6 +5,7 @@ add_executable(rat_tests
   buffered_press_test.cpp
   blocker_edit_test.cpp
   camera_test.cpp
+  clock_test.cpp
   collision_test.cpp
   debug_snapshot_test.cpp
   elevation_mechanics_test.cpp
@@ -15,6 +16,7 @@ add_executable(rat_tests
   event_runtime_test.cpp
   event_why_not_test.cpp
   entity_test.cpp
+  file_store_test.cpp
   game_state_test.cpp
   gameplay_notify_test.cpp
   height_edit_test.cpp

@@ -23,8 +23,6 @@
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
 
-#include <GLFW/glfw3.h>
-
 #include <cstdint>
 #include <iostream>
 #include <string>
@@ -197,20 +195,18 @@ bool EditorApp::init() {
   log(*logger_, LogLevel::Info, "editor", "starting rat-editor");
 
   if (!host_.create(width_, height_, "rat-editor")) {
-    log(*logger_, LogLevel::Error, "editor", "GlfwHost::create failed");
+    log(*logger_, LogLevel::Error, "editor", "NativeWindow::create failed");
     return false;
   }
 
   host_.set_user_pointer(this);
-  host_.set_framebuffer_size_callback(framebuffer_size_callback);
+  host_.set_resize_callback(on_host_resize);
   host_.framebuffer_size(width_, height_);
 
   engine_ = new Engine();
 
   RendererConfig config;
-  const NativeWindow native = host_.native_window();
-  config.window.nwh = native.nwh;
-  config.window.ndt = native.ndt;
+  config.window = host_.handle();
   config.width = static_cast<std::uint32_t>(width_ > 0 ? width_ : 1);
   config.height = static_cast<std::uint32_t>(height_ > 0 ? height_ : 1);
   config.vsync = true;
@@ -246,7 +242,7 @@ bool EditorApp::init() {
   io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
   ImGui::StyleColorsDark();
 
-  if (!ImGui_ImplGlfw_InitForOther(host_.window(), true)) {
+  if (!ImGui_ImplGlfw_InitForOther(host_.glfw_window(), true)) {
     log(*logger_, LogLevel::Error, "editor", "ImGui_ImplGlfw_InitForOther failed");
     shutdown();
     return false;
@@ -297,7 +293,7 @@ int EditorApp::run() {
 }
 
 void EditorApp::shutdown() {
-  if (!running_ && host_.window() == nullptr && engine_ == nullptr) {
+  if (!running_ && !host_.is_open() && engine_ == nullptr) {
     return;
   }
   running_ = false;
@@ -354,15 +350,15 @@ void EditorApp::snap_player_to_ground_clear_jump() {
   }
 }
 
-void EditorApp::framebuffer_size_callback(GLFWwindow* window, int width, int height) {
-  auto* self = static_cast<EditorApp*>(glfwGetWindowUserPointer(window));
+void EditorApp::on_host_resize(void* user, int width, int height) {
+  auto* self = static_cast<EditorApp*>(user);
   if (self != nullptr) {
     self->on_framebuffer_resize(width, height);
   }
 }
 
 void EditorApp::handle_edit_mouse_input(const ImGuiIO& io) {
-  if (host_.window() == nullptr || engine_ == nullptr || app_mode_ != AppMode::Edit) {
+  if (!host_.is_open() || engine_ == nullptr || app_mode_ != AppMode::Edit) {
     mouse_left_was_down_ = false;
     drag_active_ = false;
     return;
@@ -486,7 +482,7 @@ void EditorApp::handle_edit_mouse_input(const ImGuiIO& io) {
 }
 
 void EditorApp::simulate(float dt) {
-  if (engine_ == nullptr || host_.window() == nullptr) {
+  if (engine_ == nullptr || !host_.is_open()) {
     return;
   }
 
