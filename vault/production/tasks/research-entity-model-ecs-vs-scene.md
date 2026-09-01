@@ -1,7 +1,7 @@
 ---
 type: task
 area: Engine
-status: In review
+status: Done
 task_type: Research
 sprint: Sprint 7
 due:
@@ -21,3 +21,11 @@ Depends: [[feat: Asset registry and first load vertical]]. Next: [[feat: RenderW
 Origin: [[Architecture]] open question + merged `docs/architecture-roadmap.md` (2026-09-01).
 
 ADR: [[ADR-012 Entity model EntityId and ComponentStore]] (Accepted). `EntityId` + `ComponentStore` in `rat_core`; player/events/`SimulationSession` not migrated.
+
+## Resolution
+
+ADR-012: hybrid minimum — sparse `EntityId` + generation and `ComponentStore` for Transform/Renderable/Collider, not archetype ECS or scene-graph identity. Stale-id tests in `[entity]`. Player/events stay POD. Verify: `.\build\tests\rat_tests.exe "[entity]"` and `ctest`. Review: Approved.
+
+## Bugs found
+
+none.
