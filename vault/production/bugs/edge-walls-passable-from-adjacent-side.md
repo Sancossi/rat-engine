@@ -31,6 +31,6 @@ Walk-through from the side. `blocked_by_edge_barriers` only rejects a step when 
 
 Blockers already use an XZ AABB (`player_bounds`). Edge fences and height-grid step-up do not.
 
-Agreed for the fix: **cylinder** radius `0.4√2` (covers old AABB corners), height **1.6** from feet. Walk / jump / landing / events use that volume.
+Agreed for the fix: **cylinder** radius **0.4** (diameter 0.8, fits a 1-tile corridor), height **1.6** from feet. Walk / jump / landing / events use that volume. Not ECS: a `CollisionBody` list + static map query. Entity-model ADR stays [[research: Entity model ECS vs scene vs hybrid]].
 
 Later ([[feat: Field physics puzzles]]): same world query for pushable crates, floor weight plates, collapsing tiles, charge-break doors — so this slice must expose **body vs static world** (shape, mass, velocity), not `blocked_by_edge_barriers(center)`. Do not implement crates/plates/doors in this bug.
