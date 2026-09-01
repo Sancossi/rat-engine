@@ -492,6 +492,17 @@ void EditorApp::handle_edit_mouse_input(const ImGuiIO& io) {
         (void)document_.execute(make_upsert_map_floor_slab_command(std::move(slab)));
         break;
       }
+      case ViewportClickActionKind::PlaceLadder: {
+        terrain_panel_.tile_x = action.tile.x;
+        terrain_panel_.tile_z = action.tile.z;
+        LadderDef ladder;
+        ladder.tile = action.tile;
+        ladder.direction = static_cast<RampDirection>(terrain_panel_.edge_direction_index);
+        ladder.y_lo = terrain_panel_.ladder_y_lo;
+        ladder.y_hi = terrain_panel_.ladder_y_hi;
+        (void)document_.execute(make_upsert_map_ladder_command(std::move(ladder)));
+        break;
+      }
       case ViewportClickActionKind::None:
         break;
     }
@@ -710,6 +721,10 @@ void EditorApp::draw_ui() {
     ImGui::SameLine();
     if (ImGui::RadioButton("Floor slab", viewport_tool_ == ViewportTool::PlaceSlab)) {
       viewport_tool_ = ViewportTool::PlaceSlab;
+    }
+    ImGui::SameLine();
+    if (ImGui::RadioButton("Ladder", viewport_tool_ == ViewportTool::PlaceLadder)) {
+      viewport_tool_ = ViewportTool::PlaceLadder;
     }
     ImGui::TextUnformatted("Fence preset");
     ImGui::SameLine();

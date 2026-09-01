@@ -45,6 +45,25 @@ void draw_terrain_panel(EditorDocument& document, TerrainPanelState& state) {
       state.ramp_low_y = tile_height.value;
       state.ramp_high_y = tile_height.value;
     }
+    if (!state.ladder_y_hi_user_set) {
+      float suggested_hi = state.ladder_y_hi;
+      bool found_slab = false;
+      for (const FloorSlabDef& slab : document.visible_data().floor_slabs) {
+        if (slab.tile.x != state.tile_x || slab.tile.z != state.tile_z) {
+          continue;
+        }
+        if (slab.top_y <= state.ladder_y_lo) {
+          continue;
+        }
+        if (!found_slab || slab.top_y > suggested_hi) {
+          suggested_hi = slab.top_y;
+          found_slab = true;
+        }
+      }
+      if (found_slab) {
+        state.ladder_y_hi = suggested_hi;
+      }
+    }
   }
 
   if (tile_height.ok) {
@@ -193,6 +212,27 @@ void draw_terrain_panel(EditorDocument& document, TerrainPanelState& state) {
     slab.top_y = state.slab_top_y;
     slab.thickness = state.slab_thickness;
     (void)run_height(make_upsert_map_floor_slab_command(std::move(slab)));
+  }
+
+  ImGui::Separator();
+  ImGui::TextUnformatted("Ladder");
+  ImGui::TextUnformatted("Uses Edge direction (N/E/S/W) from fences.");
+  ImGui::InputFloat("Ladder y_lo", &state.ladder_y_lo, 0.05f, 0.25f, "%.3f");
+  if (ImGui::InputFloat("Ladder y_hi", &state.ladder_y_hi, 0.05f, 0.25f, "%.3f")) {
+    state.ladder_y_hi_user_set = true;
+  }
+  if (ImGui::Button("Place ladder")) {
+    LadderDef ladder;
+    ladder.tile = ramp_tile;
+    ladder.direction = static_cast<RampDirection>(state.edge_direction_index);
+    ladder.y_lo = state.ladder_y_lo;
+    ladder.y_hi = state.ladder_y_hi;
+    (void)run_height(make_upsert_map_ladder_command(std::move(ladder)));
+  }
+  ImGui::SameLine();
+  if (ImGui::Button("Remove ladder")) {
+    (void)run_height(make_remove_map_ladder_command(
+        ramp_tile, static_cast<RampDirection>(state.edge_direction_index)));
   }
 }
 

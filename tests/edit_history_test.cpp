@@ -457,3 +457,18 @@ TEST_CASE("floor slab upsert toggles same top_y and undoes", "[unit][edit][heigh
   REQUIRE(history.redo(map));
   REQUIRE(map.floor_slabs.empty());
 }
+
+TEST_CASE("ladder upsert last-wins on tile and direction and undoes", "[unit][edit][height]") {
+  rat::MapData map = make_tiny_map();
+  REQUIRE(rat::upgrade_map_schema_for_elevation(map).ok);
+  rat::EditHistory history;
+  rat::LadderDef a{{0, 0}, rat::RampDirection::East, 0.0f, 1.6f};
+  rat::LadderDef b = a;
+  b.y_hi = 2.0f;
+  REQUIRE(history.execute(map, rat::make_upsert_map_ladder_command(a)));
+  REQUIRE(history.execute(map, rat::make_upsert_map_ladder_command(b)));
+  REQUIRE(map.ladders.size() == 1);
+  REQUIRE(map.ladders[0].y_hi == Approx(2.0f));
+  REQUIRE(history.undo(map));
+  REQUIRE(map.ladders[0].y_hi == Approx(1.6f));
+}

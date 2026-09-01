@@ -233,6 +233,8 @@ ViewportClickAction resolve_viewport_click(const MapData& map, ViewportTool tool
       return {ViewportClickActionKind::PlaceFence, 0, tile};
     case ViewportTool::PlaceSlab:
       return {ViewportClickActionKind::PlaceSlab, 0, tile};
+    case ViewportTool::PlaceLadder:
+      return {ViewportClickActionKind::PlaceLadder, 0, tile};
   }
   return {};
 }

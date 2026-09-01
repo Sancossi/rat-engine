@@ -362,4 +362,53 @@ HeightEditResult upsert_map_floor_slab(MapData& map, FloorSlabDef slab) {
   return ok_result();
 }
 
+HeightEditResult upsert_map_ladder(MapData& map, LadderDef ladder) {
+  const HeightEditResult upgraded = upgrade_map_schema_for_elevation(map);
+  if (!upgraded.ok) {
+    return upgraded;
+  }
+  if (!is_valid_direction(ladder.direction)) {
+    return error_result("ladder direction is invalid");
+  }
+  if (ladder.y_hi <= ladder.y_lo) {
+    return error_result("ladder y_hi must be > y_lo");
+  }
+  std::size_t ignored = 0;
+  const HeightEditResult indexed =
+      tile_to_index(map.height_grid, ladder.tile.x, ladder.tile.z, ignored);
+  if (!indexed.ok) {
+    return indexed;
+  }
+  if (map.schema_version < 3) {
+    map.schema_version = 3;
+  }
+  for (LadderDef& existing : map.ladders) {
+    if (existing.tile.x == ladder.tile.x && existing.tile.z == ladder.tile.z &&
+        existing.direction == ladder.direction) {
+      existing = std::move(ladder);
+      return ok_result();
+    }
+  }
+  map.ladders.push_back(std::move(ladder));
+  return ok_result();
+}
+
+HeightEditResult remove_map_ladder(MapData& map, TileCoord tile, RampDirection direction) {
+  const HeightEditResult upgraded = upgrade_map_schema_for_elevation(map);
+  if (!upgraded.ok) {
+    return upgraded;
+  }
+  const std::size_t before = map.ladders.size();
+  map.ladders.erase(std::remove_if(map.ladders.begin(), map.ladders.end(),
+                                   [&](const LadderDef& existing) {
+                                     return existing.tile.x == tile.x && existing.tile.z == tile.z &&
+                                            existing.direction == direction;
+                                   }),
+                    map.ladders.end());
+  if (map.ladders.size() == before) {
+    return error_result("ladder not found for tile and direction");
+  }
+  return ok_result();
+}
+
 }  // namespace rat

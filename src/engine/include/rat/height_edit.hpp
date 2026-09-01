@@ -49,5 +49,8 @@ inline constexpr float kEdgeBarrierFullHeight = 1.6f;
 [[nodiscard]] HeightEditResult remove_map_edge_barrier(MapData& map, TileCoord tile,
                                                        RampDirection direction);
 [[nodiscard]] HeightEditResult upsert_map_floor_slab(MapData& map, FloorSlabDef slab);
+[[nodiscard]] HeightEditResult upsert_map_ladder(MapData& map, LadderDef ladder);
+[[nodiscard]] HeightEditResult remove_map_ladder(MapData& map, TileCoord tile,
+                                                 RampDirection direction);
 
 }  // namespace rat

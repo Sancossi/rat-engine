@@ -19,6 +19,9 @@ struct TerrainPanelState {
   float slab_top_y = 1.6f;
   float slab_thickness = kDefaultFloorSlabThickness;
   int slab_top_preset_index = 0;
+  float ladder_y_lo = 0.0f;
+  float ladder_y_hi = 1.6f;
+  bool ladder_y_hi_user_set = false;
 };
 
 void draw_terrain_panel(EditorDocument& document, TerrainPanelState& state);

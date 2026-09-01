@@ -1,5 +1,7 @@
 #include "rat/greybox.hpp"
 
+#include "rat/collision.hpp"
+
 #include <bgfx/embedded_shader.h>
 #include <bx/bx.h>
 #include <bx/math.h>
@@ -110,9 +112,11 @@ void GreyboxScene::set_terrain_map(const MapData& map) {
   const std::vector<TerrainSideFace> fence_faces =
       build_edge_barrier_faces(terrain_geometry_, map.edge_barriers);
   constexpr std::size_t kSlabQuadsPerSlab = 6;
+  constexpr std::size_t kLadderQuadsPerLadder = 6;
   const std::size_t slab_quads = map.floor_slabs.size() * kSlabQuadsPerSlab;
+  const std::size_t ladder_quads = map.ladders.size() * kLadderQuadsPerLadder;
   if (!terrain_fill_quad_count_fits_u16(terrain_geometry_.tiles.size(), side_faces.size(),
-                                        fence_faces.size() + slab_quads)) {
+                                        fence_faces.size() + slab_quads + ladder_quads)) {
     // Safe fallback: keep legacy floor/grid if geometry is invalid or exceeds uint16 indexing.
     terrain_geometry_ = {};
     return;
@@ -126,14 +130,15 @@ void GreyboxScene::set_terrain_map(const MapData& map) {
   const std::uint32_t terrain_color = 0xff707070;
   const std::uint32_t fence_color = 0xff8a5a38;
   const std::uint32_t slab_color = 0xff48a0c8;
+  const std::uint32_t ladder_color = 0xff38d070;
   const std::uint32_t grid_color = 0xff3a3a3a;
   const std::uint32_t axis_x = 0xff5050d0;
   const std::uint32_t axis_z = 0xffd05050;
   constexpr float kLineOffset = 0.03f;
 
   if (!terrain_geometry_.tiles.empty()) {
-    const std::size_t quad_count =
-        terrain_geometry_.tiles.size() + side_faces.size() + fence_faces.size() + slab_quads;
+    const std::size_t quad_count = terrain_geometry_.tiles.size() + side_faces.size() +
+                                   fence_faces.size() + slab_quads + ladder_quads;
     terrain_vertex_data_.reserve(quad_count * 4);
     terrain_indices_.reserve(quad_count * 6);
     std::uint32_t base_vertex = 0;
@@ -184,6 +189,46 @@ void GreyboxScene::set_terrain_map(const MapData& map) {
                      slab_color);
       push_fill_quad(min_x, y_lo, max_z, min_x, y_hi, max_z, min_x, y_hi, min_z, min_x, y_lo, min_z,
                      slab_color);
+    }
+    for (const LadderDef& ladder : map.ladders) {
+      const float ox = static_cast<float>(ladder.tile.x) * ts;
+      const float oz = static_cast<float>(ladder.tile.z) * ts;
+      float min_x = ox;
+      float max_x = ox + ts;
+      float min_z = oz;
+      float max_z = oz + ts;
+      switch (ladder.direction) {
+        case RampDirection::East:
+          min_x = ox + ts - kLadderInset;
+          max_x = ox + ts;
+          break;
+        case RampDirection::West:
+          min_x = ox;
+          max_x = ox + kLadderInset;
+          break;
+        case RampDirection::South:
+          min_z = oz + ts - kLadderInset;
+          max_z = oz + ts;
+          break;
+        case RampDirection::North:
+          min_z = oz;
+          max_z = oz + kLadderInset;
+          break;
+      }
+      const float y_hi = ladder.y_hi;
+      const float y_lo = ladder.y_lo;
+      push_fill_quad(min_x, y_hi, min_z, max_x, y_hi, min_z, max_x, y_hi, max_z, min_x, y_hi, max_z,
+                     ladder_color);
+      push_fill_quad(min_x, y_lo, max_z, max_x, y_lo, max_z, max_x, y_lo, min_z, min_x, y_lo, min_z,
+                     ladder_color);
+      push_fill_quad(min_x, y_lo, min_z, min_x, y_hi, min_z, max_x, y_hi, min_z, max_x, y_lo, min_z,
+                     ladder_color);
+      push_fill_quad(max_x, y_lo, min_z, max_x, y_hi, min_z, max_x, y_hi, max_z, max_x, y_lo, max_z,
+                     ladder_color);
+      push_fill_quad(max_x, y_lo, max_z, max_x, y_hi, max_z, min_x, y_hi, max_z, min_x, y_lo, max_z,
+                     ladder_color);
+      push_fill_quad(min_x, y_lo, max_z, min_x, y_hi, max_z, min_x, y_hi, min_z, min_x, y_lo, min_z,
+                     ladder_color);
     }
 
     const auto lines = build_terrain_grid_lines(terrain_geometry_, kLineOffset);

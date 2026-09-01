@@ -56,6 +56,9 @@ class EditCommand {
 [[nodiscard]] std::unique_ptr<EditCommand> make_remove_map_edge_barrier_command(
     TileCoord tile, RampDirection direction);
 [[nodiscard]] std::unique_ptr<EditCommand> make_upsert_map_floor_slab_command(FloorSlabDef slab);
+[[nodiscard]] std::unique_ptr<EditCommand> make_upsert_map_ladder_command(LadderDef ladder);
+[[nodiscard]] std::unique_ptr<EditCommand> make_remove_map_ladder_command(
+    TileCoord tile, RampDirection direction);
 
 class EditHistory {
  public:

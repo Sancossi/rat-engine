@@ -266,3 +266,12 @@ TEST_CASE("place slab on empty tile returns that tile", "[unit][viewport_edit]")
   REQUIRE(action.tile.x == 2);
   REQUIRE(action.tile.z == -1);
 }
+
+TEST_CASE("place ladder on empty tile returns that tile", "[unit][viewport_edit]") {
+  rat::MapData map = make_test_map();
+  const rat::ViewportClickAction action =
+      rat::resolve_viewport_click(map, rat::ViewportTool::PlaceLadder, rat::Vec3{4.1f, 0.0f, 3.7f});
+  REQUIRE(action.kind == rat::ViewportClickActionKind::PlaceLadder);
+  REQUIRE(action.tile.x == 4);
+  REQUIRE(action.tile.z == 3);
+}
