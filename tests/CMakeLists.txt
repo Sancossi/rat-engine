@@ -30,6 +30,7 @@ add_executable(rat_tests
   player_test.cpp
   play_se_test.cpp
   replay_test.cpp
+  render_world_test.cpp
   simulation_session_test.cpp
   smoke_test.cpp
   surface_query_test.cpp

@@ -13,6 +13,7 @@
 #include <rat/map_document.hpp>
 #include <rat/map_loader.hpp>
 #include <rat/replay.hpp>
+#include <rat/render_world.hpp>
 #include <rat/simulation_session.hpp>
 #include <rat/surface_query.hpp>
 #include <rat/viewport_edit.hpp>
@@ -565,7 +566,9 @@ void EditorApp::begin_ui() {
 
 void EditorApp::present() {
   sync_authoring_to_engine();
+  const RenderWorld world = capture_render_world(session_);
   engine_->begin_frame();
+  engine_->submit_world(world);
   imgui_bgfx::end_frame();
   engine_->end_frame();
 }

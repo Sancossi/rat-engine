@@ -4,6 +4,8 @@
 
 namespace rat {
 
+struct RenderWorld;
+
 struct NativeWindowHandle {
   void* nwh = nullptr;
   void* ndt = nullptr; // display / native display type (unused on Win32)
@@ -28,6 +30,7 @@ class Renderer {
   void shutdown();
   void resize(std::uint32_t width, std::uint32_t height);
   void begin_frame();
+  void submit(const RenderWorld& world);
   void end_frame();
 
   [[nodiscard]] bool is_initialized() const { return initialized_; }

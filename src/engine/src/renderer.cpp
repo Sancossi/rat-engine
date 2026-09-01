@@ -1,5 +1,7 @@
 #include "rat/renderer.hpp"
 
+#include "rat/render_world.hpp"
+
 #include <bgfx/bgfx.h>
 #include <bgfx/platform.h>
 #include <bx/bx.h>
@@ -72,6 +74,29 @@ void Renderer::begin_frame() {
     return;
   }
   bgfx::touch(0);
+}
+
+void Renderer::submit(const RenderWorld& world) {
+  if (!initialized_) {
+    return;
+  }
+  for (std::uint8_t i = 0; i < kRenderPassCount; ++i) {
+    const auto pass = static_cast<RenderPass>(i);
+    const bgfx::ViewId view = static_cast<bgfx::ViewId>(render_pass_view_id(pass));
+    const char* name =
+        i < world.pass_names.size() ? world.pass_names[i].c_str() : render_pass_name(pass);
+    bgfx::setViewName(view, name);
+    bgfx::setViewRect(view, 0, 0, static_cast<uint16_t>(width_), static_cast<uint16_t>(height_));
+    bgfx::setMarker(name);
+    bgfx::touch(view);
+  }
+  for (const RenderPacket& packet : world.packets) {
+    const bgfx::ViewId view = static_cast<bgfx::ViewId>(render_pass_view_id(packet.pass));
+    if (packet.mesh.valid()) {
+      bgfx::setMarker(packet.mesh.key().c_str());
+    }
+    bgfx::touch(view);
+  }
 }
 
 void Renderer::end_frame() {

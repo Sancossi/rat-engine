@@ -10,6 +10,8 @@
 
 namespace rat {
 
+struct RenderWorld;
+
 class Engine {
  public:
   Engine() = default;
@@ -25,6 +27,7 @@ class Engine {
   // begin_frame: clear + greybox + dbgText. end_frame: bgfx::frame().
   // Call ImGui (or other views) between begin_frame and end_frame.
   void begin_frame();
+  void submit_world(const RenderWorld& world);
   void end_frame();
   void frame();
 

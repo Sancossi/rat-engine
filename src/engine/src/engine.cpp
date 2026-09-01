@@ -1,5 +1,7 @@
 #include "rat/engine.hpp"
 
+#include "rat/render_world.hpp"
+
 #include <bgfx/bgfx.h>
 
 #include <cstdio>
@@ -65,6 +67,10 @@ void Engine::set_event_markers(std::vector<Vec3> markers) {
 void Engine::set_terrain_map(const MapData& map) {
   terrain_map_ = map;
   greybox_.set_terrain_map(terrain_map_);
+}
+
+void Engine::submit_world(const RenderWorld& world) {
+  renderer_.submit(world);
 }
 
 void Engine::begin_frame() {
