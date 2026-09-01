@@ -1,0 +1,23 @@
+---
+description: On every vault task/bug, write Resolution and Bugs found — not only sprint work
+alwaysApply: true
+---
+
+# Record resolution on every vault card
+
+Applies to **any** task, bug, chore, or research — any area, any sprint, including a one-file fix. Outcome must live on **that note**, not only in chat or a subagent report.
+
+When the card hits `Done` / `Fixed` (**after** review Approved, not in the implementer's first commit):
+
+## Resolution
+
+2–6 lines: what shipped or what was decided, how to verify. Wikilink follow-ups.
+
+## Bugs found
+
+Defects or gaps found while implementing, testing, or reviewing:
+
+- Write them on **this** card (`Bugs found:` + wikilink).
+- Also file `vault/production/bugs/` or a follow-up task (`link-followups-to-current-sprint.mdc`).
+
+If nothing broke: `Bugs found: none.`

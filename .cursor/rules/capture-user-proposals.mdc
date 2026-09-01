@@ -1,0 +1,44 @@
+---
+description: Captures user wishlist/bugs into the git Obsidian vault so ideas don't slip past chat
+alwaysApply: true
+---
+
+# Capture user proposals as vault notes
+
+When the user suggests a product/engine change, reports a bug, or says "хочу / давай / надо / баг / сломалось" as a durable idea — **create a markdown note in `vault/` before it disappears into chat**, even if we also implement it immediately.
+
+**Do not write to Notion.** Do not use Notion MCP to create or update Tasks/Bugs for this repo. Hub source of truth is the Obsidian vault (`vault/`).
+
+Read `.cursor/skills/obsidian-vault/SKILL.md` if the vault layout is unclear.
+
+## Routing
+
+| User intent | Destination | Defaults |
+| --- | --- | --- |
+| Feature / wishlist / "feat" | `vault/production/tasks/` | `type: task`, `task_type: Feature`, `status: Not started` |
+| Bug / regression / broken behavior | `vault/production/bugs/` | `type: bug`, `status: Open`; fill Repro when known |
+
+Templates: `vault/templates/task.md`, `vault/templates/bug.md`.
+
+## How to write items
+
+- **Title**: short, actionable (`feat:` / bug symptom), Russian or English OK — match surrounding board style. Filename = lowercase slug.
+- **Area**: `Engine` | `Game` | `Production` when obvious; omit if unclear.
+- **Body**: 2–5 lines — intent, acceptance hint, chat context. For bugs: steps / expected / actual.
+- **Severity** (bugs): default `Medium` unless user implies Critical/High/Low.
+- Assign `sprint` when the user schedules the item or when
+  `link-followups-to-current-sprint.mdc` identifies it as follow-up work from
+  the active sprint. Otherwise leave `sprint` empty.
+- Deduplicate: Grep `vault/production/tasks/` and `vault/production/bugs/` first; if a close match exists, update that note instead of cloning.
+
+## After create
+
+- Reply with the **repo-relative path** and one-line title.
+- Ask only if needed: implement now vs backlog.
+- Pure clarifying questions and already-tracked sprint work do not need a new card.
+
+## Exceptions (skip capture)
+
+- Tiny implementation details inside an already open task ("rename this var").
+- Explicit "не заводи задачу".
+- Pure Q&A with no product ask.

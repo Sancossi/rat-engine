@@ -1,0 +1,170 @@
+{
+  "schema_version": 2,
+  "id": "grey_yard",
+  "width": 16,
+  "height": 16,
+  "tile_size": 1.0,
+  "height_grid": {
+    "origin_x": -4,
+    "origin_z": -3,
+    "width": 16,
+    "height": 16,
+    "ground_y": [
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+    ]
+  },
+  "ramps": [
+    { "tile": { "x": 8, "z": 8 }, "direction": "east", "low_y": 0.0, "high_y": 1.0 }
+  ],
+  "blockers": [
+    { "min_x": 3.0, "min_z": -1.0, "max_x": 5.0, "max_z": 1.0 },
+    {
+      "min_x": 10.2,
+      "min_z": 8.1,
+      "max_x": 10.8,
+      "max_z": 8.9,
+      "base_y": 1.0,
+      "top_y": 1.6,
+      "jumpable": true
+    }
+  ],
+  "events": [
+    {
+      "id": "yard_intro",
+      "tile": { "x": 0, "z": 0 },
+      "pages": [
+        {
+          "trigger": "autorun",
+          "conditions": [
+            { "type": "variable", "id": 0, "op": "==", "value": 0 }
+          ],
+          "commands": [
+            { "op": "show_text", "text": "Grey Yard — a steampunk workshop lot. Talk to the foreman." },
+            { "op": "control_variable", "id": 0, "value": 1 },
+            { "op": "wait", "frames": 1 }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "foreman",
+      "tile": { "x": -2, "z": 2 },
+      "pages": [
+        {
+          "trigger": "action",
+          "conditions": [],
+          "commands": [
+            { "op": "show_text", "text": "Foreman: We're short a rusty cog for the gate winch. Search the scrap east of the crates." },
+            { "op": "control_switch", "id": 1, "value": true }
+          ]
+        },
+        {
+          "trigger": "action",
+          "conditions": [
+            { "type": "switch", "id": 1, "value": true }
+          ],
+          "commands": [
+            { "op": "show_text", "text": "Foreman: Still need that rusty cog. Try the scrap pile past the crates." }
+          ]
+        },
+        {
+          "trigger": "action",
+          "conditions": [
+            { "type": "item", "id": "rusty_cog", "quantity": 1 }
+          ],
+          "commands": [
+            { "op": "show_text", "text": "Foreman: Perfect fit. Gate winch is back online — quest complete." },
+            { "op": "change_items", "id": "rusty_cog", "delta": -1 },
+            { "op": "control_switch", "id": 2, "value": true }
+          ]
+        },
+        {
+          "trigger": "action",
+          "conditions": [
+            { "type": "switch", "id": 2, "value": true }
+          ],
+          "commands": [
+            { "op": "show_text", "text": "Foreman: Yard's quiet for now. Good work." }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "scrap_pile",
+      "tile": { "x": 6, "z": 0 },
+      "pages": [
+        {
+          "trigger": "action",
+          "conditions": [],
+          "commands": [
+            { "op": "show_text", "text": "A heap of brass scrap. Ask the foreman before digging." }
+          ]
+        },
+        {
+          "trigger": "action",
+          "conditions": [
+            { "type": "switch", "id": 1, "value": true }
+          ],
+          "commands": [
+            { "op": "show_text", "text": "You dig up a rusty cog." },
+            { "op": "change_items", "id": "rusty_cog", "delta": 1, "key_item": false },
+            { "op": "control_self_switch", "key": "A", "value": true }
+          ]
+        },
+        {
+          "trigger": "action",
+          "conditions": [
+            { "type": "self_switch", "key": "A", "value": true }
+          ],
+          "commands": [
+            { "op": "show_text", "text": "The scrap pile is picked clean." }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "crate_notice",
+      "volume": { "min_x": 3.0, "min_z": -1.0, "max_x": 5.0, "max_z": 1.0 },
+      "pages": [
+        {
+          "trigger": "player_touch",
+          "conditions": [
+            { "type": "switch", "id": 2, "value": false }
+          ],
+          "commands": [
+            { "op": "show_text", "text": "Crates block the short path — walk around north or south." }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "elevated_after_blocker",
+      "tile": { "x": 11, "z": 8 },
+      "pages": [
+        {
+          "trigger": "action",
+          "conditions": [],
+          "commands": [
+            { "op": "show_text", "text": "Service gantry reached. Relay lever unlocked." },
+            { "op": "control_switch", "id": 40, "value": true }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+---
+description: After a sprint card is In review or Done, immediately pick up the next one — do not wait for the user
+alwaysApply: true
+---
+
+# Pickup next sprint card automatically
+
+When a **current-sprint** vault card hits `In review` (implementer committed; reviewer read-only) or `Done` / `Fixed` (acceptance met; review Approved or no open Critical/Important):
+
+1. Do **not** wait for «следующая задача» / «next» / «продолжай».
+2. Take the next `Not started` card in the current sprint note **order**. Skip cards whose listed dependency is still open. Skip if any current-sprint card is `Blocked`.
+3. Set `status: In progress`, **commit**, then dispatch the implementer (see `execute-with-subagents.mdc`).
+4. Stop only if the sprint queue is empty, a card is `Blocked`, or the user said stop / «не нужно».
+
+One **implementer** on this working tree at a time. A reviewer may run in parallel (read-only). Do not pull backlog from outside the current sprint.
+
+Example: [[feat: Audio play-queue stub]] becomes `In review` → immediately [[feat: PlaySE event command]] `In progress` + implementer, without asking.

@@ -1,0 +1,22 @@
+/build/
+/out/
+/cmake-build-*/
+/.vs/
+/.idea/
+/CMakeUserPresets.json
+compile_commands.json
+*.user
+*.suo
+*.VC.db
+.DS_Store
+
+aqtinstall.log
+rat.log
+rat-debug.json
+
+# Obsidian: commit vault notes + app config; keep local UI state out of git
+vault/.obsidian/workspace.json
+vault/.obsidian/workspace-mobile.json
+vault/.obsidian/graph.json
+vault/.obsidian/cache/
+vault/.obsidian/plugins/dataview/

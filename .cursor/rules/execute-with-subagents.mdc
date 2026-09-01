@@ -1,0 +1,16 @@
+---
+description: Execute sprint and plan tasks via subagents, not the parent session
+alwaysApply: true
+---
+
+# Execute tasks with subagents
+
+When implementing a sprint, a written plan, or more than one vault card, **dispatch subagents**. Do not implement the whole slice in the parent chat.
+
+- One **implementer** subagent per task, then a **task reviewer** (spec + quality). Sequential implementers — not parallel (they share the tree).
+- Parent: **first** set the vault card `status: In progress` and commit; then briefs, follow-up cards, review packages, next dispatch.
+- Implementer must **not** flip the card to `Done` or `In review`. After the implementer commit, parent sets `In review` and commits, then dispatches the reviewer.
+- When a card is `In review`, pick up the next current-sprint card (`pickup-next-sprint-card.mdc`). When it is `Done` (after Approved), also pick up if the queue was waiting. Do not wait for the user to say «next».
+- Follow `.cursor/skills/obsidian-vault` / vault cards for scope. TDD in `rat_core` as usual.
+
+Exception: a one-file typo or status-only vault edit may stay in the parent.
