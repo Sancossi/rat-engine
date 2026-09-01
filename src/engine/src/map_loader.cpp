@@ -308,6 +308,32 @@ EventDef parse_event(const json& node) {
   return event;
 }
 
+AssetKind parse_asset_kind(const std::string& value) {
+  if (value == "texture") {
+    return AssetKind::Texture;
+  }
+  if (value == "audio_clip") {
+    return AssetKind::AudioClip;
+  }
+  if (value == "mesh") {
+    return AssetKind::MeshDescriptor;
+  }
+  if (value == "material") {
+    return AssetKind::MaterialDescriptor;
+  }
+  throw std::runtime_error("unknown asset kind: " + value);
+}
+
+MapAssetRef parse_map_asset(const json& node) {
+  MapAssetRef ref;
+  ref.id = make_asset_id(node.at("id").get<std::string>());
+  if (node.contains("kind")) {
+    ref.kind = parse_asset_kind(node.at("kind").get<std::string>());
+  }
+  ref.debug_name = node.value("debug_name", "");
+  return ref;
+}
+
 MapData parse_map(const json& root) {
   MapData map;
   map.schema_version = root.at("schema_version").get<int>();
@@ -381,6 +407,14 @@ MapData parse_map(const json& root) {
   if (root.contains("events")) {
     for (const auto& event : root.at("events")) {
       map.events.push_back(parse_event(event));
+    }
+  }
+  if (root.contains("assets")) {
+    if (!root.at("assets").is_array()) {
+      throw std::runtime_error("assets must be an array");
+    }
+    for (const auto& asset : root.at("assets")) {
+      map.assets.push_back(parse_map_asset(asset));
     }
   }
   return map;
@@ -460,6 +494,20 @@ const char* ramp_direction_to_string(RampDirection dir) {
       return "west";
   }
   return "north";
+}
+
+const char* asset_kind_to_string(AssetKind kind) {
+  switch (kind) {
+    case AssetKind::Texture:
+      return "texture";
+    case AssetKind::AudioClip:
+      return "audio_clip";
+    case AssetKind::MeshDescriptor:
+      return "mesh";
+    case AssetKind::MaterialDescriptor:
+      return "material";
+  }
+  return "texture";
 }
 
 json dump_aabb(const Aabb2& box) {
@@ -611,6 +659,16 @@ MapSerializeResult serialize_map_to_string(const MapData& map) {
     }
     for (const EventDef& event : map.events) {
       root["events"].push_back(dump_event(event));
+    }
+    if (!map.assets.empty()) {
+      root["assets"] = json::array();
+      for (const MapAssetRef& asset : map.assets) {
+        json node{{"id", asset.id.key()}, {"kind", asset_kind_to_string(asset.kind)}};
+        if (!asset.debug_name.empty()) {
+          node["debug_name"] = asset.debug_name;
+        }
+        root["assets"].push_back(node);
+      }
     }
     MapSerializeResult result;
     result.ok = true;

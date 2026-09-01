@@ -1,5 +1,6 @@
 #pragma once
 
+#include "rat/asset.hpp"
 #include "rat/player.hpp"
 
 #include <cstdint>
@@ -148,6 +149,12 @@ struct EventDef {
   std::vector<EventPage> pages;
 };
 
+struct MapAssetRef {
+  AssetId id;
+  AssetKind kind = AssetKind::Texture;
+  std::string debug_name;
+};
+
 struct MapData {
   int schema_version = 1;
   std::string id;
@@ -159,6 +166,7 @@ struct MapData {
   std::vector<EdgeBarrierDef> edge_barriers;
   std::vector<BlockerDef> blockers;
   std::vector<EventDef> events;
+  std::vector<MapAssetRef> assets;
 };
 
 }  // namespace rat

@@ -331,6 +331,17 @@ std::vector<MapIssue> validate_map_document(const MapData& data) {
     }
   }
 
+  std::unordered_set<std::string> asset_ids;
+  for (std::size_t i = 0; i < data.assets.size(); ++i) {
+    const MapAssetRef& asset = data.assets[i];
+    const std::string asset_path = index_path("/assets", i);
+    if (!asset.id.valid()) {
+      add_error(issues, asset_path + "/id", "asset id must not be empty");
+    } else if (!asset_ids.insert(asset.id.key()).second) {
+      add_error(issues, asset_path + "/id", "asset id must be unique");
+    }
+  }
+
   return issues;
 }
 

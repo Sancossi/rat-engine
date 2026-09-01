@@ -16,6 +16,7 @@ Human-readable schema for map/event data. Files live under `data/maps/<id>.json`
 | `edge_barriers` | array | v2 only | Optional tile-edge fences for schema `2` |
 | `blockers` | array | no | Static blockers on XZ (legacy full walls + optional height-aware jumpables) |
 | `events` | array | no | Event definitions |
+| `assets` | array | no | Stable `AssetId` refs (`id`, `kind`, optional `debug_name`). Kinds: `texture`, `audio_clip`, `mesh`, `material`. Gameplay looks up ids in `AssetRegistry`; omit when unused. |
 
 ### HeightGrid (v2)
 
