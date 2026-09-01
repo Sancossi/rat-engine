@@ -1,7 +1,7 @@
 ---
 type: task
 area: Engine
-status: In review
+status: Done
 task_type: Feature
 sprint: Sprint 7
 due:
@@ -17,3 +17,11 @@ Acceptance: renderer не принимает `GameState` / `EventRuntime` / edit
 Depends: [[research: Entity model ECS vs scene vs hybrid]]. Next: [[chore: NativeWindow platform adapters]].
 
 Origin: merged `docs/architecture-roadmap.md` (2026-09-01).
+
+## Resolution
+
+`SimulationSession` собирает CPU-снимок `RenderWorld` (пакеты, сортировка, имена pass Depth/Opaque/Debug) без bgfx. `Renderer::submit` принимает только `const RenderWorld&`. Editor `present()` гоняет вертикаль в существующий bgfx; greybox пока рисует геометрию. Verify: `.\build\tests\rat_tests.exe "[render]"` и `ctest`. Review: Approved.
+
+## Bugs found
+
+none.
