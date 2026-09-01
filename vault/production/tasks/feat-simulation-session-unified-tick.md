@@ -24,5 +24,9 @@ Origin: merged `docs/architecture-roadmap.md` (2026-09-01).
 
 ## Bugs found
 
-none (Important jump-buffer-on-ImGui capture fixed before Done).
+- [[jump-button-does-not-always-fire]] — play 2026-09-01, Space не всегда запускает прыжок.
+- [[ramp-climb-does-not-work]] — play 2026-09-01, подъём по рампе не работает.
+
+Follow-up: [[jump-button-does-not-always-fire]], [[ramp-climb-does-not-work]]
+
 
