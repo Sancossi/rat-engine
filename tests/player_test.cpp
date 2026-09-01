@@ -454,3 +454,42 @@ TEST_CASE("Walk along adjacent tile into east fence blocks Z", "[unit][player][e
 
   REQUIRE(player.z < 0.0f);
 }
+
+TEST_CASE("Side-walk along a 1.0 cube west face blocks Z", "[unit][player][surface]") {
+  rat::MapData map = make_surface_map(2, 2, {0.0f, 1.0f, 0.0f, 0.0f});
+  const rat::SurfaceQuery query(map);
+
+  rat::PlayerBody player;
+  player.x = 0.7f;
+  player.y = 0.0f;
+  player.z = -0.3f;
+  player.half_extent = 0.4f;
+  player.speed = 4.0f;
+
+  rat::MoveInput input{0.0f, 1.0f};
+  for (int i = 0; i < 60; ++i) {
+    player = rat::integrate_player_surface(player, input, 1.0f / 60.0f, {}, query, 0.35f, {}, &map);
+  }
+
+  REQUIRE(player.z < 0.0f);
+}
+
+TEST_CASE("Stair 0.25 still walks up when map walls are baked", "[unit][player][surface]") {
+  rat::MapData map = make_surface_map(2, 1, {0.0f, 0.25f});
+  const rat::SurfaceQuery query(map);
+
+  rat::PlayerBody player;
+  player.x = 0.5f;
+  player.y = 0.0f;
+  player.z = 0.5f;
+  player.speed = 4.0f;
+
+  rat::MoveInput input{1.0f, 0.0f};
+  for (int i = 0; i < 18; ++i) {
+    player = rat::integrate_player_surface(player, input, 1.0f / 60.0f, {}, query, 0.35f, {}, &map);
+  }
+
+  REQUIRE(player.x > 1.0f);
+  REQUIRE(player.x < 2.0f);
+  REQUIRE(player.y == Approx(0.25f));
+}

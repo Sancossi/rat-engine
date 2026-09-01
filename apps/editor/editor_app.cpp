@@ -1299,7 +1299,7 @@ void EditorApp::update_simulation(float dt) {
       }
       const PlayerFrameResult frame = integrate_player_frame_surface(
           player_, jump_state_, frame_input, kFixedStep, engine_->blockers(), *surface_query_cache_,
-          jump_tuning_, 0.35f, events_.map().edge_barriers);
+          jump_tuning_, 0.35f, events_.map().edge_barriers, &events_.map());
       player_ = frame.body;
       jump_state_ = frame.jump;
       if (frame.landed) {

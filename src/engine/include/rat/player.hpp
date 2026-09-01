@@ -9,6 +9,7 @@ namespace rat {
 class SurfaceQuery;
 struct BlockerDef;
 struct EdgeBarrierDef;
+struct MapData;
 
 struct Aabb2 {
   float min_x = 0.0f;
@@ -74,19 +75,21 @@ struct PlayerFrameResult {
 [[nodiscard]] PlayerBody integrate_player(PlayerBody player, MoveInput input, float dt,
                                           std::span<const BlockerDef> blockers,
                                           std::span<const EdgeBarrierDef> edge_barriers = {},
-                                          const SurfaceQuery* surface_query = nullptr);
+                                          const SurfaceQuery* surface_query = nullptr,
+                                          const MapData* map = nullptr);
 
 [[nodiscard]] PlayerBody integrate_player_surface(PlayerBody player, MoveInput input, float dt,
                                                   std::span<const BlockerDef> blockers,
                                                   const SurfaceQuery& surface_query,
                                                   float max_step_up = 0.35f,
-                                                  std::span<const EdgeBarrierDef> edge_barriers = {});
+                                                  std::span<const EdgeBarrierDef> edge_barriers = {},
+                                                  const MapData* map = nullptr);
 
 [[nodiscard]] PlayerFrameResult integrate_player_frame_surface(
     PlayerBody player, JumpState jump, const PlayerFrameInput& input, float dt,
     std::span<const BlockerDef> blockers, const SurfaceQuery& surface_query,
     const JumpTuning& tuning = {}, float max_step_up = 0.35f,
-    std::span<const EdgeBarrierDef> edge_barriers = {});
+    std::span<const EdgeBarrierDef> edge_barriers = {}, const MapData* map = nullptr);
 
 [[nodiscard]] Vec3 snap_to_grid(float x, float y, float z, float tile_size);
 

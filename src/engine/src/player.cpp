@@ -37,6 +37,14 @@ bool surface_step_allowed(const SurfaceSample& from, const SurfaceSample& to, fl
   return rise <= max_step_up;
 }
 
+CollisionWorld bake_integrate_world(std::span<const EdgeBarrierDef> edge_barriers,
+                                    const SurfaceQuery& query, const MapData* map) {
+  if (map != nullptr) {
+    return bake_collision_world(*map, query);
+  }
+  return bake_fence_world(edge_barriers, query);
+}
+
 }  // namespace
 
 bool aabb_overlap(const Aabb2& a, const Aabb2& b) {
@@ -75,7 +83,7 @@ MoveInput world_aligned_move(float screen_x, float screen_z) {
 PlayerBody integrate_player(PlayerBody player, MoveInput input, float dt,
                             std::span<const BlockerDef> blockers,
                             std::span<const EdgeBarrierDef> edge_barriers,
-                            const SurfaceQuery* surface_query) {
+                            const SurfaceQuery* surface_query, const MapData* map) {
   float ix = input.axis_x;
   float iz = input.axis_z;
   const float len = std::sqrt(ix * ix + iz * iz);
@@ -91,9 +99,9 @@ PlayerBody integrate_player(PlayerBody player, MoveInput input, float dt,
       std::max(1, static_cast<int>(std::ceil(std::max(std::abs(dx), std::abs(dz)) / max_step)));
   const float step_dx = dx / static_cast<float>(steps);
   const float step_dz = dz / static_cast<float>(steps);
-  CollisionWorld fences;
+  CollisionWorld world;
   if (surface_query != nullptr) {
-    fences = bake_fence_world(edge_barriers, *surface_query);
+    world = bake_integrate_world(edge_barriers, *surface_query, map);
   }
 
   for (int i = 0; i < steps; ++i) {
@@ -101,7 +109,7 @@ PlayerBody integrate_player(PlayerBody player, MoveInput input, float dt,
     player.x += step_dx;
     if (overlaps_any(player_bounds(player), blockers, player.y) ||
         (surface_query != nullptr &&
-         cylinder_hits_fences(collision_body_from_player(player), fences))) {
+         cylinder_hits_walls(collision_body_from_player(player), world, 0.35f))) {
       player.x = old_x;
     }
 
@@ -109,7 +117,7 @@ PlayerBody integrate_player(PlayerBody player, MoveInput input, float dt,
     player.z += step_dz;
     if (overlaps_any(player_bounds(player), blockers, player.y) ||
         (surface_query != nullptr &&
-         cylinder_hits_fences(collision_body_from_player(player), fences))) {
+         cylinder_hits_walls(collision_body_from_player(player), world, 0.35f))) {
       player.z = old_z;
     }
   }
@@ -120,7 +128,8 @@ PlayerBody integrate_player(PlayerBody player, MoveInput input, float dt,
 PlayerBody integrate_player_surface(PlayerBody player, MoveInput input, float dt,
                                     std::span<const BlockerDef> blockers,
                                     const SurfaceQuery& surface_query, float max_step_up,
-                                    std::span<const EdgeBarrierDef> edge_barriers) {
+                                    std::span<const EdgeBarrierDef> edge_barriers,
+                                    const MapData* map) {
   float ix = input.axis_x;
   float iz = input.axis_z;
   const float len = std::sqrt(ix * ix + iz * iz);
@@ -139,7 +148,7 @@ PlayerBody integrate_player_surface(PlayerBody player, MoveInput input, float dt
   const float step_up_limit = std::max(0.0f, max_step_up);
   SurfaceSample current_sample = surface_query.sample(player.x, player.z);
   player.y = current_sample.y;
-  const CollisionWorld fences = bake_fence_world(edge_barriers, surface_query);
+  const CollisionWorld world = bake_integrate_world(edge_barriers, surface_query, map);
 
   // Keep deterministic axis slide semantics: resolve X, then resolve Z per substep.
   for (int i = 0; i < steps; ++i) {
@@ -147,7 +156,7 @@ PlayerBody integrate_player_surface(PlayerBody player, MoveInput input, float dt
       const float old_x = player.x;
       player.x += step_dx;
       if (overlaps_any(player_bounds(player), blockers, player.y) ||
-          cylinder_hits_fences(collision_body_from_player(player), fences)) {
+          cylinder_hits_walls(collision_body_from_player(player), world, step_up_limit)) {
         player.x = old_x;
       } else {
         const SurfaceSample sample = surface_query.sample(player.x, player.z);
@@ -165,7 +174,7 @@ PlayerBody integrate_player_surface(PlayerBody player, MoveInput input, float dt
       const float old_z = player.z;
       player.z += step_dz;
       if (overlaps_any(player_bounds(player), blockers, player.y) ||
-          cylinder_hits_fences(collision_body_from_player(player), fences)) {
+          cylinder_hits_walls(collision_body_from_player(player), world, step_up_limit)) {
         player.z = old_z;
       } else {
         const SurfaceSample sample = surface_query.sample(player.x, player.z);
