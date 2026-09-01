@@ -111,5 +111,5 @@ Do not treat Notion as the source of truth for this project.
 
 - GLFW window uses `GLFW_NO_API`. Windows passes HWND to bgfx (D3D11); Linux passes X11 `Display*` / `Window` (`ndt` / `nwh`).
 - ImGui is rendered through a small `imgui_bgfx` bridge (bgfx embedded shaders).
-- `rat_core` has no GLFW/ImGui/bgfx; `rat_engine` adds rendering. Graph: `cmake/library-graph.md`. CMake fails configure/ctest if `rat_core` grows a GLFW/ImGui/bgfx/Win32 link (`rat_core_link_check`, ctest `rat_core_no_platform_graphics`).
+- `rat_core` has no GLFW/ImGui/bgfx; `rat_editor_logic` is also headless (`EditorDocument` / `FrameCoordinator`); `rat_engine` adds rendering. Graph: `cmake/library-graph.md`. CMake fails configure/ctest if `rat_core` grows a GLFW/ImGui/bgfx/Win32 link (`rat_core_link_check`, ctest `rat_core_no_platform_graphics`).
 - GitHub Actions (`.github/workflows/ci.yml`) builds and runs Catch2 on `windows-latest` and `ubuntu-latest`.

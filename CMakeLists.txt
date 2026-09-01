@@ -27,9 +27,7 @@ add_subdirectory(src/engine)
 include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/RatCoreLinkCheck.cmake")
 rat_assert_no_platform_graphics(rat_core)
 
-if(RAT_BUILD_EDITOR)
-  add_subdirectory(apps/editor)
-endif()
+add_subdirectory(apps/editor)
 
 if(RAT_BUILD_TESTS)
   enable_testing()

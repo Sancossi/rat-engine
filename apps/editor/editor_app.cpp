@@ -2,12 +2,11 @@
 
 #include "imgui_bgfx.hpp"
 
-#include <rat/blocker_edit.hpp>
 #include <rat/debug_snapshot.hpp>
 #include <rat/edit_history.hpp>
 #include <rat/engine.hpp>
 #include <rat/event_edit.hpp>
-#include <rat/event_inspect.hpp>
+#include <rat/event_runtime.hpp>
 #include <rat/height_edit.hpp>
 #include <rat/hot_apply.hpp>
 #include <rat/input.hpp>
@@ -16,27 +15,17 @@
 #include <rat/replay.hpp>
 #include <rat/simulation_session.hpp>
 #include <rat/surface_query.hpp>
+#include <rat/viewport_edit.hpp>
 
 #include <algorithm>
 
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
 
-#if defined(_WIN32)
-#define GLFW_EXPOSE_NATIVE_WIN32
-#elif defined(__linux__)
-#define GLFW_EXPOSE_NATIVE_X11
-#endif
 #include <GLFW/glfw3.h>
-#include <GLFW/glfw3native.h>
-#ifdef None
-#undef None
-#endif
 
 #include <cstdint>
-#include <cstdio>
 #include <iostream>
-#include <memory>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -44,763 +33,63 @@
 
 namespace rat {
 
-namespace {
-
-InputButtons sample_editor_buttons(GLFWwindow* window) {
-  InputButtons buttons;
-  if (window == nullptr) {
-    return buttons;
-  }
-  const auto down = [window](int key) { return glfwGetKey(window, key) == GLFW_PRESS; };
-  buttons.move_up = down(GLFW_KEY_W) || down(GLFW_KEY_UP);
-  buttons.move_down = down(GLFW_KEY_S) || down(GLFW_KEY_DOWN);
-  buttons.move_left = down(GLFW_KEY_A) || down(GLFW_KEY_LEFT);
-  buttons.move_right = down(GLFW_KEY_D) || down(GLFW_KEY_RIGHT);
-  buttons.jump = down(GLFW_KEY_SPACE);
-  buttons.interact = down(GLFW_KEY_E);
-  buttons.toggle_mode = down(GLFW_KEY_F2);
-  buttons.hot_apply = down(GLFW_KEY_F5);
-  buttons.cycle_camera = down(GLFW_KEY_C);
-  buttons.debug_snapshot = down(GLFW_KEY_F3);
-  const bool ctrl = down(GLFW_KEY_LEFT_CONTROL) || down(GLFW_KEY_RIGHT_CONTROL);
-  const bool shift = down(GLFW_KEY_LEFT_SHIFT) || down(GLFW_KEY_RIGHT_SHIFT);
-  const bool z = down(GLFW_KEY_Z);
-  buttons.undo = ctrl && z && !shift;
-  buttons.redo = ctrl && (down(GLFW_KEY_Y) || (shift && z));
-  return buttons;
-}
-
-}  // namespace
-
 EditorApp::~EditorApp() {
   shutdown();
 }
 
-void EditorApp::sync_blockers_to_runtime() {
+void EditorApp::sync_selection_to_engine() {
   if (engine_ == nullptr) {
     return;
   }
-  rebuild_surface_query_cache();
-  engine_->set_terrain_map(session_.events().map());
-  engine_->set_blockers(session_.events().map().blockers);
-  engine_->greybox().set_selected_blocker(app_mode_ == AppMode::Edit ? selected_blocker_ : -1);
-}
-
-void EditorApp::sync_events_to_runtime() {
-  if (engine_ == nullptr) {
-    return;
-  }
-  rebuild_surface_query_cache();
-  engine_->set_terrain_map(session_.events().map());
-  engine_->set_event_markers(event_markers_from_map(session_.events().map()));
-  const int marker =
-      app_mode_ == AppMode::Edit ? event_marker_index(session_.events().map(), selected_event_) : -1;
+  engine_->greybox().set_selected_blocker(app_mode_ == AppMode::Edit ? document_.selected_blocker()
+                                                                     : -1);
+  const int marker = app_mode_ == AppMode::Edit
+                         ? event_marker_index(document_.visible_data(), document_.selected_event())
+                         : -1;
   engine_->greybox().set_selected_event_marker(marker);
 }
 
-void EditorApp::apply_edited_map(MapData map, EditApplyResult mutation) {
-  if (!mutation.applied) {
+void EditorApp::sync_authoring_to_engine() {
+  if (engine_ == nullptr) {
     return;
   }
-  const int n_blockers = static_cast<int>(map.blockers.size());
-  const int n_events = static_cast<int>(map.events.size());
-  document_.replace(map);
-  const MapCompileResult compiled = compile_map_document(document_);
+  if (!document_.consume_changed()) {
+    sync_selection_to_engine();
+    return;
+  }
+  const MapCompileResult compiled = compile_map_data(document_.visible_data());
   if (!compiled.ok) {
     last_apply_error_ = format_map_issues(compiled.issues);
-  } else {
-    last_apply_error_.clear();
-    session_.events().load(compiled.runtime);
-    session_.rebuild_surface();
+    sync_selection_to_engine();
+    return;
   }
-  if (mutation.mutates_blockers) {
-    if (n_blockers <= 0) {
-      selected_blocker_ = -1;
-    } else if (selected_blocker_ >= n_blockers) {
-      selected_blocker_ = n_blockers - 1;
-    }
-    sync_blockers_to_runtime();
-  }
-  if (mutation.mutates_events) {
-    if (n_events <= 0) {
-      selected_event_ = -1;
-    } else if (selected_event_ >= n_events) {
-      selected_event_ = n_events - 1;
-    }
-    sync_events_to_runtime();
-  }
-  if (mutation.mutates_elevation) {
-    rebuild_surface_query_cache();
-    if (engine_ != nullptr) {
-      engine_->set_terrain_map(session_.events().map());
-      engine_->set_event_markers(event_markers_from_map(session_.events().map()));
-      engine_->set_blockers(session_.events().map().blockers);
-    }
+  last_apply_error_.clear();
+  session_.events().load(compiled.runtime);
+  session_.rebuild_surface();
+  engine_->set_terrain_map(session_.events().map());
+  engine_->set_blockers(session_.events().map().blockers);
+  engine_->set_event_markers(event_markers_from_map(session_.events().map()));
+  sync_selection_to_engine();
+  if (document_.last_mutated_elevation()) {
     snap_player_to_ground_clear_jump();
   }
 }
 
-void EditorApp::discard_field_edit_origins() {
-  blocker_field_origin_.reset();
-  blocker_field_origin_index_ = -1;
-  event_field_origin_.reset();
-  event_field_origin_index_ = -1;
-}
-
-void EditorApp::execute_edit_command(std::unique_ptr<EditCommand> command) {
-  if (command == nullptr) {
-    return;
-  }
-  discard_field_edit_origins();
-  MapData map = document_.data();
-  const EditApplyResult result = edit_history_.execute(map, std::move(command));
-  apply_edited_map(std::move(map), result);
-}
-
-bool EditorApp::run_height_history(std::unique_ptr<EditCommand> command) {
-  discard_field_edit_origins();
-  MapData map = document_.data();
-  const EditApplyResult result = edit_history_.execute(map, std::move(command));
-  if (!result.applied) {
-    last_apply_error_ = result.error.empty() ? "Height edit failed" : result.error;
-    return false;
-  }
-  last_apply_error_.clear();
-  apply_edited_map(std::move(map), result);
-  return true;
-}
-
-void EditorApp::sync_height_tile_from_click(TileCoord tile) {
-  height_tile_x_ = tile.x;
-  height_tile_z_ = tile.z;
-}
-
-void EditorApp::clear_map_selection() {
-  selected_blocker_ = -1;
-  selected_event_ = -1;
-  selected_page_ = 0;
-  sync_blockers_to_runtime();
-  sync_events_to_runtime();
-}
-
-void EditorApp::select_blocker_from_map(int index) {
-  selected_blocker_ = index;
-  selected_event_ = -1;
-  selected_page_ = 0;
-  sync_blockers_to_runtime();
-  sync_events_to_runtime();
-}
-
-void EditorApp::select_event_from_map(int index) {
-  selected_blocker_ = -1;
-  selected_event_ = index;
-  selected_page_ = 0;
-  sync_blockers_to_runtime();
-  sync_events_to_runtime();
-}
-
 void EditorApp::run_drag_step_commands(const ViewportPick& pick, TileDelta delta) {
-  const float tile = session_.events().map().tile_size > 0.0f ? session_.events().map().tile_size : 1.0f;
+  const float tile =
+      document_.visible_data().tile_size > 0.0f ? document_.visible_data().tile_size : 1.0f;
   while (delta.tile_dx != 0 || delta.tile_dz != 0) {
     const int step_x = delta.tile_dx > 0 ? 1 : (delta.tile_dx < 0 ? -1 : 0);
     const int step_z = delta.tile_dz > 0 ? 1 : (delta.tile_dz < 0 ? -1 : 0);
     if (pick.kind == ViewportPickKind::Blocker) {
-      execute_edit_command(
-          make_move_blocker_command(pick.index, step_x, step_z, tile));
-      select_blocker_from_map(static_cast<int>(pick.index));
+      (void)document_.execute(make_move_blocker_command(pick.index, step_x, step_z, tile));
+      document_.select_blocker(static_cast<int>(pick.index));
     } else {
-      execute_edit_command(make_move_event_command(pick.index, step_x, step_z, tile));
-      select_event_from_map(static_cast<int>(pick.index));
+      (void)document_.execute(make_move_event_command(pick.index, step_x, step_z, tile));
+      document_.select_event(static_cast<int>(pick.index));
     }
     delta.tile_dx -= step_x;
     delta.tile_dz -= step_z;
-  }
-}
-
-void EditorApp::draw_blocker_edit_ui() {
-  ImGui::Separator();
-  ImGui::TextUnformatted("Blockers (Edit)");
-  const float tile = session_.events().map().tile_size > 0.0f ? session_.events().map().tile_size : 1.0f;
-  auto blockers = session_.events().map().blockers;
-  auto run_history = [&](std::unique_ptr<EditCommand> command) {
-    discard_field_edit_origins();
-    MapData map = document_.data();
-    const EditApplyResult result = edit_history_.execute(map, std::move(command));
-    apply_edited_map(std::move(map), result);
-    blockers = session_.events().map().blockers;
-  };
-
-  if (ImGui::Button("Add blocker")) {
-    BlockerDef blocker;
-    blocker.bounds = Aabb2{0.0f, 0.0f, tile, tile};
-    run_history(make_place_blocker_command(std::move(blocker)));
-    selected_blocker_ = static_cast<int>(blockers.size()) - 1;
-    sync_blockers_to_runtime();
-  }
-  ImGui::SameLine();
-  if (ImGui::Button("Delete selected") && selected_blocker_ >= 0 &&
-      selected_blocker_ < static_cast<int>(blockers.size())) {
-    run_history(make_delete_blocker_command(static_cast<std::size_t>(selected_blocker_)));
-  }
-
-  if (ImGui::BeginListBox("##blockers", ImVec2(-1.0f, 100.0f))) {
-    for (int i = 0; i < static_cast<int>(blockers.size()); ++i) {
-      const auto& b = blockers[static_cast<std::size_t>(i)].bounds;
-      char label[128];
-      std::snprintf(label, sizeof(label), "%d: (%.0f,%.0f)-(%.0f,%.0f)", i, b.min_x, b.min_z,
-                    b.max_x, b.max_z);
-      if (ImGui::Selectable(label, selected_blocker_ == i)) {
-        selected_blocker_ = i;
-        sync_blockers_to_runtime();
-      }
-    }
-    ImGui::EndListBox();
-  }
-
-  if (selected_blocker_ >= 0 && selected_blocker_ < static_cast<int>(blockers.size())) {
-    auto selected_valid = [&]() {
-      return selected_blocker_ >= 0 && selected_blocker_ < static_cast<int>(blockers.size());
-    };
-    auto replace_selected_blocker = [&](BlockerDef next) {
-      if (!selected_valid()) {
-        return;
-      }
-      run_history(make_replace_blocker_command(static_cast<std::size_t>(selected_blocker_),
-                                               std::move(next)));
-    };
-    auto preview_selected_blocker = [&](BlockerDef next) {
-      if (!selected_valid()) {
-        return;
-      }
-      MapData preview = document_.data();
-      if (selected_blocker_ < 0 ||
-          static_cast<std::size_t>(selected_blocker_) >= preview.blockers.size()) {
-        return;
-      }
-      preview.blockers[static_cast<std::size_t>(selected_blocker_)] = std::move(next);
-      const MapCompileResult compiled = compile_map_data(preview);
-      if (!compiled.ok) {
-        return;
-      }
-      session_.events().load(compiled.runtime);
-      session_.rebuild_surface();
-      sync_blockers_to_runtime();
-      blockers = session_.events().map().blockers;
-    };
-    auto commit_blocker_field_edit = [&]() {
-      if (!ImGui::IsItemDeactivatedAfterEdit() || !blocker_field_origin_ || !selected_valid()) {
-        return;
-      }
-      BlockerDef next = blockers[static_cast<std::size_t>(selected_blocker_)];
-      blocker_field_origin_.reset();
-      replace_selected_blocker(std::move(next));
-    };
-
-    if (blocker_field_origin_index_ != selected_blocker_) {
-      blocker_field_origin_.reset();
-      blocker_field_origin_index_ = selected_blocker_;
-    }
-
-    ImGui::Text("Selected %d", selected_blocker_);
-
-    if (!selected_valid()) {
-      return;
-    }
-    BlockerDef current = blockers[static_cast<std::size_t>(selected_blocker_)];
-    const Aabb2 box = current.bounds;
-
-    if (ImGui::Button("-X")) {
-      run_history(make_move_blocker_command(static_cast<std::size_t>(selected_blocker_), -1, 0, tile));
-    }
-    ImGui::SameLine();
-    if (ImGui::Button("+X")) {
-      run_history(make_move_blocker_command(static_cast<std::size_t>(selected_blocker_), 1, 0, tile));
-    }
-    ImGui::SameLine();
-    if (ImGui::Button("-Z")) {
-      run_history(make_move_blocker_command(static_cast<std::size_t>(selected_blocker_), 0, -1, tile));
-    }
-    ImGui::SameLine();
-    if (ImGui::Button("+Z")) {
-      run_history(make_move_blocker_command(static_cast<std::size_t>(selected_blocker_), 0, 1, tile));
-    }
-
-    if (ImGui::Button("Grow +X")) {
-      BlockerDef next = current;
-      next.bounds = resize_aabb_on_grid(box, AabbEdge::MaxX, 1, tile);
-      replace_selected_blocker(std::move(next));
-    }
-    ImGui::SameLine();
-    if (ImGui::Button("Shrink +X")) {
-      BlockerDef next = current;
-      next.bounds = resize_aabb_on_grid(box, AabbEdge::MaxX, -1, tile);
-      replace_selected_blocker(std::move(next));
-    }
-    if (ImGui::Button("Grow +Z")) {
-      BlockerDef next = current;
-      next.bounds = resize_aabb_on_grid(box, AabbEdge::MaxZ, 1, tile);
-      replace_selected_blocker(std::move(next));
-    }
-    ImGui::SameLine();
-    if (ImGui::Button("Shrink +Z")) {
-      BlockerDef next = current;
-      next.bounds = resize_aabb_on_grid(box, AabbEdge::MaxZ, -1, tile);
-      replace_selected_blocker(std::move(next));
-    }
-    if (ImGui::Button("Snap to grid")) {
-      BlockerDef next = current;
-      next.bounds = snap_aabb_to_grid(box, tile);
-      replace_selected_blocker(std::move(next));
-    }
-
-    if (!selected_valid()) {
-      return;
-    }
-    current = blockers[static_cast<std::size_t>(selected_blocker_)];
-
-    ImGui::Separator();
-    bool jumpable = current.jumpable;
-    if (ImGui::Checkbox("Jumpable vertical blocker", &jumpable)) {
-      BlockerDef updated = current;
-      if (jumpable) {
-        const float center_x = 0.5f * (updated.bounds.min_x + updated.bounds.max_x);
-        const float center_z = 0.5f * (updated.bounds.min_z + updated.bounds.max_z);
-        if (session_.surface_query() == nullptr) {
-          rebuild_surface_query_cache();
-        }
-        const float sampled = session_.surface_query() == nullptr
-                                  ? 0.0f
-                                  : session_.surface_query()->sample(center_x, center_z).y;
-        const std::optional<float> base = updated.base_y.has_value() ? updated.base_y : sampled;
-        const std::optional<float> top =
-            updated.top_y.has_value() ? updated.top_y : (sampled + 0.9f);
-        if (!set_blocker_vertical_range(updated, true, base, top)) {
-          last_apply_error_ = "Invalid blocker vertical pair";
-        } else {
-          last_apply_error_.clear();
-          replace_selected_blocker(std::move(updated));
-        }
-      } else {
-        (void)set_blocker_vertical_range(updated, false, std::nullopt, std::nullopt);
-        last_apply_error_.clear();
-        replace_selected_blocker(std::move(updated));
-      }
-    }
-
-    if (!selected_valid()) {
-      return;
-    }
-    current = blockers[static_cast<std::size_t>(selected_blocker_)];
-
-    if (current.jumpable) {
-      float base_y = current.base_y.value_or(0.0f);
-      float top_y = current.top_y.value_or(base_y + 0.9f);
-      auto preview_vertical = [&]() {
-        if (top_y < base_y) {
-          top_y = base_y;
-        }
-        BlockerDef updated = current;
-        if (!set_blocker_vertical_range(updated, true, base_y, top_y)) {
-          last_apply_error_ = "Invalid blocker vertical pair";
-          return;
-        }
-        last_apply_error_.clear();
-        if (!blocker_field_origin_) {
-          blocker_field_origin_ = current;
-          blocker_field_origin_index_ = selected_blocker_;
-        }
-        preview_selected_blocker(std::move(updated));
-        current = blockers[static_cast<std::size_t>(selected_blocker_)];
-      };
-      if (ImGui::InputFloat("Base Y", &base_y, 0.05f, 0.25f, "%.3f")) {
-        preview_vertical();
-      }
-      commit_blocker_field_edit();
-      if (ImGui::InputFloat("Top Y", &top_y, 0.05f, 0.25f, "%.3f")) {
-        preview_vertical();
-      }
-      commit_blocker_field_edit();
-    } else {
-      ImGui::TextUnformatted("Legacy full wall (no vertical pair).");
-    }
-  }
-
-}
-
-void EditorApp::draw_height_edit_ui() {
-  ImGui::Separator();
-  ImGui::TextUnformatted("Elevation (Edit)");
-  if (ImGui::InputInt("Tile X", &height_tile_x_)) {
-    // Keep immediate mode state only.
-  }
-  if (ImGui::InputInt("Tile Z", &height_tile_z_)) {
-    // Keep immediate mode state only.
-  }
-  if (height_step_ <= 0.0f) {
-    height_step_ = 0.25f;
-  }
-  ImGui::InputFloat("Step", &height_step_, 0.05f, 0.25f, "%.3f");
-  if (height_step_ <= 0.0f) {
-    height_step_ = 0.25f;
-  }
-
-  const HeightGetResult tile_height =
-      get_tile_ground_y(session_.events().map().height_grid, height_tile_x_, height_tile_z_);
-  const TileCoord ramp_tile{height_tile_x_, height_tile_z_};
-  const int ramp_index = find_ramp_index_by_tile(session_.events().map().ramps, ramp_tile);
-  if (!height_tile_sync_ready_ || last_height_tile_x_ != height_tile_x_ ||
-      last_height_tile_z_ != height_tile_z_) {
-    height_tile_sync_ready_ = true;
-    last_height_tile_x_ = height_tile_x_;
-    last_height_tile_z_ = height_tile_z_;
-    if (tile_height.ok) {
-      height_set_y_ = tile_height.value;
-    }
-    if (ramp_index >= 0) {
-      const RampDef& ramp = session_.events().map().ramps[static_cast<std::size_t>(ramp_index)];
-      ramp_direction_index_ = static_cast<int>(ramp.direction);
-      ramp_low_y_ = ramp.low_y;
-      ramp_high_y_ = ramp.high_y;
-    } else if (tile_height.ok) {
-      ramp_low_y_ = tile_height.value;
-      ramp_high_y_ = tile_height.value;
-    }
-  }
-
-  if (tile_height.ok) {
-    ImGui::Text("Ground Y: %.3f", tile_height.value);
-    ImGui::TextUnformatted("Tile in range: yes");
-  } else {
-    ImGui::TextUnformatted("Ground Y: (out of range)");
-    ImGui::TextUnformatted("Tile in range: no");
-  }
-
-  const bool tile_has_ramp = ramp_index >= 0;
-  if (tile_has_ramp) {
-    ImGui::BeginDisabled();
-  }
-  if (ImGui::Button("- Step")) {
-    if (run_height_history(
-            make_adjust_map_tile_ground_y_command(height_tile_x_, height_tile_z_, -height_step_))) {
-      const HeightGetResult updated =
-          get_tile_ground_y(session_.events().map().height_grid, height_tile_x_, height_tile_z_);
-      if (updated.ok) {
-        height_set_y_ = updated.value;
-      }
-    }
-  }
-  ImGui::SameLine();
-  if (ImGui::Button("+ Step")) {
-    if (run_height_history(
-            make_adjust_map_tile_ground_y_command(height_tile_x_, height_tile_z_, height_step_))) {
-      const HeightGetResult updated =
-          get_tile_ground_y(session_.events().map().height_grid, height_tile_x_, height_tile_z_);
-      if (updated.ok) {
-        height_set_y_ = updated.value;
-      }
-    }
-  }
-  ImGui::SameLine();
-  if (ImGui::Button("Place cube")) {
-    if (run_height_history(make_place_map_tile_cube_command(height_tile_x_, height_tile_z_))) {
-      const HeightGetResult updated =
-          get_tile_ground_y(session_.events().map().height_grid, height_tile_x_, height_tile_z_);
-      if (updated.ok) {
-        height_set_y_ = updated.value;
-      }
-    }
-  }
-  if (tile_has_ramp) {
-    ImGui::EndDisabled();
-  }
-  ImGui::InputFloat("Set Y", &height_set_y_, 0.05f, 0.25f, "%.3f");
-  if (tile_has_ramp) {
-    ImGui::BeginDisabled();
-  }
-  if (ImGui::Button("Set tile height")) {
-    (void)run_height_history(
-        make_set_map_tile_ground_y_command(height_tile_x_, height_tile_z_, height_set_y_));
-  }
-  if (tile_has_ramp) {
-    ImGui::EndDisabled();
-  }
-
-  ImGui::Separator();
-  if (ramp_index >= 0) {
-    ImGui::TextUnformatted("Ramp on tile: yes");
-    ImGui::TextUnformatted("Flat ground editing disabled; use ramp controls.");
-  } else {
-    ImGui::TextUnformatted("Ramp on tile: no");
-  }
-
-  ImGui::Combo("Ramp direction", &ramp_direction_index_, "North\0East\0South\0West\0");
-  ImGui::InputFloat("Ramp low Y", &ramp_low_y_, 0.05f, 0.25f, "%.3f");
-  ImGui::InputFloat("Ramp high Y", &ramp_high_y_, 0.05f, 0.25f, "%.3f");
-
-  if (ImGui::Button(ramp_index >= 0 ? "Update ramp" : "Add ramp")) {
-    RampDef ramp;
-    ramp.tile = ramp_tile;
-    ramp.direction = static_cast<RampDirection>(ramp_direction_index_);
-    ramp.low_y = ramp_low_y_;
-    ramp.high_y = ramp_high_y_;
-    (void)run_height_history(make_upsert_map_ramp_command(std::move(ramp)));
-  }
-  ImGui::SameLine();
-  if (ImGui::Button("Remove ramp")) {
-    (void)run_height_history(make_remove_map_ramp_command(ramp_tile));
-  }
-
-  ImGui::Separator();
-  ImGui::TextUnformatted("Edge fences");
-  ImGui::Combo("Edge direction", &edge_direction_index_, "North\0East\0South\0West\0");
-  if (tile_has_ramp) {
-    ImGui::BeginDisabled();
-  }
-  auto upsert_selected_edge = [&](float height) {
-    EdgeBarrierDef edge;
-    edge.tile = ramp_tile;
-    edge.direction = static_cast<RampDirection>(edge_direction_index_);
-    edge.height = height;
-    (void)run_height_history(make_upsert_map_edge_barrier_command(std::move(edge)));
-  };
-  if (ImGui::Button("Mini 0.45")) {
-    upsert_selected_edge(kEdgeBarrierMiniHeight);
-  }
-  ImGui::SameLine();
-  if (ImGui::Button("Full 1.6")) {
-    upsert_selected_edge(kEdgeBarrierFullHeight);
-  }
-  ImGui::SameLine();
-  if (ImGui::Button("Remove edge")) {
-    (void)run_height_history(make_remove_map_edge_barrier_command(
-        ramp_tile, static_cast<RampDirection>(edge_direction_index_)));
-  }
-  if (tile_has_ramp) {
-    ImGui::EndDisabled();
-  }
-}
-
-void EditorApp::draw_event_edit_ui() {
-  ImGui::Separator();
-  ImGui::TextUnformatted("Events (Edit)");
-  const float tile = session_.events().map().tile_size > 0.0f ? session_.events().map().tile_size : 1.0f;
-  auto event_list = session_.events().map().events;
-  auto run_history = [&](std::unique_ptr<EditCommand> command) {
-    discard_field_edit_origins();
-    MapData map = document_.data();
-    const EditApplyResult result = edit_history_.execute(map, std::move(command));
-    apply_edited_map(std::move(map), result);
-    event_list = session_.events().map().events;
-  };
-
-  if (ImGui::Button("Add stub event")) {
-    const std::string id = "stub_" + std::to_string(next_stub_event_++);
-    run_history(make_place_event_command(make_stub_event(id, 0, 0)));
-    selected_event_ = static_cast<int>(event_list.size()) - 1;
-    selected_page_ = 0;
-    sync_events_to_runtime();
-  }
-  ImGui::SameLine();
-  if (ImGui::Button("Delete event") && selected_event_ >= 0 &&
-      selected_event_ < static_cast<int>(event_list.size())) {
-    run_history(make_delete_event_command(static_cast<std::size_t>(selected_event_)));
-  }
-
-  if (ImGui::BeginListBox("##events", ImVec2(-1.0f, 120.0f))) {
-    for (int i = 0; i < static_cast<int>(event_list.size()); ++i) {
-      const auto& ev = event_list[static_cast<std::size_t>(i)];
-      char label[160];
-      if (ev.tile.has_value()) {
-        std::snprintf(label, sizeof(label), "%s  tile(%d,%d)", ev.id.c_str(), ev.tile->x,
-                      ev.tile->z);
-      } else if (ev.volume.has_value()) {
-        std::snprintf(label, sizeof(label), "%s  vol", ev.id.c_str());
-      } else {
-        std::snprintf(label, sizeof(label), "%s  (no place)", ev.id.c_str());
-      }
-      if (ImGui::Selectable(label, selected_event_ == i)) {
-        selected_event_ = i;
-        selected_page_ = 0;
-        sync_events_to_runtime();
-      }
-    }
-    ImGui::EndListBox();
-  }
-
-  if (selected_event_ >= 0 && selected_event_ < static_cast<int>(event_list.size())) {
-    auto replace_selected_event = [&](EventDef next) {
-      run_history(make_replace_event_command(static_cast<std::size_t>(selected_event_),
-                                             std::move(next)));
-    };
-    auto preview_selected_event = [&](EventDef next) {
-      MapData preview = document_.data();
-      if (selected_event_ < 0 ||
-          static_cast<std::size_t>(selected_event_) >= preview.events.size()) {
-        return;
-      }
-      preview.events[static_cast<std::size_t>(selected_event_)] = std::move(next);
-      const MapCompileResult compiled = compile_map_data(preview);
-      if (!compiled.ok) {
-        return;
-      }
-      session_.events().load(compiled.runtime);
-      session_.rebuild_surface();
-      sync_events_to_runtime();
-      event_list = session_.events().map().events;
-    };
-    auto commit_event_field_edit = [&]() {
-      if (!ImGui::IsItemDeactivatedAfterEdit() || !event_field_origin_) {
-        return;
-      }
-      EventDef next = event_list[static_cast<std::size_t>(selected_event_)];
-      event_field_origin_.reset();
-      replace_selected_event(std::move(next));
-    };
-
-    if (event_field_origin_index_ != selected_event_) {
-      event_field_origin_.reset();
-      event_field_origin_index_ = selected_event_;
-    }
-
-    EventDef event = event_list[static_cast<std::size_t>(selected_event_)];
-    ImGui::Text("id: %s", event.id.c_str());
-    ImGui::Text("pages: %zu", event.pages.size());
-    ImGui::Text("Why not: %s",
-                event_why_not_name(session_.events().why_not_fired(event.id, session_.state(), session_.player(), false)));
-
-    if (!event.tile.has_value() && !event.volume.has_value()) {
-      if (ImGui::Button("Place on tile (0,0)")) {
-        event.tile = TileCoord{0, 0};
-        replace_selected_event(std::move(event));
-        event = event_list[static_cast<std::size_t>(selected_event_)];
-      }
-    } else {
-      if (ImGui::Button("Ev -X")) {
-        run_history(make_move_event_command(static_cast<std::size_t>(selected_event_), -1, 0, tile));
-        event = event_list[static_cast<std::size_t>(selected_event_)];
-      }
-      ImGui::SameLine();
-      if (ImGui::Button("Ev +X")) {
-        run_history(make_move_event_command(static_cast<std::size_t>(selected_event_), 1, 0, tile));
-        event = event_list[static_cast<std::size_t>(selected_event_)];
-      }
-      ImGui::SameLine();
-      if (ImGui::Button("Ev -Z")) {
-        run_history(make_move_event_command(static_cast<std::size_t>(selected_event_), 0, -1, tile));
-        event = event_list[static_cast<std::size_t>(selected_event_)];
-      }
-      ImGui::SameLine();
-      if (ImGui::Button("Ev +Z")) {
-        run_history(make_move_event_command(static_cast<std::size_t>(selected_event_), 0, 1, tile));
-        event = event_list[static_cast<std::size_t>(selected_event_)];
-      }
-    }
-
-    ImGui::Separator();
-    ImGui::TextUnformatted("Page inspector");
-    if (event.pages.empty()) {
-      ImGui::TextUnformatted("(no pages)");
-    } else {
-      if (selected_page_ < 0 || selected_page_ >= static_cast<int>(event.pages.size())) {
-        selected_page_ = 0;
-      }
-      if (ImGui::BeginListBox("##pages", ImVec2(-1.0f, 80.0f))) {
-        for (int p = 0; p < static_cast<int>(event.pages.size()); ++p) {
-          const EventPage& page = event.pages[static_cast<std::size_t>(p)];
-          char label[192];
-          std::snprintf(label, sizeof(label), "%d: %s | %s", p, trigger_kind_name(page.trigger),
-                        summarize_page_conditions(page).c_str());
-          if (ImGui::Selectable(label, selected_page_ == p)) {
-            selected_page_ = p;
-          }
-        }
-        ImGui::EndListBox();
-      }
-
-      EventPage& page = event.pages[static_cast<std::size_t>(selected_page_)];
-      int trigger = static_cast<int>(page.trigger);
-      if (ImGui::Combo("Trigger", &trigger,
-                       "action\0player_touch\0event_touch\0autorun\0parallel\0")) {
-        page.trigger = static_cast<TriggerKind>(trigger);
-        replace_selected_event(event);
-        event = event_list[static_cast<std::size_t>(selected_event_)];
-      }
-      EventPage& page_inspect = event.pages[static_cast<std::size_t>(selected_page_)];
-      ImGui::TextWrapped("Conditions: %s", summarize_page_conditions(page_inspect).c_str());
-
-      int sw_i = -1;
-      for (int i = 0; i < static_cast<int>(page_inspect.conditions.size()); ++i) {
-        if (page_inspect.conditions[static_cast<std::size_t>(i)].type == ConditionType::Switch) {
-          sw_i = i;
-          break;
-        }
-      }
-      if (sw_i < 0) {
-        if (ImGui::Button("Add enable Switch")) {
-          (void)ensure_page_enable_switch(page_inspect, 1, true);
-          replace_selected_event(event);
-          event = event_list[static_cast<std::size_t>(selected_event_)];
-        }
-      } else {
-        Condition& sw = event.pages[static_cast<std::size_t>(selected_page_)]
-                            .conditions[static_cast<std::size_t>(sw_i)];
-        int switch_id = static_cast<int>(sw.id);
-        bool on = sw.bool_value;
-        const EventDef switch_snapshot = event;
-        if (ImGui::InputInt("Enable SW id", &switch_id)) {
-          if (switch_id < 0) {
-            switch_id = 0;
-          }
-          sw.id = static_cast<std::uint32_t>(switch_id);
-          if (!event_field_origin_) {
-            event_field_origin_ = switch_snapshot;
-            event_field_origin_index_ = selected_event_;
-          }
-          preview_selected_event(event);
-          event = event_list[static_cast<std::size_t>(selected_event_)];
-        }
-        commit_event_field_edit();
-        if (selected_event_ >= 0 && selected_event_ < static_cast<int>(event_list.size())) {
-          event = event_list[static_cast<std::size_t>(selected_event_)];
-        }
-        Condition& sw_now = event.pages[static_cast<std::size_t>(selected_page_)]
-                                .conditions[static_cast<std::size_t>(sw_i)];
-        on = sw_now.bool_value;
-        if (ImGui::Checkbox("Enable SW ON", &on)) {
-          sw_now.bool_value = on;
-          replace_selected_event(event);
-          event = event_list[static_cast<std::size_t>(selected_event_)];
-        }
-      }
-
-      EventPage& page_now = event.pages[static_cast<std::size_t>(selected_page_)];
-      int text_i = find_first_show_text(page_now);
-      if (text_i < 0) {
-        if (ImGui::Button("Add Show Text")) {
-          Command cmd;
-          cmd.op = CommandOp::ShowText;
-          cmd.text = "New text";
-          page_now.commands.insert(page_now.commands.begin(), std::move(cmd));
-          replace_selected_event(event);
-          event = event_list[static_cast<std::size_t>(selected_event_)];
-        }
-      } else {
-        Command& cmd = event.pages[static_cast<std::size_t>(selected_page_)]
-                           .commands[static_cast<std::size_t>(text_i)];
-        char buf[512];
-        std::snprintf(buf, sizeof(buf), "%s", cmd.text.c_str());
-        const EventDef text_snapshot = event;
-        if (ImGui::InputTextMultiline("Show Text", buf, sizeof(buf), ImVec2(-1.0f, 60.0f))) {
-          cmd.text = buf;
-          if (!event_field_origin_) {
-            event_field_origin_ = text_snapshot;
-            event_field_origin_index_ = selected_event_;
-          }
-          preview_selected_event(event);
-        }
-        commit_event_field_edit();
-      }
-    }
   }
 }
 
@@ -812,8 +101,8 @@ bool EditorApp::hot_apply_map_path(const std::string& path, bool preserve_player
 
   std::vector<BlockerDef> blockers;
   std::vector<Vec3> markers;
-  HotApplyTargets targets{session_.events(), session_.state(), session_.player(), blockers, markers, &session_.surface_query(),
-                          &session_.jump()};
+  HotApplyTargets targets{session_.events(), session_.state(), session_.player(), blockers, markers,
+                          &session_.surface_query(), &session_.jump()};
   HotApplyOptions options;
   options.preserve_player_position = preserve_player;
 
@@ -829,34 +118,31 @@ bool EditorApp::hot_apply_map_path(const std::string& path, bool preserve_player
 
   last_apply_error_.clear();
   map_path_ = path;
-  document_.replace(session_.events().map());
-  selected_blocker_ = blockers.empty() ? -1 : 0;
-  selected_event_ = session_.events().map().events.empty() ? -1 : 0;
-  selected_page_ = 0;
-  height_tile_x_ = session_.events().map().height_grid.origin_x;
-  height_tile_z_ = session_.events().map().height_grid.origin_z;
-  height_step_ = 0.25f;
-  height_set_y_ = 0.0f;
-  ramp_direction_index_ = 0;
-  ramp_low_y_ = 0.0f;
-  ramp_high_y_ = 0.0f;
-  height_tile_sync_ready_ = false;
-  last_height_tile_x_ = 0;
-  last_height_tile_z_ = 0;
+  document_.load(session_.events().map());
+  (void)document_.consume_changed();
+  terrain_panel_.tile_x = session_.events().map().height_grid.origin_x;
+  terrain_panel_.tile_z = session_.events().map().height_grid.origin_z;
+  terrain_panel_.step = 0.25f;
+  terrain_panel_.set_y = 0.0f;
+  terrain_panel_.ramp_direction_index = 0;
+  terrain_panel_.ramp_low_y = 0.0f;
+  terrain_panel_.ramp_high_y = 0.0f;
+  terrain_panel_.tile_sync_ready = false;
+  terrain_panel_.last_tile_x = 0;
+  terrain_panel_.last_tile_z = 0;
+  blocker_panel_ = {};
+  event_panel_.field_origin.reset();
+  event_panel_.field_origin_index = -1;
   engine_->set_terrain_map(session_.events().map());
   engine_->set_blockers(std::move(blockers));
   engine_->set_event_markers(std::move(markers));
   engine_->set_player(session_.player());
-  engine_->greybox().set_selected_blocker(app_mode_ == AppMode::Edit ? selected_blocker_ : -1);
-  engine_->greybox().set_selected_event_marker(
-      app_mode_ == AppMode::Edit ? event_marker_index(session_.events().map(), selected_event_) : -1);
+  sync_selection_to_engine();
   session_.set_app_mode(app_mode_);
   session_.clear_pending_input();
-  previous_buttons_ = window_ != nullptr ? sample_editor_buttons(window_) : InputButtons{};
+  previous_buttons_ = host_.sample_buttons();
   fixed_accumulator_ = 0.0f;
   snap_player_to_ground_clear_jump();
-  edit_history_.clear();
-  discard_field_edit_origins();
   return true;
 }
 
@@ -877,6 +163,7 @@ bool EditorApp::save_map_path(const std::string& path) {
   }
   last_apply_error_.clear();
   last_serialize_status_ = "Saved: " + path;
+  document_.mark_clean();
   return true;
 }
 
@@ -908,37 +195,21 @@ bool EditorApp::init() {
   }
   log(*logger_, LogLevel::Info, "editor", "starting rat-editor");
 
-  if (!glfwInit()) {
-    log(*logger_, LogLevel::Error, "editor", "glfwInit failed");
+  if (!host_.create(width_, height_, "rat-editor")) {
+    log(*logger_, LogLevel::Error, "editor", "GlfwHost::create failed");
     return false;
   }
 
-  glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-  glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
-
-  window_ = glfwCreateWindow(width_, height_, "rat-editor", nullptr, nullptr);
-  if (window_ == nullptr) {
-    log(*logger_, LogLevel::Error, "editor", "glfwCreateWindow failed");
-    glfwTerminate();
-    return false;
-  }
-
-  glfwSetWindowUserPointer(window_, this);
-  glfwSetFramebufferSizeCallback(window_, framebuffer_size_callback);
-  glfwGetFramebufferSize(window_, &width_, &height_);
+  host_.set_user_pointer(this);
+  host_.set_framebuffer_size_callback(framebuffer_size_callback);
+  host_.framebuffer_size(width_, height_);
 
   engine_ = new Engine();
 
   RendererConfig config;
-#if defined(_WIN32)
-  config.window.nwh = glfwGetWin32Window(window_);
-#elif defined(__linux__)
-  config.window.ndt = glfwGetX11Display();
-  config.window.nwh =
-      reinterpret_cast<void*>(static_cast<std::uintptr_t>(glfwGetX11Window(window_)));
-#else
-#error Native window handles are only wired for Win32 and Linux X11
-#endif
+  const NativeWindow native = host_.native_window();
+  config.window.nwh = native.nwh;
+  config.window.ndt = native.ndt;
   config.width = static_cast<std::uint32_t>(width_ > 0 ? width_ : 1);
   config.height = static_cast<std::uint32_t>(height_ > 0 ? height_ : 1);
   config.vsync = true;
@@ -961,7 +232,6 @@ bool EditorApp::init() {
     return false;
   }
 
-  // Spawn near the foreman for the sample quest path.
   session_.player().x = -1.5f;
   session_.player().z = 1.5f;
   snap_player_to_ground_clear_jump();
@@ -975,7 +245,7 @@ bool EditorApp::init() {
   io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
   ImGui::StyleColorsDark();
 
-  if (!ImGui_ImplGlfw_InitForOther(window_, true)) {
+  if (!ImGui_ImplGlfw_InitForOther(host_.window(), true)) {
     log(*logger_, LogLevel::Error, "editor", "ImGui_ImplGlfw_InitForOther failed");
     shutdown();
     return false;
@@ -987,7 +257,18 @@ bool EditorApp::init() {
     return false;
   }
 
-  last_time_ = glfwGetTime();
+  coordinator_.poll = [this] { host_.poll(); };
+  coordinator_.simulate = [this](float dt) { simulate(dt); };
+  coordinator_.drain_audio = [this] {
+    if (audio_ != nullptr) {
+      audio_->drain();
+    }
+  };
+  coordinator_.begin_ui = [this] { begin_ui(); };
+  coordinator_.draw_ui = [this] { draw_ui(); };
+  coordinator_.present = [this] { present(); };
+
+  last_time_ = host_.time();
   running_ = true;
   return true;
 }
@@ -997,10 +278,8 @@ int EditorApp::run() {
     return 1;
   }
 
-  while (!glfwWindowShouldClose(window_)) {
-    glfwPollEvents();
-
-    const double now = glfwGetTime();
+  while (!host_.should_close()) {
+    const double now = host_.time();
     float dt = static_cast<float>(now - last_time_);
     last_time_ = now;
     if (dt < 0.0f) {
@@ -1009,18 +288,7 @@ int EditorApp::run() {
     if (dt > 0.1f) {
       dt = 0.1f;
     }
-    update_simulation(dt);
-    if (audio_ != nullptr) {
-      audio_->drain();
-    }
-
-    ImGui_ImplGlfw_NewFrame();
-    imgui_bgfx::begin_frame(width_, height_);
-    draw_ui();
-
-    engine_->begin_frame();
-    imgui_bgfx::end_frame();
-    engine_->end_frame();
+    coordinator_.run_frame(dt);
   }
 
   shutdown();
@@ -1028,7 +296,7 @@ int EditorApp::run() {
 }
 
 void EditorApp::shutdown() {
-  if (!running_ && window_ == nullptr && engine_ == nullptr) {
+  if (!running_ && host_.window() == nullptr && engine_ == nullptr) {
     return;
   }
   running_ = false;
@@ -1045,19 +313,14 @@ void EditorApp::shutdown() {
     engine_ = nullptr;
   }
 
-  if (window_ != nullptr) {
-    glfwDestroyWindow(window_);
-    window_ = nullptr;
-  }
-  glfwTerminate();
+  host_.destroy();
 }
 
 void EditorApp::on_framebuffer_resize(int width, int height) {
   width_ = width > 0 ? width : 1;
   height_ = height > 0 ? height : 1;
   if (engine_ != nullptr && engine_->is_initialized()) {
-    engine_->resize(static_cast<std::uint32_t>(width_),
-                    static_cast<std::uint32_t>(height_));
+    engine_->resize(static_cast<std::uint32_t>(width_), static_cast<std::uint32_t>(height_));
   }
 }
 
@@ -1072,16 +335,15 @@ void EditorApp::set_app_mode(AppMode next_mode) {
   if (app_mode_ == next_mode) {
     return;
   }
-  discard_field_edit_origins();
+  blocker_panel_.field_origin.reset();
+  blocker_panel_.field_origin_index = -1;
+  event_panel_.field_origin.reset();
+  event_panel_.field_origin_index = -1;
+  document_.discard_preview();
   app_mode_ = next_mode;
   session_.set_app_mode(next_mode);
   refresh_mode_banner();
-  sync_blockers_to_runtime();
-  sync_events_to_runtime();
-}
-
-void EditorApp::rebuild_surface_query_cache() {
-  session_.rebuild_surface();
+  sync_selection_to_engine();
 }
 
 void EditorApp::snap_player_to_ground_clear_jump() {
@@ -1099,13 +361,13 @@ void EditorApp::framebuffer_size_callback(GLFWwindow* window, int width, int hei
 }
 
 void EditorApp::handle_edit_mouse_input(const ImGuiIO& io) {
-  if (window_ == nullptr || engine_ == nullptr || app_mode_ != AppMode::Edit) {
+  if (host_.window() == nullptr || engine_ == nullptr || app_mode_ != AppMode::Edit) {
     mouse_left_was_down_ = false;
     drag_active_ = false;
     return;
   }
 
-  const bool left_down = glfwGetMouseButton(window_, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS;
+  const bool left_down = host_.mouse_left_down();
   if (io.WantCaptureMouse) {
     mouse_left_was_down_ = left_down;
     if (!left_down) {
@@ -1116,13 +378,12 @@ void EditorApp::handle_edit_mouse_input(const ImGuiIO& io) {
 
   double cursor_x = 0.0;
   double cursor_y = 0.0;
-  glfwGetCursorPos(window_, &cursor_x, &cursor_y);
-  const auto world_hit = unproject_to_ground_plane(engine_->greybox().camera(),
-                                                   static_cast<float>(cursor_x),
-                                                   static_cast<float>(cursor_y),
-                                                   static_cast<std::uint32_t>(width_ > 0 ? width_ : 1),
-                                                   static_cast<std::uint32_t>(height_ > 0 ? height_ : 1),
-                                                   0.0f);
+  host_.cursor_pos(cursor_x, cursor_y);
+  const auto world_hit =
+      unproject_to_ground_plane(engine_->greybox().camera(), static_cast<float>(cursor_x),
+                                static_cast<float>(cursor_y),
+                                static_cast<std::uint32_t>(width_ > 0 ? width_ : 1),
+                                static_cast<std::uint32_t>(height_ > 0 ? height_ : 1), 0.0f);
   if (!world_hit.has_value()) {
     mouse_left_was_down_ = left_down;
     if (!left_down) {
@@ -1133,29 +394,29 @@ void EditorApp::handle_edit_mouse_input(const ImGuiIO& io) {
 
   const bool pressed = left_down && !mouse_left_was_down_;
   const bool released = !left_down && mouse_left_was_down_;
+  const MapData& map = document_.visible_data();
 
   if (pressed) {
     drag_active_ = false;
-    const ViewportClickAction action =
-        resolve_viewport_click(session_.events().map(), viewport_tool_, *world_hit);
+    const ViewportClickAction action = resolve_viewport_click(map, viewport_tool_, *world_hit);
     switch (action.kind) {
       case ViewportClickActionKind::Deselect:
-        clear_map_selection();
+        document_.clear_selection();
         break;
       case ViewportClickActionKind::SelectBlocker:
-        select_blocker_from_map(static_cast<int>(action.index));
+        document_.select_blocker(static_cast<int>(action.index));
         drag_pick_ = {ViewportPickKind::Blocker, action.index};
-        drag_last_tile_ = world_to_tile_xz(*world_hit, session_.events().map().tile_size);
+        drag_last_tile_ = world_to_tile_xz(*world_hit, map.tile_size);
         drag_active_ = true;
         break;
       case ViewportClickActionKind::SelectEvent:
-        select_event_from_map(static_cast<int>(action.index));
+        document_.select_event(static_cast<int>(action.index));
         drag_pick_ = {ViewportPickKind::Event, action.index};
-        drag_last_tile_ = world_to_tile_xz(*world_hit, session_.events().map().tile_size);
+        drag_last_tile_ = world_to_tile_xz(*world_hit, map.tile_size);
         drag_active_ = true;
         break;
       case ViewportClickActionKind::PlaceBlocker: {
-        const float tile = session_.events().map().tile_size > 0.0f ? session_.events().map().tile_size : 1.0f;
+        const float tile = map.tile_size > 0.0f ? map.tile_size : 1.0f;
         BlockerDef blocker;
         blocker.bounds = {
             static_cast<float>(action.tile.x) * tile,
@@ -1163,39 +424,43 @@ void EditorApp::handle_edit_mouse_input(const ImGuiIO& io) {
             static_cast<float>(action.tile.x + 1) * tile,
             static_cast<float>(action.tile.z + 1) * tile,
         };
-        execute_edit_command(make_place_blocker_command(std::move(blocker)));
-        select_blocker_from_map(static_cast<int>(session_.events().map().blockers.size()) - 1);
+        (void)document_.execute(make_place_blocker_command(std::move(blocker)));
+        document_.select_blocker(static_cast<int>(document_.data().blockers.size()) - 1);
         break;
       }
       case ViewportClickActionKind::PlaceEvent: {
-        const std::string id = "stub_" + std::to_string(next_stub_event_++);
-        execute_edit_command(make_place_event_command(make_stub_event(id, action.tile.x, action.tile.z)));
-        select_event_from_map(static_cast<int>(session_.events().map().events.size()) - 1);
+        const std::string id = "stub_" + std::to_string(event_panel_.next_stub_event++);
+        (void)document_.execute(make_place_event_command(make_stub_event(id, action.tile.x, action.tile.z)));
+        document_.select_event(static_cast<int>(document_.data().events.size()) - 1);
         break;
       }
       case ViewportClickActionKind::PlaceCube: {
-        sync_height_tile_from_click(action.tile);
-        if (run_height_history(make_place_map_tile_cube_command(action.tile.x, action.tile.z))) {
+        terrain_panel_.tile_x = action.tile.x;
+        terrain_panel_.tile_z = action.tile.z;
+        if (document_.execute(make_place_map_tile_cube_command(action.tile.x, action.tile.z))) {
           const HeightGetResult updated =
-              get_tile_ground_y(session_.events().map().height_grid, height_tile_x_, height_tile_z_);
+              get_tile_ground_y(document_.data().height_grid, terrain_panel_.tile_x,
+                                terrain_panel_.tile_z);
           if (updated.ok) {
-            height_set_y_ = updated.value;
+            terrain_panel_.set_y = updated.value;
           }
         }
         break;
       }
       case ViewportClickActionKind::PlaceFence: {
-        sync_height_tile_from_click(action.tile);
-        const RampDirection direction = static_cast<RampDirection>(edge_direction_index_);
+        terrain_panel_.tile_x = action.tile.x;
+        terrain_panel_.tile_z = action.tile.z;
+        const RampDirection direction =
+            static_cast<RampDirection>(terrain_panel_.edge_direction_index);
         if (fence_preset_index_ == 2) {
-          (void)run_height_history(make_remove_map_edge_barrier_command(action.tile, direction));
+          (void)document_.execute(make_remove_map_edge_barrier_command(action.tile, direction));
         } else {
           EdgeBarrierDef edge;
           edge.tile = action.tile;
           edge.direction = direction;
           edge.height =
               fence_preset_index_ == 1 ? kEdgeBarrierFullHeight : kEdgeBarrierMiniHeight;
-          (void)run_height_history(make_upsert_map_edge_barrier_command(std::move(edge)));
+          (void)document_.execute(make_upsert_map_edge_barrier_command(std::move(edge)));
         }
         break;
       }
@@ -1205,7 +470,7 @@ void EditorApp::handle_edit_mouse_input(const ImGuiIO& io) {
   }
 
   if (left_down && drag_active_) {
-    const TileCoord tile = world_to_tile_xz(*world_hit, session_.events().map().tile_size);
+    const TileCoord tile = world_to_tile_xz(*world_hit, map.tile_size);
     const TileDelta delta = tile_delta_between(drag_last_tile_, tile);
     if (delta.tile_dx != 0 || delta.tile_dz != 0) {
       run_drag_step_commands(drag_pick_, delta);
@@ -1219,14 +484,14 @@ void EditorApp::handle_edit_mouse_input(const ImGuiIO& io) {
   mouse_left_was_down_ = left_down;
 }
 
-void EditorApp::update_simulation(float dt) {
-  if (engine_ == nullptr || window_ == nullptr) {
+void EditorApp::simulate(float dt) {
+  if (engine_ == nullptr || host_.window() == nullptr) {
     return;
   }
 
   const ImGuiIO& io = ImGui::GetIO();
 
-  const InputButtons buttons = sample_editor_buttons(window_);
+  const InputButtons buttons = host_.sample_buttons();
   InputGating gating;
   gating.player_control = player_control_enabled(app_mode_);
   gating.keyboard_captured = io.WantCaptureKeyboard;
@@ -1246,18 +511,10 @@ void EditorApp::update_simulation(float dt) {
 
   if (app_mode_ == AppMode::Edit) {
     if (input.undo_pressed) {
-      MapData map = document_.data();
-      const EditApplyResult result = edit_history_.undo(map);
-      if (result.applied) {
-        apply_edited_map(std::move(map), result);
-      }
+      (void)document_.undo();
     }
     if (input.redo_pressed) {
-      MapData map = document_.data();
-      const EditApplyResult result = edit_history_.redo(map);
-      if (result.applied) {
-        apply_edited_map(std::move(map), result);
-      }
+      (void)document_.redo();
     }
   }
 
@@ -1273,9 +530,10 @@ void EditorApp::update_simulation(float dt) {
 
   if (input.debug_snapshot_pressed) {
     std::string_view selected_id{};
-    const auto& event_list = session_.events().map().events;
-    if (selected_event_ >= 0 && selected_event_ < static_cast<int>(event_list.size())) {
-      selected_id = event_list[static_cast<std::size_t>(selected_event_)].id;
+    const auto& event_list = document_.visible_data().events;
+    if (document_.selected_event() >= 0 &&
+        document_.selected_event() < static_cast<int>(event_list.size())) {
+      selected_id = event_list[static_cast<std::size_t>(document_.selected_event())].id;
     }
     const DebugSnapshot snapshot =
         make_debug_snapshot(session_.tick_id(), app_mode_, session_.player(), session_.jump(),
@@ -1300,6 +558,18 @@ void EditorApp::update_simulation(float dt) {
   engine_->set_player(session_.player());
 }
 
+void EditorApp::begin_ui() {
+  ImGui_ImplGlfw_NewFrame();
+  imgui_bgfx::begin_frame(width_, height_);
+}
+
+void EditorApp::present() {
+  sync_authoring_to_engine();
+  engine_->begin_frame();
+  imgui_bgfx::end_frame();
+  engine_->end_frame();
+}
+
 void EditorApp::draw_ui() {
   ImGuiWindowFlags dock_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking;
   const ImGuiViewport* viewport = ImGui::GetMainViewport();
@@ -1320,7 +590,7 @@ void EditorApp::draw_ui() {
   if (ImGui::BeginMenuBar()) {
     if (ImGui::BeginMenu("File")) {
       if (ImGui::MenuItem("Exit")) {
-        glfwSetWindowShouldClose(window_, GLFW_TRUE);
+        host_.request_close();
       }
       ImGui::EndMenu();
     }
@@ -1333,7 +603,8 @@ void EditorApp::draw_ui() {
   ImGui::Begin("Hierarchy");
   ImGui::Text("Mode: %s  (F2)", app_mode_name(app_mode_));
   ImGui::Text("Map: %s", session_.state().map_id().c_str());
-  ImGui::Text("Player: (%.2f, %.2f, %.2f)", session_.player().x, session_.player().y, session_.player().z);
+  ImGui::Text("Player: (%.2f, %.2f, %.2f)", session_.player().x, session_.player().y,
+              session_.player().z);
   ImGui::Text("Events: %zu", session_.events().map().events.size());
   ImGui::Text("Parallel: %d", session_.events().active_parallel_count());
   ImGui::End();
@@ -1346,7 +617,8 @@ void EditorApp::draw_ui() {
     ImGui::TextUnformatted("Quest: ask foreman (cyan) for a rusty cog,");
     ImGui::TextUnformatted("loot scrap east of crates, return.");
   }
-  ImGui::TextUnformatted("WASD move | Space jump | E interact | C camera | F2 Play/Edit | F3 snapshot | F5 hot-apply");
+  ImGui::TextUnformatted(
+      "WASD move | Space jump | E interact | C camera | F2 Play/Edit | F3 snapshot | F5 hot-apply");
   if (app_mode_ == AppMode::Edit) {
     ImGui::TextUnformatted("Ctrl+Z undo | Ctrl+Y / Ctrl+Shift+Z redo");
   }
@@ -1406,9 +678,31 @@ void EditorApp::draw_ui() {
     ImGui::RadioButton("Full 1.6", &fence_preset_index_, 1);
     ImGui::SameLine();
     ImGui::RadioButton("Remove", &fence_preset_index_, 2);
-    draw_height_edit_ui();
-    draw_blocker_edit_ui();
-    draw_event_edit_ui();
+    draw_terrain_panel(document_, terrain_panel_);
+    float sampled_ground_y = 0.0f;
+    if (document_.selected_blocker() >= 0 &&
+        document_.selected_blocker() <
+            static_cast<int>(document_.visible_data().blockers.size())) {
+      const BlockerDef& selected =
+          document_.visible_data().blockers[static_cast<std::size_t>(document_.selected_blocker())];
+      const float center_x = 0.5f * (selected.bounds.min_x + selected.bounds.max_x);
+      const float center_z = 0.5f * (selected.bounds.min_z + selected.bounds.max_z);
+      if (session_.surface_query() == nullptr) {
+        session_.rebuild_surface();
+      }
+      sampled_ground_y = session_.surface_query() == nullptr
+                             ? 0.0f
+                             : session_.surface_query()->sample(center_x, center_z).y;
+    }
+    draw_blocker_panel(document_, blocker_panel_, sampled_ground_y, last_apply_error_);
+    const char* why_not = "";
+    if (document_.selected_event() >= 0 &&
+        document_.selected_event() < static_cast<int>(document_.visible_data().events.size())) {
+      why_not = event_why_not_name(session_.events().why_not_fired(
+          document_.visible_data().events[static_cast<std::size_t>(document_.selected_event())].id,
+          session_.state(), session_.player(), false));
+    }
+    draw_event_panel(document_, event_panel_, why_not);
   }
   {
     int mode = 0;
@@ -1431,8 +725,10 @@ void EditorApp::draw_ui() {
     }
   }
   if (ImGui::Button("Snap player to grid")) {
-    const float tile_size = session_.events().map().tile_size > 0.0f ? session_.events().map().tile_size : 1.0f;
-    const auto snapped = snap_to_grid(session_.player().x, session_.player().y, session_.player().z, tile_size);
+    const float tile_size =
+        document_.visible_data().tile_size > 0.0f ? document_.visible_data().tile_size : 1.0f;
+    const auto snapped =
+        snap_to_grid(session_.player().x, session_.player().y, session_.player().z, tile_size);
     session_.player().x = snapped.x;
     session_.player().z = snapped.z;
     snap_player_to_ground_clear_jump();
@@ -1446,7 +742,8 @@ void EditorApp::draw_ui() {
   ImGui::Text("rusty_cog: %d", session_.state().item_quantity("rusty_cog"));
   ImGui::End();
 
-  if (event_runtime_enabled(app_mode_) && session_.events().has_action_prompt(session_.player(), session_.state()) &&
+  if (event_runtime_enabled(app_mode_) &&
+      session_.events().has_action_prompt(session_.player(), session_.state()) &&
       !session_.events().active_message().has_value()) {
     const ImVec2 prompt_pos(viewport->WorkPos.x + viewport->WorkSize.x * 0.5f - 70.0f,
                             viewport->WorkPos.y + viewport->WorkSize.y * 0.55f);
@@ -1462,8 +759,8 @@ void EditorApp::draw_ui() {
 
   if (event_runtime_enabled(app_mode_) && session_.events().active_message().has_value()) {
     const float dialog_w = viewport->WorkSize.x - 160.0f;
-    ImGui::SetNextWindowPos(ImVec2(viewport->WorkPos.x + 80.0f,
-                                   viewport->WorkPos.y + viewport->WorkSize.y - 170.0f));
+    ImGui::SetNextWindowPos(
+        ImVec2(viewport->WorkPos.x + 80.0f, viewport->WorkPos.y + viewport->WorkSize.y - 170.0f));
     ImGui::SetNextWindowSize(ImVec2(dialog_w, 130.0f));
     ImGui::SetNextWindowBgAlpha(0.92f);
     ImGui::Begin("Dialog", nullptr,
