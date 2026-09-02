@@ -120,6 +120,73 @@ TEST_CASE("compile conditional_branch then and else", "[unit][event][graph]") {
   REQUIRE(compiled.commands[0].else_commands[0].text == "Off");
 }
 
+TEST_CASE("compile join after then and else reconverge", "[unit][event][graph]") {
+  rat::EventGraph graph;
+  rat::EventGraphNode branch;
+  branch.id = "br";
+  branch.kind = "conditional_branch";
+  branch.branch_condition.type = rat::ConditionType::Switch;
+  branch.branch_condition.id = 2;
+  branch.branch_condition.bool_value = true;
+  graph.nodes = {
+      branch,
+      rat::EventGraphNode{.id = "yes", .kind = "show_text", .text = "Then"},
+      rat::EventGraphNode{.id = "no", .kind = "show_text", .text = "Else"},
+      rat::EventGraphNode{.id = "after", .kind = "wait", .frames = 9},
+  };
+  graph.edges = {
+      rat::EventGraphEdge{.from = "entry", .to = "br"},
+      rat::EventGraphEdge{.from = "br", .to = "yes", .branch = std::string("then")},
+      rat::EventGraphEdge{.from = "br", .to = "no", .branch = std::string("else")},
+      rat::EventGraphEdge{.from = "yes", .to = "after"},
+      rat::EventGraphEdge{.from = "no", .to = "after"},
+      rat::EventGraphEdge{.from = "after", .to = "exit"},
+  };
+
+  const rat::EventGraphCompileResult compiled = rat::compile_event_graph(graph);
+  REQUIRE(compiled.ok);
+  REQUIRE(compiled.issues.empty());
+  REQUIRE(compiled.commands.size() == 2);
+  REQUIRE(compiled.commands[0].op == rat::CommandOp::ConditionalBranch);
+  REQUIRE(compiled.commands[0].then_commands.size() == 1);
+  REQUIRE(compiled.commands[0].then_commands[0].op == rat::CommandOp::ShowText);
+  REQUIRE(compiled.commands[0].then_commands[0].text == "Then");
+  REQUIRE(compiled.commands[0].else_commands.size() == 1);
+  REQUIRE(compiled.commands[0].else_commands[0].op == rat::CommandOp::ShowText);
+  REQUIRE(compiled.commands[0].else_commands[0].text == "Else");
+  REQUIRE(compiled.commands[1].op == rat::CommandOp::Wait);
+  REQUIRE(compiled.commands[1].frames == 9);
+}
+
+TEST_CASE("sequence edge from conditional_branch is a compile error", "[unit][event][graph]") {
+  rat::EventGraph graph;
+  rat::EventGraphNode branch;
+  branch.id = "br";
+  branch.kind = "conditional_branch";
+  branch.branch_condition.type = rat::ConditionType::Switch;
+  branch.branch_condition.id = 1;
+  branch.branch_condition.bool_value = true;
+  graph.nodes = {
+      branch,
+      rat::EventGraphNode{.id = "yes", .kind = "show_text", .text = "On"},
+      rat::EventGraphNode{.id = "no", .kind = "show_text", .text = "Off"},
+      rat::EventGraphNode{.id = "stray", .kind = "wait", .frames = 3},
+  };
+  graph.edges = {
+      rat::EventGraphEdge{.from = "entry", .to = "br"},
+      rat::EventGraphEdge{.from = "br", .to = "yes", .branch = std::string("then")},
+      rat::EventGraphEdge{.from = "br", .to = "no", .branch = std::string("else")},
+      rat::EventGraphEdge{.from = "br", .to = "stray"},
+      rat::EventGraphEdge{.from = "yes", .to = "exit"},
+      rat::EventGraphEdge{.from = "no", .to = "exit"},
+      rat::EventGraphEdge{.from = "stray", .to = "exit"},
+  };
+
+  const rat::EventGraphCompileResult compiled = rat::compile_event_graph(graph);
+  REQUIRE_FALSE(compiled.ok);
+  REQUIRE(has_error_mentioning(compiled.issues, "sequence"));
+}
+
 TEST_CASE("sibling edges without order sort by target id", "[unit][event][graph]") {
   rat::EventGraph graph;
   graph.nodes = {

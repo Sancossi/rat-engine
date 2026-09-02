@@ -339,14 +339,19 @@ void validate_and_index(const EventGraph& graph, GraphIndex& index,
       add_error(result, edge_path + "/to", "graph edge to unknown node: " + edge.to);
       continue;
     }
+    const auto from_node = index.node_index.find(edge.from);
     if (role != EdgeRole::Sequence) {
-      const auto from_node = index.node_index.find(edge.from);
       if (from_node == index.node_index.end() ||
           graph.nodes[from_node->second].kind != "conditional_branch") {
         add_error(result, edge_path + "/branch",
                   "then/else edges must start at a conditional_branch node");
         continue;
       }
+    } else if (from_node != index.node_index.end() &&
+               graph.nodes[from_node->second].kind == "conditional_branch") {
+      add_error(result, edge_path + "/branch",
+                "sequence edge cannot leave a conditional_branch node");
+      continue;
     }
     IndexedEdge indexed;
     indexed.to = edge.to;
