@@ -87,6 +87,7 @@ class EditorApp {
   bool brush_active_ = false;
   ViewportPick drag_pick_{};
   TileCoord drag_last_tile_{};
+  RampDirection drag_last_edge_{};
   int width_ = 1280;
   int height_ = 720;
   bool running_ = false;

@@ -119,6 +119,33 @@ void EditorApp::apply_cell_brush(const ViewportClickAction& action) {
       (void)document_.execute(make_upsert_map_floor_slab_command(std::move(slab)));
       break;
     }
+    case ViewportClickActionKind::PlaceFence: {
+      terrain_panel_.tile_x = action.tile.x;
+      terrain_panel_.tile_z = action.tile.z;
+      terrain_panel_.edge_direction_index = static_cast<int>(action.edge);
+      if (fence_preset_index_ == 2) {
+        (void)document_.execute(make_remove_map_edge_barrier_command(action.tile, action.edge));
+      } else {
+        EdgeBarrierDef edge;
+        edge.tile = action.tile;
+        edge.direction = action.edge;
+        edge.height = fence_preset_index_ == 1 ? kEdgeBarrierFullHeight : kEdgeBarrierMiniHeight;
+        (void)document_.execute(make_upsert_map_edge_barrier_command(std::move(edge)));
+      }
+      break;
+    }
+    case ViewportClickActionKind::PlaceLadder: {
+      terrain_panel_.tile_x = action.tile.x;
+      terrain_panel_.tile_z = action.tile.z;
+      terrain_panel_.edge_direction_index = static_cast<int>(action.edge);
+      LadderDef ladder;
+      ladder.tile = action.tile;
+      ladder.direction = action.edge;
+      ladder.y_lo = terrain_panel_.ladder_y_lo;
+      ladder.y_hi = terrain_panel_.ladder_y_hi;
+      (void)document_.execute(make_upsert_map_ladder_command(std::move(ladder)));
+      break;
+    }
     default:
       break;
   }
@@ -504,39 +531,14 @@ void EditorApp::handle_edit_mouse_input(const ImGuiIO& io) {
       }
       case ViewportClickActionKind::PlaceCube:
       case ViewportClickActionKind::PlaceSlab:
+      case ViewportClickActionKind::PlaceFence:
+      case ViewportClickActionKind::PlaceLadder:
         document_.begin_stroke();
         apply_cell_brush(action);
         brush_active_ = true;
         drag_last_tile_ = action.tile;
+        drag_last_edge_ = action.edge;
         break;
-      case ViewportClickActionKind::PlaceFence: {
-        terrain_panel_.tile_x = action.tile.x;
-        terrain_panel_.tile_z = action.tile.z;
-        const RampDirection direction =
-            static_cast<RampDirection>(terrain_panel_.edge_direction_index);
-        if (fence_preset_index_ == 2) {
-          (void)document_.execute(make_remove_map_edge_barrier_command(action.tile, direction));
-        } else {
-          EdgeBarrierDef edge;
-          edge.tile = action.tile;
-          edge.direction = direction;
-          edge.height =
-              fence_preset_index_ == 1 ? kEdgeBarrierFullHeight : kEdgeBarrierMiniHeight;
-          (void)document_.execute(make_upsert_map_edge_barrier_command(std::move(edge)));
-        }
-        break;
-      }
-      case ViewportClickActionKind::PlaceLadder: {
-        terrain_panel_.tile_x = action.tile.x;
-        terrain_panel_.tile_z = action.tile.z;
-        LadderDef ladder;
-        ladder.tile = action.tile;
-        ladder.direction = static_cast<RampDirection>(terrain_panel_.edge_direction_index);
-        ladder.y_lo = terrain_panel_.ladder_y_lo;
-        ladder.y_hi = terrain_panel_.ladder_y_hi;
-        (void)document_.execute(make_upsert_map_ladder_command(std::move(ladder)));
-        break;
-      }
       case ViewportClickActionKind::None:
         break;
     }
@@ -544,11 +546,17 @@ void EditorApp::handle_edit_mouse_input(const ImGuiIO& io) {
 
   if (left_down && brush_active_) {
     const ViewportClickAction action = resolve_viewport_click(map, viewport_tool_, *world_hit);
-    if ((action.kind == ViewportClickActionKind::PlaceCube ||
-         action.kind == ViewportClickActionKind::PlaceSlab) &&
-        (action.tile.x != drag_last_tile_.x || action.tile.z != drag_last_tile_.z)) {
+    const bool cell_tool = action.kind == ViewportClickActionKind::PlaceCube ||
+                           action.kind == ViewportClickActionKind::PlaceSlab;
+    const bool edge_tool = action.kind == ViewportClickActionKind::PlaceFence ||
+                           action.kind == ViewportClickActionKind::PlaceLadder;
+    const bool tile_changed =
+        action.tile.x != drag_last_tile_.x || action.tile.z != drag_last_tile_.z;
+    const bool edge_changed = action.edge != drag_last_edge_;
+    if ((cell_tool && tile_changed) || (edge_tool && (tile_changed || edge_changed))) {
       apply_cell_brush(action);
       drag_last_tile_ = action.tile;
+      drag_last_edge_ = action.edge;
     }
   }
 

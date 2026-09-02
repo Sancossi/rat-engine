@@ -204,6 +204,30 @@ TileCoord world_to_tile_xz(Vec3 world_hit, float tile_size) {
   };
 }
 
+RampDirection nearest_tile_edge(Vec3 world_hit, float tile_size) {
+  const float tile = safe_tile_size(tile_size);
+  const TileCoord coord = world_to_tile_xz(world_hit, tile);
+  const float ox = static_cast<float>(coord.x) * tile;
+  const float oz = static_cast<float>(coord.z) * tile;
+  const float dist_west = world_hit.x - ox;
+  const float dist_east = (ox + tile) - world_hit.x;
+  const float dist_north = world_hit.z - oz;
+  const float dist_south = (oz + tile) - world_hit.z;
+
+  RampDirection best = RampDirection::North;
+  float best_dist = dist_north;
+  const auto consider = [&](RampDirection direction, float dist) {
+    if (dist < best_dist) {
+      best_dist = dist;
+      best = direction;
+    }
+  };
+  consider(RampDirection::East, dist_east);
+  consider(RampDirection::South, dist_south);
+  consider(RampDirection::West, dist_west);
+  return best;
+}
+
 TileDelta tile_delta_between(TileCoord from, TileCoord to) {
   return {
       to.x - from.x,
@@ -220,21 +244,22 @@ ViewportClickAction resolve_viewport_click(const MapData& map, ViewportTool tool
   }
 
   const TileCoord tile = world_to_tile_xz(world_hit, map.tile_size);
+  const RampDirection edge = nearest_tile_edge(world_hit, map.tile_size);
   switch (tool) {
     case ViewportTool::Select:
-      return {ViewportClickActionKind::Deselect, 0, tile};
+      return {ViewportClickActionKind::Deselect, 0, tile, edge};
     case ViewportTool::PlaceBlocker:
-      return {ViewportClickActionKind::PlaceBlocker, 0, tile};
+      return {ViewportClickActionKind::PlaceBlocker, 0, tile, edge};
     case ViewportTool::PlaceEvent:
-      return {ViewportClickActionKind::PlaceEvent, 0, tile};
+      return {ViewportClickActionKind::PlaceEvent, 0, tile, edge};
     case ViewportTool::PlaceCube:
-      return {ViewportClickActionKind::PlaceCube, 0, tile};
+      return {ViewportClickActionKind::PlaceCube, 0, tile, edge};
     case ViewportTool::PlaceFence:
-      return {ViewportClickActionKind::PlaceFence, 0, tile};
+      return {ViewportClickActionKind::PlaceFence, 0, tile, edge};
     case ViewportTool::PlaceSlab:
-      return {ViewportClickActionKind::PlaceSlab, 0, tile};
+      return {ViewportClickActionKind::PlaceSlab, 0, tile, edge};
     case ViewportTool::PlaceLadder:
-      return {ViewportClickActionKind::PlaceLadder, 0, tile};
+      return {ViewportClickActionKind::PlaceLadder, 0, tile, edge};
   }
   return {};
 }

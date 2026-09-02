@@ -46,6 +46,7 @@ struct ViewportClickAction {
   ViewportClickActionKind kind = ViewportClickActionKind::None;
   std::size_t index = 0;
   TileCoord tile{};
+  RampDirection edge = RampDirection::North;
 };
 
 struct TileDelta {
@@ -64,6 +65,7 @@ struct TileDelta {
 [[nodiscard]] std::optional<ViewportPick> pick_map_object_xz(const MapData& map, Vec3 world_hit);
 
 [[nodiscard]] TileCoord world_to_tile_xz(Vec3 world_hit, float tile_size);
+[[nodiscard]] RampDirection nearest_tile_edge(Vec3 world_hit, float tile_size);
 [[nodiscard]] TileDelta tile_delta_between(TileCoord from, TileCoord to);
 
 [[nodiscard]] ViewportClickAction resolve_viewport_click(const MapData& map, ViewportTool tool,

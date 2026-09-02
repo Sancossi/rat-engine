@@ -275,3 +275,60 @@ TEST_CASE("place ladder on empty tile returns that tile", "[unit][viewport_edit]
   REQUIRE(action.tile.x == 4);
   REQUIRE(action.tile.z == 3);
 }
+
+TEST_CASE("nearest tile edge is the closest of N E S W", "[unit][edit][viewport_edit]") {
+  constexpr float tile = 1.0f;
+  // Tile (2,3) occupies [2,3] x [3,4]. North = min Z, South = max Z, West = min X, East = max X.
+  REQUIRE(rat::nearest_tile_edge({2.5f, 0.0f, 3.05f}, tile) == rat::RampDirection::North);
+  REQUIRE(rat::nearest_tile_edge({2.95f, 0.0f, 3.5f}, tile) == rat::RampDirection::East);
+  REQUIRE(rat::nearest_tile_edge({2.5f, 0.0f, 3.95f}, tile) == rat::RampDirection::South);
+  REQUIRE(rat::nearest_tile_edge({2.05f, 0.0f, 3.5f}, tile) == rat::RampDirection::West);
+}
+
+TEST_CASE("place fence near opposite faces of the same cell pick those facings",
+          "[unit][edit][viewport_edit]") {
+  rat::MapData map = make_test_map();
+  const rat::Vec3 east_hit{2.92f, 0.0f, 3.50f};
+  const rat::Vec3 west_hit{2.08f, 0.0f, 3.50f};
+
+  const rat::ViewportClickAction east =
+      rat::resolve_viewport_click(map, rat::ViewportTool::PlaceFence, east_hit);
+  REQUIRE(east.kind == rat::ViewportClickActionKind::PlaceFence);
+  REQUIRE(east.tile.x == 2);
+  REQUIRE(east.tile.z == 3);
+  REQUIRE(east.edge == rat::RampDirection::East);
+
+  const rat::ViewportClickAction west =
+      rat::resolve_viewport_click(map, rat::ViewportTool::PlaceFence, west_hit);
+  REQUIRE(west.kind == rat::ViewportClickActionKind::PlaceFence);
+  REQUIRE(west.tile.x == 2);
+  REQUIRE(west.tile.z == 3);
+  REQUIRE(west.edge == rat::RampDirection::West);
+}
+
+TEST_CASE("place ladder click uses the nearest tile edge", "[unit][edit][viewport_edit]") {
+  rat::MapData map = make_test_map();
+  const rat::ViewportClickAction action =
+      rat::resolve_viewport_click(map, rat::ViewportTool::PlaceLadder, rat::Vec3{1.50f, 0.0f, 4.97f});
+  REQUIRE(action.kind == rat::ViewportClickActionKind::PlaceLadder);
+  REQUIRE(action.tile.x == 1);
+  REQUIRE(action.tile.z == 4);
+  REQUIRE(action.edge == rat::RampDirection::South);
+}
+
+TEST_CASE("drag along a north wall picks north on each adjacent tile",
+          "[unit][edit][viewport_edit]") {
+  rat::MapData map = make_test_map();
+  const rat::ViewportClickAction first =
+      rat::resolve_viewport_click(map, rat::ViewportTool::PlaceFence, rat::Vec3{0.50f, 0.0f, 0.05f});
+  const rat::ViewportClickAction second =
+      rat::resolve_viewport_click(map, rat::ViewportTool::PlaceFence, rat::Vec3{1.50f, 0.0f, 0.05f});
+  REQUIRE(first.kind == rat::ViewportClickActionKind::PlaceFence);
+  REQUIRE(first.tile.x == 0);
+  REQUIRE(first.tile.z == 0);
+  REQUIRE(first.edge == rat::RampDirection::North);
+  REQUIRE(second.kind == rat::ViewportClickActionKind::PlaceFence);
+  REQUIRE(second.tile.x == 1);
+  REQUIRE(second.tile.z == 0);
+  REQUIRE(second.edge == rat::RampDirection::North);
+}
