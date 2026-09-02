@@ -1,5 +1,7 @@
 #include <rat/map_data.hpp>
+#include <rat/map_loader.hpp>
 #include <rat/player.hpp>
+#include <rat/simulation_session.hpp>
 #include <rat/surface_query.hpp>
 
 #include <catch2/catch_approx.hpp>
@@ -7,6 +9,7 @@
 
 #include <algorithm>
 #include <span>
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -44,6 +47,162 @@ rat::BlockerDef make_low_jumpable(float min_x, float min_z, float max_x, float m
   blocker.top_y = top_y;
   blocker.jumpable = true;
   return blocker;
+}
+
+#ifndef RAT_TEST_DATA_DIR
+#error RAT_TEST_DATA_DIR must be defined
+#endif
+
+[[nodiscard]] rat::MapData load_grey_yard_map() {
+  const auto loaded =
+      rat::load_map_from_file(std::string(RAT_TEST_DATA_DIR) + "/maps/grey_yard.json");
+  REQUIRE(loaded.ok);
+  return loaded.map;
+}
+
+struct LoftFallTrace {
+  std::vector<float> y_after_leave;
+  bool left_support = false;
+  bool snapped_to_ground = false;
+  bool landed = false;
+  float y_at_leave = 0.0f;
+  float x_at_leave = 0.0f;
+  float z_at_leave = 0.0f;
+  float offset_at_leave = 0.0f;
+};
+
+[[nodiscard]] rat::PlayerFrameResult step_loft_frame(rat::PlayerBody& body, rat::JumpState& jump,
+                                                     const rat::PlayerFrameInput& input,
+                                                     const rat::SurfaceQuery& query,
+                                                     const rat::MapData& map, float dt) {
+  const rat::PlayerFrameResult result = rat::integrate_player_frame_surface(
+      body, jump, input, dt, map.blockers, query, {}, 0.35f, map.edge_barriers, &map);
+  body = result.body;
+  jump = result.jump;
+  return result;
+}
+
+// Walk or jump from a loft pose. After leaving slab support, Y must stay near 2 (not 0)
+// and then descend. `jump_off` launches on the first frame (control curve).
+LoftFallTrace trace_grey_yard_loft_leave(rat::PlayerBody body, rat::JumpState jump,
+                                         rat::PlayerFrameInput input, const rat::MapData& map,
+                                         const rat::SurfaceQuery& query, bool jump_off) {
+  LoftFallTrace trace;
+  constexpr float kDt = 1.0f / 120.0f;
+  input.jump_pressed = jump_off;
+  input.jump_held = jump_off;
+  for (int i = 0; i < 400; ++i) {
+    (void)step_loft_frame(body, jump, input, query, map, kDt);
+    input.jump_pressed = false;
+    if (!jump_off) {
+      input.jump_held = false;
+    }
+    if (!trace.left_support && !jump.grounded) {
+      trace.left_support = true;
+      trace.y_at_leave = body.y;
+      trace.x_at_leave = body.x;
+      trace.z_at_leave = body.z;
+      trace.offset_at_leave = jump.jump_offset;
+      if (body.y < 0.5f) {
+        trace.snapped_to_ground = true;
+      }
+    }
+    if (trace.left_support && jump.grounded && body.y < 0.5f && i > 0 &&
+        trace.y_after_leave.empty()) {
+      // Left and landed in the same first airborne observation — one-frame snap.
+      trace.snapped_to_ground = true;
+    }
+    if (trace.left_support) {
+      trace.y_after_leave.push_back(body.y);
+      if (jump.grounded && body.y < 0.2f) {
+        trace.landed = true;
+        break;
+      }
+      if (trace.y_after_leave.size() >= 2) {
+        const float prev = trace.y_after_leave[trace.y_after_leave.size() - 2];
+        if (prev > 1.5f && body.y < 0.5f && prev - body.y > 1.0f) {
+          trace.snapped_to_ground = true;
+        }
+      }
+    }
+  }
+  return trace;
+}
+
+void require_smooth_loft_fall(const LoftFallTrace& walk, const LoftFallTrace& jump_ctrl) {
+  REQUIRE(walk.left_support);
+  INFO("leave xz=(" << walk.x_at_leave << "," << walk.z_at_leave << ") y=" << walk.y_at_leave
+                    << " offset=" << walk.offset_at_leave << " n=" << walk.y_after_leave.size());
+  if (walk.y_after_leave.size() >= 3) {
+    INFO("y[0..2]=" << walk.y_after_leave[0] << "," << walk.y_after_leave[1] << ","
+                    << walk.y_after_leave[2]);
+  }
+  REQUIRE_FALSE(walk.snapped_to_ground);
+  REQUIRE(walk.y_at_leave == Approx(2.0f).margin(0.2f));
+  REQUIRE(walk.y_at_leave > 1.5f);
+  REQUIRE(walk.y_after_leave.size() >= 8);
+
+  REQUIRE(jump_ctrl.left_support);
+  REQUIRE_FALSE(jump_ctrl.snapped_to_ground);
+  REQUIRE(jump_ctrl.y_at_leave == Approx(2.0f).margin(0.35f));
+  REQUIRE(jump_ctrl.landed);
+
+  bool descended = false;
+  for (std::size_t i = 1; i < walk.y_after_leave.size(); ++i) {
+    REQUIRE(walk.y_after_leave[i] > -0.05f);
+    if (walk.y_after_leave[i] < walk.y_at_leave - 0.2f) {
+      descended = true;
+    }
+    const float drop = walk.y_after_leave[i - 1] - walk.y_after_leave[i];
+    REQUIRE(drop < 0.5f);
+  }
+  REQUIRE(descended);
+  REQUIRE(walk.landed);
+  REQUIRE(walk.y_after_leave.back() == Approx(0.0f).margin(0.1f));
+
+  // Walk-off starts at rest; jump-off has takeoff speed. Compare walk Y(t) to the
+  // same gravity the jump motor uses (gravity then faster_fall_gravity).
+  const rat::JumpTuning tuning;
+  constexpr float kDt = 1.0f / 120.0f;
+  std::size_t fall_start = 0;
+  for (std::size_t i = 1; i < walk.y_after_leave.size(); ++i) {
+    if (walk.y_after_leave[i] < walk.y_after_leave[i - 1] - 1e-5f) {
+      fall_start = i - 1;
+      break;
+    }
+  }
+  float v = 0.0f;
+  float y = walk.y_after_leave[fall_start];
+  const std::size_t compare_n =
+      std::min<std::size_t>(20, walk.y_after_leave.size() - fall_start);
+  REQUIRE(compare_n >= 6);
+  for (std::size_t k = 0; k < compare_n; ++k) {
+    REQUIRE(walk.y_after_leave[fall_start + k] == Approx(y).margin(0.12f));
+    if (y <= 0.05f) {
+      break;
+    }
+    const float g = v < 0.0f ? tuning.faster_fall_gravity : tuning.gravity;
+    v -= g * kDt;
+    v = std::max(v, -tuning.max_fall_speed);
+    y += v * kDt;
+    if (y < 0.0f) {
+      y = 0.0f;
+    }
+  }
+}
+
+void ack_grey_yard_intro(rat::SimulationSession& session) {
+  session.tick({});
+  if (session.events().active_message().has_value()) {
+    rat::InputFrame ack;
+    ack.interact_pressed = true;
+    session.tick(ack);
+    session.tick({});
+    session.tick({});
+  }
+  for (int i = 0; i < 30 && session.events().player_input_blocked(); ++i) {
+    session.tick({});
+  }
 }
 
 float run_jump_peak(const rat::SurfaceQuery& query, bool held) {
@@ -2127,4 +2286,174 @@ TEST_CASE("Ground jump not overlapping a ladder still uses jump_speed", "[unit][
   REQUIRE(result.jump.vertical_speed == Approx(7.5f).margin(0.3f));
   REQUIRE(result.jump.vertical_speed > 5.0f);
   REQUIRE(result.jump.ladder_lockout_left == 0.0f);
+}
+
+TEST_CASE("grey_yard walk into loft hole stays at Y then falls like a jump", "[unit][player]") {
+  const rat::MapData map = load_grey_yard_map();
+  const rat::SurfaceQuery query(map);
+
+  rat::PlayerBody body;
+  body.x = 1.5f;
+  body.y = 2.0f;
+  body.z = 5.5f;
+  body.speed = 5.0f;
+  rat::JumpState jump = rat::make_grounded_jump_state();
+  rat::PlayerFrameInput walk;
+  walk.move = rat::MoveInput{1.0f, 0.0f};
+
+  const LoftFallTrace walk_trace =
+      trace_grey_yard_loft_leave(body, jump, walk, map, query, false);
+  const LoftFallTrace jump_trace =
+      trace_grey_yard_loft_leave(body, rat::make_grounded_jump_state(), walk, map, query, true);
+  require_smooth_loft_fall(walk_trace, jump_trace);
+}
+
+TEST_CASE("grey_yard walk off loft south edge stays at Y then falls like a jump",
+          "[unit][player]") {
+  const rat::MapData map = load_grey_yard_map();
+  const rat::SurfaceQuery query(map);
+
+  rat::PlayerBody body;
+  body.x = 1.5f;
+  body.y = 2.0f;
+  body.z = 4.5f;
+  body.speed = 5.0f;
+  rat::PlayerFrameInput walk;
+  walk.move = rat::MoveInput{0.0f, -1.0f};
+
+  const LoftFallTrace walk_trace = trace_grey_yard_loft_leave(
+      body, rat::make_grounded_jump_state(), walk, map, query, false);
+  const LoftFallTrace jump_trace = trace_grey_yard_loft_leave(
+      body, rat::make_grounded_jump_state(), walk, map, query, true);
+  require_smooth_loft_fall(walk_trace, jump_trace);
+}
+
+TEST_CASE("grey_yard walk off loft east edge stays at Y then falls like a jump", "[unit][player]") {
+  const rat::MapData map = load_grey_yard_map();
+  const rat::SurfaceQuery query(map);
+
+  rat::PlayerBody body;
+  body.x = 0.5f;
+  body.y = 2.0f;
+  body.z = 5.5f;
+  body.speed = 5.0f;
+  rat::PlayerFrameInput walk;
+  walk.move = rat::MoveInput{1.0f, 0.0f};
+
+  const LoftFallTrace walk_trace = trace_grey_yard_loft_leave(
+      body, rat::make_grounded_jump_state(), walk, map, query, false);
+  const LoftFallTrace jump_trace = trace_grey_yard_loft_leave(
+      body, rat::make_grounded_jump_state(), walk, map, query, true);
+  require_smooth_loft_fall(walk_trace, jump_trace);
+}
+
+TEST_CASE("grey_yard climb east ladder then walk into loft hole falls like a jump",
+          "[unit][player]") {
+  const rat::MapData map = load_grey_yard_map();
+  const rat::SurfaceQuery query(map);
+
+  rat::PlayerBody body;
+  body.x = 2.85f;
+  body.y = 0.0f;
+  body.z = 4.5f;
+  body.speed = 5.0f;
+  rat::JumpState jump = rat::make_grounded_jump_state();
+  rat::PlayerFrameInput input;
+  input.interact_pressed = true;
+  rat::PlayerFrameResult result =
+      step_loft_frame(body, jump, input, query, map, 1.0f / 120.0f);
+  REQUIRE(result.jump.climbing);
+  input.interact_pressed = false;
+  input.move = rat::MoveInput{1.0f, 0.0f};
+  bool dismounted = false;
+  for (int i = 0; i < 160; ++i) {
+    result = step_loft_frame(body, jump, input, query, map, 1.0f / 120.0f);
+    if (!result.jump.climbing && body.y >= 1.9f) {
+      dismounted = true;
+      break;
+    }
+  }
+  REQUIRE(dismounted);
+  REQUIRE(body.y == Approx(2.0f).margin(0.15f));
+  REQUIRE(jump.grounded);
+
+  // Leave the ladder tile, then walk into the hole at (2, 5).
+  input.move = rat::MoveInput{-1.0f, 0.0f};
+  for (int i = 0; i < 40 && body.x > 1.6f; ++i) {
+    (void)step_loft_frame(body, jump, input, query, map, 1.0f / 120.0f);
+  }
+  REQUIRE(body.y == Approx(2.0f).margin(0.15f));
+  input.move = rat::MoveInput{0.0f, 1.0f};
+  for (int i = 0; i < 40 && body.z < 5.45f; ++i) {
+    (void)step_loft_frame(body, jump, input, query, map, 1.0f / 120.0f);
+  }
+  REQUIRE(body.y == Approx(2.0f).margin(0.15f));
+  REQUIRE(jump.grounded);
+
+  const rat::PlayerBody loft_pose = body;
+  const rat::JumpState loft_jump = jump;
+  rat::PlayerFrameInput into_hole;
+  into_hole.move = rat::MoveInput{1.0f, 0.0f};
+  const LoftFallTrace walk_trace =
+      trace_grey_yard_loft_leave(loft_pose, loft_jump, into_hole, map, query, false);
+  const LoftFallTrace jump_trace = trace_grey_yard_loft_leave(
+      loft_pose, loft_jump, into_hole, map, query, true);
+  require_smooth_loft_fall(walk_trace, jump_trace);
+}
+
+TEST_CASE("SimulationSession grey_yard walk into loft hole stays at Y then falls",
+          "[unit][player][sim]") {
+  const rat::MapData map = load_grey_yard_map();
+  rat::SimulationSession session;
+  REQUIRE(session.load(map).ok);
+  ack_grey_yard_intro(session);
+
+  rat::PlayerBody start;
+  start.x = 1.5f;
+  start.y = 2.0f;
+  start.z = 5.5f;
+  start.speed = 5.0f;
+  session.set_player(start);
+  session.jump() = rat::make_grounded_jump_state();
+
+  rat::InputFrame walk;
+  walk.move = rat::MoveInput{1.0f, 0.0f};
+
+  bool left_support = false;
+  float y_at_leave = 0.0f;
+  bool snapped = false;
+  bool landed = false;
+  std::vector<float> y_after_leave;
+  for (int i = 0; i < 400; ++i) {
+    session.tick(walk);
+    const rat::PlayerBody& body = session.player();
+    const rat::JumpState& jump = session.jump();
+    if (!left_support && !jump.grounded) {
+      left_support = true;
+      y_at_leave = body.y;
+      if (body.y < 0.5f) {
+        snapped = true;
+      }
+    }
+    if (left_support) {
+      y_after_leave.push_back(body.y);
+      if (y_after_leave.size() >= 2) {
+        const float prev = y_after_leave[y_after_leave.size() - 2];
+        if (prev > 1.5f && body.y < 0.5f && prev - body.y > 1.0f) {
+          snapped = true;
+        }
+      }
+      if (jump.grounded && body.y < 0.2f) {
+        landed = true;
+        break;
+      }
+    }
+  }
+
+  REQUIRE(left_support);
+  REQUIRE_FALSE(snapped);
+  REQUIRE(y_at_leave == Approx(2.0f).margin(0.2f));
+  REQUIRE(y_after_leave.size() >= 8);
+  REQUIRE(landed);
+  REQUIRE(session.player().y == Approx(0.0f).margin(0.1f));
 }

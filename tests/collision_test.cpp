@@ -387,6 +387,18 @@ TEST_CASE("Cylinder head hits slab underside; feet on top do not", "[collision]"
   REQUIRE_FALSE(rat::cylinder_hits_ceiling(on_top, world));
 }
 
+TEST_CASE("Cylinder in the hole beside a slab is not under that slab ceiling", "[collision]") {
+  rat::MapData map = make_grid(2, 1, 0.0f);
+  map.floor_slabs.push_back({{0, 0}, 2.0f, 0.25f});
+  const rat::CollisionWorld world = rat::bake_collision_world(map, rat::SurfaceQuery(map));
+  rat::CollisionBody beside;
+  beside.x = 1.04f;
+  beside.y = 1.5f;
+  beside.z = 0.5f;
+  beside.height = 1.6f;
+  REQUIRE_FALSE(rat::cylinder_hits_ceiling(beside, world));
+}
+
 TEST_CASE("Thin slab side blocks at mid-thickness even though span < max_step_up", "[collision]") {
   rat::MapData map = make_grid(2, 1, 0.0f);
   map.floor_slabs.push_back({{1, 0}, 2.0f, 0.25f});

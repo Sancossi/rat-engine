@@ -330,8 +330,8 @@ void clamp_to_ceiling(PlayerBody& player, JumpState& jump, const CollisionWorld&
   float lowest = std::numeric_limits<float>::infinity();
   const float head = body.y + body.height;
   for (const WalkableBox& box : world.boxes) {
-    const Aabb2 xz{box.min_x, box.min_z, box.max_x, box.max_z};
-    if (!circle_overlaps_aabb2(body.x, body.z, body.radius, xz)) {
+    if (player.x < box.min_x || player.x >= box.max_x || player.z < box.min_z ||
+        player.z >= box.max_z) {
       continue;
     }
     if (body.y < box.y_lo && head > box.y_lo && body.y < box.y_hi) {

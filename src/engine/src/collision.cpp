@@ -38,6 +38,10 @@ bool tile_has_ramp(std::span<const RampDef> ramps, int world_x, int world_z) {
   return false;
 }
 
+bool point_on_walkable_box(float x, float z, const WalkableBox& box) {
+  return x >= box.min_x && x < box.max_x && z >= box.min_z && z < box.max_z;
+}
+
 void append_slab_side_fences(CollisionWorld& world, const WalkableBox& box) {
   auto add_edge = [&](float ax, float az, float bx, float bz) {
     FenceSolid solid;
@@ -432,7 +436,7 @@ std::optional<SolidSupport> query_solid_support(const CollisionWorld& world, flo
     }
     // Stand like SurfaceQuery: the probe point must be on the tile, so a jump
     // into a neighboring face does not land on that cell's top.
-    if (x < box.min_x || x >= box.max_x || z < box.min_z || z >= box.max_z) {
+    if (!point_on_walkable_box(x, z, box)) {
       continue;
     }
     if (feet_y + 1e-4f < box.y_lo) {
@@ -458,8 +462,9 @@ std::optional<SolidSupport> query_solid_support(const CollisionWorld& world, flo
 
 bool cylinder_hits_ceiling(const CollisionBody& body, const CollisionWorld& world) {
   for (const WalkableBox& box : world.boxes) {
-    const Aabb2 xz{box.min_x, box.min_z, box.max_x, box.max_z};
-    if (!circle_overlaps_aabb2(body.x, body.z, body.radius, xz)) {
+    // Underside is a ceiling only when the feet point is on this tile. Circle
+    // overlap with a neighboring slab would teleport a walk-off fall to y_lo - height.
+    if (!point_on_walkable_box(body.x, body.z, box)) {
       continue;
     }
     // Feet below the underside (not standing on the top). Head may still have a
