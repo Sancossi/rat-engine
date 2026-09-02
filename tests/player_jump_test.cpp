@@ -1824,6 +1824,33 @@ TEST_CASE("Interact on an east ladder mounts the rail", "[unit][player]") {
   REQUIRE(result.body.x < 1.0f);
 }
 
+TEST_CASE("Interact on east ladder from +X stores into toward the rungs", "[unit][player]") {
+  rat::MapData map = make_surface_map(2, 1, {0.0f, 0.0f});
+  map.schema_version = 3;
+  map.ladders.push_back({{0, 0}, rat::RampDirection::East, 0.0f, 2.0f});
+  const rat::SurfaceQuery query(map);
+  rat::PlayerBody body;
+  body.x = 1.15f;
+  body.y = 1.0f;
+  body.z = 0.5f;
+  body.speed = 5.0f;
+  rat::JumpState jump = rat::make_grounded_jump_state();
+  rat::PlayerFrameInput input;
+  input.interact_pressed = true;
+  const rat::PlayerFrameResult result = rat::integrate_player_frame_surface(
+      body, jump, input, 1.0f / 120.0f, {}, query, {}, 0.35f, {}, &map);
+  REQUIRE(result.jump.climbing);
+  REQUIRE(result.jump.climb_into_x == Approx(-1.0f));
+  REQUIRE(result.jump.climb_into_z == Approx(0.0f));
+  const rat::Vec3 mounted{result.body.x, result.body.y, result.body.z};
+  const rat::ClimbCameraPose pose =
+      rat::climb_camera_pose(mounted, result.jump.climb_into_x, result.jump.climb_into_z);
+  REQUIRE(pose.eye.x > result.body.x);
+  const rat::MoveInput w = rat::camera_relative_move(0.0f, 1.0f, pose.eye, pose.focus);
+  REQUIRE(w.axis_x < -0.5f);
+  REQUIRE(w.axis_x * result.jump.climb_into_x + w.axis_z * result.jump.climb_into_z > 0.0f);
+}
+
 TEST_CASE("Jump while climbing does not bounce", "[unit][player]") {
   rat::MapData map = make_surface_map(1, 1, {0.0f});
   map.schema_version = 3;

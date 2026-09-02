@@ -441,9 +441,30 @@ const LadderVolume* find_mount_zone_ladder(const CollisionBody& body, const Coll
   return nullptr;
 }
 
+void climb_into_from_approach(const PlayerBody& player, const LadderVolume& ladder, float& into_x,
+                              float& into_z) {
+  into_x = 0.0f;
+  into_z = 0.0f;
+  switch (ladder.face) {
+    case RampDirection::East:
+      into_x = player.x <= ladder.max_x ? 1.0f : -1.0f;
+      break;
+    case RampDirection::West:
+      into_x = player.x >= ladder.min_x ? -1.0f : 1.0f;
+      break;
+    case RampDirection::South:
+      into_z = player.z <= ladder.max_z ? 1.0f : -1.0f;
+      break;
+    case RampDirection::North:
+      into_z = player.z >= ladder.min_z ? -1.0f : 1.0f;
+      break;
+  }
+}
+
 void apply_mount(JumpFrameCtx& ctx, const LadderVolume& ladder) {
   PlayerBody& player = ctx.player;
   JumpState& jump = ctx.jump;
+  climb_into_from_approach(player, ladder, jump.climb_into_x, jump.climb_into_z);
   player.x = 0.5f * (ladder.min_x + ladder.max_x);
   player.z = 0.5f * (ladder.min_z + ladder.max_z);
   player.y = std::clamp(player.y, ladder.y_lo, ladder.y_hi);
@@ -457,7 +478,6 @@ void apply_mount(JumpFrameCtx& ctx, const LadderVolume& ladder) {
   jump.ladder_lockout_left = 0.0f;
   jump.ladder_bounce_x = 0.0f;
   jump.ladder_bounce_z = 0.0f;
-  ladder_face_into(ladder.face, jump.climb_into_x, jump.climb_into_z);
   if (!ctx.was_grounded) {
     ctx.landed = true;
   }
