@@ -14,4 +14,4 @@ Intent: на верхе лестницы (`y_hi`) движение away долж
 
 Acceptance: East ladder + slab on the same tile; climb to `top_y`; away → stand on the slab without walking off the tile. Leave-without-support still falls.
 
-Origin: [[feat: Stacked surfaces caves and basements]] (Task 5 review: face-normal XZ is zeroed while overlapping, so the center cannot stay on the owner tile when leaving).
+Origin: [[feat: Stacked surfaces caves and basements]] (Task 5 review: face-normal XZ is zeroed while overlapping, so the center cannot stay on the owner tile when leaving). Related: [[feat: Ladder toward-climb, jump grab, jump off]] (away больше не −Y; сойти на ту же клетку может войти в ту карточку).
