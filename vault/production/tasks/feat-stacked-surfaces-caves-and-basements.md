@@ -1,7 +1,7 @@
 ---
 type: task
 area: Engine
-status: In review
+status: Done
 task_type: Feature
 sprint:
 due:
@@ -21,3 +21,13 @@ Origin: chat (collider design) + chat 2026-09-02 (многоэтажный до�
 Spec: `docs/superpowers/specs/2026-09-02-stacked-floors-colliders-design.md`
 Plan: `docs/superpowers/plans/2026-09-02-stacked-floors-colliders.md`
 Follow-up: [[feat: Step off ladder onto same-tile floor]], [[events-match-ground-while-on-slab]]
+
+## Resolution
+
+Schema v3: `floor_slabs` и `ladders`. Play при `map != nullptr` стоит/падает/бьётся о потолок по baked solids (земля, призмы рамп, плиты); лестница — overlap, в грань = +Y. Edit: инструменты Floor slab (toggle) и Ladder (last-wins) + greybox. Verify: `rat_tests.exe "[collision]"` / `"[unit][player]"` / `"[unit][edit]"`; в редакторе поставить плиту 2.0, лестницу, подняться и сойти. Review: Approved (финальный срез + re-review потолка/`ramp_index`).
+
+## Bugs found
+
+- [[events-match-ground-while-on-slab]]
+- [[feat: Step off ladder onto same-tile floor]]
+
