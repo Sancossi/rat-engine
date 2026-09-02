@@ -24,4 +24,4 @@ DoD:
 
 Порядок:
 
-- [[climb-camera-locks-on-far-side]] → [[feat: Smooth camera turn]] → [[walk-off-slab-teleports-to-ground]] → [[research: Sims build-mode edit analog]] → [[feat: Edit hold-drag brush]] → [[feat: Edit paint clicked edge]] → [[research: Event node graph vs bytecode]] → [[walk-through-ladder]] → [[feat: Event graph model and compile]] → [[feat: Event graph editor canvas]]
+- [[climb-camera-locks-on-far-side]] → [[feat: Smooth camera turn]] → [[walk-off-slab-teleports-to-ground]] → [[research: Sims build-mode edit analog]] → [[feat: Edit hold-drag brush]] → [[feat: Edit paint clicked edge]] → [[research: Event node graph vs bytecode]] → [[walk-through-ladder]] → [[feat: Event graph model and compile]] → [[feat: Event graph editor canvas]] → [[chore: Event graph join golden and branch edges]]

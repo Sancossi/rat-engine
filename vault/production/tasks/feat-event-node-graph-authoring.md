@@ -1,7 +1,7 @@
 ---
 type: task
 area: Engine
-status: Not started
+status: Done
 task_type: Feature
 sprint: Sprint 8
 due:
@@ -21,3 +21,13 @@ Intent: авторство событий как **дерево/граф нод*
 Acceptance: см. слайсы. MVP без полного MZ-набора команд.
 
 Origin: chat 2026-09-02. Related: [[s2-event-inspector-pages-stub]], [[feat: PlaySE event command]]. Взято в [[Sprint 8 — Play feel and authoring]].
+
+Follow-up: [[chore: Event graph join golden and branch edges]]
+
+## Resolution
+
+Все три слайса Done: граф только authoring, Edit компилирует в `commands`, Play тот же interpreter, ImGui-холст MVP в Edit. Verify: Apply edited map после правки графа; Play не читает `graph`.
+
+## Bugs found
+
+none.
