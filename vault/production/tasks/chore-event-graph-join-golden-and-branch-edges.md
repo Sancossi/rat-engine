@@ -1,7 +1,7 @@
 ---
 type: task
 area: Engine
-status: In review
+status: Done
 task_type: Chore
 sprint: Sprint 8
 due:
@@ -16,4 +16,10 @@ Acceptance: Catch2 golden — then/else сходятся в общий узел,
 
 Origin: [[feat: Event graph editor canvas]] review (Approved, Minor). Related: [[feat: Event graph model and compile]].
 
-Implementer `9c2424c`: join golden + sequence-from-branch compile error. Review pending.
+## Resolution
+
+Catch2 locks join-after-branch: then/else stop at the shared node; that node's commands follow the branch. A sequence edge out of `conditional_branch` is a `MapIssue` (`ok == false`), not a silent drop. Verify: `.\build\tests\rat_tests.exe "*join after*","*sequence edge*"`. Review: Approved.
+
+## Bugs found
+
+none.
