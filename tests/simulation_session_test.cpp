@@ -241,6 +241,79 @@ TEST_CASE("drain_simulation_catch_up latches interact edge across a zero-tick di
   CHECK(session.state().get_switch(5));
 }
 
+TEST_CASE("drain_simulation_catch_up latches interact mount across a zero-tick display frame",
+          "[unit][sim]") {
+  // Same 0-tick display-frame miss as jump / NPC interact, but Action is consumed by player
+  // mount first. EventRuntime must not fire a co-located Action on that tick.
+  rat::MapData map;
+  map.schema_version = 3;
+  map.id = "sim_ladder_mount";
+  map.width = 1;
+  map.height = 1;
+  map.tile_size = 1.0f;
+  map.height_grid.origin_x = 0;
+  map.height_grid.origin_z = 0;
+  map.height_grid.width = 1;
+  map.height_grid.height = 1;
+  map.height_grid.ground_y.assign(1, 0.0f);
+  map.ladders.push_back({{0, 0}, rat::RampDirection::East, 0.0f, 2.0f});
+
+  rat::EventDef npc;
+  npc.id = "npc";
+  npc.tile = rat::TileCoord{0, 0};
+  rat::EventPage page;
+  page.trigger = rat::TriggerKind::Action;
+  rat::Command cmd;
+  cmd.op = rat::CommandOp::ControlSwitch;
+  cmd.id = 5;
+  cmd.bool_value = true;
+  page.commands.push_back(cmd);
+  npc.pages.push_back(page);
+  map.events.push_back(npc);
+
+  rat::PlayerBody player;
+  player.x = 0.85f;
+  player.y = 1.0f;
+  player.z = 0.5f;
+  player.speed = 5.0f;
+
+  rat::SimulationSession session;
+  REQUIRE(session.load(map).ok);
+  session.set_player(player);
+  REQUIRE(session.events().has_action_prompt(session.player(), session.state()));
+  REQUIRE_FALSE(session.state().get_switch(5));
+  REQUIRE_FALSE(session.jump().climbing);
+
+  rat::InputButtons down;
+  down.interact = true;
+  rat::InputButtons previous{};
+
+  const float display_dt = session.config().dt * 0.5f;
+  float accumulator = 0.0f;
+
+  const rat::InputFrame press = rat::map_input_frame(down, previous, {});
+  REQUIRE(press.interact_pressed);
+  previous = down;
+  accumulator += display_dt;
+  const rat::SimulationCatchUpResult skipped =
+      rat::drain_simulation_catch_up(session, accumulator, press);
+  REQUIRE(skipped.ticks_run == 0);
+  REQUIRE(session.tick_id() == 0);
+  REQUIRE_FALSE(session.jump().climbing);
+  REQUIRE_FALSE(session.state().get_switch(5));
+
+  const rat::InputFrame held = rat::map_input_frame(down, previous, {});
+  REQUIRE_FALSE(held.interact_pressed);
+  accumulator += display_dt;
+  const rat::SimulationCatchUpResult mounted =
+      rat::drain_simulation_catch_up(session, accumulator, held);
+
+  CHECK(mounted.ticks_run == 1);
+  CHECK(session.tick_id() == 1);
+  CHECK(session.jump().climbing);
+  CHECK_FALSE(session.state().get_switch(5));
+}
+
 TEST_CASE("clear_pending_input drops jump buffer so keyboard capture cannot launch",
           "[unit][sim]") {
   rat::SimulationSession session;

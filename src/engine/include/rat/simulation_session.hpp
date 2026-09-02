@@ -68,8 +68,9 @@ class SimulationSession {
   // Hold a jump edge until the next tick that runs player control. Used when a
   // display frame sees jump_pressed but drain runs zero ticks.
   void note_jump_pressed();
-  // Push interact_buffer_ when a display frame sees interact_pressed but drain
-  // runs zero ticks. Do not clear the buffer just because this frame has no edge.
+  // Push interact_buffer_ and latch interact_press_pending_ when a display frame
+  // sees interact_pressed but drain runs zero ticks. Do not clear the buffer just
+  // because this frame has no edge.
   void note_interact_pressed();
 
   SimulationTickResult tick(const InputFrame& input);
@@ -102,6 +103,7 @@ class SimulationSession {
   std::uint64_t tick_id_ = 0;
   BufferedPress interact_buffer_{};
   bool jump_press_pending_ = false;
+  bool interact_press_pending_ = false;
   std::unique_ptr<SurfaceQuery> surface_;
   GameplayNotifyBus* notify_ = nullptr;
   Clock* clock_ = nullptr;
@@ -112,7 +114,7 @@ class SimulationSession {
 // Drain `accumulator` by calling `tick`. Edges on `input` apply to the first tick that
 // runs so a reused display-frame InputFrame does not retrigger jump/interact. A jump or
 // interact edge on a drain that runs zero ticks is latched via note_jump_pressed() /
-// note_interact_pressed().
+// note_interact_pressed() (event buffer and player mount).
 [[nodiscard]] SimulationCatchUpResult drain_simulation_catch_up(
     SimulationSession& session, float& accumulator, const InputFrame& input,
     int max_ticks = kMaxCatchUpTicks);

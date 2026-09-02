@@ -92,6 +92,7 @@ void SimulationSession::reset_jump_grounded() {
 
 void SimulationSession::clear_pending_input() {
   jump_press_pending_ = false;
+  interact_press_pending_ = false;
   jump_.jump_buffer_left = 0.0f;
   clear_buffered_press(interact_buffer_);
 }
@@ -107,6 +108,11 @@ void SimulationSession::note_jump_pressed() {
 void SimulationSession::note_interact_pressed() {
   push_buffered_press_if_allowed(interact_buffer_, true, event_runtime_enabled(config_.app_mode),
                                  false, config_.interact_buffer_seconds);
+  const bool control = player_control_enabled(config_.app_mode);
+  const bool blocked = events_.player_input_blocked();
+  if (control && !blocked) {
+    interact_press_pending_ = true;
+  }
 }
 
 SimulationTickResult SimulationSession::tick(const InputFrame& input) {
@@ -127,6 +133,9 @@ SimulationTickResult SimulationSession::tick(const InputFrame& input) {
   if (input.jump_pressed && allow_player_input) {
     jump_press_pending_ = true;
   }
+  if (input.interact_pressed && allow_player_input) {
+    interact_press_pending_ = true;
+  }
 
   push_buffered_press_if_allowed(interact_buffer_, input.interact_pressed, events_on, false,
                                  config_.interact_buffer_seconds);
@@ -134,6 +143,7 @@ SimulationTickResult SimulationSession::tick(const InputFrame& input) {
   if (!allow_player_input) {
     jump_.jump_buffer_left = 0.0f;
     jump_press_pending_ = false;
+    interact_press_pending_ = false;
   }
 
   if (control) {
@@ -146,6 +156,7 @@ SimulationTickResult SimulationSession::tick(const InputFrame& input) {
     } else {
       frame_input.jump_pressed = jump_press_pending_;
       frame_input.jump_held = input.jump_held;
+      frame_input.interact_pressed = interact_press_pending_;
     }
 
     const PlayerFrameResult integrated = integrate_player_frame_surface(
@@ -160,6 +171,9 @@ SimulationTickResult SimulationSession::tick(const InputFrame& input) {
     state_.set_player_position(player_.x, player_.y, player_.z);
     if (frame_input.jump_pressed) {
       jump_press_pending_ = false;
+    }
+    if (frame_input.interact_pressed) {
+      interact_press_pending_ = false;
     }
   } else {
     reset_jump_grounded();
@@ -196,6 +210,7 @@ SimulationTickResult SimulationSession::tick(const InputFrame& input) {
       jump_.coyote_time_left = config_.jump_tuning.coyote_seconds;
       jump_.jump_buffer_left = 0.0f;
       jump_press_pending_ = false;
+      interact_press_pending_ = false;
     }
   }
 
