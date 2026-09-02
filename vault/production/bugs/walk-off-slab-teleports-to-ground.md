@@ -1,7 +1,7 @@
 ---
 type: bug
 area: Engine
-status: Fixed
+status: Investigating
 severity: High
 sprint: Sprint 8
 tags: [bug]
@@ -11,27 +11,25 @@ tags: [bug]
 
 Origin: chat 2026-09-02 playtest. `grey_yard` loft slabs `top_y` 2.0; hole at `(2, 5)`. Related: [[feat: Stacked surfaces caves and basements]] (acceptance: дыра ведёт вниз). Взято в [[Sprint 8 — Play feel and authoring]].
 
+Playtest 2026-09-02 evening (after keep-Y in `follow_standing_sample` + full Release rebuild): **still snaps**. Reopened.
+
+Follow-up: [[walk-through-ladder]]
+
 ## Repro
 
-1. Play `grey_yard`, climb to the second floor (slab ~Y 2).
-2. Walk off the loft edge or into the hole (`(2, 5)`), or slide off the slab.
+1. Play `grey_yard`, climb the East ladder to the second floor (slab ~Y 2).
+2. Walk off the loft edge or into the hole (`(2, 5)`), or slide off the slab. Do **not** jump.
 
 ## Expected
 
-Leave support → airborne, gravity, **smooth fall** onto the ground (Y 0). No Y snap.
+Leave support → airborne, gravity, **smooth fall** onto the ground (Y 0). Same curve as **jumping** off the same ledge (Fall / `faster_fall_gravity`), not a one-frame Y teleport.
 
 ## Actual
 
 Player **teleports** to the first floor instead of falling.
 
+The surface keep-Y patch is not enough: Play Y is assigned in `tick_ground_air_substep` (`effective_ground_y + jump_offset`, then grounded `corrected.y`). Synthetic 2×1 frame tests can hide a grey_yard / post-climb miss.
+
 Suspect walk-off / `query_solid_support` snaps feet to ground_y under the same XZ instead of Fall. Not a clone of [[stuck-after-fall-or-jump-into-elevation]] (wedge) or [[cannot-fall-off-ramp]].
 
 Follow-up from: [[feat: Stacked surfaces caves and basements]]
-
-## Resolution
-
-Grounded XZ with a baked map no longer snaps feet to a sample more than `max_step_up` below world Y. Walk off a slab / hole stays at loft Y, then Fall + gravity. Verify: Play `grey_yard` hole `(2, 5)`; `.\build\tests\rat_tests.exe "*slab*"`.
-
-## Bugs found
-
-none.

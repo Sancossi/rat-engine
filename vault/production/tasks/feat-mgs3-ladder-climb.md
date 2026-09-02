@@ -21,6 +21,7 @@ Origin: chat 2026-09-02 (камера-climb плохо). Replaces feel of [[feat
 Follow-up: [[feat: Step off ladder onto same-tile floor]] (closed here — top + up onto same-tile slab).
 Follow-up: [[climb-camera-locks-on-far-side]]
 Follow-up: [[feat: Smooth camera turn]]
+Follow-up: [[walk-through-ladder]]
 
 ## Resolution
 
@@ -29,3 +30,4 @@ Follow-up: [[feat: Smooth camera turn]]
 ## Bugs found
 
 - [[climb-camera-locks-on-far-side]] — playtest 2026-09-02, подход с `(3, 5)` к East-лестнице `(2, 4)`: камера с дальнего края стены.
+- [[walk-through-ladder]] — playtest 2026-09-02 evening: сквозь лестницу можно пройти; нужна стена на грани.
