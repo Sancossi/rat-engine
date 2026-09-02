@@ -56,6 +56,19 @@ void EditorDocument::load(MapData data) {
   note_changed();
 }
 
+EventGraphApplyResult EditorDocument::compile_graphs_for_apply() {
+  discard_preview();
+  EventGraphApplyResult result = compile_event_graphs_for_apply(map_.data());
+  if (!result.ok) {
+    return result;
+  }
+  map_.replace(std::move(result.map));
+  result.map = map_.data();
+  dirty_ = true;
+  note_changed();
+  return result;
+}
+
 EditApplyResult EditorDocument::execute(std::unique_ptr<EditCommand> command) {
   if (command == nullptr) {
     return {};

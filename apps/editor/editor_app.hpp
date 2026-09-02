@@ -46,6 +46,7 @@ class EditorApp {
   void present();
   void refresh_mode_banner();
   void set_app_mode(AppMode next_mode);
+  bool apply_edited_map(bool preserve_player);
   bool hot_apply_map_path(const std::string& path, bool preserve_player);
   bool save_map_path(const std::string& path);
   void sync_authoring_to_engine();

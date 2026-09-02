@@ -1,6 +1,8 @@
 add_library(rat_editor_logic
   editor_document.cpp
   editor_document.hpp
+  event_graph_edit.cpp
+  event_graph_edit.hpp
   frame_coordinator.cpp
   frame_coordinator.hpp
 )
@@ -43,6 +45,8 @@ add_executable(rat-editor
   panels/terrain_panel.hpp
   panels/event_panel.cpp
   panels/event_panel.hpp
+  panels/event_graph_canvas.cpp
+  panels/event_graph_canvas.hpp
 )
 
 set(_rat_imgui_shader_out "${CMAKE_CURRENT_BINARY_DIR}/generated_shaders")

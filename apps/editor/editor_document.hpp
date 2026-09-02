@@ -1,5 +1,7 @@
 #pragma once
 
+#include "event_graph_edit.hpp"
+
 #include <rat/edit_history.hpp>
 #include <rat/map_data.hpp>
 #include <rat/map_document.hpp>
@@ -30,6 +32,8 @@ class EditorDocument {
   [[nodiscard]] bool preview_blocker(int index, BlockerDef next);
   [[nodiscard]] bool preview_event(int index, EventDef next);
   void discard_preview();
+
+  [[nodiscard]] EventGraphApplyResult compile_graphs_for_apply();
 
   [[nodiscard]] bool consume_changed();
   [[nodiscard]] bool last_mutated_elevation() const { return last_mutated_elevation_; }

@@ -1,5 +1,7 @@
 #include "event_panel.hpp"
 
+#include "event_graph_canvas.hpp"
+
 #include <rat/edit_history.hpp>
 #include <rat/event_edit.hpp>
 #include <rat/event_inspect.hpp>
@@ -204,14 +206,23 @@ void draw_event_panel(EditorDocument& document, EventPanelState& state, const ch
     }
   }
 
-  EventPage& page_now = event.pages[static_cast<std::size_t>(document.selected_page())];
-  int text_i = find_first_show_text(page_now);
+  draw_event_graph_canvas(document, state.canvas, event, state.last_compile_error);
+  if (document.selected_event() < 0 ||
+      document.selected_event() >= static_cast<int>(document.visible_data().events.size())) {
+    return;
+  }
+  event = document.visible_data().events[static_cast<std::size_t>(document.selected_event())];
+  EventPage& page_list = event.pages[static_cast<std::size_t>(document.selected_page())];
+  if (page_list.graph.has_value()) {
+    return;
+  }
+  int text_i = find_first_show_text(page_list);
   if (text_i < 0) {
     if (ImGui::Button("Add Show Text")) {
       Command cmd;
       cmd.op = CommandOp::ShowText;
       cmd.text = "New text";
-      page_now.commands.insert(page_now.commands.begin(), std::move(cmd));
+      page_list.commands.insert(page_list.commands.begin(), std::move(cmd));
       replace_selected_event(event);
     }
   } else {

@@ -200,6 +200,8 @@ bool EditorApp::hot_apply_map_path(const std::string& path, bool preserve_player
   blocker_panel_ = {};
   event_panel_.field_origin.reset();
   event_panel_.field_origin_index = -1;
+  event_panel_.canvas = {};
+  event_panel_.last_compile_error.clear();
   engine_->set_terrain_map(session_.events().map());
   engine_->set_blockers(std::move(blockers));
   engine_->set_event_markers(std::move(markers));
@@ -219,6 +221,17 @@ bool EditorApp::save_map_path(const std::string& path) {
     last_apply_error_ = "map path is empty";
     return false;
   }
+  const EventGraphApplyResult compiled = document_.compile_graphs_for_apply();
+  if (!compiled.ok) {
+    last_apply_error_ = compiled.issues.empty() ? "event graph compile failed"
+                                               : format_map_issues(compiled.issues);
+    last_serialize_status_.clear();
+    if (logger_ != nullptr) {
+      log(*logger_, LogLevel::Error, "editor",
+          std::string("map save rejected (graph compile): ") + last_apply_error_);
+    }
+    return false;
+  }
   const MapFileResult result = save_map_to_file(document_.data(), path);
   if (!result.ok) {
     last_apply_error_ = result.error;
@@ -232,6 +245,56 @@ bool EditorApp::save_map_path(const std::string& path) {
   last_apply_error_.clear();
   last_serialize_status_ = "Saved: " + path;
   document_.mark_clean();
+  event_panel_.last_compile_error.clear();
+  return true;
+}
+
+bool EditorApp::apply_edited_map(bool preserve_player) {
+  if (engine_ == nullptr) {
+    last_apply_error_ = "engine not ready";
+    return false;
+  }
+  const EventGraphApplyResult compiled = document_.compile_graphs_for_apply();
+  if (!compiled.ok) {
+    last_apply_error_ = compiled.issues.empty() ? "event graph compile failed"
+                                               : format_map_issues(compiled.issues);
+    event_panel_.last_compile_error = last_apply_error_;
+    if (logger_ != nullptr) {
+      log(*logger_, LogLevel::Error, "editor",
+          std::string("apply rejected (graph compile): ") + last_apply_error_);
+    }
+    return false;
+  }
+  event_panel_.last_compile_error.clear();
+
+  std::vector<BlockerDef> blockers;
+  std::vector<Vec3> markers;
+  HotApplyTargets targets{session_.events(), session_.state(), session_.player(), blockers, markers,
+                          &session_.surface_query(), &session_.jump()};
+  HotApplyOptions options;
+  options.preserve_player_position = preserve_player;
+  const HotApplyResult result = hot_apply_map(document_.data(), targets, options);
+  if (!result.ok) {
+    last_apply_error_ = result.error;
+    if (logger_ != nullptr) {
+      log(*logger_, LogLevel::Error, "editor",
+          std::string("apply edited map failed: ") + result.error);
+    }
+    return false;
+  }
+
+  last_apply_error_.clear();
+  engine_->set_terrain_map(session_.events().map());
+  engine_->set_blockers(std::move(blockers));
+  engine_->set_event_markers(std::move(markers));
+  engine_->set_player(session_.player());
+  sync_selection_to_engine();
+  bind_session_assets();
+  session_.set_app_mode(app_mode_);
+  session_.clear_pending_input();
+  previous_buttons_ = host_.sample_buttons();
+  fixed_accumulator_ = 0.0f;
+  snap_player_to_ground_clear_jump();
   return true;
 }
 
@@ -752,6 +815,9 @@ void EditorApp::draw_ui() {
   if (app_mode_ == AppMode::Edit && !map_path_.empty() &&
       ImGui::Button("Save current map JSON")) {
     save_map_path(map_path_);
+  }
+  if (app_mode_ == AppMode::Edit && ImGui::Button("Apply edited map")) {
+    apply_edited_map(true);
   }
   if (!map_path_.empty() && ImGui::Button("Load map JSON (F5, keep pos)")) {
     hot_apply_map_path(map_path_, true);
