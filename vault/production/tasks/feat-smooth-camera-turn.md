@@ -1,7 +1,7 @@
 ---
 type: task
 area: Engine
-status: In progress
+status: Done
 task_type: Feature
 sprint: Sprint 8
 due:
@@ -16,3 +16,11 @@ Acceptance: mount/dismount Climb: eye и look-at доезжают до `climb_ca
 
 Depends: [[climb-camera-locks-on-far-side]] (сначала правильная сторона, потом lerp).
 Origin: chat 2026-09-02 (упд: хочу плавный поворот). Related: [[feat: MGS3 ladder climb]], [[feat: Camera-aligned walk]]. Взято в [[Sprint 8 — Play feel and authoring]].
+
+## Resolution
+
+Greybox lerps eye/focus to climb lock or `CameraMode` over `kCameraTurnSeconds` (0.3 s). Climb WASD uses the **target** `climb_camera_pose`, not the in-flight camera. `C` when not climbing turns smoothly. Verify: Play mount/`C`; `.\build\tests\rat_tests.exe "[unit][camera]"`.
+
+## Bugs found
+
+none.
