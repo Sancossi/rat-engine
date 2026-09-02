@@ -415,3 +415,38 @@ TEST_CASE("Ladder face into maps east to +X", "[collision]") {
   REQUIRE(into_x == Approx(1.0f));
   REQUIRE(into_z == Approx(0.0f));
 }
+
+TEST_CASE("East ladder bake blocks a ground cylinder at the face", "[collision]") {
+  rat::MapData map = make_grid(2, 1, 0.0f);
+  map.ladders.push_back({{0, 0}, rat::RampDirection::East, 0.0f, 2.0f});
+  const rat::CollisionWorld world = rat::bake_collision_world(map, rat::SurfaceQuery(map));
+  REQUIRE(world.ladders.size() == 1);
+
+  bool found_face = false;
+  for (const rat::FenceSolid& solid : world.fences) {
+    if (solid.ax == Approx(1.0f) && solid.bx == Approx(1.0f) &&
+        std::min(solid.az, solid.bz) == Approx(0.0f) &&
+        std::max(solid.az, solid.bz) == Approx(1.0f) && solid.y_lo == Approx(0.0f) &&
+        solid.y_hi == Approx(2.0f) && !solid.apply_max_step_up_skip) {
+      found_face = true;
+      break;
+    }
+  }
+  REQUIRE(found_face);
+
+  rat::CollisionBody approach;
+  approach.x = 1.3f;
+  approach.y = 0.0f;
+  approach.z = 0.5f;
+  approach.radius = 0.4f;
+  approach.height = rat::kPlayerCylinderHeight;
+  REQUIRE(rat::cylinder_hits_walls(approach, world, 0.35f));
+
+  rat::CollisionBody owner = approach;
+  owner.x = 0.7f;
+  REQUIRE(rat::cylinder_hits_walls(owner, world, 0.35f));
+
+  rat::CollisionBody clear = approach;
+  clear.x = 1.6f;
+  REQUIRE_FALSE(rat::cylinder_hits_walls(clear, world, 0.35f));
+}

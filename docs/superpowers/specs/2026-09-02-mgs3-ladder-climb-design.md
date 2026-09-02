@@ -40,7 +40,7 @@ If `climbing` (from previous substep / mount this substep):
 
 - **Top:** Y ≥ `y_hi - 0.05` and climb axis **up** (`dot > 0`): if `query_solid_support` at a face-away nudge (`0.35` along −into) finds a standable top ≥ `y_hi - 0.05`, place feet on that support, `climbing = false`, grounded walk. If no support, clamp at `y_hi` and stay climbing.
 - **Bottom:** Y ≤ `y_lo + 0.05` and climb axis **down**: place on approach (nudge face-away `0.35`), `climbing = false`. If there is ground/support, stand; else fall.
-- Overlap without climbing is walk/air (can pass the volume).
+- The ladder face is a blocking wall. Overlap is still the climb volume; walk-by without Interact does not mount.
 
 Leave bounce fields in `JumpState` at 0. Stop applying bounce/lockout in the climb path. Do not delete snapshot keys.
 

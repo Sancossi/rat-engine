@@ -2066,6 +2066,43 @@ TEST_CASE("Overlap without interact does not climb", "[unit][player]") {
   REQUIRE_FALSE(result.jump.climbing);
 }
 
+TEST_CASE("grey_yard ground walk west does not pass through east ladder", "[unit][player]") {
+  const rat::MapData map = load_grey_yard_map();
+  const rat::SurfaceQuery query(map);
+  rat::PlayerBody body;
+  body.x = 3.5f;
+  body.y = 0.0f;
+  body.z = 4.5f;
+  body.speed = 5.0f;
+  rat::JumpState jump = rat::make_grounded_jump_state();
+  rat::PlayerFrameInput walk_west;
+  walk_west.move.axis_x = -1.0f;
+  constexpr float kDt = 1.0f / 120.0f;
+  for (int i = 0; i < 180; ++i) {
+    (void)step_loft_frame(body, jump, walk_west, query, map, kDt);
+    REQUIRE_FALSE(jump.climbing);
+  }
+  REQUIRE(body.x >= 3.0f);
+  REQUIRE(body.y == Approx(0.0f).margin(0.05f));
+
+  rat::PlayerFrameInput interact;
+  interact.interact_pressed = true;
+  const rat::PlayerFrameResult mounted =
+      step_loft_frame(body, jump, interact, query, map, kDt);
+  REQUIRE(mounted.jump.climbing);
+  REQUIRE(body.x < 3.0f);
+  REQUIRE(body.x > 2.7f);
+
+  const float y_mounted = body.y;
+  rat::PlayerFrameInput climb_up;
+  climb_up.move.axis_x = -1.0f;
+  for (int i = 0; i < 24; ++i) {
+    (void)step_loft_frame(body, jump, climb_up, query, map, kDt);
+  }
+  REQUIRE(jump.climbing);
+  REQUIRE(body.y > y_mounted);
+}
+
 TEST_CASE("Interact on an east ladder mounts the rail", "[unit][player]") {
   rat::MapData map = make_surface_map(1, 1, {0.0f});
   map.schema_version = 3;

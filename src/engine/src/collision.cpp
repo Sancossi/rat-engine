@@ -255,6 +255,7 @@ void append_ramp_prisms(CollisionWorld& world, std::span<const RampDef> ramps, f
 void append_ladders(CollisionWorld& world, std::span<const LadderDef> ladders, float tile_size) {
   const float ts = tile_size > 0.0f ? tile_size : 1.0f;
   world.ladders.reserve(world.ladders.size() + ladders.size());
+  world.fences.reserve(world.fences.size() + ladders.size());
   for (const LadderDef& def : ladders) {
     const float ox = static_cast<float>(def.tile.x) * ts;
     const float oz = static_cast<float>(def.tile.z) * ts;
@@ -262,33 +263,58 @@ void append_ladders(CollisionWorld& world, std::span<const LadderDef> ladders, f
     volume.y_lo = def.y_lo;
     volume.y_hi = def.y_hi;
     volume.face = def.direction;
+    FenceSolid solid;
+    solid.y_lo = def.y_lo;
+    solid.y_hi = def.y_hi;
+    solid.ay_lo = def.y_lo;
+    solid.ay_hi = def.y_hi;
+    solid.by_lo = def.y_lo;
+    solid.by_hi = def.y_hi;
+    solid.apply_max_step_up_skip = false;
     switch (def.direction) {
       case RampDirection::East:
         volume.min_x = ox + ts - kLadderInset;
         volume.max_x = ox + ts;
         volume.min_z = oz;
         volume.max_z = oz + ts;
+        solid.ax = ox + ts;
+        solid.az = oz;
+        solid.bx = ox + ts;
+        solid.bz = oz + ts;
         break;
       case RampDirection::West:
         volume.min_x = ox;
         volume.max_x = ox + kLadderInset;
         volume.min_z = oz;
         volume.max_z = oz + ts;
+        solid.ax = ox;
+        solid.az = oz;
+        solid.bx = ox;
+        solid.bz = oz + ts;
         break;
       case RampDirection::South:
         volume.min_x = ox;
         volume.max_x = ox + ts;
         volume.min_z = oz + ts - kLadderInset;
         volume.max_z = oz + ts;
+        solid.ax = ox;
+        solid.az = oz + ts;
+        solid.bx = ox + ts;
+        solid.bz = oz + ts;
         break;
       case RampDirection::North:
         volume.min_x = ox;
         volume.max_x = ox + ts;
         volume.min_z = oz;
         volume.max_z = oz + kLadderInset;
+        solid.ax = ox;
+        solid.az = oz;
+        solid.bx = ox + ts;
+        solid.bz = oz;
         break;
     }
     world.ladders.push_back(volume);
+    world.fences.push_back(solid);
   }
 }
 

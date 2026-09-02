@@ -386,6 +386,7 @@ struct JumpFrameCtx {
 };
 
 constexpr float kMountYSlop = 0.45f;
+constexpr float kMountFaceSlop = 0.05f;
 constexpr float kDismountYSlop = 0.05f;
 constexpr float kDismountNudge = 0.35f;
 
@@ -423,6 +424,20 @@ bool footprint_on_approach_side(const CollisionBody& body, const LadderVolume& v
   return (body.x - cx) * into_x + (body.z - cz) * into_z < 0.0f;
 }
 
+bool footprint_against_face_approach(const CollisionBody& body, const LadderVolume& volume) {
+  float into_x = 0.0f;
+  float into_z = 0.0f;
+  ladder_face_into(volume.face, into_x, into_z);
+  const float face_x = into_x > 0.0f ? volume.max_x : (into_x < 0.0f ? volume.min_x : body.x);
+  const float face_z = into_z > 0.0f ? volume.max_z : (into_z < 0.0f ? volume.min_z : body.z);
+  const float along = (body.x - face_x) * into_x + (body.z - face_z) * into_z;
+  if (along < -1e-4f) {
+    return false;
+  }
+  const Aabb2 vol{volume.min_x, volume.min_z, volume.max_x, volume.max_z};
+  return circle_overlaps_aabb2(body.x, body.z, body.radius + kMountFaceSlop, vol);
+}
+
 const LadderVolume* find_mount_zone_ladder(const CollisionBody& body, const CollisionWorld& world,
                                            bool grounded, float tile_size) {
   if (const LadderVolume* hit = overlapping_ladder(body, world)) {
@@ -431,6 +446,10 @@ const LadderVolume* find_mount_zone_ladder(const CollisionBody& body, const Coll
   for (const LadderVolume& volume : world.ladders) {
     if (std::abs(body.y - volume.y_lo) <= kMountYSlop && footprint_on_approach_side(body, volume) &&
         xz_overlaps_tile_or_volume(body, volume, tile_size)) {
+      return &volume;
+    }
+    if (std::abs(body.y - volume.y_lo) <= kMountYSlop &&
+        footprint_against_face_approach(body, volume)) {
       return &volume;
     }
     if (grounded && std::abs(body.y - volume.y_hi) <= kMountYSlop &&
