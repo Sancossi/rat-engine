@@ -19,6 +19,8 @@ Plan: `docs/superpowers/plans/2026-09-02-mgs3-ladder-climb.md`
 Depends: [[feat: Camera-aligned walk]]
 Origin: chat 2026-09-02 (камера-climb плохо). Replaces feel of [[feat: Ladder toward-climb, jump grab, jump off]]. Absorbs [[feat: Step off ladder onto same-tile floor]].
 Follow-up: [[feat: Step off ladder onto same-tile floor]] (closed here — top + up onto same-tile slab).
+Follow-up: [[climb-camera-locks-on-far-side]]
+Follow-up: [[feat: Smooth camera turn]]
 
 ## Resolution
 
@@ -26,4 +28,4 @@ Follow-up: [[feat: Step off ladder onto same-tile floor]] (closed here — top +
 
 ## Bugs found
 
-none.
+- [[climb-camera-locks-on-far-side]] — playtest 2026-09-02, подход с `(3, 5)` к East-лестнице `(2, 4)`: камера с дальнего края стены.
