@@ -83,6 +83,22 @@ EditApplyResult EditorDocument::redo() {
   return result;
 }
 
+void EditorDocument::begin_stroke() {
+  history_.begin_stroke();
+}
+
+void EditorDocument::end_stroke() {
+  history_.end_stroke();
+}
+
+EditApplyResult EditorDocument::abort_stroke() {
+  discard_preview();
+  MapData map = map_.data();
+  const EditApplyResult result = history_.abort_stroke(map);
+  apply_map(std::move(map), result);
+  return result;
+}
+
 void EditorDocument::mark_clean() {
   dirty_ = false;
 }

@@ -94,6 +94,45 @@ void EditorApp::run_drag_step_commands(const ViewportPick& pick, TileDelta delta
   }
 }
 
+void EditorApp::apply_cell_brush(const ViewportClickAction& action) {
+  switch (action.kind) {
+    case ViewportClickActionKind::PlaceCube: {
+      terrain_panel_.tile_x = action.tile.x;
+      terrain_panel_.tile_z = action.tile.z;
+      if (document_.execute(make_place_map_tile_cube_command(action.tile.x, action.tile.z))) {
+        const HeightGetResult updated =
+            get_tile_ground_y(document_.data().height_grid, terrain_panel_.tile_x,
+                              terrain_panel_.tile_z);
+        if (updated.ok) {
+          terrain_panel_.set_y = updated.value;
+        }
+      }
+      break;
+    }
+    case ViewportClickActionKind::PlaceSlab: {
+      terrain_panel_.tile_x = action.tile.x;
+      terrain_panel_.tile_z = action.tile.z;
+      FloorSlabDef slab;
+      slab.tile = action.tile;
+      slab.top_y = terrain_panel_.slab_top_y;
+      slab.thickness = terrain_panel_.slab_thickness;
+      (void)document_.execute(make_upsert_map_floor_slab_command(std::move(slab)));
+      break;
+    }
+    default:
+      break;
+  }
+}
+
+void EditorApp::finish_cell_brush(bool abort) {
+  if (abort) {
+    (void)document_.abort_stroke();
+  } else {
+    document_.end_stroke();
+  }
+  brush_active_ = false;
+}
+
 bool EditorApp::hot_apply_map_path(const std::string& path, bool preserve_player) {
   if (engine_ == nullptr) {
     last_apply_error_ = "engine not ready";
@@ -380,13 +419,23 @@ void EditorApp::on_host_resize(void* user, int width, int height) {
 
 void EditorApp::handle_edit_mouse_input(const ImGuiIO& io) {
   if (!host_.is_open() || engine_ == nullptr || app_mode_ != AppMode::Edit) {
+    finish_cell_brush(false);
     mouse_left_was_down_ = false;
     drag_active_ = false;
     return;
   }
 
   const bool left_down = host_.mouse_left_down();
+  if ((brush_active_ || document_.in_stroke()) &&
+      (host_.mouse_right_down() || host_.key_escape_down())) {
+    finish_cell_brush(true);
+  }
+  if (brush_active_ && !document_.in_stroke()) {
+    brush_active_ = false;
+  }
+
   if (io.WantCaptureMouse) {
+    finish_cell_brush(false);
     mouse_left_was_down_ = left_down;
     if (!left_down) {
       drag_active_ = false;
@@ -406,6 +455,7 @@ void EditorApp::handle_edit_mouse_input(const ImGuiIO& io) {
     mouse_left_was_down_ = left_down;
     if (!left_down) {
       drag_active_ = false;
+      finish_cell_brush(false);
     }
     return;
   }
@@ -452,19 +502,13 @@ void EditorApp::handle_edit_mouse_input(const ImGuiIO& io) {
         document_.select_event(static_cast<int>(document_.data().events.size()) - 1);
         break;
       }
-      case ViewportClickActionKind::PlaceCube: {
-        terrain_panel_.tile_x = action.tile.x;
-        terrain_panel_.tile_z = action.tile.z;
-        if (document_.execute(make_place_map_tile_cube_command(action.tile.x, action.tile.z))) {
-          const HeightGetResult updated =
-              get_tile_ground_y(document_.data().height_grid, terrain_panel_.tile_x,
-                                terrain_panel_.tile_z);
-          if (updated.ok) {
-            terrain_panel_.set_y = updated.value;
-          }
-        }
+      case ViewportClickActionKind::PlaceCube:
+      case ViewportClickActionKind::PlaceSlab:
+        document_.begin_stroke();
+        apply_cell_brush(action);
+        brush_active_ = true;
+        drag_last_tile_ = action.tile;
         break;
-      }
       case ViewportClickActionKind::PlaceFence: {
         terrain_panel_.tile_x = action.tile.x;
         terrain_panel_.tile_z = action.tile.z;
@@ -480,16 +524,6 @@ void EditorApp::handle_edit_mouse_input(const ImGuiIO& io) {
               fence_preset_index_ == 1 ? kEdgeBarrierFullHeight : kEdgeBarrierMiniHeight;
           (void)document_.execute(make_upsert_map_edge_barrier_command(std::move(edge)));
         }
-        break;
-      }
-      case ViewportClickActionKind::PlaceSlab: {
-        terrain_panel_.tile_x = action.tile.x;
-        terrain_panel_.tile_z = action.tile.z;
-        FloorSlabDef slab;
-        slab.tile = action.tile;
-        slab.top_y = terrain_panel_.slab_top_y;
-        slab.thickness = terrain_panel_.slab_thickness;
-        (void)document_.execute(make_upsert_map_floor_slab_command(std::move(slab)));
         break;
       }
       case ViewportClickActionKind::PlaceLadder: {
@@ -508,6 +542,16 @@ void EditorApp::handle_edit_mouse_input(const ImGuiIO& io) {
     }
   }
 
+  if (left_down && brush_active_) {
+    const ViewportClickAction action = resolve_viewport_click(map, viewport_tool_, *world_hit);
+    if ((action.kind == ViewportClickActionKind::PlaceCube ||
+         action.kind == ViewportClickActionKind::PlaceSlab) &&
+        (action.tile.x != drag_last_tile_.x || action.tile.z != drag_last_tile_.z)) {
+      apply_cell_brush(action);
+      drag_last_tile_ = action.tile;
+    }
+  }
+
   if (left_down && drag_active_) {
     const TileCoord tile = world_to_tile_xz(*world_hit, map.tile_size);
     const TileDelta delta = tile_delta_between(drag_last_tile_, tile);
@@ -519,6 +563,7 @@ void EditorApp::handle_edit_mouse_input(const ImGuiIO& io) {
 
   if (released) {
     drag_active_ = false;
+    finish_cell_brush(false);
   }
   mouse_left_was_down_ = left_down;
 }

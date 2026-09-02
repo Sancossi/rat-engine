@@ -17,6 +17,9 @@ class EditorDocument {
   [[nodiscard]] EditApplyResult execute(std::unique_ptr<EditCommand> command);
   [[nodiscard]] EditApplyResult undo();
   [[nodiscard]] EditApplyResult redo();
+  void begin_stroke();
+  void end_stroke();
+  [[nodiscard]] EditApplyResult abort_stroke();
   void mark_clean();
 
   void clear_selection();
@@ -38,6 +41,7 @@ class EditorDocument {
   [[nodiscard]] bool preview_active() const { return preview_.has_value(); }
   [[nodiscard]] bool can_undo() const { return history_.can_undo(); }
   [[nodiscard]] bool can_redo() const { return history_.can_redo(); }
+  [[nodiscard]] bool in_stroke() const { return history_.in_stroke(); }
   [[nodiscard]] int selected_blocker() const { return selected_blocker_; }
   [[nodiscard]] int selected_event() const { return selected_event_; }
   [[nodiscard]] int selected_page() const { return selected_page_; }

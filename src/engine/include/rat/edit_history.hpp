@@ -65,13 +65,19 @@ class EditHistory {
   EditApplyResult execute(MapData& map, std::unique_ptr<EditCommand> command);
   EditApplyResult undo(MapData& map);
   EditApplyResult redo(MapData& map);
+  void begin_stroke();
+  void end_stroke();
+  EditApplyResult abort_stroke(MapData& map);
   void clear();
   [[nodiscard]] bool can_undo() const;
   [[nodiscard]] bool can_redo() const;
+  [[nodiscard]] bool in_stroke() const;
 
  private:
   std::vector<std::unique_ptr<EditCommand>> undo_;
   std::vector<std::unique_ptr<EditCommand>> redo_;
+  std::vector<std::unique_ptr<EditCommand>> stroke_;
+  bool in_stroke_ = false;
 };
 
 }  // namespace rat

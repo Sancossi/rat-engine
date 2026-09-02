@@ -53,6 +53,8 @@ class EditorApp {
   void handle_edit_mouse_input(const ImGuiIO& io);
   void snap_player_to_ground_clear_jump();
   void run_drag_step_commands(const ViewportPick& pick, TileDelta delta);
+  void apply_cell_brush(const ViewportClickAction& action);
+  void finish_cell_brush(bool abort);
   void bind_session_assets();
 
   static void on_host_resize(void* user, int width, int height);
@@ -82,6 +84,7 @@ class EditorApp {
   int fence_preset_index_ = 0;
   bool mouse_left_was_down_ = false;
   bool drag_active_ = false;
+  bool brush_active_ = false;
   ViewportPick drag_pick_{};
   TileCoord drag_last_tile_{};
   int width_ = 1280;

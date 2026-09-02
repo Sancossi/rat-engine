@@ -327,6 +327,78 @@ class ReplaceElevationSnapshotCommand final : public EditCommand {
   std::string last_error_{};
 };
 
+class CompositeCommand final : public EditCommand {
+ public:
+  void append(std::unique_ptr<EditCommand> command) {
+    if (command != nullptr) {
+      children_.push_back(std::move(command));
+    }
+  }
+
+  [[nodiscard]] bool empty() const { return children_.empty(); }
+
+  void apply(MapData& map) override {
+    for (std::unique_ptr<EditCommand>& child : children_) {
+      child->apply(map);
+    }
+  }
+
+  void revert(MapData& map) override {
+    for (auto it = children_.rbegin(); it != children_.rend(); ++it) {
+      (*it)->revert(map);
+    }
+  }
+
+  [[nodiscard]] bool applied_successfully() const override { return !children_.empty(); }
+
+  [[nodiscard]] bool mutates_blockers() const override {
+    for (const std::unique_ptr<EditCommand>& child : children_) {
+      if (child->mutates_blockers()) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  [[nodiscard]] bool mutates_events() const override {
+    for (const std::unique_ptr<EditCommand>& child : children_) {
+      if (child->mutates_events()) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  [[nodiscard]] bool mutates_elevation() const override {
+    for (const std::unique_ptr<EditCommand>& child : children_) {
+      if (child->mutates_elevation()) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+ private:
+  std::vector<std::unique_ptr<EditCommand>> children_{};
+};
+
+std::unique_ptr<EditCommand> take_stroke_command(std::vector<std::unique_ptr<EditCommand>>& stroke) {
+  if (stroke.empty()) {
+    return nullptr;
+  }
+  if (stroke.size() == 1) {
+    std::unique_ptr<EditCommand> command = std::move(stroke.front());
+    stroke.clear();
+    return command;
+  }
+  auto composite = std::make_unique<CompositeCommand>();
+  for (std::unique_ptr<EditCommand>& child : stroke) {
+    composite->append(std::move(child));
+  }
+  stroke.clear();
+  return composite;
+}
+
 }  // namespace
 
 std::unique_ptr<EditCommand> make_place_blocker_command(BlockerDef blocker) {
@@ -432,12 +504,23 @@ EditApplyResult EditHistory::execute(MapData& map, std::unique_ptr<EditCommand> 
     return failed;
   }
   const EditApplyResult result = result_from(*command);
+  if (in_stroke_) {
+    stroke_.push_back(std::move(command));
+    redo_.clear();
+    return result;
+  }
   undo_.push_back(std::move(command));
   redo_.clear();
   return result;
 }
 
 EditApplyResult EditHistory::undo(MapData& map) {
+  if (in_stroke_) {
+    if (!stroke_.empty()) {
+      return abort_stroke(map);
+    }
+    in_stroke_ = false;
+  }
   if (undo_.empty()) {
     return {};
   }
@@ -450,7 +533,7 @@ EditApplyResult EditHistory::undo(MapData& map) {
 }
 
 EditApplyResult EditHistory::redo(MapData& map) {
-  if (redo_.empty()) {
+  if (in_stroke_ || redo_.empty()) {
     return {};
   }
   std::unique_ptr<EditCommand> command = std::move(redo_.back());
@@ -466,17 +549,57 @@ EditApplyResult EditHistory::redo(MapData& map) {
   return result;
 }
 
-void EditHistory::clear() {
-  undo_.clear();
+void EditHistory::begin_stroke() {
+  if (in_stroke_) {
+    return;
+  }
+  in_stroke_ = true;
+  stroke_.clear();
+}
+
+void EditHistory::end_stroke() {
+  if (!in_stroke_) {
+    return;
+  }
+  in_stroke_ = false;
+  std::unique_ptr<EditCommand> command = take_stroke_command(stroke_);
+  if (command == nullptr) {
+    return;
+  }
+  undo_.push_back(std::move(command));
   redo_.clear();
 }
 
+EditApplyResult EditHistory::abort_stroke(MapData& map) {
+  if (!in_stroke_) {
+    return {};
+  }
+  in_stroke_ = false;
+  if (stroke_.empty()) {
+    return {};
+  }
+  std::unique_ptr<EditCommand> command = take_stroke_command(stroke_);
+  command->revert(map);
+  return result_from(*command);
+}
+
+void EditHistory::clear() {
+  undo_.clear();
+  redo_.clear();
+  stroke_.clear();
+  in_stroke_ = false;
+}
+
 bool EditHistory::can_undo() const {
-  return !undo_.empty();
+  return !undo_.empty() || (in_stroke_ && !stroke_.empty());
 }
 
 bool EditHistory::can_redo() const {
   return !redo_.empty();
+}
+
+bool EditHistory::in_stroke() const {
+  return in_stroke_;
 }
 
 }  // namespace rat

@@ -230,6 +230,14 @@ bool NativeWindow::mouse_left_down() const {
   return window_ != nullptr && glfwGetMouseButton(window_, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS;
 }
 
+bool NativeWindow::mouse_right_down() const {
+  return window_ != nullptr && glfwGetMouseButton(window_, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS;
+}
+
+bool NativeWindow::key_escape_down() const {
+  return window_ != nullptr && glfwGetKey(window_, GLFW_KEY_ESCAPE) == GLFW_PRESS;
+}
+
 void NativeWindow::cursor_pos(double& x, double& y) const {
   if (window_ == nullptr) {
     x = 0.0;

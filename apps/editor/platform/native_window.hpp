@@ -30,6 +30,8 @@ class NativeWindow {
   void set_input_bindings(InputBindings bindings);
   [[nodiscard]] const InputBindings& input_bindings() const { return bindings_; }
   [[nodiscard]] bool mouse_left_down() const;
+  [[nodiscard]] bool mouse_right_down() const;
+  [[nodiscard]] bool key_escape_down() const;
   void cursor_pos(double& x, double& y) const;
   void framebuffer_size(int& width, int& height) const;
   [[nodiscard]] NativeWindowHandle handle() const;

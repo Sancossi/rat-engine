@@ -4,6 +4,7 @@
 #include <rat/app_mode.hpp>
 #include <rat/edit_history.hpp>
 #include <rat/event_edit.hpp>
+#include <rat/height_edit.hpp>
 #include <rat/map_data.hpp>
 #include <rat/map_loader.hpp>
 #include <rat/simulation_session.hpp>
@@ -108,6 +109,29 @@ TEST_CASE("Play/Edit session mode does not destroy EditorDocument authoring stat
   const rat::MapSerializeResult after = rat::serialize_map_to_string(document.data());
   REQUIRE(after.ok);
   REQUIRE(after.json_text == serialized.json_text);
+}
+
+TEST_CASE("EditorDocument grouped cubes undo as one stroke", "[unit][editordoc][edit]") {
+  rat::EditorDocument document;
+  document.load(make_doc_map());
+  document.begin_stroke();
+  REQUIRE(document.execute(rat::make_place_map_tile_cube_command(0, 0)));
+  REQUIRE(document.execute(rat::make_place_map_tile_cube_command(1, 0)));
+  document.end_stroke();
+  const rat::HeightGetResult raised0 = rat::get_tile_ground_y(document.data().height_grid, 0, 0);
+  const rat::HeightGetResult raised1 = rat::get_tile_ground_y(document.data().height_grid, 1, 0);
+  REQUIRE(raised0.ok);
+  REQUIRE(raised1.ok);
+  REQUIRE(raised0.value == Approx(rat::kPlaceCubeDeltaY));
+  REQUIRE(raised1.value == Approx(rat::kPlaceCubeDeltaY));
+  REQUIRE(document.undo().applied);
+  const rat::HeightGetResult undone0 = rat::get_tile_ground_y(document.data().height_grid, 0, 0);
+  const rat::HeightGetResult undone1 = rat::get_tile_ground_y(document.data().height_grid, 1, 0);
+  REQUIRE(undone0.ok);
+  REQUIRE(undone1.ok);
+  REQUIRE(undone0.value == Approx(0.0f));
+  REQUIRE(undone1.value == Approx(0.0f));
+  REQUIRE_FALSE(document.can_undo());
 }
 
 TEST_CASE("EditorDocument load replaces map, clears history, and marks clean", "[unit][editordoc]") {

@@ -458,6 +458,101 @@ TEST_CASE("floor slab upsert toggles same top_y and undoes", "[unit][edit][heigh
   REQUIRE(map.floor_slabs.empty());
 }
 
+TEST_CASE("two cube places without a stroke still undo separately", "[unit][edit]") {
+  rat::MapData map = make_tiny_map();
+  REQUIRE(rat::upgrade_map_schema_for_elevation(map).ok);
+  rat::EditHistory history;
+
+  REQUIRE(history.execute(map, rat::make_place_map_tile_cube_command(0, 0)));
+  REQUIRE(history.execute(map, rat::make_place_map_tile_cube_command(1, 0)));
+
+  REQUIRE(history.undo(map));
+  const rat::HeightGetResult first = rat::get_tile_ground_y(map.height_grid, 0, 0);
+  const rat::HeightGetResult second = rat::get_tile_ground_y(map.height_grid, 1, 0);
+  REQUIRE(first.ok);
+  REQUIRE(second.ok);
+  REQUIRE(first.value == Approx(rat::kPlaceCubeDeltaY));
+  REQUIRE(second.value == Approx(0.0f));
+  REQUIRE(history.can_undo());
+}
+
+TEST_CASE("grouped cube places undo both tiles in one stroke", "[unit][edit]") {
+  rat::MapData map = make_tiny_map();
+  REQUIRE(rat::upgrade_map_schema_for_elevation(map).ok);
+  rat::EditHistory history;
+
+  history.begin_stroke();
+  REQUIRE(history.execute(map, rat::make_place_map_tile_cube_command(0, 0)));
+  REQUIRE(history.execute(map, rat::make_place_map_tile_cube_command(1, 0)));
+  history.end_stroke();
+
+  const rat::HeightGetResult first = rat::get_tile_ground_y(map.height_grid, 0, 0);
+  const rat::HeightGetResult second = rat::get_tile_ground_y(map.height_grid, 1, 0);
+  REQUIRE(first.ok);
+  REQUIRE(second.ok);
+  REQUIRE(first.value == Approx(rat::kPlaceCubeDeltaY));
+  REQUIRE(second.value == Approx(rat::kPlaceCubeDeltaY));
+
+  REQUIRE(history.undo(map));
+  const rat::HeightGetResult undone_first = rat::get_tile_ground_y(map.height_grid, 0, 0);
+  const rat::HeightGetResult undone_second = rat::get_tile_ground_y(map.height_grid, 1, 0);
+  REQUIRE(undone_first.ok);
+  REQUIRE(undone_second.ok);
+  REQUIRE(undone_first.value == Approx(0.0f));
+  REQUIRE(undone_second.value == Approx(0.0f));
+  REQUIRE_FALSE(history.can_undo());
+
+  REQUIRE(history.redo(map));
+  const rat::HeightGetResult redone_first = rat::get_tile_ground_y(map.height_grid, 0, 0);
+  const rat::HeightGetResult redone_second = rat::get_tile_ground_y(map.height_grid, 1, 0);
+  REQUIRE(redone_first.ok);
+  REQUIRE(redone_second.ok);
+  REQUIRE(redone_first.value == Approx(rat::kPlaceCubeDeltaY));
+  REQUIRE(redone_second.value == Approx(rat::kPlaceCubeDeltaY));
+}
+
+TEST_CASE("grouped floor slabs undo both tiles in one stroke", "[unit][edit]") {
+  rat::MapData map = make_tiny_map();
+  REQUIRE(rat::upgrade_map_schema_for_elevation(map).ok);
+  rat::EditHistory history;
+  rat::FloorSlabDef a{{0, 0}, 2.0f, 0.25f};
+  rat::FloorSlabDef b{{1, 0}, 2.0f, 0.25f};
+
+  history.begin_stroke();
+  REQUIRE(history.execute(map, rat::make_upsert_map_floor_slab_command(a)));
+  REQUIRE(history.execute(map, rat::make_upsert_map_floor_slab_command(b)));
+  history.end_stroke();
+  REQUIRE(map.floor_slabs.size() == 2);
+
+  REQUIRE(history.undo(map));
+  REQUIRE(map.floor_slabs.empty());
+  REQUIRE_FALSE(history.can_undo());
+
+  REQUIRE(history.redo(map));
+  REQUIRE(map.floor_slabs.size() == 2);
+}
+
+TEST_CASE("abort stroke reverts painted tiles without an undo entry", "[unit][edit]") {
+  rat::MapData map = make_tiny_map();
+  REQUIRE(rat::upgrade_map_schema_for_elevation(map).ok);
+  rat::EditHistory history;
+
+  history.begin_stroke();
+  REQUIRE(history.execute(map, rat::make_place_map_tile_cube_command(0, 0)));
+  REQUIRE(history.execute(map, rat::make_place_map_tile_cube_command(1, 0)));
+  REQUIRE(history.abort_stroke(map));
+
+  const rat::HeightGetResult first = rat::get_tile_ground_y(map.height_grid, 0, 0);
+  const rat::HeightGetResult second = rat::get_tile_ground_y(map.height_grid, 1, 0);
+  REQUIRE(first.ok);
+  REQUIRE(second.ok);
+  REQUIRE(first.value == Approx(0.0f));
+  REQUIRE(second.value == Approx(0.0f));
+  REQUIRE_FALSE(history.can_undo());
+  REQUIRE_FALSE(history.can_redo());
+  REQUIRE_FALSE(history.in_stroke());
+}
+
 TEST_CASE("ladder upsert last-wins on tile and direction and undoes", "[unit][edit][height]") {
   rat::MapData map = make_tiny_map();
   REQUIRE(rat::upgrade_map_schema_for_elevation(map).ok);
