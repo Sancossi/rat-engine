@@ -68,6 +68,8 @@ TEST_CASE("write_debug_snapshot round-trips a headless fixture", "[unit][debug]"
   jump.ladder_bounce_x = -1.0f;
   jump.ladder_bounce_z = 0.0f;
   jump.climbing = true;
+  jump.climb_into_x = 1.0f;
+  jump.climb_into_z = 0.0f;
 
   const rat::DebugSnapshot written = rat::make_debug_snapshot(
       42, rat::AppMode::Play, player, jump, runtime, state);
@@ -90,6 +92,8 @@ TEST_CASE("write_debug_snapshot round-trips a headless fixture", "[unit][debug]"
   CHECK(read->jump.ladder_bounce_x == -1.0f);
   CHECK(read->jump.ladder_bounce_z == 0.0f);
   CHECK(read->jump.climbing);
+  CHECK(read->jump.climb_into_x == 1.0f);
+  CHECK(read->jump.climb_into_z == 0.0f);
   REQUIRE_FALSE(read->overlapping_event_ids.empty());
   CHECK(read->overlapping_event_ids[0] == "intro");
   REQUIRE(read->active_interpreter.has_value());
@@ -147,6 +151,8 @@ TEST_CASE("write_debug_snapshot grounded jump defaults lockout and bounce to zer
   REQUIRE(read->jump.ladder_lockout_left == 0.0f);
   REQUIRE(read->jump.ladder_bounce_x == 0.0f);
   REQUIRE(read->jump.ladder_bounce_z == 0.0f);
+  REQUIRE(read->jump.climb_into_x == 0.0f);
+  REQUIRE(read->jump.climb_into_z == 0.0f);
 
   std::filesystem::remove(path, ec);
 }

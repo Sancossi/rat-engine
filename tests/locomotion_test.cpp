@@ -129,6 +129,7 @@ TEST_CASE("East ladder integrate classifies as Climb", "[unit][loco]") {
   body.speed = 5.0f;
   rat::JumpState jump = rat::make_grounded_jump_state();
   rat::PlayerFrameInput input;
+  input.interact_pressed = true;
   input.move.axis_x = 1.0f;
   const rat::PlayerFrameResult climbed =
       rat::integrate_player_frame_surface(body, jump, input, 1.0f / 60.0f, {}, query, {}, 0.35f, {},
@@ -137,7 +138,7 @@ TEST_CASE("East ladder integrate classifies as Climb", "[unit][loco]") {
   REQUIRE(rat::locomotion_from(climbed.jump, input.move) == rat::LocomotionState::Climb);
 }
 
-TEST_CASE("East ladder bounce classifies as Jump not Climb", "[unit][loco]") {
+TEST_CASE("Jump while climbing stays Climb with lockout 0", "[unit][loco]") {
   rat::MapData map = make_grey_floor();
   map.schema_version = 3;
   map.ladders.push_back({{0, 0}, rat::RampDirection::East, 0.0f, 2.0f});
@@ -148,14 +149,19 @@ TEST_CASE("East ladder bounce classifies as Jump not Climb", "[unit][loco]") {
   body.z = 0.5f;
   rat::JumpState jump = rat::make_grounded_jump_state();
   rat::PlayerFrameInput input;
-  input.jump_pressed = true;
-  const rat::PlayerFrameResult bounced =
+  input.interact_pressed = true;
+  rat::PlayerFrameResult mounted =
       rat::integrate_player_frame_surface(body, jump, input, 1.0f / 120.0f, {}, query, {}, 0.35f, {},
                                          &map);
-  REQUIRE_FALSE(bounced.jump.climbing);
-  REQUIRE_FALSE(bounced.jump.grounded);
-  REQUIRE(bounced.jump.vertical_speed > 0.0f);
-  REQUIRE(rat::locomotion_from(bounced.jump, {}) == rat::LocomotionState::Jump);
+  REQUIRE(mounted.jump.climbing);
+  input.interact_pressed = false;
+  input.jump_pressed = true;
+  const rat::PlayerFrameResult jumped =
+      rat::integrate_player_frame_surface(mounted.body, mounted.jump, input, 1.0f / 120.0f, {},
+                                         query, {}, 0.35f, {}, &map);
+  REQUIRE(jumped.jump.climbing);
+  REQUIRE(jumped.jump.ladder_lockout_left == 0.0f);
+  REQUIRE(rat::locomotion_from(jumped.jump, {}) == rat::LocomotionState::Climb);
 }
 
 TEST_CASE("integrate_player_frame_surface classify matches locomotion rules", "[unit][loco]") {

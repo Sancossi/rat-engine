@@ -1,7 +1,6 @@
 #include "rat/player.hpp"
 
 #include "rat/collision.hpp"
-#include "rat/locomotion.hpp"
 #include "rat/map_data.hpp"
 #include "rat/surface_query.hpp"
 
@@ -379,101 +378,92 @@ struct JumpFrameCtx {
   float coyote_seconds = 0.0f;
   float input_buffer_seconds = 0.0f;
   float step_up_limit = 0.0f;
-  float hop_speed = 0.0f;
   float bounce_speed = 0.0f;
-  float lockout_seconds = 0.0f;
   bool jump_pressed_this_substep = false;
   bool was_grounded = false;
   bool was_climbing = false;
   bool& landed;
 };
 
-void latch_climb(JumpState& jump, bool was_climbing) {
+constexpr float kMountYSlop = 0.45f;
+constexpr float kDismountYSlop = 0.05f;
+constexpr float kDismountNudge = 0.35f;
+
+Aabb2 ladder_owner_tile_xz(const LadderVolume& volume, float tile_size) {
+  const float ts = tile_size > 0.0f ? tile_size : 1.0f;
+  switch (volume.face) {
+    case RampDirection::East:
+      return {volume.max_x - ts, volume.min_z, volume.max_x, volume.max_z};
+    case RampDirection::West:
+      return {volume.min_x, volume.min_z, volume.min_x + ts, volume.max_z};
+    case RampDirection::South:
+      return {volume.min_x, volume.max_z - ts, volume.max_x, volume.max_z};
+    case RampDirection::North:
+      return {volume.min_x, volume.min_z, volume.max_x, volume.min_z + ts};
+  }
+  return {volume.min_x, volume.min_z, volume.max_x, volume.max_z};
+}
+
+bool xz_overlaps_tile_or_volume(const CollisionBody& body, const LadderVolume& volume,
+                                float tile_size) {
+  const Aabb2 vol{volume.min_x, volume.min_z, volume.max_x, volume.max_z};
+  if (circle_overlaps_aabb2(body.x, body.z, body.radius, vol)) {
+    return true;
+  }
+  const Aabb2 tile = ladder_owner_tile_xz(volume, tile_size);
+  return circle_overlaps_aabb2(body.x, body.z, body.radius, tile);
+}
+
+bool footprint_on_approach_side(const CollisionBody& body, const LadderVolume& volume) {
+  float into_x = 0.0f;
+  float into_z = 0.0f;
+  ladder_face_into(volume.face, into_x, into_z);
+  const float cx = 0.5f * (volume.min_x + volume.max_x);
+  const float cz = 0.5f * (volume.min_z + volume.max_z);
+  return (body.x - cx) * into_x + (body.z - cz) * into_z < 0.0f;
+}
+
+const LadderVolume* find_mount_zone_ladder(const CollisionBody& body, const CollisionWorld& world,
+                                           bool grounded, float tile_size) {
+  if (const LadderVolume* hit = overlapping_ladder(body, world)) {
+    return hit;
+  }
+  for (const LadderVolume& volume : world.ladders) {
+    if (std::abs(body.y - volume.y_lo) <= kMountYSlop && footprint_on_approach_side(body, volume) &&
+        xz_overlaps_tile_or_volume(body, volume, tile_size)) {
+      return &volume;
+    }
+    if (grounded && std::abs(body.y - volume.y_hi) <= kMountYSlop &&
+        xz_overlaps_tile_or_volume(body, volume, tile_size)) {
+      return &volume;
+    }
+  }
+  return nullptr;
+}
+
+void apply_mount(JumpFrameCtx& ctx, const LadderVolume& ladder) {
+  PlayerBody& player = ctx.player;
+  JumpState& jump = ctx.jump;
+  player.x = 0.5f * (ladder.min_x + ladder.max_x);
+  player.z = 0.5f * (ladder.min_z + ladder.max_z);
+  player.y = std::clamp(player.y, ladder.y_lo, ladder.y_hi);
   jump.climbing = true;
-  if (!was_climbing) {
-    jump.jump_buffer_left = 0.0f;
-  }
-}
-
-void apply_ladder_bounce(JumpFrameCtx& ctx, const LadderVolume& ladder) {
-  PlayerBody& player = ctx.player;
-  JumpState& jump = ctx.jump;
-  float ax = 0.0f;
-  float az = 0.0f;
-  ladder_face_away(ladder.face, ax, az);
-  jump.grounded = false;
-  jump.climbing = false;
-  jump.coyote_time_left = 0.0f;
-  jump.jump_buffer_left = 0.0f;
-  jump.vertical_speed = ctx.hop_speed;
-  jump.support_blocker_index = kInvalidSupportBlockerIndex;
-  jump.ladder_bounce_x = ax;
-  jump.ladder_bounce_z = az;
-  jump.ladder_lockout_left = ctx.lockout_seconds;
-  const SurfaceSample air0 =
-      standing_sample(ctx.surface_query, ctx.solids, player.x, player.z, player.half_extent,
-                      player.y, ctx.step_up_limit);
-  jump.jump_offset = std::max(0.0f, player.y - air0.y);
-  try_move_xz(player, ax * kLadderBounceNudge, az * kLadderBounceNudge, ctx.blockers,
-              ctx.collision_world, ctx.step_up_limit);
-}
-
-// Climb motor owns the whole substep: stay latched, snap to a slab, or walk off into air.
-void tick_climb_substep(JumpFrameCtx& ctx) {
-  PlayerBody& player = ctx.player;
-  JumpState& jump = ctx.jump;
-  player = integrate_player_surface(player, ctx.input.move, ctx.step_dt, ctx.blockers,
-                                    ctx.surface_query, ctx.max_step_up, ctx.edge_barriers, ctx.map,
-                                    false, ctx.input.climb_move);
-  if (overlapping_ladder(collision_body_from_player(player), ctx.collision_world) != nullptr) {
-    jump.grounded = true;
-    jump.vertical_speed = 0.0f;
-    jump.jump_offset = 0.0f;
-    jump.coyote_time_left = ctx.coyote_seconds;
-    jump.support_blocker_index = kInvalidSupportBlockerIndex;
-    latch_climb(jump, ctx.was_climbing);
-    if (!ctx.was_grounded) {
-      ctx.landed = true;
-    }
-    return;
-  }
-  const std::optional<SolidSupport> ladder_support =
-      query_solid_support(ctx.collision_world, player.x, player.z, player.half_extent, player.y,
-                          ctx.step_up_limit);
-  if (ladder_support.has_value()) {
-    player.y = ladder_support->y;
-    jump.grounded = true;
-    jump.vertical_speed = 0.0f;
-    jump.jump_offset = 0.0f;
-    jump.coyote_time_left = ctx.coyote_seconds;
-    jump.support_blocker_index = kInvalidSupportBlockerIndex;
-    if (!ctx.was_grounded) {
-      ctx.landed = true;
-    }
-    return;
-  }
-  jump.grounded = false;
+  jump.grounded = true;
   jump.vertical_speed = 0.0f;
-  jump.support_blocker_index = kInvalidSupportBlockerIndex;
-  const SurfaceSample air = standing_sample(ctx.surface_query, ctx.solids, player.x, player.z,
-                                            player.half_extent, player.y, ctx.step_up_limit);
-  jump.jump_offset = std::max(0.0f, player.y - air.y);
+  jump.jump_offset = 0.0f;
+  jump.jump_buffer_left = 0.0f;
   jump.coyote_time_left = ctx.coyote_seconds;
-  jump.vertical_speed -= ctx.gravity_down * ctx.step_dt;
-  jump.vertical_speed = std::max(jump.vertical_speed, -ctx.max_fall);
-  jump.jump_offset += jump.vertical_speed * ctx.step_dt;
-  if (jump.jump_offset <= 0.0f) {
-    jump.jump_offset = 0.0f;
-    jump.vertical_speed = 0.0f;
-    jump.grounded = true;
-    player.y = air.y;
-    if (!ctx.was_grounded) {
-      ctx.landed = true;
-    }
-  } else {
-    player.y = air.y + jump.jump_offset;
+  jump.support_blocker_index = kInvalidSupportBlockerIndex;
+  jump.ladder_lockout_left = 0.0f;
+  jump.ladder_bounce_x = 0.0f;
+  jump.ladder_bounce_z = 0.0f;
+  ladder_face_into(ladder.face, jump.climb_into_x, jump.climb_into_z);
+  if (!ctx.was_grounded) {
+    ctx.landed = true;
   }
 }
+
+void tick_climb_substep(JumpFrameCtx& ctx);
 
 void move_grounded_xz(JumpFrameCtx& ctx, const std::optional<SupportCandidate>& support_before) {
   PlayerBody& player = ctx.player;
@@ -483,7 +473,7 @@ void move_grounded_xz(JumpFrameCtx& ctx, const std::optional<SupportCandidate>& 
   } else {
     player = integrate_player_surface(player, ctx.input.move, ctx.step_dt, ctx.blockers,
                                       ctx.surface_query, ctx.max_step_up, ctx.edge_barriers, ctx.map,
-                                      ctx.jump.ladder_lockout_left > 1e-6f, ctx.input.climb_move);
+                                      true, {});
   }
 }
 
@@ -550,6 +540,7 @@ void tick_ground_air_substep(JumpFrameCtx& ctx) {
   const float bounce_speed = ctx.bounce_speed;
   const bool jump_pressed_this_substep = ctx.jump_pressed_this_substep;
   const bool was_grounded = ctx.was_grounded;
+  jump.climbing = false;
 
   if (jump.ladder_lockout_left > 1e-6f) {
     jump.ladder_lockout_left = std::max(0.0f, jump.ladder_lockout_left - step_dt);
@@ -863,9 +854,86 @@ void tick_ground_air_substep(JumpFrameCtx& ctx) {
   if (!was_grounded && jump.grounded) {
     ctx.landed = true;  // sticky for the frame; a later substep takeoff does not clear this
   }
-  if (!jump.climbing && jump.ladder_lockout_left <= 1e-6f && jump.grounded &&
-      overlapping_ladder(collision_body_from_player(player), collision_world) != nullptr) {
-    latch_climb(jump, ctx.was_climbing);
+}
+
+void tick_climb_substep(JumpFrameCtx& ctx) {
+  PlayerBody& player = ctx.player;
+  JumpState& jump = ctx.jump;
+  const LadderVolume* ladder =
+      overlapping_ladder(collision_body_from_player(player), ctx.collision_world);
+  if (ladder == nullptr) {
+    jump.climbing = false;
+    tick_ground_air_substep(ctx);
+    return;
+  }
+
+  player.x = 0.5f * (ladder->min_x + ladder->max_x);
+  player.z = 0.5f * (ladder->min_z + ladder->max_z);
+
+  const MoveInput& climb_move = ctx.input.climb_move;
+  const bool climb_nonzero =
+      std::abs(climb_move.axis_x) > 1e-6f || std::abs(climb_move.axis_z) > 1e-6f;
+  const MoveInput& steer = climb_nonzero ? climb_move : ctx.input.move;
+  const float axis = steer.axis_x * jump.climb_into_x + steer.axis_z * jump.climb_into_z;
+  player.y += axis * player.speed * ctx.step_dt;
+  player.y = std::clamp(player.y, ladder->y_lo, ladder->y_hi);
+
+  jump.climbing = true;
+  jump.grounded = true;
+  jump.vertical_speed = 0.0f;
+  jump.jump_offset = 0.0f;
+  jump.coyote_time_left = ctx.coyote_seconds;
+  jump.support_blocker_index = kInvalidSupportBlockerIndex;
+  jump.ladder_lockout_left = 0.0f;
+  jump.ladder_bounce_x = 0.0f;
+  jump.ladder_bounce_z = 0.0f;
+
+  float away_x = 0.0f;
+  float away_z = 0.0f;
+  ladder_face_away(ladder->face, away_x, away_z);
+
+  if (player.y >= ladder->y_hi - kDismountYSlop && axis > 0.0f) {
+    const float px = player.x + away_x * kDismountNudge;
+    const float pz = player.z + away_z * kDismountNudge;
+    const std::optional<SolidSupport> support = query_solid_support(
+        ctx.collision_world, px, pz, player.half_extent, player.y, ctx.step_up_limit);
+    if (support.has_value() && support->y >= ladder->y_hi - kDismountYSlop) {
+      player.x = px;
+      player.z = pz;
+      player.y = support->y;
+      jump.climbing = false;
+      jump.grounded = true;
+      jump.climb_into_x = 0.0f;
+      jump.climb_into_z = 0.0f;
+      return;
+    }
+    player.y = ladder->y_hi;
+    return;
+  }
+
+  if (player.y <= ladder->y_lo + kDismountYSlop && axis < 0.0f) {
+    player.x += away_x * kDismountNudge;
+    player.z += away_z * kDismountNudge;
+    jump.climbing = false;
+    jump.climb_into_x = 0.0f;
+    jump.climb_into_z = 0.0f;
+    const std::optional<SolidSupport> support =
+        query_solid_support(ctx.collision_world, player.x, player.z, player.half_extent, player.y,
+                            ctx.step_up_limit);
+    if (support.has_value()) {
+      player.y = support->y;
+      jump.grounded = true;
+      jump.vertical_speed = 0.0f;
+      jump.jump_offset = 0.0f;
+    } else {
+      jump.grounded = false;
+      const SurfaceSample air =
+          standing_sample(ctx.surface_query, ctx.solids, player.x, player.z, player.half_extent,
+                          player.y, ctx.step_up_limit);
+      jump.jump_offset = std::max(0.0f, player.y - air.y);
+      jump.vertical_speed = 0.0f;
+      player.y = air.y + jump.jump_offset;
+    }
   }
 }
 
@@ -883,6 +951,8 @@ JumpState make_grounded_jump_state() {
   state.ladder_bounce_x = 0.0f;
   state.ladder_bounce_z = 0.0f;
   state.climbing = false;
+  state.climb_into_x = 0.0f;
+  state.climb_into_z = 0.0f;
   return state;
 }
 
@@ -911,20 +981,20 @@ PlayerFrameResult integrate_player_frame_surface(PlayerBody player, JumpState ju
       map != nullptr ? bake_collision_world(*map, surface_query)
                      : bake_fence_world(edge_barriers, surface_query);
   const CollisionWorld* solids = map != nullptr ? &collision_world : nullptr;
-  const float hop_speed = clamp_nonnegative(tuning.ladder_hop_speed);
   const float bounce_speed = clamp_nonnegative(tuning.ladder_bounce_speed);
-  const float lockout_seconds = clamp_nonnegative(tuning.ladder_lockout_seconds);
+  const float tile_size =
+      map != nullptr && map->tile_size > 0.0f ? map->tile_size : 1.0f;
 
   bool landed = false;
   for (int i = 0; i < substeps; ++i) {
     const bool jump_pressed_this_substep = input.jump_pressed && i == 0;
     const bool was_grounded = jump.grounded;
     const bool was_climbing = jump.climbing;
-    jump.climbing = false;
-    const bool lockout_active = jump.ladder_lockout_left > 1e-6f;
-    const LadderVolume* ladder =
-        lockout_active ? nullptr
-                       : overlapping_ladder(collision_body_from_player(player), collision_world);
+    const LadderVolume* mount_ladder = nullptr;
+    if (!was_climbing && input.interact_pressed) {
+      mount_ladder = find_mount_zone_ladder(collision_body_from_player(player), collision_world,
+                                            jump.grounded, tile_size);
+    }
 
     JumpFrameCtx ctx{
         player,
@@ -946,39 +1016,20 @@ PlayerFrameResult integrate_player_frame_surface(PlayerBody player, JumpState ju
         coyote_seconds,
         input_buffer_seconds,
         step_up_limit,
-        hop_speed,
         bounce_speed,
-        lockout_seconds,
         jump_pressed_this_substep,
         was_grounded,
         was_climbing,
         landed,
     };
 
-    LocomotionState motor = LocomotionState::Idle;
-    if (ladder != nullptr) {
-      const bool want_bounce =
-          jump_pressed_this_substep || (was_climbing && jump.jump_buffer_left > 1e-6f);
-      if (want_bounce) {
-        apply_ladder_bounce(ctx, *ladder);
-        motor = locomotion_from(jump, input.move);
-      } else {
-        motor = LocomotionState::Climb;
+    if (was_climbing || mount_ladder != nullptr) {
+      if (mount_ladder != nullptr) {
+        apply_mount(ctx, *mount_ladder);
       }
+      tick_climb_substep(ctx);
     } else {
-      motor = locomotion_from(jump, input.move);
-    }
-
-    switch (motor) {
-      case LocomotionState::Climb:
-        tick_climb_substep(ctx);
-        break;
-      case LocomotionState::Idle:
-      case LocomotionState::Walk:
-      case LocomotionState::Jump:
-      case LocomotionState::Fall:
-        tick_ground_air_substep(ctx);
-        break;
+      tick_ground_air_substep(ctx);
     }
   }
 

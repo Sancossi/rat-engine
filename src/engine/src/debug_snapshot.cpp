@@ -29,7 +29,9 @@ json dump_jump(const JumpState& jump) {
               {"ladder_lockout_left", jump.ladder_lockout_left},
               {"ladder_bounce_x", jump.ladder_bounce_x},
               {"ladder_bounce_z", jump.ladder_bounce_z},
-              {"climbing", jump.climbing}};
+              {"climbing", jump.climbing},
+              {"climb_into_x", jump.climb_into_x},
+              {"climb_into_z", jump.climb_into_z}};
 }
 
 JumpState load_jump(const json& node) {
@@ -47,6 +49,8 @@ JumpState load_jump(const json& node) {
   jump.ladder_bounce_x = node.value("ladder_bounce_x", 0.0f);
   jump.ladder_bounce_z = node.value("ladder_bounce_z", 0.0f);
   jump.climbing = node.value("climbing", false);
+  jump.climb_into_x = node.value("climb_into_x", 0.0f);
+  jump.climb_into_z = node.value("climb_into_z", 0.0f);
   return jump;
 }
 

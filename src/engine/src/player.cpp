@@ -168,65 +168,8 @@ PlayerBody integrate_player_surface(PlayerBody player, MoveInput input, float dt
   const float step_dz = dz / static_cast<float>(steps);
   const float step_up_limit = std::max(0.0f, max_step_up);
   const CollisionWorld world = bake_integrate_world(edge_barriers, surface_query, map);
-  if (!ignore_ladders) {
-  if (const LadderVolume* ladder = overlapping_ladder(collision_body_from_player(player), world)) {
-    MoveInput steer = climb_move;
-    if (std::abs(steer.axis_x) <= 1e-6f && std::abs(steer.axis_z) <= 1e-6f) {
-      steer = input;
-    }
-    float sx = steer.axis_x;
-    float sz = steer.axis_z;
-    const float slen = std::sqrt(sx * sx + sz * sz);
-    if (slen > 1e-6f) {
-      sx /= slen;
-      sz /= slen;
-    }
-    float climb = 0.0f;
-    float tan_x = 0.0f;
-    float tan_z = 0.0f;
-    switch (ladder->face) {
-      case RampDirection::East:
-        climb = sx;
-        tan_z = sz;
-        break;
-      case RampDirection::West:
-        climb = -sx;
-        tan_z = sz;
-        break;
-      case RampDirection::North:
-        climb = -sz;
-        tan_x = sx;
-        break;
-      case RampDirection::South:
-        climb = sz;
-        tan_x = sx;
-        break;
-    }
-    player.y += climb * player.speed * dt;
-    player.y = std::clamp(player.y, ladder->y_lo, ladder->y_hi);
-
-    if (std::abs(tan_x) > 1e-6f || std::abs(tan_z) > 1e-6f) {
-      const float old_x = player.x;
-      const float old_z = player.z;
-      player.x += tan_x * player.speed * dt;
-      player.z += tan_z * player.speed * dt;
-      if (overlaps_any(player_bounds(player), blockers, player.y) ||
-          cylinder_hits_walls(collision_body_from_player(player), world, step_up_limit)) {
-        player.x = old_x;
-        player.z = old_z;
-      }
-    }
-
-    if (overlapping_ladder(collision_body_from_player(player), world) == nullptr) {
-      const std::optional<SolidSupport> support = query_solid_support(
-          world, player.x, player.z, player.half_extent, player.y, step_up_limit);
-      if (support.has_value()) {
-        player.y = support->y;
-      }
-    }
-    return player;
-  }
-  }
+  (void)ignore_ladders;
+  (void)climb_move;
 
   SurfaceSample current_sample =
       standing_sample(surface_query, world, map, player.x, player.z, player.half_extent, player.y,

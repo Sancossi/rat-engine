@@ -120,6 +120,7 @@ TEST_CASE("player_input_from_frame copies move and jump", "[unit][input]") {
   CHECK(player.climb_move.axis_z == 0.75f);
   CHECK(player.jump_pressed);
   CHECK(player.jump_held);
+  CHECK(player.interact_pressed);
 }
 
 TEST_CASE("InputFrame reports undo and redo edges unless keyboard captured", "[unit][input]") {

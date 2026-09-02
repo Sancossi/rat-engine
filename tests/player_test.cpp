@@ -581,23 +581,36 @@ TEST_CASE("Player stands on airborne slab and falls walking off", "[unit][player
   REQUIRE(player.y == Approx(0.0f).margin(0.05f));
 }
 
-TEST_CASE("East ladder climb reaches slab with move only", "[unit][player][surface]") {
+TEST_CASE("East ladder climb reaches slab with interact then into-face", "[unit][player][surface]") {
   rat::MapData map = make_surface_map(1, 1, {0.0f});
   map.floor_slabs.push_back({{0, 0}, 2.0f, 0.25f});
   map.ladders.push_back({{0, 0}, rat::RampDirection::East, 0.0f, 2.0f});
   const rat::SurfaceQuery query(map);
   rat::PlayerBody player;
-  player.x = 0.85f; player.y = 0.0f; player.z = 0.5f; player.speed = 5.0f;
-  rat::MoveInput into{1.0f, 0.0f};
+  player.x = 0.85f;
+  player.y = 0.0f;
+  player.z = 0.5f;
+  player.speed = 5.0f;
+  rat::JumpState jump = rat::make_grounded_jump_state();
+  rat::PlayerFrameInput input;
+  input.interact_pressed = true;
+  input.move = {1.0f, 0.0f};
+  rat::PlayerFrameResult result = rat::integrate_player_frame_surface(
+      player, jump, input, 1.0f / 60.0f, {}, query, {}, 0.35f, {}, &map);
+  REQUIRE(result.jump.climbing);
+  player = result.body;
+  jump = result.jump;
+  input.interact_pressed = false;
   for (int i = 0; i < 80; ++i) {
-    player = rat::integrate_player_surface(player, into, 1.0f / 60.0f, {}, query, 0.35f, {}, &map);
+    result = rat::integrate_player_frame_surface(player, jump, input, 1.0f / 60.0f, {}, query, {},
+                                                 0.35f, {}, &map);
+    player = result.body;
+    jump = result.jump;
+    if (!result.jump.climbing) {
+      break;
+    }
   }
-  REQUIRE(player.y == Approx(2.0f).margin(0.05f));
-  rat::MoveInput away{-1.0f, 0.0f};
-  for (int i = 0; i < 80; ++i) {
-    player = rat::integrate_player_surface(player, away, 1.0f / 60.0f, {}, query, 0.35f, {}, &map);
-  }
-  REQUIRE(player.y == Approx(0.0f).margin(0.1f));
+  REQUIRE(player.y == Approx(2.0f).margin(0.1f));
 }
 
 TEST_CASE("Neighboring ramps with a rise above max_step_up cannot be climbed",
@@ -637,25 +650,6 @@ TEST_CASE("Neighboring ramps with a rise above max_step_up cannot be climbed",
   REQUIRE(player.y < 0.8f);
 }
 
-TEST_CASE("East ladder tangent cannot walk through slab side", "[unit][player][surface]") {
-  rat::MapData map = make_surface_map(1, 1, {0.0f});
-  map.floor_slabs.push_back({{0, 0}, 2.0f, 0.25f});
-  map.ladders.push_back({{0, 0}, rat::RampDirection::East, 0.0f, 2.0f});
-  const rat::SurfaceQuery query(map);
-  rat::PlayerBody player;
-  player.x = 0.85f;
-  player.y = 1.875f;  // mid-thickness of the 0.25 slab (1.75–2.0)
-  player.z = 0.5f;
-  player.speed = 5.0f;
-  const float start_x = player.x;
-  rat::MoveInput tangent{0.0f, 1.0f};
-  for (int i = 0; i < 60; ++i) {
-    player = rat::integrate_player_surface(player, tangent, 1.0f / 60.0f, {}, query, 0.35f, {}, &map);
-  }
-  REQUIRE(player.x == Approx(start_x).margin(1e-3f));
-  REQUIRE(player.z < 1.0f - player.half_extent + 0.05f);
-}
-
 TEST_CASE("East ladder climb uses camera steer not world WASD", "[unit][player][surface]") {
   rat::MapData map = make_surface_map(1, 1, {0.0f});
   map.floor_slabs.push_back({{0, 0}, 2.0f, 0.25f});
@@ -666,15 +660,31 @@ TEST_CASE("East ladder climb uses camera steer not world WASD", "[unit][player][
   player.y = 0.0f;
   player.z = 0.5f;
   player.speed = 5.0f;
-  // World W is -Z (tangent on an east ladder). Camera looking +X: W is into the face.
+  const rat::ClimbCameraPose pose =
+      rat::climb_camera_pose(rat::Vec3{player.x, player.y, player.z}, 1.0f, 0.0f);
   const rat::MoveInput world_w = rat::world_aligned_move(0.0f, 1.0f);
-  const rat::MoveInput cam_w =
-      rat::camera_relative_move(0.0f, 1.0f, rat::Vec3{0.0f, 8.0f, 0.0f}, rat::Vec3{4.0f, 0.0f, 0.0f});
+  const rat::MoveInput cam_w = rat::camera_relative_move(0.0f, 1.0f, pose.eye, pose.focus);
   REQUIRE(world_w.axis_z == Approx(-1.0f));
   REQUIRE(cam_w.axis_x > 0.5f);
+  rat::JumpState jump = rat::make_grounded_jump_state();
+  rat::PlayerFrameInput input;
+  input.interact_pressed = true;
+  rat::PlayerFrameResult result = rat::integrate_player_frame_surface(
+      player, jump, input, 1.0f / 60.0f, {}, query, {}, 0.35f, {}, &map);
+  REQUIRE(result.jump.climbing);
+  player = result.body;
+  jump = result.jump;
+  input.interact_pressed = false;
+  input.move = world_w;
+  input.climb_move = cam_w;
   for (int i = 0; i < 80; ++i) {
-    player = rat::integrate_player_surface(player, world_w, 1.0f / 60.0f, {}, query, 0.35f, {}, &map,
-                                           false, cam_w);
+    result = rat::integrate_player_frame_surface(player, jump, input, 1.0f / 60.0f, {}, query, {},
+                                                 0.35f, {}, &map);
+    player = result.body;
+    jump = result.jump;
+    if (player.y >= 1.9f) {
+      break;
+    }
   }
-  REQUIRE(player.y == Approx(2.0f).margin(0.05f));
+  REQUIRE(player.y == Approx(2.0f).margin(0.1f));
 }

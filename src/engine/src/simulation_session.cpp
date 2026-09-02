@@ -142,6 +142,7 @@ SimulationTickResult SimulationSession::tick(const InputFrame& input) {
       frame_input.move = {};
       frame_input.jump_pressed = false;
       frame_input.jump_held = false;
+      frame_input.interact_pressed = false;
     } else {
       frame_input.jump_pressed = jump_press_pending_;
       frame_input.jump_held = input.jump_held;
@@ -171,9 +172,12 @@ SimulationTickResult SimulationSession::tick(const InputFrame& input) {
       consumed_for_dialog = true;
     }
 
-    const bool gameplay_interact =
+    bool gameplay_interact =
         !consumed_for_dialog && !events_.player_input_blocked() &&
         consume_buffered_press(interact_buffer_);
+    if (jump_.climbing) {
+      gameplay_interact = false;
+    }
 
     const std::string before_map_id = state_.map_id();
     const float before_x = state_.player_x();

@@ -55,6 +55,7 @@ PlayerFrameInput player_input_from_frame(const InputFrame& frame) {
   input.climb_move = frame.climb_move;
   input.jump_pressed = frame.jump_pressed;
   input.jump_held = frame.jump_held;
+  input.interact_pressed = frame.interact_pressed;
   return input;
 }
 

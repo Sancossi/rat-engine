@@ -42,6 +42,8 @@ struct JumpState {
   float ladder_bounce_x = 0.0f;
   float ladder_bounce_z = 0.0f;
   bool climbing = false;  // set by integrate when the Climb motor owns the tick
+  float climb_into_x = 0.0f;
+  float climb_into_z = 0.0f;
 };
 
 struct JumpTuning {
@@ -65,6 +67,7 @@ struct PlayerFrameInput {
   MoveInput climb_move{};  // camera-relative; empty → climb uses `move`
   bool jump_pressed = false;
   bool jump_held = false;
+  bool interact_pressed = false;
 };
 
 struct PlayerFrameResult {

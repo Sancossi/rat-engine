@@ -73,6 +73,8 @@ void mix_jump(std::uint64_t& hash, const JumpState& jump) {
   mix_f32(hash, jump.ladder_bounce_x);
   mix_f32(hash, jump.ladder_bounce_z);
   mix_bool(hash, jump.climbing);
+  mix_f32(hash, jump.climb_into_x);
+  mix_f32(hash, jump.climb_into_z);
 }
 
 void mix_interpreter(std::uint64_t& hash, const InterpreterDebug& interp) {
