@@ -1,7 +1,7 @@
 ---
 type: task
 area: Engine
-status: In review
+status: Done
 task_type: Feature
 sprint:
 due:
@@ -18,4 +18,8 @@ Origin: chat 2026-09-02 (уточнение к лестнице). Related: [[fea
 
 ## Resolution
 
+`LocomotionState::Climb` + `JumpState.climbing`. Each jump substep `switch`es Climb (`tick_climb_substep`) vs Idle/Walk/Jump/Fall (`tick_ground_air_substep`). Bounce leaves Climb and runs ballistic; lockout is not Climb. Verify: `.\build\tests\rat_tests.exe "[unit][loco],[unit][player]"`.
+
 ## Bugs found
+
+none. Jump-grab buffer bounce was found on [[feat: Ladder toward-climb, jump grab, jump off]] and fixed there.

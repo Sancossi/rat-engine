@@ -1,7 +1,7 @@
 ---
 type: task
 area: Engine
-status: In review
+status: Done
 task_type: Feature
 sprint:
 due:
@@ -22,4 +22,8 @@ Follow-up: [[feat: Drive player physics from locomotion FSM]]
 
 ## Resolution
 
+Climb up/down follows the camera (`climb_move`); walk stays world-aligned. Overlap latches. Jump on a ladder bounces off the face (hop 4, nudge 0.6, lockout 0.20). Jump-grab: leftover air buffer latches; only a latched buffer or jump press while overlapping bounces. Verify: `.\build\tests\rat_tests.exe "[unit][player]"`.
+
 ## Bugs found
+
+Leftover air-jump buffer bounced on first ladder overlap instead of grabbing. Fixed in this slice (`was_climbing` + `latch_climb`).

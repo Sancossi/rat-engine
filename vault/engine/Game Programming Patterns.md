@@ -32,7 +32,7 @@ tags: [engine]
 | Event Queue (звук) | `QueuedAudio` FIFO + overflow_count; tests Recording/Null; editor miniaudio sink | Готово [[feat: Audio backend implementation]] |
 | Service Locator | composition | Не заводить locator |
 | Singleton | нет | Так и держать |
-| State (FSM) | `locomotion_from` Idle/Walk/Jump/Fall/Climb; Climb владеет tick на overlap | В работе [[feat: Drive player physics from locomotion FSM]]; клипы — [[ADR-009 RE-like segmented character hierarchy]] |
+| State (FSM) | `locomotion_from` Idle/Walk/Jump/Fall/Climb; Climb владеет tick на overlap | Готово [[feat: Drive player physics from locomotion FSM]]; клипы — [[ADR-009 RE-like segmented character hierarchy]] |
 | Component / ECS | гибрид EntityId + ComponentStore | [[ADR-012 Entity model EntityId and ComponentStore]]; игрок/события пока POD. Не archetype |
 | Observer | `GameplayNotifyBus` subscribe/post | stub; side channel (ItemPicked / DialogShown / Landed), not opcode interpreter. [[feat: Gameplay notify observer]] |
 | Object Pool | нет | [[feat: Object pool for short-lived FX]] с field-action FX |
