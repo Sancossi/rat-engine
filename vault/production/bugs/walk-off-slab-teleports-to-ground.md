@@ -1,7 +1,7 @@
 ---
 type: bug
 area: Engine
-status: Investigating
+status: Fixed
 severity: High
 sprint: Sprint 8
 tags: [bug]
@@ -27,3 +27,11 @@ Player **teleports** to the first floor instead of falling.
 Suspect walk-off / `query_solid_support` snaps feet to ground_y under the same XZ instead of Fall. Not a clone of [[stuck-after-fall-or-jump-into-elevation]] (wedge) or [[cannot-fall-off-ramp]].
 
 Follow-up from: [[feat: Stacked surfaces caves and basements]]
+
+## Resolution
+
+Grounded XZ with a baked map no longer snaps feet to a sample more than `max_step_up` below world Y. Walk off a slab / hole stays at loft Y, then Fall + gravity. Verify: Play `grey_yard` hole `(2, 5)`; `.\build\tests\rat_tests.exe "*slab*"`.
+
+## Bugs found
+
+none.
