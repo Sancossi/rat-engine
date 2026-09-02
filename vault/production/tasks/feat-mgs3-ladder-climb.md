@@ -1,7 +1,7 @@
 ---
 type: task
 area: Engine
-status: In progress
+status: In review
 task_type: Feature
 sprint:
 due:
@@ -18,6 +18,7 @@ Spec: `docs/superpowers/specs/2026-09-02-mgs3-ladder-climb-design.md`
 Plan: `docs/superpowers/plans/2026-09-02-mgs3-ladder-climb.md`
 Depends: [[feat: Camera-aligned walk]]
 Origin: chat 2026-09-02 (камера-climb плохо). Replaces feel of [[feat: Ladder toward-climb, jump grab, jump off]]. Absorbs [[feat: Step off ladder onto same-tile floor]].
+Follow-up: [[feat: Step off ladder onto same-tile floor]] (close after this review).
 
 ## Resolution
 
