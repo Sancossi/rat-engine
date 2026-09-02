@@ -1,7 +1,7 @@
 ---
 type: bug
 area: Engine
-status: Investigating
+status: Fixed
 severity: High
 sprint: Sprint 8
 tags: [bug]
@@ -26,8 +26,10 @@ The ladder face blocks the cylinder like a fence/wall for `[y_lo, y_hi]`. You ca
 
 The volume is overlap-only. Walking through the face is free.
 
-Implementer `8f22456`: bake `FenceSolid` on the ladder face; approach-side Interact still mounts. Review pending.
+## Resolution
 
-## Notes
+`append_ladders` bakes a `FenceSolid` on the face (`apply_max_step_up_skip = false`, y span = ladder). Ground walk cannot cross the rungs. Interact still mounts when pressed against the wall (approach `y_lo` zone). Climb volume/rail unchanged. Verify: Play `grey_yard` walk west into East ladder `(2, 4)` without E; then E to climb. `.\build\tests\rat_tests.exe "[collision],[unit][player]"`. Review: Approved.
 
-Bake a `FenceSolid` on the ladder edge (`apply_max_step_up_skip = false`) spanning `y_lo`–`y_hi`. Do not require a separate authored fence. Update the MGS3 spec line that said overlap without climbing may pass the volume.
+## Bugs found
+
+none.
