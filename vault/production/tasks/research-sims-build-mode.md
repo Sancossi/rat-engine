@@ -1,7 +1,7 @@
 ---
 type: task
 area: Engine
-status: In progress
+status: Done
 task_type: Research
 sprint: Sprint 8
 due:
@@ -36,3 +36,11 @@ Origin: [[feat: Sims-like edit brush and edge paint]]. Related: [[Collect 5 refe
 - Auto-room detection, wall height variants per room, diagonal walls — только axis-aligned grid edges.
 
 **Follow-up:** [[feat: Edit hold-drag brush]], [[feat: Edit paint clicked edge]] (порядок в [[feat: Sims-like edit brush and edge paint]]).
+
+## Resolution
+
+Заметка в теле карточки: стены по кликнутому ребру, drag вдоль стены, кисть по клеткам, один stroke = один undo, cancel ПКМ/Esc. Не берём каталог/этажи Sims. Verify: read this note.
+
+## Bugs found
+
+none.
