@@ -70,5 +70,5 @@ Show Text, Control Switch, Control Variable, Conditional Branch, Set Move Route 
 ## Open questions
 
 - [x] Формат хранения → **JSON**
-- [x] UX команд → **RM-like list**
+- [x] UX команд → **RM-like list** (графический граф — бэклог [[feat: Event node graph authoring]])
 - [x] Лимиты Parallel → **8 / 32 / no nested**

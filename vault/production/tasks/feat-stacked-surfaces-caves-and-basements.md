@@ -20,7 +20,7 @@ Origin: chat (collider design) + chat 2026-09-02 (многоэтажный до�
 
 Spec: `docs/superpowers/specs/2026-09-02-stacked-floors-colliders-design.md`
 Plan: `docs/superpowers/plans/2026-09-02-stacked-floors-colliders.md`
-Follow-up: [[feat: Step off ladder onto same-tile floor]], [[feat: Ladder toward-climb, jump grab, jump off]], [[events-match-ground-while-on-slab]]
+Follow-up: [[feat: Step off ladder onto same-tile floor]], [[feat: Ladder toward-climb, jump grab, jump off]], [[events-match-ground-while-on-slab]], [[walk-off-slab-teleports-to-ground]]
 
 ## Resolution
 
@@ -30,4 +30,5 @@ Schema v3: `floor_slabs` и `ladders`. Play при `map != nullptr` стоит/�
 
 - [[events-match-ground-while-on-slab]]
 - [[feat: Step off ladder onto same-tile floor]]
+- [[walk-off-slab-teleports-to-ground]] — playtest 2026-09-02, сход со 2 этажа телепорт на 1, нет падения.
 
