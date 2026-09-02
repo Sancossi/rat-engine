@@ -1,7 +1,7 @@
 ---
 type: task
 area: Engine
-status: In progress
+status: In review
 task_type: Feature
 sprint: Sprint 8
 due:
@@ -17,3 +17,5 @@ Acceptance: place/connect/delete nodes; compile on apply; inspector list ост�
 Origin: [[feat: Event node graph authoring]]. Depends: [[feat: Event graph model and compile]]. Related: [[s2-event-inspector-pages-stub]]. Взято в [[Sprint 8 — Play feel and authoring]].
 
 Compile review leftovers (do in this slice if cheap): on apply/save write `commands` from `compile_event_graph`; add a join-after-branch golden (then/else reconverge then continue); treat sequence edges out of `conditional_branch` as compile errors.
+
+Implementer `09943c4`: ImGui canvas + compile-on-apply (Save / Apply edited map / Compile graph). Review pending.
