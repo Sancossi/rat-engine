@@ -151,10 +151,33 @@ struct Command {
   std::vector<Command> else_commands;
 };
 
+struct EventGraphNode {
+  std::string id;
+  std::string kind;
+  std::string text;
+  std::uint32_t switch_id = 0;
+  bool bool_value = false;
+  int frames = 0;
+  Condition branch_condition{};
+};
+
+struct EventGraphEdge {
+  std::string from;
+  std::string to;
+  std::optional<int> order;
+  std::optional<std::string> branch;
+};
+
+struct EventGraph {
+  std::vector<EventGraphNode> nodes;
+  std::vector<EventGraphEdge> edges;
+};
+
 struct EventPage {
   TriggerKind trigger = TriggerKind::Action;
   std::vector<Condition> conditions;
   std::vector<Command> commands;
+  std::optional<EventGraph> graph;
 };
 
 struct EventDef {

@@ -1,0 +1,464 @@
+#include "rat/event_graph.hpp"
+
+#include <algorithm>
+#include <queue>
+#include <string>
+#include <string_view>
+#include <unordered_map>
+#include <unordered_set>
+#include <utility>
+#include <vector>
+
+namespace rat {
+namespace {
+
+constexpr const char* kEntry = "entry";
+constexpr const char* kExit = "exit";
+
+enum class EdgeRole {
+  Sequence,
+  Then,
+  Else,
+};
+
+struct IndexedEdge {
+  std::string to;
+  std::optional<int> order;
+  EdgeRole role = EdgeRole::Sequence;
+  std::size_t source_index = 0;
+};
+
+[[nodiscard]] bool is_pseudo_id(std::string_view id) {
+  return id == kEntry || id == kExit;
+}
+
+[[nodiscard]] bool is_mvp_kind(std::string_view kind) {
+  return kind == "show_text" || kind == "control_switch" || kind == "conditional_branch" ||
+         kind == "wait";
+}
+
+[[nodiscard]] std::string index_path(std::string_view prefix, std::size_t index) {
+  std::string path;
+  path.reserve(prefix.size() + 8);
+  path.append(prefix);
+  path.push_back('/');
+  path.append(std::to_string(index));
+  return path;
+}
+
+void add_error(EventGraphCompileResult& result, std::string json_path, std::string message) {
+  MapIssue issue;
+  issue.severity = MapIssueSeverity::Error;
+  issue.json_path = std::move(json_path);
+  issue.message = std::move(message);
+  result.issues.push_back(std::move(issue));
+}
+
+[[nodiscard]] EdgeRole parse_edge_role(const std::optional<std::string>& branch, bool& ok) {
+  if (!branch.has_value() || branch->empty()) {
+    return EdgeRole::Sequence;
+  }
+  if (*branch == "then") {
+    return EdgeRole::Then;
+  }
+  if (*branch == "else") {
+    return EdgeRole::Else;
+  }
+  ok = false;
+  return EdgeRole::Sequence;
+}
+
+[[nodiscard]] bool edge_order_less(const IndexedEdge& a, const IndexedEdge& b) {
+  const int oa = a.order.value_or(0);
+  const int ob = b.order.value_or(0);
+  if (oa != ob) {
+    return oa < ob;
+  }
+  if (a.to != b.to) {
+    return a.to < b.to;
+  }
+  return a.source_index < b.source_index;
+}
+
+[[nodiscard]] Command command_from_node(const EventGraphNode& node) {
+  Command command;
+  if (node.kind == "show_text") {
+    command.op = CommandOp::ShowText;
+    command.text = node.text;
+  } else if (node.kind == "control_switch") {
+    command.op = CommandOp::ControlSwitch;
+    command.id = node.switch_id;
+    command.bool_value = node.bool_value;
+  } else if (node.kind == "wait") {
+    command.op = CommandOp::Wait;
+    command.frames = node.frames;
+  } else if (node.kind == "conditional_branch") {
+    command.op = CommandOp::ConditionalBranch;
+    command.branch_condition = node.branch_condition;
+  } else {
+    command.op = CommandOp::Comment;
+    command.text = node.kind;
+  }
+  return command;
+}
+
+struct GraphIndex {
+  std::unordered_map<std::string, std::size_t> node_index;
+  std::unordered_map<std::string, std::vector<IndexedEdge>> outgoing;
+};
+
+[[nodiscard]] std::vector<IndexedEdge> edges_with_role(const GraphIndex& index,
+                                                       const std::string& from, EdgeRole role) {
+  std::vector<IndexedEdge> selected;
+  const auto found = index.outgoing.find(from);
+  if (found == index.outgoing.end()) {
+    return selected;
+  }
+  for (const IndexedEdge& edge : found->second) {
+    if (edge.role == role) {
+      selected.push_back(edge);
+    }
+  }
+  std::sort(selected.begin(), selected.end(), edge_order_less);
+  return selected;
+}
+
+[[nodiscard]] std::vector<std::string> successor_ids(const GraphIndex& index,
+                                                     const std::string& from) {
+  std::vector<std::string> ids;
+  const auto found = index.outgoing.find(from);
+  if (found == index.outgoing.end()) {
+    return ids;
+  }
+  ids.reserve(found->second.size());
+  for (const IndexedEdge& edge : found->second) {
+    ids.push_back(edge.to);
+  }
+  return ids;
+}
+
+[[nodiscard]] bool reaches_exit(const GraphIndex& index, const std::string& start,
+                                const std::string& blocked) {
+  if (start == kExit && start != blocked) {
+    return true;
+  }
+  std::unordered_set<std::string> visited;
+  std::vector<std::string> stack;
+  stack.push_back(start);
+  while (!stack.empty()) {
+    const std::string id = std::move(stack.back());
+    stack.pop_back();
+    if (id == blocked || !visited.insert(id).second) {
+      continue;
+    }
+    if (id == kExit) {
+      return true;
+    }
+    for (const std::string& next : successor_ids(index, id)) {
+      stack.push_back(next);
+    }
+  }
+  return false;
+}
+
+[[nodiscard]] std::unordered_map<std::string, int> distances_from(const GraphIndex& index,
+                                                                  const std::string& start) {
+  std::unordered_map<std::string, int> distance;
+  std::queue<std::string> pending;
+  distance[start] = 0;
+  pending.push(start);
+  while (!pending.empty()) {
+    const std::string id = pending.front();
+    pending.pop();
+    const int next_dist = distance[id] + 1;
+    for (const std::string& next : successor_ids(index, id)) {
+      if (distance.find(next) != distance.end()) {
+        continue;
+      }
+      distance[next] = next_dist;
+      pending.push(next);
+    }
+  }
+  return distance;
+}
+
+[[nodiscard]] std::string join_after_branch(const GraphIndex& index, const EventGraph& graph,
+                                            const std::string& branch_id) {
+  if (edges_with_role(index, branch_id, EdgeRole::Else).empty()) {
+    return kExit;
+  }
+
+  std::vector<std::string> candidates;
+  candidates.reserve(graph.nodes.size() + 1);
+  for (const EventGraphNode& node : graph.nodes) {
+    if (node.id != branch_id) {
+      candidates.push_back(node.id);
+    }
+  }
+  candidates.emplace_back(kExit);
+
+  std::vector<std::string> postdominators;
+  for (const std::string& candidate : candidates) {
+    if (!reaches_exit(index, branch_id, candidate)) {
+      postdominators.push_back(candidate);
+    }
+  }
+  if (postdominators.empty()) {
+    return kExit;
+  }
+
+  const std::unordered_map<std::string, int> distance = distances_from(index, branch_id);
+  std::string best = postdominators.front();
+  for (const std::string& candidate : postdominators) {
+    const int best_d = distance.find(best) == distance.end() ? 1'000'000 : distance.at(best);
+    const int cand_d =
+        distance.find(candidate) == distance.end() ? 1'000'000 : distance.at(candidate);
+    if (cand_d < best_d || (cand_d == best_d && candidate < best)) {
+      best = candidate;
+    }
+  }
+  return best;
+}
+
+struct Emitter {
+  const EventGraph& graph;
+  const GraphIndex& index;
+  EventGraphCompileResult& result;
+
+  [[nodiscard]] const EventGraphNode* find_node(const std::string& id) const {
+    const auto found = index.node_index.find(id);
+    if (found == index.node_index.end()) {
+      return nullptr;
+    }
+    return &graph.nodes[found->second];
+  }
+
+  std::vector<Command> emit_chain(const std::string& id, const std::unordered_set<std::string>& stop,
+                                  std::unordered_set<std::string>& path) {
+    if (id.empty() || id == kExit || stop.find(id) != stop.end()) {
+      return {};
+    }
+    if (is_pseudo_id(id) && id == kEntry) {
+      std::vector<Command> commands;
+      for (const IndexedEdge& edge : edges_with_role(index, kEntry, EdgeRole::Sequence)) {
+        const std::vector<Command> more = emit_chain(edge.to, stop, path);
+        commands.insert(commands.end(), more.begin(), more.end());
+      }
+      return commands;
+    }
+
+    const EventGraphNode* node = find_node(id);
+    if (node == nullptr) {
+      return {};
+    }
+    if (!path.insert(id).second) {
+      return {};
+    }
+
+    std::vector<Command> commands;
+    if (node->kind == "conditional_branch") {
+      Command command = command_from_node(*node);
+      const std::string join = join_after_branch(index, graph, id);
+      std::unordered_set<std::string> inner_stop = stop;
+      inner_stop.insert(join);
+      for (const IndexedEdge& edge : edges_with_role(index, id, EdgeRole::Then)) {
+        const std::vector<Command> then_cmds = emit_chain(edge.to, inner_stop, path);
+        command.then_commands.insert(command.then_commands.end(), then_cmds.begin(),
+                                     then_cmds.end());
+      }
+      for (const IndexedEdge& edge : edges_with_role(index, id, EdgeRole::Else)) {
+        const std::vector<Command> else_cmds = emit_chain(edge.to, inner_stop, path);
+        command.else_commands.insert(command.else_commands.end(), else_cmds.begin(),
+                                     else_cmds.end());
+      }
+      commands.push_back(std::move(command));
+      if (join != kExit && stop.find(join) == stop.end()) {
+        const std::vector<Command> after = emit_chain(join, stop, path);
+        commands.insert(commands.end(), after.begin(), after.end());
+      }
+    } else {
+      commands.push_back(command_from_node(*node));
+      for (const IndexedEdge& edge : edges_with_role(index, id, EdgeRole::Sequence)) {
+        const std::vector<Command> more = emit_chain(edge.to, stop, path);
+        commands.insert(commands.end(), more.begin(), more.end());
+      }
+    }
+
+    path.erase(id);
+    return commands;
+  }
+};
+
+void validate_and_index(const EventGraph& graph, GraphIndex& index,
+                        EventGraphCompileResult& result) {
+  for (std::size_t i = 0; i < graph.nodes.size(); ++i) {
+    const EventGraphNode& node = graph.nodes[i];
+    const std::string node_path = index_path("/nodes", i);
+    if (node.id.empty()) {
+      add_error(result, node_path + "/id", "graph node id must not be empty");
+      continue;
+    }
+    if (is_pseudo_id(node.id)) {
+      add_error(result, node_path + "/id", "graph node id 'entry' and 'exit' are reserved");
+      continue;
+    }
+    if (!index.node_index.emplace(node.id, i).second) {
+      add_error(result, node_path + "/id", "graph node id must be unique");
+      continue;
+    }
+    if (!is_mvp_kind(node.kind)) {
+      add_error(result, node_path + "/kind", "unknown graph node kind: " + node.kind);
+    }
+    if (node.kind == "wait" && node.frames < 0) {
+      add_error(result, node_path + "/params/frames", "wait frames must be >= 0");
+    }
+  }
+
+  for (std::size_t i = 0; i < graph.edges.size(); ++i) {
+    const EventGraphEdge& edge = graph.edges[i];
+    const std::string edge_path = index_path("/edges", i);
+    if (edge.from.empty()) {
+      add_error(result, edge_path + "/from", "graph edge from must not be empty");
+      continue;
+    }
+    if (edge.to.empty()) {
+      add_error(result, edge_path + "/to", "graph edge to must not be empty");
+      continue;
+    }
+    bool role_ok = true;
+    const EdgeRole role = parse_edge_role(edge.branch, role_ok);
+    if (!role_ok) {
+      add_error(result, edge_path + "/branch", "graph edge branch must be then or else");
+      continue;
+    }
+    if (!is_pseudo_id(edge.from) && index.node_index.find(edge.from) == index.node_index.end()) {
+      add_error(result, edge_path + "/from", "graph edge from unknown node: " + edge.from);
+      continue;
+    }
+    if (!is_pseudo_id(edge.to) && index.node_index.find(edge.to) == index.node_index.end()) {
+      add_error(result, edge_path + "/to", "graph edge to unknown node: " + edge.to);
+      continue;
+    }
+    if (role != EdgeRole::Sequence) {
+      const auto from_node = index.node_index.find(edge.from);
+      if (from_node == index.node_index.end() ||
+          graph.nodes[from_node->second].kind != "conditional_branch") {
+        add_error(result, edge_path + "/branch",
+                  "then/else edges must start at a conditional_branch node");
+        continue;
+      }
+    }
+    IndexedEdge indexed;
+    indexed.to = edge.to;
+    indexed.order = edge.order;
+    indexed.role = role;
+    indexed.source_index = i;
+    index.outgoing[edge.from].push_back(std::move(indexed));
+  }
+
+  for (auto& [from, edges] : index.outgoing) {
+    std::stable_sort(edges.begin(), edges.end(), edge_order_less);
+    (void)from;
+  }
+
+  enum class Color { White, Gray, Black };
+  std::unordered_map<std::string, Color> color;
+  color[kEntry] = Color::White;
+  color[kExit] = Color::White;
+  for (const EventGraphNode& node : graph.nodes) {
+    if (!node.id.empty()) {
+      color[node.id] = Color::White;
+    }
+  }
+
+  std::vector<std::string> path;
+  std::unordered_set<std::string> reachable;
+
+  const auto record_cycle = [&](const std::string& back_to) {
+    std::vector<std::string> cycle_ids;
+    bool recording = false;
+    for (const std::string& id : path) {
+      if (id == back_to) {
+        recording = true;
+      }
+      if (recording) {
+        cycle_ids.push_back(id);
+      }
+    }
+    cycle_ids.push_back(back_to);
+    bool has_wait = false;
+    for (const std::string& id : cycle_ids) {
+      const auto found = index.node_index.find(id);
+      if (found != index.node_index.end() && graph.nodes[found->second].kind == "wait") {
+        has_wait = true;
+        break;
+      }
+    }
+    if (has_wait) {
+      add_error(result, "/edges", "graph cycle cannot be compiled into a command list");
+    } else {
+      add_error(result, "/edges", "cycle without Wait");
+    }
+  };
+
+  const auto dfs = [&](auto&& self, const std::string& id) -> void {
+    color[id] = Color::Gray;
+    path.push_back(id);
+    reachable.insert(id);
+    for (const std::string& next : successor_ids(index, id)) {
+      const Color next_color = color.find(next) == color.end() ? Color::White : color[next];
+      if (next_color == Color::Gray) {
+        record_cycle(next);
+        continue;
+      }
+      if (next_color == Color::White) {
+        self(self, next);
+      } else {
+        reachable.insert(next);
+      }
+    }
+    path.pop_back();
+    color[id] = Color::Black;
+  };
+  dfs(dfs, kEntry);
+
+  for (std::size_t i = 0; i < graph.nodes.size(); ++i) {
+    const EventGraphNode& node = graph.nodes[i];
+    if (node.id.empty()) {
+      continue;
+    }
+    if (reachable.find(node.id) == reachable.end()) {
+      add_error(result, index_path("/nodes", i), "unreachable graph node: " + node.id);
+    }
+  }
+
+  for (std::size_t i = 0; i < graph.nodes.size(); ++i) {
+    const EventGraphNode& node = graph.nodes[i];
+    if (node.kind != "conditional_branch") {
+      continue;
+    }
+    if (edges_with_role(index, node.id, EdgeRole::Then).empty()) {
+      add_error(result, index_path("/nodes", i), "conditional_branch requires a then-edge");
+    }
+  }
+}
+
+}  // namespace
+
+EventGraphCompileResult compile_event_graph(const EventGraph& graph) {
+  EventGraphCompileResult result;
+  GraphIndex index;
+  validate_and_index(graph, index, result);
+  if (!result.issues.empty()) {
+    result.ok = false;
+    return result;
+  }
+
+  Emitter emitter{graph, index, result};
+  std::unordered_set<std::string> path;
+  result.commands = emitter.emit_chain(kEntry, {}, path);
+  result.ok = result.issues.empty();
+  return result;
+}
+
+}  // namespace rat

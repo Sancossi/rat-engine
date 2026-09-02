@@ -11,6 +11,7 @@ add_library(rat_core
   src/debug_snapshot.cpp
   src/edit_history.cpp
   src/event_edit.cpp
+  src/event_graph.cpp
   src/event_inspect.cpp
   src/event_runtime.cpp
   src/entity.cpp

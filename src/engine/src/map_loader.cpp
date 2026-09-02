@@ -270,6 +270,69 @@ void canonicalize_edge_barriers(MapData& map) {
   map.edge_barriers = std::move(kept);
 }
 
+EventGraphNode parse_graph_node(const json& node) {
+  EventGraphNode graph_node;
+  graph_node.id = node.at("id").get<std::string>();
+  graph_node.kind = node.at("kind").get<std::string>();
+  if (!node.contains("params") || !node.at("params").is_object()) {
+    return graph_node;
+  }
+  const json& params = node.at("params");
+  if (params.contains("text")) {
+    graph_node.text = params.at("text").get<std::string>();
+  }
+  if (params.contains("id") && params.at("id").is_number_unsigned()) {
+    graph_node.switch_id = params.at("id").get<std::uint32_t>();
+  }
+  if (params.contains("value") && params.at("value").is_boolean()) {
+    graph_node.bool_value = params.at("value").get<bool>();
+  }
+  if (params.contains("frames")) {
+    graph_node.frames = params.at("frames").get<int>();
+  }
+  if (params.contains("condition")) {
+    graph_node.branch_condition = parse_condition(params.at("condition"));
+  }
+  return graph_node;
+}
+
+EventGraphEdge parse_graph_edge(const json& node) {
+  EventGraphEdge edge;
+  edge.from = node.at("from").get<std::string>();
+  edge.to = node.at("to").get<std::string>();
+  if (node.contains("order")) {
+    edge.order = node.at("order").get<int>();
+  }
+  if (node.contains("branch")) {
+    edge.branch = node.at("branch").get<std::string>();
+  }
+  return edge;
+}
+
+EventGraph parse_graph(const json& node) {
+  if (!node.is_object()) {
+    throw std::runtime_error("graph must be an object");
+  }
+  EventGraph graph;
+  if (node.contains("nodes")) {
+    if (!node.at("nodes").is_array()) {
+      throw std::runtime_error("graph nodes must be an array");
+    }
+    for (const auto& item : node.at("nodes")) {
+      graph.nodes.push_back(parse_graph_node(item));
+    }
+  }
+  if (node.contains("edges")) {
+    if (!node.at("edges").is_array()) {
+      throw std::runtime_error("graph edges must be an array");
+    }
+    for (const auto& item : node.at("edges")) {
+      graph.edges.push_back(parse_graph_edge(item));
+    }
+  }
+  return graph;
+}
+
 EventPage parse_page(const json& node) {
   EventPage page;
   page.trigger = parse_trigger(node.at("trigger").get<std::string>());
@@ -280,6 +343,9 @@ EventPage parse_page(const json& node) {
   }
   if (node.contains("commands")) {
     page.commands = parse_commands(node.at("commands"));
+  }
+  if (node.contains("graph")) {
+    page.graph = parse_graph(node.at("graph"));
   }
   return page;
 }
@@ -622,12 +688,62 @@ json dump_commands(const std::vector<Command>& commands) {
   return arr;
 }
 
+json dump_graph_node(const EventGraphNode& node) {
+  json params = json::object();
+  if (node.kind == "show_text") {
+    params["text"] = node.text;
+  } else if (node.kind == "control_switch") {
+    params["id"] = node.switch_id;
+    params["value"] = node.bool_value;
+  } else if (node.kind == "wait") {
+    params["frames"] = node.frames;
+  } else if (node.kind == "conditional_branch") {
+    params["condition"] = dump_condition(node.branch_condition);
+  } else {
+    if (!node.text.empty()) {
+      params["text"] = node.text;
+    }
+    if (node.switch_id != 0) {
+      params["id"] = node.switch_id;
+    }
+    if (node.frames != 0) {
+      params["frames"] = node.frames;
+    }
+  }
+  return json{{"id", node.id}, {"kind", node.kind}, {"params", params}};
+}
+
+json dump_graph_edge(const EventGraphEdge& edge) {
+  json node{{"from", edge.from}, {"to", edge.to}};
+  if (edge.order.has_value()) {
+    node["order"] = *edge.order;
+  }
+  if (edge.branch.has_value()) {
+    node["branch"] = *edge.branch;
+  }
+  return node;
+}
+
+json dump_graph(const EventGraph& graph) {
+  json node{{"nodes", json::array()}, {"edges", json::array()}};
+  for (const EventGraphNode& graph_node : graph.nodes) {
+    node["nodes"].push_back(dump_graph_node(graph_node));
+  }
+  for (const EventGraphEdge& edge : graph.edges) {
+    node["edges"].push_back(dump_graph_edge(edge));
+  }
+  return node;
+}
+
 json dump_page(const EventPage& page) {
   json node{{"trigger", trigger_to_string(page.trigger)},
             {"conditions", json::array()},
             {"commands", dump_commands(page.commands)}};
   for (const Condition& condition : page.conditions) {
     node["conditions"].push_back(dump_condition(condition));
+  }
+  if (page.graph.has_value()) {
+    node["graph"] = dump_graph(*page.graph);
   }
   return node;
 }

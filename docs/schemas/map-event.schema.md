@@ -150,7 +150,52 @@ At least one of `tile` / `volume` should be present for interactable events.
 |-------|------|----------|-------|
 | `trigger` | string | yes | See triggers |
 | `conditions` | array | no | All must pass (AND) |
-| `commands` | array | no | Ordered RM-like list |
+| `commands` | array | no | Ordered RM-like list (Play bytecode) |
+| `graph` | object | no | Authoring node graph; optional. Play does not read it. |
+
+`graph` is authoring-only. Edit compiles it to `commands[]` on apply/save. Existing maps omit `graph`. Trigger and page `conditions` stay outside the graph.
+
+### Graph (`EventGraph`)
+
+```json
+"graph": {
+  "nodes": [ { "id": "n1", "kind": "show_text", "params": { "text": "Hello" } } ],
+  "edges": [ { "from": "entry", "to": "n1" }, { "from": "n1", "to": "exit" } ]
+}
+```
+
+| Field | Type | Required | Notes |
+|-------|------|----------|-------|
+| `nodes` | array | no | Graph nodes. Ids `entry` and `exit` are reserved pseudo-nodes and must not appear here. |
+| `edges` | array | no | Directed edges. `from` / `to` are node ids or `entry` / `exit`. |
+
+#### Node
+
+| Field | Type | Required | Notes |
+|-------|------|----------|-------|
+| `id` | string | yes | Unique on the page graph |
+| `kind` | string | yes | MVP: `show_text`, `control_switch`, `conditional_branch`, `wait` |
+| `params` | object | no | Kind-specific payload |
+
+MVP `kind` → `params`:
+
+| `kind` | `params` | Compiles to `Command.op` |
+|--------|----------|--------------------------|
+| `show_text` | `text` (string) | `show_text` |
+| `control_switch` | `id` (uint), `value` (bool) | `control_switch` |
+| `conditional_branch` | `condition` (one condition object) | `conditional_branch` with nested `then` / `else` |
+| `wait` | `frames` (int ≥ 0) | `wait` |
+
+#### Edge
+
+| Field | Type | Required | Notes |
+|-------|------|----------|-------|
+| `from` | string | yes | Source node id, or `entry` |
+| `to` | string | yes | Target node id, or `exit` |
+| `order` | int | no | Sibling order among outgoing edges from the same node. Missing `order` sorts as `0`, then by target id. |
+| `branch` | string | no | `then` or `else` on edges out of `conditional_branch`. Omit for sequence edges. |
+
+Compile walks from `entry` deterministically. Nested `then` / `else` become `Command.then_commands` / `else_commands`. Invalid graphs (cycle without Wait, unreachable nodes, unknown kind, `conditional_branch` without a then-edge) are structured map validation errors: the map does not start / document load rejects.
 
 ### Triggers
 

@@ -12,6 +12,7 @@ add_executable(rat_tests
   edit_history_test.cpp
   editor_document_test.cpp
   event_edit_test.cpp
+  event_graph_test.cpp
   event_inspect_test.cpp
   event_runtime_test.cpp
   event_why_not_test.cpp

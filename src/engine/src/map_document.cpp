@@ -1,5 +1,6 @@
 #include "rat/map_document.hpp"
 
+#include "rat/event_graph.hpp"
 #include "rat/map_loader.hpp"
 
 #include <nlohmann/json.hpp>
@@ -367,6 +368,13 @@ std::vector<MapIssue> validate_map_document(const MapData& data) {
         validate_condition(page.conditions[c], index_path(page_path + "/conditions", c), issues);
       }
       validate_commands(page.commands, page_path + "/commands", issues);
+      if (page.graph.has_value()) {
+        const EventGraphCompileResult compiled = compile_event_graph(*page.graph);
+        for (MapIssue issue : compiled.issues) {
+          issue.json_path = page_path + "/graph" + issue.json_path;
+          issues.push_back(std::move(issue));
+        }
+      }
     }
   }
 
