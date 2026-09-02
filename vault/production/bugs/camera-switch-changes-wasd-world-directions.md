@@ -18,3 +18,5 @@ Expected: same key preserves world direction across camera switches.
 Actual: camera-relative projected axes rotate in 3/4.
 
 Decision: editor movement uses stable world mapping W=-Z, D=-X for all camera modes.
+
+Follow-up: Play walk is camera-relative again — [[feat: Camera-aligned walk]]. `C` rotating W in Play is intended. Edit still has no player WASD.
