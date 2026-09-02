@@ -565,7 +565,7 @@ TEST_CASE("Stair 0.25 still walks up when map walls are baked", "[unit][player][
   REQUIRE(player.y == Approx(0.25f));
 }
 
-TEST_CASE("Player stands on airborne slab and falls walking off", "[unit][player][surface]") {
+TEST_CASE("Walking off a floor slab keeps world Y", "[unit][player][surface]") {
   rat::MapData map = make_surface_map(2, 1, {0.0f, 0.0f});
   map.floor_slabs.push_back({{0, 0}, 2.0f, 0.25f});
   const rat::SurfaceQuery query(map);
@@ -574,11 +574,24 @@ TEST_CASE("Player stands on airborne slab and falls walking off", "[unit][player
   player = rat::integrate_player_surface(player, {}, 1.0f / 60.0f, {}, query, 0.35f, {}, &map);
   REQUIRE(player.y == Approx(2.0f).margin(1e-3f));
   rat::MoveInput east{1.0f, 0.0f};
+  bool left_slab = false;
   for (int i = 0; i < 40; ++i) {
+    const float y_before = player.y;
     player = rat::integrate_player_surface(player, east, 1.0f / 60.0f, {}, query, 0.35f, {}, &map);
+    if (player.x >= 1.0f) {
+      left_slab = true;
+      REQUIRE(player.y == Approx(2.0f).margin(0.15f));
+      REQUIRE(y_before - player.y <= 0.35f + 1e-3f);
+      break;
+    }
   }
-  REQUIRE(player.x > 1.2f);
-  REQUIRE(player.y == Approx(0.0f).margin(0.05f));
+  REQUIRE(left_slab);
+  REQUIRE(player.x > 1.0f);
+  REQUIRE(player.y == Approx(2.0f).margin(0.15f));
+  for (int i = 0; i < 5; ++i) {
+    player = rat::integrate_player_surface(player, east, 1.0f / 60.0f, {}, query, 0.35f, {}, &map);
+    REQUIRE(player.y == Approx(2.0f).margin(0.15f));
+  }
 }
 
 TEST_CASE("East ladder climb reaches slab with interact then into-face", "[unit][player][surface]") {

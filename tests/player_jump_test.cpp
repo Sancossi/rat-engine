@@ -1774,6 +1774,111 @@ TEST_CASE("Jump under a 1.6 slab does not shove feet below support", "[unit][pla
   }
 }
 
+TEST_CASE("Walking off a floor slab stays at world Y then falls", "[unit][player]") {
+  rat::MapData map = make_surface_map(2, 1, {0.0f, 0.0f});
+  map.floor_slabs.push_back({{0, 0}, 2.0f, 0.25f});
+  const rat::SurfaceQuery query(map);
+
+  rat::PlayerBody body;
+  body.x = 0.5f;
+  body.y = 2.0f;
+  body.z = 0.5f;
+  body.speed = 5.0f;
+  rat::JumpState jump = rat::make_grounded_jump_state();
+
+  rat::PlayerFrameInput input;
+  input.move = rat::MoveInput{1.0f, 0.0f};
+
+  bool left_slab = false;
+  for (int i = 0; i < 40; ++i) {
+    const rat::PlayerFrameResult result = rat::integrate_player_frame_surface(
+        body, jump, input, 1.0f / 60.0f, {}, query, {}, 0.35f, {}, &map);
+    body = result.body;
+    jump = result.jump;
+    if (body.x >= 1.0f) {
+      left_slab = true;
+      REQUIRE_FALSE(jump.grounded);
+      REQUIRE(body.y == Approx(2.0f).margin(0.15f));
+      REQUIRE(body.y > 0.5f);
+      break;
+    }
+  }
+  REQUIRE(left_slab);
+
+  const float y_after_leave = body.y;
+  bool descended = false;
+  bool landed = false;
+  for (int i = 0; i < 180; ++i) {
+    const rat::PlayerFrameResult result = rat::integrate_player_frame_surface(
+        body, jump, input, 1.0f / 60.0f, {}, query, {}, 0.35f, {}, &map);
+    body = result.body;
+    jump = result.jump;
+    if (!descended && body.y < y_after_leave - 0.2f) {
+      descended = true;
+    }
+    if (jump.grounded && body.y < 0.1f) {
+      landed = true;
+      break;
+    }
+  }
+  REQUIRE(descended);
+  REQUIRE(landed);
+  REQUIRE(body.y == Approx(0.0f).margin(0.05f));
+}
+
+TEST_CASE("Walking into a slab hole stays at world Y then falls", "[unit][player]") {
+  rat::MapData map = make_surface_map(3, 1, {0.0f, 0.0f, 0.0f});
+  map.floor_slabs.push_back({{0, 0}, 2.0f, 0.25f});
+  map.floor_slabs.push_back({{1, 0}, 2.0f, 0.25f});
+  const rat::SurfaceQuery query(map);
+
+  rat::PlayerBody body;
+  body.x = 1.5f;
+  body.y = 2.0f;
+  body.z = 0.5f;
+  body.speed = 5.0f;
+  rat::JumpState jump = rat::make_grounded_jump_state();
+
+  rat::PlayerFrameInput input;
+  input.move = rat::MoveInput{1.0f, 0.0f};
+
+  bool entered_hole = false;
+  for (int i = 0; i < 40; ++i) {
+    const rat::PlayerFrameResult result = rat::integrate_player_frame_surface(
+        body, jump, input, 1.0f / 60.0f, {}, query, {}, 0.35f, {}, &map);
+    body = result.body;
+    jump = result.jump;
+    if (body.x >= 2.0f) {
+      entered_hole = true;
+      REQUIRE_FALSE(jump.grounded);
+      REQUIRE(body.y == Approx(2.0f).margin(0.15f));
+      REQUIRE(body.y > 0.5f);
+      break;
+    }
+  }
+  REQUIRE(entered_hole);
+
+  const float y_after_leave = body.y;
+  bool descended = false;
+  bool landed = false;
+  for (int i = 0; i < 180; ++i) {
+    const rat::PlayerFrameResult result = rat::integrate_player_frame_surface(
+        body, jump, input, 1.0f / 60.0f, {}, query, {}, 0.35f, {}, &map);
+    body = result.body;
+    jump = result.jump;
+    if (!descended && body.y < y_after_leave - 0.2f) {
+      descended = true;
+    }
+    if (jump.grounded && body.y < 0.1f) {
+      landed = true;
+      break;
+    }
+  }
+  REQUIRE(descended);
+  REQUIRE(landed);
+  REQUIRE(body.y == Approx(0.0f).margin(0.05f));
+}
+
 TEST_CASE("make_grounded_jump_state zeros ladder lockout and bounce", "[unit][player]") {
   const rat::JumpState jump = rat::make_grounded_jump_state();
   REQUIRE(jump.ladder_lockout_left == 0.0f);

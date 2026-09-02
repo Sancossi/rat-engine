@@ -38,6 +38,13 @@ bool surface_step_allowed(const SurfaceSample& from, const SurfaceSample& to, fl
   return rise <= max_step_up;
 }
 
+void follow_standing_sample(PlayerBody& player, const SurfaceSample& sample, float max_step_up,
+                            bool keep_world_y_on_drop) {
+  if (!keep_world_y_on_drop || player.y - sample.y <= max_step_up) {
+    player.y = sample.y;
+  }
+}
+
 CollisionWorld bake_integrate_world(std::span<const EdgeBarrierDef> edge_barriers,
                                     const SurfaceQuery& query, const MapData* map) {
   if (map != nullptr) {
@@ -168,13 +175,14 @@ PlayerBody integrate_player_surface(PlayerBody player, MoveInput input, float dt
   const float step_dz = dz / static_cast<float>(steps);
   const float step_up_limit = std::max(0.0f, max_step_up);
   const CollisionWorld world = bake_integrate_world(edge_barriers, surface_query, map);
+  const bool keep_world_y_on_drop = map != nullptr;
   (void)ignore_ladders;
   (void)climb_move;
 
   SurfaceSample current_sample =
       standing_sample(surface_query, world, map, player.x, player.z, player.half_extent, player.y,
                       step_up_limit);
-  player.y = current_sample.y;
+  follow_standing_sample(player, current_sample, step_up_limit, keep_world_y_on_drop);
 
   // Keep deterministic axis slide semantics: resolve X, then resolve Z per substep.
   for (int i = 0; i < steps; ++i) {
@@ -198,7 +206,7 @@ PlayerBody integrate_player_surface(PlayerBody player, MoveInput input, float dt
         player.x = old_x;
       } else {
         current_sample = sample;
-        player.y = sample.y;
+        follow_standing_sample(player, sample, step_up_limit, keep_world_y_on_drop);
       }
     }
 
@@ -221,7 +229,7 @@ PlayerBody integrate_player_surface(PlayerBody player, MoveInput input, float dt
         player.z = old_z;
       } else {
         current_sample = sample;
-        player.y = sample.y;
+        follow_standing_sample(player, sample, step_up_limit, keep_world_y_on_drop);
       }
     }
   }
