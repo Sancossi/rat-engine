@@ -1,7 +1,7 @@
 ---
 type: task
 area: Engine
-status: Not started
+status: In progress
 task_type: Feature
 sprint:
 due:
@@ -17,6 +17,7 @@ Acceptance: climb-ось без изменений. Overlap latch. На лест
 Origin: chat 2026-09-02 (переделка climb). Related: [[feat: Stacked surfaces caves and basements]], [[feat: Step off ladder onto same-tile floor]].
 
 Spec: `docs/superpowers/specs/2026-09-02-ladder-jump-off-design.md`
+Plan: `docs/superpowers/plans/2026-09-02-ladder-jump-off.md`
 
 ## Resolution
 
