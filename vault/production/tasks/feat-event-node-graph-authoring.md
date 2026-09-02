@@ -3,7 +3,7 @@ type: task
 area: Engine
 status: Not started
 task_type: Feature
-sprint:
+sprint: Sprint 8
 due:
 tags: [task]
 ---
@@ -20,4 +20,4 @@ Intent: авторство событий как **дерево/граф нод*
 
 Acceptance: см. слайсы. MVP без полного MZ-набора команд.
 
-Origin: chat 2026-09-02. Related: [[s2-event-inspector-pages-stub]], [[feat: PlaySE event command]].
+Origin: chat 2026-09-02. Related: [[s2-event-inspector-pages-stub]], [[feat: PlaySE event command]]. Взято в [[Sprint 8 — Play feel and authoring]].

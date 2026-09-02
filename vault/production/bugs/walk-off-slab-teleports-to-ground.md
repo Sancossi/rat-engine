@@ -3,13 +3,13 @@ type: bug
 area: Engine
 status: Open
 severity: High
-sprint:
+sprint: Sprint 8
 tags: [bug]
 ---
 
 # Walk off slab teleports to the ground
 
-Origin: chat 2026-09-02 playtest. `grey_yard` loft slabs `top_y` 2.0; hole at `(2, 5)`. Related: [[feat: Stacked surfaces caves and basements]] (acceptance: дыра ведёт вниз).
+Origin: chat 2026-09-02 playtest. `grey_yard` loft slabs `top_y` 2.0; hole at `(2, 5)`. Related: [[feat: Stacked surfaces caves and basements]] (acceptance: дыра ведёт вниз). Взято в [[Sprint 8 — Play feel and authoring]].
 
 ## Repro
 

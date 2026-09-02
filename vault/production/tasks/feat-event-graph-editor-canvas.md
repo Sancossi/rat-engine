@@ -3,7 +3,7 @@ type: task
 area: Engine
 status: Not started
 task_type: Feature
-sprint:
+sprint: Sprint 8
 due:
 tags: [task]
 ---
@@ -14,4 +14,4 @@ Intent: в Edit у выбранного event/page — холст нод (trigge
 
 Acceptance: place/connect/delete nodes; compile on apply; inspector list остаётся fallback. MVP без полного MZ-набора. Не Ruby/JS VM.
 
-Origin: [[feat: Event node graph authoring]]. Depends: [[feat: Event graph model and compile]]. Related: [[s2-event-inspector-pages-stub]].
+Origin: [[feat: Event node graph authoring]]. Depends: [[feat: Event graph model and compile]]. Related: [[s2-event-inspector-pages-stub]]. Взято в [[Sprint 8 — Play feel and authoring]].

@@ -3,13 +3,13 @@ type: bug
 area: Engine
 status: Open
 severity: High
-sprint:
+sprint: Sprint 8
 tags: [bug]
 ---
 
 # Climb camera locks on the far side of the ladder
 
-Origin: chat 2026-09-02 playtest after [[feat: MGS3 ladder climb]]. Test map `grey_yard`: East ladder on tile `(2, 4)`, approach from `(3, 5)`.
+Origin: chat 2026-09-02 playtest after [[feat: MGS3 ladder climb]]. Test map `grey_yard`: East ladder on tile `(2, 4)`, approach from `(3, 5)`. Взято в [[Sprint 8 — Play feel and authoring]].
 
 ## Repro
 

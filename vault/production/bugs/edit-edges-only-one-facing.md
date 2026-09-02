@@ -3,13 +3,13 @@ type: bug
 area: Engine
 status: Open
 severity: Medium
-sprint:
+sprint: Sprint 8
 tags: [bug]
 ---
 
 # Edit edges / ramps only one facing
 
-Origin: chat 2026-09-02 (author): рамки при редактировании ставятся только с одной стороны; нужно уметь с другой.
+Origin: chat 2026-09-02 (author): рамки при редактировании ставятся только с одной стороны; нужно уметь с другой. Взято в [[Sprint 8 — Play feel and authoring]].
 
 ## Repro
 

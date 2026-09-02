@@ -3,7 +3,7 @@ type: task
 area: Engine
 status: Not started
 task_type: Feature
-sprint:
+sprint: Sprint 8
 due:
 tags: [task]
 ---
@@ -14,4 +14,4 @@ Intent: модель графа (ноды + рёбра) и compile → суще�
 
 Acceptance: serialize/load graph; compile matches today’s linear list for a golden page; invalid graph = structured error, карта не стартует. Нет ImGui canvas.
 
-Origin: [[feat: Event node graph authoring]]. Depends: [[research: Event node graph vs bytecode]].
+Origin: [[feat: Event node graph authoring]]. Depends: [[research: Event node graph vs bytecode]]. Взято в [[Sprint 8 — Play feel and authoring]].

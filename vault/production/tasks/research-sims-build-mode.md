@@ -3,7 +3,7 @@ type: task
 area: Engine
 status: Not started
 task_type: Research
-sprint:
+sprint: Sprint 8
 due:
 tags: [task]
 ---
@@ -14,4 +14,4 @@ Intent: зафиксировать, что брать из The Sims (стены 
 
 Acceptance: короткая заметка в vault (5–10 пунктов: wall tool, floor/terrain brush, drag along edges, cancel/undo). Без кода.
 
-Origin: [[feat: Sims-like edit brush and edge paint]]. Related: [[Collect 5 reference games]].
+Origin: [[feat: Sims-like edit brush and edge paint]]. Related: [[Collect 5 reference games]]. Взято в [[Sprint 8 — Play feel and authoring]].

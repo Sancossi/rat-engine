@@ -25,6 +25,6 @@ tags: [hub]
 
 ## Текущий спринт
 
-Смотри заметку спринта с `current: true`. Последний закрытый — [[Sprint 7 — Engine architecture]] (очередь roadmap пустая; следующий спринт не заведён).
+Смотри заметку спринта с `current: true`: [[Sprint 8 — Play feel and authoring]]. Последний закрытый — [[Sprint 7 — Engine architecture]].
 
 Доска: [[Task board]] — виды **Current sprint** (канбан спринта) и **In progress** (код / ревью / blocked). Статус в YAML заметки = колонка на доске.
