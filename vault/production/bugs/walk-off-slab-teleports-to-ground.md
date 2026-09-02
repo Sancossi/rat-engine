@@ -1,7 +1,7 @@
 ---
 type: bug
 area: Engine
-status: Investigating
+status: Fixed
 severity: High
 sprint: Sprint 8
 tags: [bug]
@@ -15,7 +15,7 @@ Playtest 2026-09-02 evening (after keep-Y in `follow_standing_sample` + full Rel
 
 Follow-up: [[walk-through-ladder]]
 
-Implementer `97296b5`: mid-fall teleport was neighboring-slab ceiling (circle overlap), not the keep-Y walk-off. Ceiling is now point-in-tile. Review pending (bug status has no In review).
+Follow-up from: [[feat: Stacked surfaces caves and basements]]
 
 ## Repro
 
@@ -30,8 +30,10 @@ Leave support → airborne, gravity, **smooth fall** onto the ground (Y 0). Same
 
 Player **teleports** to the first floor instead of falling.
 
-The surface keep-Y patch is not enough: Play Y is assigned in `tick_ground_air_substep` (`effective_ground_y + jump_offset`, then grounded `corrected.y`). Synthetic 2×1 frame tests can hide a grey_yard / post-climb miss.
+## Resolution
 
-Suspect walk-off / `query_solid_support` snaps feet to ground_y under the same XZ instead of Fall. Not a clone of [[stuck-after-fall-or-jump-into-elevation]] (wedge) or [[cannot-fall-off-ramp]].
+Walk-off already left the loft at Y≈2; the teleport was mid-fall: the cylinder still overlapped a **neighbor** slab after the feet point left its tile, so `clamp_to_ceiling` slammed Y to `y_lo − height`. Ceiling now uses the same point-in-tile rule as standing support. Verify: Play `grey_yard` hole `(2, 5)` or south loft edge; `.\build\tests\rat_tests.exe "*loft*"`. Review: Approved.
 
-Follow-up from: [[feat: Stacked surfaces caves and basements]]
+## Bugs found
+
+none.
