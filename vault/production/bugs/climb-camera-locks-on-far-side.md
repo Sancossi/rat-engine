@@ -1,7 +1,7 @@
 ---
 type: bug
 area: Engine
-status: Investigating
+status: Fixed
 severity: High
 sprint: Sprint 8
 tags: [bug]
@@ -30,3 +30,11 @@ Lock uses `ladder_face_into` (East = +X): eye = player − into × 10. For an Ea
 Lock also **snaps**; want a smooth turn: [[feat: Smooth camera turn]].
 
 Follow-up from: [[feat: MGS3 ladder climb]]
+
+## Resolution
+
+`apply_mount` stores `climb_into` from **pre-snap** XZ: along the face, player → rungs. East grab from +X → into −X, camera east of the player looking at the wall. Mount from 0.85 (owner side) still +X. `climb_camera_pose` math unchanged. Verify: Play `grey_yard` East ladder from `(3, 5)`; `.\build\tests\rat_tests.exe "*rungs*"`.
+
+## Bugs found
+
+none.
