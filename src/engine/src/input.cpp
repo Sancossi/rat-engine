@@ -30,8 +30,8 @@ InputFrame map_input_frame(const InputButtons& down, const InputButtons& previou
     if (down.move_right) {
       screen_x += 1.0f;
     }
-    frame.move = world_aligned_move(screen_x, screen_z);
-    frame.climb_move = camera_relative_move(screen_x, screen_z, camera_eye, camera_focus);
+    frame.move = camera_relative_move(screen_x, screen_z, camera_eye, camera_focus);
+    frame.climb_move = frame.move;
     frame.jump_pressed = edge(down.jump, previous.jump);
     frame.jump_held = down.jump;
   }

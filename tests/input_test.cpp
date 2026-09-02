@@ -4,7 +4,7 @@
 
 #include <catch2/catch_test_macros.hpp>
 
-TEST_CASE("InputFrame maps WASD to world-aligned move", "[unit][input]") {
+TEST_CASE("InputFrame default camera walk matches world-aligned fallback", "[unit][input]") {
   rat::InputButtons down;
   down.move_up = true;
   down.move_right = true;
@@ -14,9 +14,11 @@ TEST_CASE("InputFrame maps WASD to world-aligned move", "[unit][input]") {
   const rat::MoveInput expected = rat::world_aligned_move(1.0f, 1.0f);
   CHECK(frame.move.axis_x == expected.axis_x);
   CHECK(frame.move.axis_z == expected.axis_z);
+  CHECK(frame.climb_move.axis_x == frame.move.axis_x);
+  CHECK(frame.climb_move.axis_z == frame.move.axis_z);
 }
 
-TEST_CASE("InputFrame climb_move follows camera while walk stays world-aligned", "[unit][input]") {
+TEST_CASE("InputFrame walk follows camera look", "[unit][input]") {
   rat::InputButtons down;
   down.move_up = true;
   rat::InputGating gate;
@@ -24,14 +26,12 @@ TEST_CASE("InputFrame climb_move follows camera while walk stays world-aligned",
   const rat::Vec3 focus{4.0f, 0.0f, 0.0f};
 
   const rat::InputFrame frame = rat::map_input_frame(down, {}, gate, eye, focus);
-  const rat::MoveInput world_w = rat::world_aligned_move(0.0f, 1.0f);
   const rat::MoveInput cam_w = rat::camera_relative_move(0.0f, 1.0f, eye, focus);
-  CHECK(frame.move.axis_x == world_w.axis_x);
-  CHECK(frame.move.axis_z == world_w.axis_z);
-  CHECK(frame.climb_move.axis_x == cam_w.axis_x);
-  CHECK(frame.climb_move.axis_z == cam_w.axis_z);
-  CHECK(frame.climb_move.axis_x > 0.5f);
-  CHECK(frame.move.axis_z == -1.0f);
+  CHECK(frame.move.axis_x == cam_w.axis_x);
+  CHECK(frame.move.axis_z == cam_w.axis_z);
+  CHECK(frame.climb_move.axis_x == frame.move.axis_x);
+  CHECK(frame.climb_move.axis_z == frame.move.axis_z);
+  CHECK(frame.move.axis_x > 0.5f);
 }
 
 TEST_CASE("InputFrame reports jump, interact, and editor action edges", "[unit][input]") {

@@ -27,8 +27,8 @@ struct InputGating {
 };
 
 struct InputFrame {
-  MoveInput move{};
-  MoveInput climb_move{};  // camera-relative WASD; empty → climb uses `move`
+  MoveInput move{};        // Play: camera-relative (degenerate camera = world-aligned fallback)
+  MoveInput climb_move{};  // same mapping until MGS3 1D climb
   bool jump_pressed = false;
   bool jump_held = false;
   bool interact_pressed = false;

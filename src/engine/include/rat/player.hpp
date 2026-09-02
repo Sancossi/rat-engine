@@ -79,7 +79,7 @@ struct PlayerFrameResult {
 [[nodiscard]] MoveInput camera_relative_move(float screen_x, float screen_z, Vec3 eye,
                                              Vec3 focus);
 
-// Stable editor/game axes across camera switches: W=-Z, D=-X.
+// Stable editor/game axes across camera switches: W=-Z, D=-X. Play input no longer uses this.
 [[nodiscard]] MoveInput world_aligned_move(float screen_x, float screen_z);
 
 [[nodiscard]] PlayerBody integrate_player(PlayerBody player, MoveInput input, float dt,
