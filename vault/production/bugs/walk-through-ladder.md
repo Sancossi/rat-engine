@@ -26,6 +26,8 @@ The ladder face blocks the cylinder like a fence/wall for `[y_lo, y_hi]`. You ca
 
 The volume is overlap-only. Walking through the face is free.
 
+Implementer `8f22456`: bake `FenceSolid` on the ladder face; approach-side Interact still mounts. Review pending.
+
 ## Notes
 
 Bake a `FenceSolid` on the ladder edge (`apply_max_step_up_skip = false`) spanning `y_lo`–`y_hi`. Do not require a separate authored fence. Update the MGS3 spec line that said overlap without climbing may pass the volume.
