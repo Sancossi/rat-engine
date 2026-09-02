@@ -6,7 +6,9 @@
 #include <bx/bx.h>
 #include <bx/math.h>
 
+#include <algorithm>
 #include <array>
+#include <cmath>
 #include <cstdint>
 #include <utility>
 #include <vector>
@@ -82,15 +84,36 @@ void GreyboxScene::set_camera_mode(CameraMode mode) {
   if (params_.mode == mode) {
     return;
   }
+  begin_camera_turn();
   params_.mode = mode;
   rebuild_camera();
 }
 
 void GreyboxScene::set_climb_lock(bool locked, float into_x, float into_z) {
+  const bool changed =
+      climb_locked_ != locked || (locked && (climb_into_x_ != into_x || climb_into_z_ != into_z));
   climb_locked_ = locked;
   climb_into_x_ = into_x;
   climb_into_z_ = into_z;
+  if (changed) {
+    begin_camera_turn();
+  }
   rebuild_camera();
+}
+
+void GreyboxScene::tick(float dt) {
+  const float step = std::max(0.0f, dt) / kCameraTurnSeconds;
+  turn_t_ = std::clamp(turn_t_ + step, 0.0f, 1.0f);
+  rebuild_camera();
+}
+
+void GreyboxScene::begin_camera_turn() {
+  if (!has_display_) {
+    return;
+  }
+  from_pose_ = display_pose_;
+  from_up_ = display_up_;
+  turn_t_ = 0.0f;
 }
 
 void GreyboxScene::set_blockers(std::span<const BlockerDef> blockers) {
@@ -259,22 +282,46 @@ void GreyboxScene::set_selected_event_marker(int index) {
 }
 
 void GreyboxScene::rebuild_camera() {
+  if (has_player_) {
+    params_.focus = {player_.x, player_.y, player_.z};
+  }
   camera_ = build_ortho_camera(width_, height_, params_);
 
-  // Use bx matrices so handedness/depth match the active renderer.
-  bx::Vec3 eye{camera_.eye.x, camera_.eye.y, camera_.eye.z};
-  bx::Vec3 at{params_.focus.x, params_.focus.y, params_.focus.z};
-  // Top-down look is parallel to world +Y; use -Z as up so the view is well-defined.
-  bx::Vec3 up = (params_.mode == CameraMode::TopDown) ? bx::Vec3{0.0f, 0.0f, -1.0f}
-                                                      : bx::Vec3{0.0f, 1.0f, 0.0f};
+  ClimbCameraPose target;
+  Vec3 target_up;
   if (climb_locked_) {
-    const ClimbCameraPose pose =
-        climb_camera_pose({player_.x, player_.y, player_.z}, climb_into_x_, climb_into_z_);
-    camera_.eye = pose.eye;
-    params_.focus = pose.focus;
-    eye = {pose.eye.x, pose.eye.y, pose.eye.z};
-    at = {pose.focus.x, pose.focus.y, pose.focus.z};
-    up = {0.0f, 1.0f, 0.0f};
+    target = climb_camera_pose({player_.x, player_.y, player_.z}, climb_into_x_, climb_into_z_);
+    target_up = {0.0f, 1.0f, 0.0f};
+  } else {
+    target.eye = camera_.eye;
+    target.focus = params_.focus;
+    target_up = (params_.mode == CameraMode::TopDown) ? Vec3{0.0f, 0.0f, -1.0f}
+                                                     : Vec3{0.0f, 1.0f, 0.0f};
+  }
+
+  if (!has_display_) {
+    display_pose_ = target;
+    from_pose_ = target;
+    display_up_ = target_up;
+    from_up_ = target_up;
+    turn_t_ = 1.0f;
+    has_display_ = true;
+  } else {
+    display_pose_ = lerp_climb_camera_pose(from_pose_, target, turn_t_);
+    display_up_ = {from_up_.x + (target_up.x - from_up_.x) * turn_t_,
+                   from_up_.y + (target_up.y - from_up_.y) * turn_t_,
+                   from_up_.z + (target_up.z - from_up_.z) * turn_t_};
+  }
+
+  camera_.eye = display_pose_.eye;
+  const bx::Vec3 eye{display_pose_.eye.x, display_pose_.eye.y, display_pose_.eye.z};
+  const bx::Vec3 at{display_pose_.focus.x, display_pose_.focus.y, display_pose_.focus.z};
+  const float up_len_sq =
+      display_up_.x * display_up_.x + display_up_.y * display_up_.y + display_up_.z * display_up_.z;
+  bx::Vec3 up{0.0f, 1.0f, 0.0f};
+  if (up_len_sq > 1e-16f) {
+    const float inv_len = 1.0f / std::sqrt(up_len_sq);
+    up = {display_up_.x * inv_len, display_up_.y * inv_len, display_up_.z * inv_len};
   }
   bx::mtxLookAt(camera_.view.m, eye, at, up, bx::Handedness::Left);
 

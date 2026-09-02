@@ -545,9 +545,18 @@ void EditorApp::simulate(float dt) {
     engine_->greybox().set_climb_lock(false, 0.0f, 0.0f);
   }
 
-  const InputFrame input = map_input_frame(buttons, previous_buttons_, gating,
-                                           engine_->greybox().camera().eye,
-                                           engine_->greybox().camera_focus());
+  Vec3 input_eye = engine_->greybox().camera().eye;
+  Vec3 input_focus = engine_->greybox().camera_focus();
+  if (session_.jump().climbing) {
+    const ClimbCameraPose climb_pose =
+        climb_camera_pose({session_.player().x, session_.player().y, session_.player().z},
+                          session_.jump().climb_into_x, session_.jump().climb_into_z);
+    input_eye = climb_pose.eye;
+    input_focus = climb_pose.focus;
+  }
+
+  const InputFrame input =
+      map_input_frame(buttons, previous_buttons_, gating, input_eye, input_focus);
   previous_buttons_ = buttons;
 
   if (input.toggle_mode_pressed) {
@@ -612,6 +621,7 @@ void EditorApp::simulate(float dt) {
     log(*logger_, LogLevel::Warn, "sim", "simulation catch-up budget exceeded");
   }
   engine_->set_player(session_.player());
+  engine_->greybox().tick(dt);
 }
 
 void EditorApp::begin_ui() {

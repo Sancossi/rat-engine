@@ -178,4 +178,15 @@ ClimbCameraPose climb_camera_pose(Vec3 player, float into_x, float into_z) {
   return pose;
 }
 
+ClimbCameraPose lerp_climb_camera_pose(ClimbCameraPose from, ClimbCameraPose to, float t) {
+  t = std::clamp(t, 0.0f, 1.0f);
+  ClimbCameraPose pose;
+  pose.eye = {from.eye.x + (to.eye.x - from.eye.x) * t, from.eye.y + (to.eye.y - from.eye.y) * t,
+              from.eye.z + (to.eye.z - from.eye.z) * t};
+  pose.focus = {from.focus.x + (to.focus.x - from.focus.x) * t,
+                from.focus.y + (to.focus.y - from.focus.y) * t,
+                from.focus.z + (to.focus.z - from.focus.z) * t};
+  return pose;
+}
+
 }  // namespace rat

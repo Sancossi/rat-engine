@@ -63,6 +63,7 @@ struct OrthoCamera {
 
 inline constexpr float kClimbCameraBack = 10.0f;
 inline constexpr float kClimbCameraHeight = 8.0f;
+inline constexpr float kCameraTurnSeconds = 0.3f;
 
 struct ClimbCameraPose {
   Vec3 eye{};
@@ -70,5 +71,7 @@ struct ClimbCameraPose {
 };
 
 [[nodiscard]] ClimbCameraPose climb_camera_pose(Vec3 player, float into_x, float into_z);
+[[nodiscard]] ClimbCameraPose lerp_climb_camera_pose(ClimbCameraPose from, ClimbCameraPose to,
+                                                     float t);
 
 }  // namespace rat

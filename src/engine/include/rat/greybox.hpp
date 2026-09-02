@@ -39,6 +39,7 @@ class GreyboxScene {
     has_player_ = true;
   }
   void set_climb_lock(bool locked, float into_x, float into_z);
+  void tick(float dt);
   void set_blockers(std::span<const BlockerDef> blockers);
   void set_event_markers(std::span<const Vec3> markers);
   void set_terrain_map(const MapData& map);
@@ -50,16 +51,25 @@ class GreyboxScene {
   [[nodiscard]] bool is_initialized() const { return initialized_; }
   [[nodiscard]] CameraMode camera_mode() const { return params_.mode; }
   [[nodiscard]] const OrthoCamera& camera() const { return camera_; }
-  [[nodiscard]] Vec3 camera_focus() const { return params_.focus; }
+  [[nodiscard]] Vec3 camera_focus() const {
+    return has_display_ ? display_pose_.focus : params_.focus;
+  }
 
  private:
+  void begin_camera_turn();
   void rebuild_camera();
 
   bool initialized_ = false;
   bool has_player_ = false;
   bool climb_locked_ = false;
+  bool has_display_ = false;
   float climb_into_x_ = 0.0f;
   float climb_into_z_ = 0.0f;
+  float turn_t_ = 1.0f;
+  ClimbCameraPose from_pose_{};
+  ClimbCameraPose display_pose_{};
+  Vec3 from_up_{0.0f, 1.0f, 0.0f};
+  Vec3 display_up_{0.0f, 1.0f, 0.0f};
   std::uint32_t width_ = 1;
   std::uint32_t height_ = 1;
   OrthoCameraParams params_{};

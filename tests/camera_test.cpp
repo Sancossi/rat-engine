@@ -87,3 +87,37 @@ TEST_CASE("Climb camera sits behind the player looking into an east face", "[uni
       rat::camera_relative_move(0.0f, 1.0f, pose.eye, pose.focus);
   REQUIRE(w.axis_x > 0.5f);
 }
+
+TEST_CASE("Lerp climb camera pose interpolates eye and focus", "[unit][camera]") {
+  const rat::ClimbCameraPose from{{0.0f, 0.0f, 0.0f}, {1.0f, 2.0f, 3.0f}};
+  const rat::ClimbCameraPose to{{10.0f, 20.0f, 30.0f}, {5.0f, 8.0f, 11.0f}};
+
+  const rat::ClimbCameraPose at_from = rat::lerp_climb_camera_pose(from, to, 0.0f);
+  REQUIRE(at_from.eye.x == Approx(from.eye.x));
+  REQUIRE(at_from.eye.y == Approx(from.eye.y));
+  REQUIRE(at_from.eye.z == Approx(from.eye.z));
+  REQUIRE(at_from.focus.x == Approx(from.focus.x));
+  REQUIRE(at_from.focus.y == Approx(from.focus.y));
+  REQUIRE(at_from.focus.z == Approx(from.focus.z));
+
+  const rat::ClimbCameraPose at_to = rat::lerp_climb_camera_pose(from, to, 1.0f);
+  REQUIRE(at_to.eye.x == Approx(to.eye.x));
+  REQUIRE(at_to.eye.y == Approx(to.eye.y));
+  REQUIRE(at_to.eye.z == Approx(to.eye.z));
+  REQUIRE(at_to.focus.x == Approx(to.focus.x));
+  REQUIRE(at_to.focus.y == Approx(to.focus.y));
+  REQUIRE(at_to.focus.z == Approx(to.focus.z));
+
+  const rat::ClimbCameraPose mid = rat::lerp_climb_camera_pose(from, to, 0.5f);
+  REQUIRE(mid.eye.x == Approx(5.0f));
+  REQUIRE(mid.eye.y == Approx(10.0f));
+  REQUIRE(mid.eye.z == Approx(15.0f));
+  REQUIRE(mid.focus.x == Approx(3.0f));
+  REQUIRE(mid.focus.y == Approx(5.0f));
+  REQUIRE(mid.focus.z == Approx(7.0f));
+
+  const rat::ClimbCameraPose clamped_lo = rat::lerp_climb_camera_pose(from, to, -1.0f);
+  REQUIRE(clamped_lo.eye.x == Approx(from.eye.x));
+  const rat::ClimbCameraPose clamped_hi = rat::lerp_climb_camera_pose(from, to, 2.0f);
+  REQUIRE(clamped_hi.eye.x == Approx(to.eye.x));
+}
