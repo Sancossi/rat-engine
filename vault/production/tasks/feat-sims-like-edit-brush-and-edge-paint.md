@@ -1,7 +1,7 @@
 ---
 type: task
 area: Engine
-status: Not started
+status: Done
 task_type: Feature
 sprint: Sprint 8
 due:
@@ -21,3 +21,11 @@ Intent: переделать Edit mode ближе к The Sims build. Зажат�
 Acceptance: см. слайсы. Does not replace Play.
 
 Origin: chat 2026-09-02. Related: [[feat: Mouse viewport terrain edit]], [[Collect 5 reference games]]. Взято в [[Sprint 8 — Play feel and authoring]].
+
+## Resolution
+
+Слайсы shipped: Sims research, hold-drag cube/slab, fence/ladder по кликнутой грани. Verify: Edit кисть + Fence у края клетки.
+
+## Bugs found
+
+none.

@@ -1,7 +1,7 @@
 ---
 type: bug
 area: Engine
-status: Open
+status: Fixed
 severity: Medium
 sprint: Sprint 8
 tags: [bug]
@@ -27,3 +27,11 @@ Viewport Fence/Ladder use `edge_direction_index` (default North). Ramp is ImGui-
 Proper Sims-like edge paint: [[feat: Edit paint clicked edge]] (epic [[feat: Sims-like edit brush and edge paint]]).
 
 Related: [[feat: Mouse viewport terrain edit]], [[feat: Edit and greybox edge walls]].
+
+## Resolution
+
+Fence и ladder берутся с кликнутой грани клетки, не combo. Противоположная сторона той же клетки работает. Рампа по-прежнему ImGui. Verify: Edit Fence у east/west одной клетки.
+
+## Bugs found
+
+none.
