@@ -1,7 +1,7 @@
 ---
 type: task
 area: Engine
-status: In progress
+status: Done
 task_type: Feature
 sprint: Sprint 8
 due:
@@ -15,3 +15,11 @@ Intent: в Edit зажать ЛКМ и вести — активный **кле�
 Acceptance: drag crossing N tiles applies N mutations as one `EditHistory` group; release ends the stroke; Play не пишет. Не стены по ребру (это [[feat: Edit paint clicked edge]]).
 
 Origin: [[feat: Sims-like edit brush and edge paint]]. Depends: [[feat: Mouse viewport terrain edit]]. Взято в [[Sprint 8 — Play feel and authoring]].
+
+## Resolution
+
+Place cube и Floor slab: зажать ЛКМ и вести красит клетки; один `EditHistory` stroke = один Ctrl+Z. Play не пишет. Fence/Ladder — следующий слайс. Verify: Edit Place cube drag; `.\build\tests\rat_tests.exe "[unit][edit]"`.
+
+## Bugs found
+
+none.
