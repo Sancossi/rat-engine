@@ -18,7 +18,7 @@ tags: [engine]
 - **Edit Command** — `EditHistory` / `EditCommand` в `rat_core`, владелец `EditorApp`. Place/move/delete blockers и events; Play не пишет стек; `clear()` на hot-apply.
 - **Audio** — `QueuedAudio` + `AudioSink` в `rat_core`; composition root `EditorApp` drain раз в кадр. Device — miniaudio как sink ([[ADR-013 Audio backend miniaudio]]); тесты подменяют Recording/Null. Клипы — `AssetId`. Заготовка [[Audio Direction]].
 - **Владение сервисами** — composition root `EditorApp`, без singleton/locator. Совпадает с [[Engine Vision]] («минимум скрытого глобального состояния»).
-- **State** — `AppMode { Play, Edit }`, физические флаги `JumpState`, interpreter wait/message. Персонажный classify: `locomotion_from` → Idle/Walk/Jump/Fall (`rat/locomotion.hpp`); физика прыжка не в FSM.
+- **State** — `AppMode { Play, Edit }`, физические флаги `JumpState`, interpreter wait/message. Персонажный FSM: `locomotion_from` → Idle/Walk/Jump/Fall/**Climb**; тик `integrate_player_frame_surface` выбирает Climb vs ground/air.
 
 ## Глава → rat-engine
 
@@ -32,7 +32,7 @@ tags: [engine]
 | Event Queue (звук) | `QueuedAudio` FIFO + overflow_count; tests Recording/Null; editor miniaudio sink | Готово [[feat: Audio backend implementation]] |
 | Service Locator | composition | Не заводить locator |
 | Singleton | нет | Так и держать |
-| State (FSM) | `locomotion_from` Idle/Walk/Jump/Fall; физика в `JumpState` | Готово [[feat: Player locomotion FSM]]; клипы — позже по [[ADR-009 RE-like segmented character hierarchy]] |
+| State (FSM) | `locomotion_from` Idle/Walk/Jump/Fall/Climb; Climb владеет tick на overlap | В работе [[feat: Drive player physics from locomotion FSM]]; клипы — [[ADR-009 RE-like segmented character hierarchy]] |
 | Component / ECS | гибрид EntityId + ComponentStore | [[ADR-012 Entity model EntityId and ComponentStore]]; игрок/события пока POD. Не archetype |
 | Observer | `GameplayNotifyBus` subscribe/post | stub; side channel (ItemPicked / DialogShown / Landed), not opcode interpreter. [[feat: Gameplay notify observer]] |
 | Object Pool | нет | [[feat: Object pool for short-lived FX]] с field-action FX |

@@ -64,6 +64,9 @@ TEST_CASE("write_debug_snapshot round-trips a headless fixture", "[unit][debug]"
   rat::JumpState jump = rat::make_grounded_jump_state();
   jump.jump_offset = 1.25f;
   jump.grounded = false;
+  jump.ladder_lockout_left = 0.15f;
+  jump.ladder_bounce_x = -1.0f;
+  jump.ladder_bounce_z = 0.0f;
 
   const rat::DebugSnapshot written = rat::make_debug_snapshot(
       42, rat::AppMode::Play, player, jump, runtime, state);
@@ -82,6 +85,10 @@ TEST_CASE("write_debug_snapshot round-trips a headless fixture", "[unit][debug]"
   CHECK(read->player_z == 0.5f);
   CHECK(read->jump.jump_offset == 1.25f);
   CHECK_FALSE(read->jump.grounded);
+  CHECK(read->jump.ladder_lockout_left == 0.15f);
+  CHECK(read->jump.ladder_bounce_x == -1.0f);
+  CHECK(read->jump.ladder_bounce_z == 0.0f);
+  CHECK_FALSE(read->jump.climbing);
   REQUIRE_FALSE(read->overlapping_event_ids.empty());
   CHECK(read->overlapping_event_ids[0] == "intro");
   REQUIRE(read->active_interpreter.has_value());
@@ -98,6 +105,47 @@ TEST_CASE("write_debug_snapshot round-trips a headless fixture", "[unit][debug]"
   CHECK(read->event_why_not[0].id == "intro");
   CHECK(read->event_why_not[0].reason == "already_running");
   CHECK(read->event_why_not_reason == "already_running");
+
+  std::filesystem::remove(path, ec);
+}
+
+TEST_CASE("write_debug_snapshot grounded jump defaults lockout and bounce to zero",
+          "[unit][debug]") {
+  constexpr const char* kJson = R"({
+    "schema_version": 1,
+    "id": "snap_lockout_defaults",
+    "width": 2,
+    "height": 2,
+    "events": []
+  })";
+
+  const auto loaded = rat::load_map_from_string(kJson);
+  REQUIRE(loaded.ok);
+
+  rat::GameState state;
+  rat::EventRuntime runtime;
+  REQUIRE(runtime.load(loaded.map).ok);
+
+  rat::PlayerBody player;
+  player.x = 0.5f;
+  player.y = 0.0f;
+  player.z = 0.5f;
+
+  const rat::JumpState jump = rat::make_grounded_jump_state();
+  const rat::DebugSnapshot written =
+      rat::make_debug_snapshot(1, rat::AppMode::Play, player, jump, runtime, state);
+
+  const auto path =
+      std::filesystem::temp_directory_path() / "rat-debug-snapshot-lockout-defaults.json";
+  std::error_code ec;
+  std::filesystem::remove(path, ec);
+  REQUIRE(rat::write_debug_snapshot(path.string(), written));
+
+  const auto read = rat::read_debug_snapshot(path.string());
+  REQUIRE(read.has_value());
+  REQUIRE(read->jump.ladder_lockout_left == 0.0f);
+  REQUIRE(read->jump.ladder_bounce_x == 0.0f);
+  REQUIRE(read->jump.ladder_bounce_z == 0.0f);
 
   std::filesystem::remove(path, ec);
 }

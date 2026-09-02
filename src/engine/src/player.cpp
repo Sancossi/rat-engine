@@ -150,7 +150,7 @@ PlayerBody integrate_player_surface(PlayerBody player, MoveInput input, float dt
                                     std::span<const BlockerDef> blockers,
                                     const SurfaceQuery& surface_query, float max_step_up,
                                     std::span<const EdgeBarrierDef> edge_barriers,
-                                    const MapData* map) {
+                                    const MapData* map, bool ignore_ladders, MoveInput climb_move) {
   float ix = input.axis_x;
   float iz = input.axis_z;
   const float len = std::sqrt(ix * ix + iz * iz);
@@ -168,26 +168,38 @@ PlayerBody integrate_player_surface(PlayerBody player, MoveInput input, float dt
   const float step_dz = dz / static_cast<float>(steps);
   const float step_up_limit = std::max(0.0f, max_step_up);
   const CollisionWorld world = bake_integrate_world(edge_barriers, surface_query, map);
+  if (!ignore_ladders) {
   if (const LadderVolume* ladder = overlapping_ladder(collision_body_from_player(player), world)) {
+    MoveInput steer = climb_move;
+    if (std::abs(steer.axis_x) <= 1e-6f && std::abs(steer.axis_z) <= 1e-6f) {
+      steer = input;
+    }
+    float sx = steer.axis_x;
+    float sz = steer.axis_z;
+    const float slen = std::sqrt(sx * sx + sz * sz);
+    if (slen > 1e-6f) {
+      sx /= slen;
+      sz /= slen;
+    }
     float climb = 0.0f;
     float tan_x = 0.0f;
     float tan_z = 0.0f;
     switch (ladder->face) {
       case RampDirection::East:
-        climb = ix;
-        tan_z = iz;
+        climb = sx;
+        tan_z = sz;
         break;
       case RampDirection::West:
-        climb = -ix;
-        tan_z = iz;
+        climb = -sx;
+        tan_z = sz;
         break;
       case RampDirection::North:
-        climb = -iz;
-        tan_x = ix;
+        climb = -sz;
+        tan_x = sx;
         break;
       case RampDirection::South:
-        climb = iz;
-        tan_x = ix;
+        climb = sz;
+        tan_x = sx;
         break;
     }
     player.y += climb * player.speed * dt;
@@ -213,6 +225,7 @@ PlayerBody integrate_player_surface(PlayerBody player, MoveInput input, float dt
       }
     }
     return player;
+  }
   }
 
   SurfaceSample current_sample =

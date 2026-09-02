@@ -11,7 +11,7 @@ namespace {
 }  // namespace
 
 InputFrame map_input_frame(const InputButtons& down, const InputButtons& previous,
-                           const InputGating& gating) {
+                           const InputGating& gating, Vec3 camera_eye, Vec3 camera_focus) {
   InputFrame frame;
   const bool allow_player =
       gating.player_control && !gating.keyboard_captured && !gating.player_input_blocked;
@@ -31,6 +31,7 @@ InputFrame map_input_frame(const InputButtons& down, const InputButtons& previou
       screen_x += 1.0f;
     }
     frame.move = world_aligned_move(screen_x, screen_z);
+    frame.climb_move = camera_relative_move(screen_x, screen_z, camera_eye, camera_focus);
     frame.jump_pressed = edge(down.jump, previous.jump);
     frame.jump_held = down.jump;
   }
@@ -51,6 +52,7 @@ InputFrame map_input_frame(const InputButtons& down, const InputButtons& previou
 PlayerFrameInput player_input_from_frame(const InputFrame& frame) {
   PlayerFrameInput input;
   input.move = frame.move;
+  input.climb_move = frame.climb_move;
   input.jump_pressed = frame.jump_pressed;
   input.jump_held = frame.jump_held;
   return input;

@@ -90,6 +90,7 @@ TEST_CASE("InputFrame Play/Edit gating matches current editor rules", "[unit][in
 TEST_CASE("player_input_from_frame copies move and jump", "[unit][input]") {
   rat::InputFrame frame;
   frame.move = rat::MoveInput{0.5f, -1.0f};
+  frame.climb_move = rat::MoveInput{0.25f, 0.75f};
   frame.jump_pressed = true;
   frame.jump_held = true;
   frame.interact_pressed = true;
@@ -97,6 +98,8 @@ TEST_CASE("player_input_from_frame copies move and jump", "[unit][input]") {
   const rat::PlayerFrameInput player = rat::player_input_from_frame(frame);
   CHECK(player.move.axis_x == 0.5f);
   CHECK(player.move.axis_z == -1.0f);
+  CHECK(player.climb_move.axis_x == 0.25f);
+  CHECK(player.climb_move.axis_z == 0.75f);
   CHECK(player.jump_pressed);
   CHECK(player.jump_held);
 }

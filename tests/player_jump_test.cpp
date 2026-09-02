@@ -1773,3 +1773,94 @@ TEST_CASE("Jump under a 1.6 slab does not shove feet below support", "[unit][pla
     }
   }
 }
+
+TEST_CASE("make_grounded_jump_state zeros ladder lockout and bounce", "[unit][player]") {
+  const rat::JumpState jump = rat::make_grounded_jump_state();
+  REQUIRE(jump.ladder_lockout_left == 0.0f);
+  REQUIRE(jump.ladder_bounce_x == 0.0f);
+  REQUIRE(jump.ladder_bounce_z == 0.0f);
+  REQUIRE_FALSE(jump.climbing);
+}
+
+TEST_CASE("East ladder jump bounces away from face with lockout", "[unit][player]") {
+  rat::MapData map = make_surface_map(1, 1, {0.0f});
+  map.schema_version = 3;
+  map.ladders.push_back({{0, 0}, rat::RampDirection::East, 0.0f, 2.0f});
+  const rat::SurfaceQuery query(map);
+  rat::PlayerBody body;
+  body.x = 0.85f;
+  body.y = 1.0f;
+  body.z = 0.5f;
+  body.speed = 5.0f;
+  rat::JumpState jump = rat::make_grounded_jump_state();
+  rat::PlayerFrameInput input;
+  input.jump_pressed = true;
+  const rat::PlayerFrameResult result = rat::integrate_player_frame_surface(
+      body, jump, input, 1.0f / 120.0f, {}, query, {}, 0.35f, {}, &map);
+  REQUIRE(result.body.x < body.x - 0.4f);
+  REQUIRE(result.body.y > body.y);
+  REQUIRE(result.jump.ladder_lockout_left == Approx(0.20f).margin(0.02f));
+  REQUIRE_FALSE(result.jump.grounded);
+  REQUIRE_FALSE(result.jump.climbing);
+  REQUIRE(result.jump.vertical_speed == Approx(4.0f).margin(0.5f));
+}
+
+TEST_CASE("Ladder lockout ignores overlap then remounts", "[unit][player]") {
+  rat::MapData map = make_surface_map(1, 1, {0.0f});
+  map.schema_version = 3;
+  map.ladders.push_back({{0, 0}, rat::RampDirection::East, 0.0f, 2.0f});
+  const rat::SurfaceQuery query(map);
+  rat::PlayerBody body;
+  body.x = 0.85f;
+  body.y = 1.0f;
+  body.z = 0.5f;
+  body.speed = 5.0f;
+  rat::JumpState jump = rat::make_grounded_jump_state();
+  rat::PlayerFrameInput input;
+  input.jump_pressed = true;
+  rat::PlayerFrameResult result = rat::integrate_player_frame_surface(
+      body, jump, input, 1.0f / 120.0f, {}, query, {}, 0.35f, {}, &map);
+  body = result.body;
+  jump = result.jump;
+  input.jump_pressed = false;
+  for (int i = 0; i < 18; ++i) {
+    result = rat::integrate_player_frame_surface(body, jump, input, 1.0f / 120.0f, {}, query, {},
+                                                 0.35f, {}, &map);
+    body = result.body;
+    jump = result.jump;
+  }
+  REQUIRE(jump.ladder_lockout_left > 0.0f);
+  REQUIRE_FALSE(jump.grounded);
+  for (int i = 0; i < 30; ++i) {
+    result = rat::integrate_player_frame_surface(body, jump, input, 1.0f / 120.0f, {}, query, {},
+                                                 0.35f, {}, &map);
+    body = result.body;
+    jump = result.jump;
+  }
+  REQUIRE(jump.ladder_lockout_left == Approx(0.0f).margin(1e-4f));
+  body.x = 0.85f;
+  body.z = 0.5f;
+  result = rat::integrate_player_frame_surface(body, jump, input, 1.0f / 120.0f, {}, query, {},
+                                               0.35f, {}, &map);
+  REQUIRE(result.jump.grounded);
+  REQUIRE(result.jump.climbing);
+  REQUIRE(result.jump.vertical_speed == Approx(0.0f).margin(1e-3f));
+}
+
+TEST_CASE("Ground jump not overlapping a ladder still uses jump_speed", "[unit][player]") {
+  rat::MapData map = make_surface_map(1, 1, {0.0f});
+  const rat::SurfaceQuery query(map);
+  rat::PlayerBody body;
+  body.x = 0.5f;
+  body.y = 0.0f;
+  body.z = 0.5f;
+  rat::JumpState jump = rat::make_grounded_jump_state();
+  rat::PlayerFrameInput input;
+  input.jump_pressed = true;
+  input.jump_held = true;
+  const rat::PlayerFrameResult result = rat::integrate_player_frame_surface(
+      body, jump, input, 1.0f / 120.0f, {}, query, {}, 0.35f, {}, &map);
+  REQUIRE(result.jump.vertical_speed == Approx(7.5f).margin(0.3f));
+  REQUIRE(result.jump.vertical_speed > 5.0f);
+  REQUIRE(result.jump.ladder_lockout_left == 0.0f);
+}

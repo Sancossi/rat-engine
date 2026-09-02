@@ -28,6 +28,7 @@ struct InputGating {
 
 struct InputFrame {
   MoveInput move{};
+  MoveInput climb_move{};  // camera-relative WASD; empty → climb uses `move`
   bool jump_pressed = false;
   bool jump_held = false;
   bool interact_pressed = false;
@@ -40,7 +41,8 @@ struct InputFrame {
 };
 
 [[nodiscard]] InputFrame map_input_frame(const InputButtons& down, const InputButtons& previous,
-                                         const InputGating& gating);
+                                         const InputGating& gating, Vec3 camera_eye = {},
+                                         Vec3 camera_focus = {});
 
 [[nodiscard]] PlayerFrameInput player_input_from_frame(const InputFrame& frame);
 

@@ -69,6 +69,10 @@ void mix_jump(std::uint64_t& hash, const JumpState& jump) {
   mix_f32(hash, jump.jump_buffer_left);
   mix_bool(hash, jump.grounded);
   mix_i32(hash, jump.support_blocker_index);
+  mix_f32(hash, jump.ladder_lockout_left);
+  mix_f32(hash, jump.ladder_bounce_x);
+  mix_f32(hash, jump.ladder_bounce_z);
+  mix_bool(hash, jump.climbing);
 }
 
 void mix_interpreter(std::uint64_t& hash, const InterpreterDebug& interp) {
@@ -83,6 +87,8 @@ void mix_interpreter(std::uint64_t& hash, const InterpreterDebug& interp) {
 json dump_input(const InputFrame& input) {
   return json{{"axis_x", input.move.axis_x},
               {"axis_z", input.move.axis_z},
+              {"climb_axis_x", input.climb_move.axis_x},
+              {"climb_axis_z", input.climb_move.axis_z},
               {"jump_pressed", input.jump_pressed},
               {"jump_held", input.jump_held},
               {"interact_pressed", input.interact_pressed}};
@@ -95,6 +101,8 @@ InputFrame load_input(const json& node) {
   }
   input.move.axis_x = node.value("axis_x", 0.0f);
   input.move.axis_z = node.value("axis_z", 0.0f);
+  input.climb_move.axis_x = node.value("climb_axis_x", 0.0f);
+  input.climb_move.axis_z = node.value("climb_axis_z", 0.0f);
   input.jump_pressed = node.value("jump_pressed", false);
   input.jump_held = node.value("jump_held", false);
   input.interact_pressed = node.value("interact_pressed", false);

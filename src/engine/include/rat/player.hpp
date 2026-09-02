@@ -38,6 +38,10 @@ struct JumpState {
   float jump_buffer_left = 0.0f;
   bool grounded = true;
   int support_blocker_index = -1;
+  float ladder_lockout_left = 0.0f;
+  float ladder_bounce_x = 0.0f;
+  float ladder_bounce_z = 0.0f;
+  bool climbing = false;  // set by integrate when the Climb motor owns the tick
 };
 
 struct JumpTuning {
@@ -49,10 +53,16 @@ struct JumpTuning {
   float coyote_seconds = 0.1f;
   float input_buffer_seconds = 0.1f;
   float max_substep_seconds = 1.0f / 120.0f;
+  float ladder_lockout_seconds = 0.20f;
+  float ladder_hop_speed = 4.0f;
+  float ladder_bounce_speed = 4.0f;
 };
+
+inline constexpr float kLadderBounceNudge = 0.6f;
 
 struct PlayerFrameInput {
   MoveInput move{};
+  MoveInput climb_move{};  // camera-relative; empty → climb uses `move`
   bool jump_pressed = false;
   bool jump_held = false;
 };
@@ -83,7 +93,9 @@ struct PlayerFrameResult {
                                                   const SurfaceQuery& surface_query,
                                                   float max_step_up = 0.35f,
                                                   std::span<const EdgeBarrierDef> edge_barriers = {},
-                                                  const MapData* map = nullptr);
+                                                  const MapData* map = nullptr,
+                                                  bool ignore_ladders = false,
+                                                  MoveInput climb_move = {});
 
 [[nodiscard]] PlayerFrameResult integrate_player_frame_surface(
     PlayerBody player, JumpState jump, const PlayerFrameInput& input, float dt,

@@ -655,3 +655,26 @@ TEST_CASE("East ladder tangent cannot walk through slab side", "[unit][player][s
   REQUIRE(player.x == Approx(start_x).margin(1e-3f));
   REQUIRE(player.z < 1.0f - player.half_extent + 0.05f);
 }
+
+TEST_CASE("East ladder climb uses camera steer not world WASD", "[unit][player][surface]") {
+  rat::MapData map = make_surface_map(1, 1, {0.0f});
+  map.floor_slabs.push_back({{0, 0}, 2.0f, 0.25f});
+  map.ladders.push_back({{0, 0}, rat::RampDirection::East, 0.0f, 2.0f});
+  const rat::SurfaceQuery query(map);
+  rat::PlayerBody player;
+  player.x = 0.85f;
+  player.y = 0.0f;
+  player.z = 0.5f;
+  player.speed = 5.0f;
+  // World W is -Z (tangent on an east ladder). Camera looking +X: W is into the face.
+  const rat::MoveInput world_w = rat::world_aligned_move(0.0f, 1.0f);
+  const rat::MoveInput cam_w =
+      rat::camera_relative_move(0.0f, 1.0f, rat::Vec3{0.0f, 8.0f, 0.0f}, rat::Vec3{4.0f, 0.0f, 0.0f});
+  REQUIRE(world_w.axis_z == Approx(-1.0f));
+  REQUIRE(cam_w.axis_x > 0.5f);
+  for (int i = 0; i < 80; ++i) {
+    player = rat::integrate_player_surface(player, world_w, 1.0f / 60.0f, {}, query, 0.35f, {}, &map,
+                                           false, cam_w);
+  }
+  REQUIRE(player.y == Approx(2.0f).margin(0.05f));
+}

@@ -49,6 +49,7 @@ class GreyboxScene {
   [[nodiscard]] bool is_initialized() const { return initialized_; }
   [[nodiscard]] CameraMode camera_mode() const { return params_.mode; }
   [[nodiscard]] const OrthoCamera& camera() const { return camera_; }
+  [[nodiscard]] Vec3 camera_focus() const { return params_.focus; }
 
  private:
   void rebuild_camera();

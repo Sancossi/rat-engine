@@ -536,7 +536,9 @@ void EditorApp::simulate(float dt) {
   gating.keyboard_captured = io.WantCaptureKeyboard;
   gating.dialog_open = session_.events().active_message().has_value();
   gating.player_input_blocked = session_.events().player_input_blocked();
-  const InputFrame input = map_input_frame(buttons, previous_buttons_, gating);
+  const InputFrame input = map_input_frame(buttons, previous_buttons_, gating,
+                                           engine_->greybox().camera().eye,
+                                           engine_->greybox().camera_focus());
   previous_buttons_ = buttons;
 
   if (input.toggle_mode_pressed) {

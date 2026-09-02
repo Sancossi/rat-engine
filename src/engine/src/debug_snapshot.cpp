@@ -25,7 +25,11 @@ json dump_jump(const JumpState& jump) {
               {"coyote_time_left", jump.coyote_time_left},
               {"jump_buffer_left", jump.jump_buffer_left},
               {"grounded", jump.grounded},
-              {"support_blocker_index", jump.support_blocker_index}};
+              {"support_blocker_index", jump.support_blocker_index},
+              {"ladder_lockout_left", jump.ladder_lockout_left},
+              {"ladder_bounce_x", jump.ladder_bounce_x},
+              {"ladder_bounce_z", jump.ladder_bounce_z},
+              {"climbing", jump.climbing}};
 }
 
 JumpState load_jump(const json& node) {
@@ -39,6 +43,10 @@ JumpState load_jump(const json& node) {
   jump.jump_buffer_left = node.value("jump_buffer_left", 0.0f);
   jump.grounded = node.value("grounded", true);
   jump.support_blocker_index = node.value("support_blocker_index", -1);
+  jump.ladder_lockout_left = node.value("ladder_lockout_left", 0.0f);
+  jump.ladder_bounce_x = node.value("ladder_bounce_x", 0.0f);
+  jump.ladder_bounce_z = node.value("ladder_bounce_z", 0.0f);
+  jump.climbing = node.value("climbing", false);
   return jump;
 }
 

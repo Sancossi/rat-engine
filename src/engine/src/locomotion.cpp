@@ -14,11 +14,16 @@ const char* locomotion_state_name(LocomotionState state) {
       return "Jump";
     case LocomotionState::Fall:
       return "Fall";
+    case LocomotionState::Climb:
+      return "Climb";
   }
   return "Idle";
 }
 
 LocomotionState locomotion_from(const JumpState& jump, const MoveInput& move) {
+  if (jump.climbing) {
+    return LocomotionState::Climb;
+  }
   if (!jump.grounded) {
     if (jump.vertical_speed > 0.0f) {
       return LocomotionState::Jump;
