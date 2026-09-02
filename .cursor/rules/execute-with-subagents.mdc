@@ -5,7 +5,7 @@ alwaysApply: true
 
 # Execute tasks with subagents
 
-When implementing a sprint, a written plan, or more than one vault card, **dispatch subagents**. Do not implement the whole slice in the parent chat.
+When implementing a sprint, a written plan, a vault card, or any multi-step feature/fix, **dispatch subagents**. Do not implement the slice in the parent chat. Always — including a single card.
 
 - One **implementer** subagent per task, then a **task reviewer** (spec + quality). Sequential implementers — not parallel (they share the tree).
 - Parent: **first** set the vault card `status: In progress` and commit; then briefs, follow-up cards, review packages, next dispatch.
