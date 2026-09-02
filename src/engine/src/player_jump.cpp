@@ -384,8 +384,16 @@ struct JumpFrameCtx {
   float lockout_seconds = 0.0f;
   bool jump_pressed_this_substep = false;
   bool was_grounded = false;
+  bool was_climbing = false;
   bool& landed;
 };
+
+void latch_climb(JumpState& jump, bool was_climbing) {
+  jump.climbing = true;
+  if (!was_climbing) {
+    jump.jump_buffer_left = 0.0f;
+  }
+}
 
 void apply_ladder_bounce(JumpFrameCtx& ctx, const LadderVolume& ladder) {
   PlayerBody& player = ctx.player;
@@ -423,7 +431,7 @@ void tick_climb_substep(JumpFrameCtx& ctx) {
     jump.jump_offset = 0.0f;
     jump.coyote_time_left = ctx.coyote_seconds;
     jump.support_blocker_index = kInvalidSupportBlockerIndex;
-    jump.climbing = true;
+    latch_climb(jump, ctx.was_climbing);
     if (!ctx.was_grounded) {
       ctx.landed = true;
     }
@@ -755,7 +763,9 @@ void tick_ground_air_substep(JumpFrameCtx& ctx) {
     walked_off_drop = true;
   }
 
-  if (jump_pressed_this_substep) {
+  if (jump.ladder_lockout_left > 1e-6f) {
+    jump.jump_buffer_left = std::max(0.0f, jump.jump_buffer_left - step_dt);
+  } else if (jump_pressed_this_substep) {
     jump.jump_buffer_left = input_buffer_seconds;
   } else {
     jump.jump_buffer_left = std::max(0.0f, jump.jump_buffer_left - step_dt);
@@ -855,7 +865,7 @@ void tick_ground_air_substep(JumpFrameCtx& ctx) {
   }
   if (!jump.climbing && jump.ladder_lockout_left <= 1e-6f && jump.grounded &&
       overlapping_ladder(collision_body_from_player(player), collision_world) != nullptr) {
-    jump.climbing = true;
+    latch_climb(jump, ctx.was_climbing);
   }
 }
 
@@ -909,6 +919,7 @@ PlayerFrameResult integrate_player_frame_surface(PlayerBody player, JumpState ju
   for (int i = 0; i < substeps; ++i) {
     const bool jump_pressed_this_substep = input.jump_pressed && i == 0;
     const bool was_grounded = jump.grounded;
+    const bool was_climbing = jump.climbing;
     jump.climbing = false;
     const bool lockout_active = jump.ladder_lockout_left > 1e-6f;
     const LadderVolume* ladder =
@@ -940,12 +951,14 @@ PlayerFrameResult integrate_player_frame_surface(PlayerBody player, JumpState ju
         lockout_seconds,
         jump_pressed_this_substep,
         was_grounded,
+        was_climbing,
         landed,
     };
 
     LocomotionState motor = LocomotionState::Idle;
     if (ladder != nullptr) {
-      const bool want_bounce = jump_pressed_this_substep || jump.jump_buffer_left > 1e-6f;
+      const bool want_bounce =
+          jump_pressed_this_substep || (was_climbing && jump.jump_buffer_left > 1e-6f);
       if (want_bounce) {
         apply_ladder_bounce(ctx, *ladder);
         motor = locomotion_from(jump, input.move);

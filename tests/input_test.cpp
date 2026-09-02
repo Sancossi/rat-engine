@@ -16,6 +16,24 @@ TEST_CASE("InputFrame maps WASD to world-aligned move", "[unit][input]") {
   CHECK(frame.move.axis_z == expected.axis_z);
 }
 
+TEST_CASE("InputFrame climb_move follows camera while walk stays world-aligned", "[unit][input]") {
+  rat::InputButtons down;
+  down.move_up = true;
+  rat::InputGating gate;
+  const rat::Vec3 eye{0.0f, 8.0f, 0.0f};
+  const rat::Vec3 focus{4.0f, 0.0f, 0.0f};
+
+  const rat::InputFrame frame = rat::map_input_frame(down, {}, gate, eye, focus);
+  const rat::MoveInput world_w = rat::world_aligned_move(0.0f, 1.0f);
+  const rat::MoveInput cam_w = rat::camera_relative_move(0.0f, 1.0f, eye, focus);
+  CHECK(frame.move.axis_x == world_w.axis_x);
+  CHECK(frame.move.axis_z == world_w.axis_z);
+  CHECK(frame.climb_move.axis_x == cam_w.axis_x);
+  CHECK(frame.climb_move.axis_z == cam_w.axis_z);
+  CHECK(frame.climb_move.axis_x > 0.5f);
+  CHECK(frame.move.axis_z == -1.0f);
+}
+
 TEST_CASE("InputFrame reports jump, interact, and editor action edges", "[unit][input]") {
   rat::InputButtons down;
   down.jump = true;

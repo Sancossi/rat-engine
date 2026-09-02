@@ -37,7 +37,7 @@ Tests that pass only world `MoveInput` (no camera steer) keep today’s into-fac
 
 Interact is unused. Jump is not required to mount.
 
-**Bounce vs first overlap:** bounce only if already overlapping at the **start** of that jump substep. A hop that **enters** later latches and does not bounce on that same `jump_pressed`. While latched, a consumed jump **buffer** uses bounce-off, not `jump_speed`.
+**Bounce vs first overlap:** bounce only if already overlapping at the **start** of that jump substep. A hop that **enters** later latches and does not bounce on that same `jump_pressed`. Leftover jump **buffer** bounces only while **already latched** (`was_climbing`); a first overlap with a live air-jump buffer latches and clears the buffer. While latched, a consumed jump buffer uses bounce-off, not `jump_speed`.
 
 ## Bounce-off
 
@@ -74,6 +74,7 @@ Each jump substep **resolves a locomotion motor** then runs that state’s integ
 - Existing “East ladder climb reaches slab with move only” stays (into +Y, away −Y).
 - East overlap + `jump_pressed`: `x` decreases, `y` increases, `ladder_lockout_left > 0`, next ticks do not clamp Y to the ladder while lockout lasts.
 - After lockout, standing in the volume latches again.
+- Airborne with a live jump buffer, then entering the volume: latch (lockout 0, climbing), not bounce.
 - Ground jump that is **not** overlapping is unchanged (`jump_speed`).
 - Tangent-vs-slab-side case unchanged.
 

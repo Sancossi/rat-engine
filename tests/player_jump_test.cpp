@@ -1864,3 +1864,91 @@ TEST_CASE("Ground jump not overlapping a ladder still uses jump_speed", "[unit][
   REQUIRE(result.jump.vertical_speed > 5.0f);
   REQUIRE(result.jump.ladder_lockout_left == 0.0f);
 }
+
+TEST_CASE("Airborne jump buffer entering a ladder latches instead of bouncing", "[unit][player]") {
+  rat::MapData map = make_surface_map(1, 1, {0.0f});
+  map.schema_version = 3;
+  map.ladders.push_back({{0, 0}, rat::RampDirection::East, 0.0f, 2.0f});
+  const rat::SurfaceQuery query(map);
+  rat::PlayerBody body;
+  body.x = 0.25f;
+  body.y = 1.0f;
+  body.z = 0.5f;
+  body.speed = 5.0f;
+  rat::JumpState jump = rat::make_grounded_jump_state();
+  jump.grounded = false;
+  jump.coyote_time_left = 0.0f;
+  jump.jump_buffer_left = 0.1f;
+  jump.vertical_speed = -2.0f;
+  jump.jump_offset = 1.0f;
+  rat::PlayerFrameInput input;
+  rat::PlayerFrameResult outside = rat::integrate_player_frame_surface(
+      body, jump, input, 1.0f / 120.0f, {}, query, {}, 0.35f, {}, &map);
+  REQUIRE_FALSE(outside.jump.climbing);
+  REQUIRE(outside.jump.ladder_lockout_left == 0.0f);
+  REQUIRE(outside.jump.jump_buffer_left > 1e-6f);
+  body = outside.body;
+  jump = outside.jump;
+  body.x = 0.85f;
+  body.z = 0.5f;
+  const rat::PlayerFrameResult latched = rat::integrate_player_frame_surface(
+      body, jump, input, 1.0f / 120.0f, {}, query, {}, 0.35f, {}, &map);
+  REQUIRE(latched.jump.climbing);
+  REQUIRE(latched.jump.ladder_lockout_left == 0.0f);
+  REQUIRE(latched.jump.grounded);
+  REQUIRE(latched.jump.vertical_speed == Approx(0.0f).margin(1e-3f));
+  REQUIRE(latched.jump.jump_buffer_left == Approx(0.0f).margin(1e-4f));
+}
+
+TEST_CASE("Ground takeoff then later ladder overlap latches", "[unit][player]") {
+  rat::MapData map = make_surface_map(1, 1, {0.0f});
+  map.schema_version = 3;
+  map.ladders.push_back({{0, 0}, rat::RampDirection::East, 0.0f, 2.0f});
+  const rat::SurfaceQuery query(map);
+  rat::PlayerBody body;
+  body.x = 0.25f;
+  body.y = 0.0f;
+  body.z = 0.5f;
+  body.speed = 5.0f;
+  rat::JumpState jump = rat::make_grounded_jump_state();
+  rat::PlayerFrameInput input;
+  input.jump_pressed = true;
+  input.jump_held = true;
+  rat::PlayerFrameResult launched = rat::integrate_player_frame_surface(
+      body, jump, input, 1.0f / 120.0f, {}, query, {}, 0.35f, {}, &map);
+  REQUIRE_FALSE(launched.jump.grounded);
+  REQUIRE(launched.jump.vertical_speed == Approx(7.5f).margin(0.3f));
+  REQUIRE_FALSE(launched.jump.climbing);
+  body = launched.body;
+  jump = launched.jump;
+  input.jump_pressed = false;
+  body.x = 0.85f;
+  body.z = 0.5f;
+  const rat::PlayerFrameResult latched = rat::integrate_player_frame_surface(
+      body, jump, input, 1.0f / 120.0f, {}, query, {}, 0.35f, {}, &map);
+  REQUIRE(latched.jump.climbing);
+  REQUIRE(latched.jump.ladder_lockout_left == 0.0f);
+  REQUIRE(latched.jump.vertical_speed == Approx(0.0f).margin(1e-3f));
+}
+
+TEST_CASE("Latched jump buffer bounces off the ladder", "[unit][player]") {
+  rat::MapData map = make_surface_map(1, 1, {0.0f});
+  map.schema_version = 3;
+  map.ladders.push_back({{0, 0}, rat::RampDirection::East, 0.0f, 2.0f});
+  const rat::SurfaceQuery query(map);
+  rat::PlayerBody body;
+  body.x = 0.85f;
+  body.y = 1.0f;
+  body.z = 0.5f;
+  body.speed = 5.0f;
+  rat::JumpState jump = rat::make_grounded_jump_state();
+  jump.climbing = true;
+  jump.jump_buffer_left = 0.1f;
+  rat::PlayerFrameInput input;
+  const rat::PlayerFrameResult result = rat::integrate_player_frame_surface(
+      body, jump, input, 1.0f / 120.0f, {}, query, {}, 0.35f, {}, &map);
+  REQUIRE_FALSE(result.jump.climbing);
+  REQUIRE_FALSE(result.jump.grounded);
+  REQUIRE(result.jump.ladder_lockout_left == Approx(0.20f).margin(0.02f));
+  REQUIRE(result.body.x < body.x - 0.4f);
+}
