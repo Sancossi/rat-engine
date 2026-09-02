@@ -1,7 +1,7 @@
 ---
 type: task
 area: Engine
-status: In review
+status: Done
 task_type: Feature
 sprint:
 due:
@@ -21,4 +21,8 @@ Plan: `docs/superpowers/plans/2026-09-02-camera-aligned-walk.md`
 
 ## Resolution
 
+Play `map_input_frame` maps WASD through `camera_relative_move` (`climb_move` same). Degenerate camera (no look XZ) keeps `world_aligned_move` numbers. `C` in Play rotates W by design. Verify: `.\build\tests\rat_tests.exe "[unit][input]"`.
+
 ## Bugs found
+
+none.
