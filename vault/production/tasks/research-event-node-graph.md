@@ -1,7 +1,7 @@
 ---
 type: task
 area: Engine
-status: In progress
+status: Done
 task_type: Research
 sprint: Sprint 8
 due:
@@ -104,3 +104,11 @@ Compile — **детерминированный** обход от `entry` по 
 2. [[feat: Event graph editor canvas]] — ImGui/node canvas, compile on apply, inspector fallback.
 
 Epic: [[feat: Event node graph authoring]]. Schema doc update: `docs/schemas/map-event.schema.md` (поле `graph` + node kinds) — в scope compile task, не здесь.
+
+## Resolution
+
+Граф optional на page, Edit компилирует в `commands`; Play не читает `graph`. MVP-ноды: Show Text, Switch, Branch, Wait. Verify: read this card.
+
+## Bugs found
+
+none.
