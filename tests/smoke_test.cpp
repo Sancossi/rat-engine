@@ -14,4 +14,6 @@ TEST_CASE("smoke: grey_yard.json loads without a window", "[smoke]") {
   REQUIRE(result.map.id == "grey_yard");
   REQUIRE_FALSE(result.map.height_grid.ground_y.empty());
   REQUIRE_FALSE(result.map.events.empty());
+  REQUIRE_FALSE(result.map.floor_slabs.empty());
+  REQUIRE_FALSE(result.map.ladders.empty());
 }

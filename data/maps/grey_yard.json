@@ -1,5 +1,5 @@
 {
-  "schema_version": 2,
+  "schema_version": 3,
   "id": "grey_yard",
   "width": 16,
   "height": 16,
@@ -34,6 +34,16 @@
   "edge_barriers": [
     { "tile": { "x": 4, "z": 6 }, "direction": "east", "height": 0.45 },
     { "tile": { "x": 6, "z": 6 }, "direction": "east", "height": 1.6 }
+  ],
+  "floor_slabs": [
+    { "tile": { "x": 0, "z": 4 }, "top_y": 2.0, "thickness": 0.25 },
+    { "tile": { "x": 1, "z": 4 }, "top_y": 2.0, "thickness": 0.25 },
+    { "tile": { "x": 2, "z": 4 }, "top_y": 2.0, "thickness": 0.25 },
+    { "tile": { "x": 0, "z": 5 }, "top_y": 2.0, "thickness": 0.25 },
+    { "tile": { "x": 1, "z": 5 }, "top_y": 2.0, "thickness": 0.25 }
+  ],
+  "ladders": [
+    { "tile": { "x": 2, "z": 4 }, "direction": "east", "y_lo": 0.0, "y_hi": 2.0 }
   ],
   "blockers": [
     { "min_x": 3.0, "min_z": -1.0, "max_x": 5.0, "max_z": 1.0 },

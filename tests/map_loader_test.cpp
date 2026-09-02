@@ -108,7 +108,7 @@ TEST_CASE("Example grey_yard.json loads without crash", "[unit][map]") {
   const auto result = rat::load_map_from_file(path);
   REQUIRE(result.ok);
   REQUIRE(result.map.id == "grey_yard");
-  REQUIRE(result.map.schema_version == 2);
+  REQUIRE(result.map.schema_version == 3);
   REQUIRE(result.map.height_grid.origin_x == -4);
   REQUIRE(result.map.height_grid.origin_z == -3);
   REQUIRE(result.map.height_grid.width == 16);
@@ -243,19 +243,27 @@ TEST_CASE("Example grey_yard.json loads without crash", "[unit][map]") {
   REQUIRE(found_standable_cube);
   REQUIRE(found_mini_fence);
   REQUIRE(found_full_fence);
+  REQUIRE(result.map.floor_slabs.size() == 5);
+  REQUIRE(result.map.floor_slabs[0].top_y == Catch::Approx(2.0f));
+  REQUIRE(result.map.ladders.size() == 1);
+  REQUIRE(result.map.ladders[0].tile.x == 2);
+  REQUIRE(result.map.ladders[0].tile.z == 4);
+  REQUIRE(result.map.ladders[0].direction == rat::RampDirection::East);
 
   // Round-trip via string path also works.
   const auto from_string = rat::load_map_from_string(read_file(path));
   REQUIRE(from_string.ok);
   REQUIRE(from_string.map.events.size() == result.map.events.size());
-  REQUIRE(from_string.map.schema_version == 2);
+  REQUIRE(from_string.map.schema_version == 3);
   REQUIRE(from_string.map.height_grid.ground_y == result.map.height_grid.ground_y);
 
   const auto serialized = rat::serialize_map_to_string(result.map);
   REQUIRE(serialized.ok);
   const auto from_serialized = rat::load_map_from_string(serialized.json_text);
   REQUIRE(from_serialized.ok);
-  REQUIRE(from_serialized.map.schema_version == 2);
+  REQUIRE(from_serialized.map.schema_version == 3);
+  REQUIRE(from_serialized.map.floor_slabs.size() == result.map.floor_slabs.size());
+  REQUIRE(from_serialized.map.ladders.size() == result.map.ladders.size());
   REQUIRE(from_serialized.map.height_grid.origin_x == result.map.height_grid.origin_x);
   REQUIRE(from_serialized.map.height_grid.origin_z == result.map.height_grid.origin_z);
   REQUIRE(from_serialized.map.height_grid.width == result.map.height_grid.width);

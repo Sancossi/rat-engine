@@ -63,7 +63,7 @@ TEST_CASE("Grey yard elevation slice: ramp, jumpable blocker, elevated action", 
   const auto loaded =
       rat::load_map_from_file(std::string(RAT_TEST_DATA_DIR) + "/maps/grey_yard.json");
   REQUIRE(loaded.ok);
-  REQUIRE(loaded.map.schema_version == 2);
+  REQUIRE(loaded.map.schema_version == 3);
 
   const rat::BlockerDef* low_blocker = find_jumpable_blocker(loaded.map);
   REQUIRE(low_blocker != nullptr);

@@ -24,7 +24,7 @@ Follow-up: [[feat: Step off ladder onto same-tile floor]], [[events-match-ground
 
 ## Resolution
 
-Schema v3: `floor_slabs` и `ladders`. Play при `map != nullptr` стоит/падает/бьётся о потолок по baked solids (земля, призмы рамп, плиты); лестница — overlap, в грань = +Y. Edit: инструменты Floor slab (toggle) и Ladder (last-wins) + greybox. Verify: `rat_tests.exe "[collision]"` / `"[unit][player]"` / `"[unit][edit]"`; в редакторе поставить плиту 2.0, лестницу, подняться и сойти. Review: Approved (финальный срез + re-review потолка/`ramp_index`).
+Schema v3: `floor_slabs` и `ladders`. Play при `map != nullptr` стоит/падает/бьётся о потолок по baked solids (земля, призмы рамп, плиты); лестница — overlap, в грань = +Y. Edit: инструменты Floor slab (toggle) и Ladder (last-wins) + greybox. `grey_yard` — schema 3: лофт `top_y` 2.0 на клетках (0–2,4) и (0–1,5) (дыра в (2,5)), лестница east на (2,4) `y` 0–2. Verify: `rat_tests.exe "[collision]"` / `"[unit][player]"` / `"[unit][edit]"` / `"[smoke]"`; в Play подойти с востока к лестнице у (2,4), подняться, сойти в дыру. Review: Approved (финальный срез + re-review потолка/`ramp_index`).
 
 ## Bugs found
 
