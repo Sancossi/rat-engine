@@ -1,7 +1,7 @@
 ---
 type: task
 area: Engine
-status: Not started
+status: Done
 task_type: Feature
 sprint:
 due:
@@ -16,4 +16,12 @@ Acceptance: East ladder + slab on the same tile; climb to `top_y`; away → stan
 
 Origin: [[feat: Stacked surfaces caves and basements]] (Task 5 review: face-normal XZ is zeroed while overlapping, so the center cannot stay on the owner tile when leaving). Related: [[feat: Ladder toward-climb, jump grab, jump off]], [[feat: MGS3 ladder climb]].
 
-Absorbed by [[feat: MGS3 ladder climb]] — parent will close after review. Top + up onto same-tile slab shipped in Task 2.
+Absorbed by [[feat: MGS3 ladder climb]]. Top + up onto same-tile slab shipped there.
+
+## Resolution
+
+Сход сверху: `y_hi` + движение вверх по рельсу ставит ноги на `query_solid_support` после nudge 0.35 face-away (плита той же клетки). Без support — clamp, остаёмся на рельсе. Проверка: `Top of east ladder plus up steps onto the same-tile slab` в `.\build\tests\rat_tests.exe "[unit][player]"`.
+
+## Bugs found
+
+none.
