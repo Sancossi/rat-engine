@@ -1,6 +1,6 @@
 ---
 type: sprint
-status: Not started
+status: In progress
 dates: 2026-09-02/2026-09-15
 goal: Play feel on grey_yard plus Sims-like edit and event node-graph authoring
 current: true
