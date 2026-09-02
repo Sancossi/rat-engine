@@ -86,6 +86,13 @@ void GreyboxScene::set_camera_mode(CameraMode mode) {
   rebuild_camera();
 }
 
+void GreyboxScene::set_climb_lock(bool locked, float into_x, float into_z) {
+  climb_locked_ = locked;
+  climb_into_x_ = into_x;
+  climb_into_z_ = into_z;
+  rebuild_camera();
+}
+
 void GreyboxScene::set_blockers(std::span<const BlockerDef> blockers) {
   blockers_.assign(blockers.begin(), blockers.end());
 }
@@ -255,11 +262,20 @@ void GreyboxScene::rebuild_camera() {
   camera_ = build_ortho_camera(width_, height_, params_);
 
   // Use bx matrices so handedness/depth match the active renderer.
-  const bx::Vec3 eye{camera_.eye.x, camera_.eye.y, camera_.eye.z};
-  const bx::Vec3 at{params_.focus.x, params_.focus.y, params_.focus.z};
+  bx::Vec3 eye{camera_.eye.x, camera_.eye.y, camera_.eye.z};
+  bx::Vec3 at{params_.focus.x, params_.focus.y, params_.focus.z};
   // Top-down look is parallel to world +Y; use -Z as up so the view is well-defined.
-  const bx::Vec3 up = (params_.mode == CameraMode::TopDown) ? bx::Vec3{0.0f, 0.0f, -1.0f}
-                                                            : bx::Vec3{0.0f, 1.0f, 0.0f};
+  bx::Vec3 up = (params_.mode == CameraMode::TopDown) ? bx::Vec3{0.0f, 0.0f, -1.0f}
+                                                      : bx::Vec3{0.0f, 1.0f, 0.0f};
+  if (climb_locked_) {
+    const ClimbCameraPose pose =
+        climb_camera_pose({player_.x, player_.y, player_.z}, climb_into_x_, climb_into_z_);
+    camera_.eye = pose.eye;
+    params_.focus = pose.focus;
+    eye = {pose.eye.x, pose.eye.y, pose.eye.z};
+    at = {pose.focus.x, pose.focus.y, pose.focus.z};
+    up = {0.0f, 1.0f, 0.0f};
+  }
   bx::mtxLookAt(camera_.view.m, eye, at, up, bx::Handedness::Left);
 
   const bgfx::Caps* caps = bgfx::getCaps();

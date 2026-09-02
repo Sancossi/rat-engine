@@ -38,6 +38,7 @@ class GreyboxScene {
     player_ = player;
     has_player_ = true;
   }
+  void set_climb_lock(bool locked, float into_x, float into_z);
   void set_blockers(std::span<const BlockerDef> blockers);
   void set_event_markers(std::span<const Vec3> markers);
   void set_terrain_map(const MapData& map);
@@ -56,6 +57,9 @@ class GreyboxScene {
 
   bool initialized_ = false;
   bool has_player_ = false;
+  bool climb_locked_ = false;
+  float climb_into_x_ = 0.0f;
+  float climb_into_z_ = 0.0f;
   std::uint32_t width_ = 1;
   std::uint32_t height_ = 1;
   OrthoCameraParams params_{};

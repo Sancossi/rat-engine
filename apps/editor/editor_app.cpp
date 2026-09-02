@@ -536,6 +536,15 @@ void EditorApp::simulate(float dt) {
   gating.keyboard_captured = io.WantCaptureKeyboard;
   gating.dialog_open = session_.events().active_message().has_value();
   gating.player_input_blocked = session_.events().player_input_blocked();
+
+  engine_->set_player(session_.player());
+  if (session_.jump().climbing) {
+    engine_->greybox().set_climb_lock(true, session_.jump().climb_into_x,
+                                     session_.jump().climb_into_z);
+  } else {
+    engine_->greybox().set_climb_lock(false, 0.0f, 0.0f);
+  }
+
   const InputFrame input = map_input_frame(buttons, previous_buttons_, gating,
                                            engine_->greybox().camera().eye,
                                            engine_->greybox().camera_focus());
