@@ -479,4 +479,23 @@ bool circle_overlaps_aabb2(float cx, float cz, float radius, const Aabb2& box) {
   return dx * dx + dz * dz <= radius * radius;
 }
 
+void ladder_face_into(RampDirection face, float& into_x, float& into_z) {
+  into_x = 0.0f;
+  into_z = 0.0f;
+  switch (face) {
+    case RampDirection::East:
+      into_x = 1.0f;
+      break;
+    case RampDirection::West:
+      into_x = -1.0f;
+      break;
+    case RampDirection::North:
+      into_z = -1.0f;
+      break;
+    case RampDirection::South:
+      into_z = 1.0f;
+      break;
+  }
+}
+
 }  // namespace rat

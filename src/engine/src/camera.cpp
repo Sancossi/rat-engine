@@ -160,4 +160,22 @@ OrthoCamera build_ortho_camera(std::uint32_t framebuffer_width, std::uint32_t fr
   return build_ortho_top_down(framebuffer_width, framebuffer_height, params);
 }
 
+ClimbCameraPose climb_camera_pose(Vec3 player, float into_x, float into_z) {
+  const float len_sq = into_x * into_x + into_z * into_z;
+  if (len_sq < 1e-6f) {
+    into_x = 1.0f;
+    into_z = 0.0f;
+  } else {
+    const float inv_len = 1.0f / std::sqrt(len_sq);
+    into_x *= inv_len;
+    into_z *= inv_len;
+  }
+
+  ClimbCameraPose pose;
+  pose.focus = player;
+  pose.eye = {player.x - into_x * kClimbCameraBack, player.y + kClimbCameraHeight,
+              player.z - into_z * kClimbCameraBack};
+  return pose;
+}
+
 }  // namespace rat

@@ -111,4 +111,6 @@ void depenetrate_cylinder_from_walls(CollisionBody& body, const CollisionWorld& 
                                      float max_step_up = 0.35f);
 [[nodiscard]] bool circle_overlaps_aabb2(float cx, float cz, float radius, const Aabb2& box);
 
+void ladder_face_into(RampDirection face, float& into_x, float& into_z);
+
 }  // namespace rat

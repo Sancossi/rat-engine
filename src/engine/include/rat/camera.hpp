@@ -61,4 +61,14 @@ struct OrthoCamera {
 [[nodiscard]] CameraMode next_camera_mode(CameraMode mode);
 [[nodiscard]] const char* camera_mode_name(CameraMode mode);
 
+inline constexpr float kClimbCameraBack = 10.0f;
+inline constexpr float kClimbCameraHeight = 8.0f;
+
+struct ClimbCameraPose {
+  Vec3 eye{};
+  Vec3 focus{};
+};
+
+[[nodiscard]] ClimbCameraPose climb_camera_pose(Vec3 player, float into_x, float into_z);
+
 }  // namespace rat

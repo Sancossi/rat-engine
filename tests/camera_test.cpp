@@ -1,4 +1,5 @@
 #include <rat/camera.hpp>
+#include <rat/player.hpp>
 
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
@@ -72,4 +73,17 @@ TEST_CASE("Ortho tilt 45 looks from elevated +Z with equal height", "[unit][came
   REQUIRE(rat::next_camera_mode(rat::CameraMode::TopDown) == rat::CameraMode::Tilt45);
   REQUIRE(rat::next_camera_mode(rat::CameraMode::Tilt45) == rat::CameraMode::ThreeQuarter);
   REQUIRE(rat::next_camera_mode(rat::CameraMode::ThreeQuarter) == rat::CameraMode::TopDown);
+}
+
+TEST_CASE("Climb camera sits behind the player looking into an east face", "[unit][camera]") {
+  const rat::Vec3 player{0.85f, 1.0f, 0.5f};
+  const rat::ClimbCameraPose pose = rat::climb_camera_pose(player, 1.0f, 0.0f);
+  REQUIRE(pose.focus.x == Approx(player.x));
+  REQUIRE(pose.focus.y == Approx(player.y));
+  REQUIRE(pose.focus.z == Approx(player.z));
+  REQUIRE(pose.eye.x < player.x - 1.0f);
+  REQUIRE(pose.eye.y > player.y);
+  const rat::MoveInput w =
+      rat::camera_relative_move(0.0f, 1.0f, pose.eye, pose.focus);
+  REQUIRE(w.axis_x > 0.5f);
 }

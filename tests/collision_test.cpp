@@ -395,3 +395,11 @@ TEST_CASE("Thin slab side blocks at mid-thickness even though span < max_step_up
   body.x = 0.7f; body.y = 1.8f; body.z = 0.5f;
   REQUIRE(rat::cylinder_hits_walls(body, world, 0.35f));
 }
+
+TEST_CASE("Ladder face into maps east to +X", "[collision]") {
+  float into_x = 0.0f;
+  float into_z = 0.0f;
+  rat::ladder_face_into(rat::RampDirection::East, into_x, into_z);
+  REQUIRE(into_x == Approx(1.0f));
+  REQUIRE(into_z == Approx(0.0f));
+}
