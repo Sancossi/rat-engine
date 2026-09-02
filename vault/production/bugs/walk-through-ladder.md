@@ -1,7 +1,7 @@
 ---
 type: bug
 area: Engine
-status: Open
+status: Investigating
 severity: High
 sprint: Sprint 8
 tags: [bug]

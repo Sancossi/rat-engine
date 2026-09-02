@@ -15,6 +15,8 @@ Playtest 2026-09-02 evening (after keep-Y in `follow_standing_sample` + full Rel
 
 Follow-up: [[walk-through-ladder]]
 
+Implementer `97296b5`: mid-fall teleport was neighboring-slab ceiling (circle overlap), not the keep-Y walk-off. Ceiling is now point-in-tile. Review pending (bug status has no In review).
+
 ## Repro
 
 1. Play `grey_yard`, climb the East ladder to the second floor (slab ~Y 2).
