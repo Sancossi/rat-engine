@@ -819,6 +819,63 @@ TEST_CASE("Event runtime loft-bound tile event matches slab top not ground",
   REQUIRE_FALSE(ground_state.get_switch(50));
 }
 
+TEST_CASE("Event runtime spawn markers use EventDef bind Y", "[unit][events][event]") {
+  constexpr const char* kJson = R"({
+    "schema_version": 3,
+    "id": "loft_spawn_marker",
+    "width": 2,
+    "height": 2,
+    "tile_size": 1.0,
+    "height_grid": {
+      "origin_x": 0,
+      "origin_z": 0,
+      "width": 2,
+      "height": 2,
+      "ground_y": [0, 0, 0, 0]
+    },
+    "floor_slabs": [
+      { "tile": { "x": 0, "z": 0 }, "top_y": 2.0, "thickness": 0.25 }
+    ],
+    "events": [
+      {
+        "id": "loft_action",
+        "tile": { "x": 0, "z": 0 },
+        "y": 2.0,
+        "pages": [
+          {
+            "trigger": "action",
+            "commands": [{ "op": "control_switch", "id": 50, "value": true }]
+          }
+        ]
+      },
+      {
+        "id": "ground_touch",
+        "tile": { "x": 1, "z": 0 },
+        "pages": [
+          {
+            "trigger": "player_touch",
+            "commands": [{ "op": "control_switch", "id": 51, "value": true }]
+          }
+        ]
+      }
+    ]
+  })";
+
+  const auto loaded = rat::load_map_from_string(kJson);
+  REQUIRE(loaded.ok);
+  rat::EventRuntime runtime;
+  REQUIRE(runtime.load(loaded.map).ok);
+
+  const auto markers = runtime.event_markers();
+  REQUIRE(markers.size() == 2);
+  REQUIRE(markers[0].x == Catch::Approx(0.5f));
+  REQUIRE(markers[0].z == Catch::Approx(0.5f));
+  REQUIRE(markers[0].y == Catch::Approx(2.0f));
+  REQUIRE(markers[1].x == Catch::Approx(1.5f));
+  REQUIRE(markers[1].z == Catch::Approx(0.5f));
+  REQUIRE(markers[1].y == Catch::Approx(0.0f));
+}
+
 TEST_CASE("Event runtime unbound ground event still ignores slab beside a loft bind",
           "[unit][events][event]") {
   constexpr const char* kJson = R"({

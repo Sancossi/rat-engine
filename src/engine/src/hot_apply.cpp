@@ -20,7 +20,7 @@ std::vector<Vec3> event_markers_from_map(const MapData& map) {
   for (const EventDef& event : map.events) {
     if (event.tile.has_value()) {
       Vec3 marker = tile_center_world(*event.tile, map.tile_size);
-      marker.y = query.sample(marker.x, marker.z).y;
+      marker.y = event.y.value_or(query.sample(marker.x, marker.z).y);
       markers.push_back(marker);
     } else if (event.volume.has_value()) {
       Vec3 marker{
@@ -28,7 +28,7 @@ std::vector<Vec3> event_markers_from_map(const MapData& map) {
           0.0f,
           (event.volume->min_z + event.volume->max_z) * 0.5f,
       };
-      marker.y = query.sample(marker.x, marker.z).y;
+      marker.y = event.y.value_or(query.sample(marker.x, marker.z).y);
       markers.push_back(marker);
     }
   }

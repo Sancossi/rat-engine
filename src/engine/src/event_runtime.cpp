@@ -778,7 +778,11 @@ std::vector<Vec3> EventRuntime::event_markers() const {
       continue;
     }
     Vec3 marker = live_event_xz(event);
-    if (surface_query_) {
+    const bool overlay_live = overlays_.contains(event.id);
+    // Spawn/unmoved: sit on EventDef bind Y. Overlay-live keeps dest surface sample.
+    if (event.y.has_value() && !overlay_live) {
+      marker.y = *event.y;
+    } else if (surface_query_) {
       marker.y = surface_query_->sample(marker.x, marker.z).y;
     }
     markers.push_back(marker);

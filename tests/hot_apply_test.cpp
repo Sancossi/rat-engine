@@ -194,6 +194,60 @@ TEST_CASE("Event markers sample elevated tile and volume centers", "[unit][hot_a
   REQUIRE(markers[1].y == Approx(5.0f));
 }
 
+TEST_CASE("Event markers sit on EventDef bind Y not ground sample", "[unit][hot_apply]") {
+  constexpr const char* kJson = R"({
+    "schema_version": 3,
+    "id": "loft_marker",
+    "width": 2,
+    "height": 2,
+    "tile_size": 1.0,
+    "height_grid": {
+      "origin_x": 0,
+      "origin_z": 0,
+      "width": 2,
+      "height": 2,
+      "ground_y": [0, 0, 0, 0]
+    },
+    "floor_slabs": [
+      { "tile": { "x": 0, "z": 0 }, "top_y": 2.0, "thickness": 0.25 }
+    ],
+    "events": [
+      {
+        "id": "loft_plank",
+        "tile": { "x": 0, "z": 0 },
+        "y": 2.0,
+        "pages": [{ "trigger": "action", "commands": [{ "op": "comment", "text": "loft" }] }]
+      },
+      {
+        "id": "ground_npc",
+        "tile": { "x": 1, "z": 0 },
+        "pages": [{ "trigger": "action", "commands": [{ "op": "comment", "text": "ground" }] }]
+      },
+      {
+        "id": "loft_volume",
+        "volume": { "min_x": 0.0, "min_z": 1.0, "max_x": 1.0, "max_z": 2.0 },
+        "y": 1.5,
+        "pages": [{ "trigger": "player_touch", "commands": [{ "op": "comment", "text": "vol" }] }]
+      }
+    ]
+  })";
+
+  const auto loaded = rat::load_map_from_string(kJson);
+  REQUIRE(loaded.ok);
+
+  const auto markers = rat::event_markers_from_map(loaded.map);
+  REQUIRE(markers.size() == 3);
+  REQUIRE(markers[0].x == Approx(0.5f));
+  REQUIRE(markers[0].z == Approx(0.5f));
+  REQUIRE(markers[0].y == Approx(2.0f));
+  REQUIRE(markers[1].x == Approx(1.5f));
+  REQUIRE(markers[1].z == Approx(0.5f));
+  REQUIRE(markers[1].y == Approx(0.0f));
+  REQUIRE(markers[2].x == Approx(0.5f));
+  REQUIRE(markers[2].z == Approx(1.5f));
+  REQUIRE(markers[2].y == Approx(1.5f));
+}
+
 TEST_CASE("Hot-apply refreshes cached query and resets jump state", "[unit][hot_apply]") {
   const auto loaded = rat::load_map_from_string(kHeightMap);
   REQUIRE(loaded.ok);
