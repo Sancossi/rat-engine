@@ -8,11 +8,26 @@
 #include <catch2/catch_test_macros.hpp>
 
 #include <algorithm>
+#include <cmath>
 #include <string>
 
 using Catch::Approx;
 
 namespace {
+
+constexpr float kTickDt = 1.0f / 60.0f;
+
+int frames_to_cross_tile(const rat::PlayerBody& player, float tile_size = 1.0f) {
+  const float speed = player.speed > 0.0f ? player.speed : 5.0f;
+  return static_cast<int>(std::ceil(tile_size / (speed * kTickDt) - 1.0e-6f));
+}
+
+void tick(rat::EventRuntime& runtime, rat::GameState& state, const rat::PlayerBody& player,
+          int frames = 1) {
+  for (int i = 0; i < frames; ++i) {
+    runtime.update(state, player, false, kTickDt);
+  }
+}
 
 constexpr const char* kRouteMap = R"({
   "schema_version": 1,
@@ -44,13 +59,6 @@ constexpr const char* kRouteMap = R"({
     }
   ]
 })";
-
-void tick(rat::EventRuntime& runtime, rat::GameState& state, const rat::PlayerBody& player,
-          int frames = 1) {
-  for (int i = 0; i < frames; ++i) {
-    runtime.update(state, player, false, 1.0f / 60.0f);
-  }
-}
 
 }  // namespace
 
@@ -113,7 +121,7 @@ TEST_CASE("page-level op move does not become a page CommandOp", "[unit][route]"
   REQUIRE(loaded.error.find("move") != std::string::npos);
 }
 
-TEST_CASE("overlay tile moves one cell and authored EventDef.tile is unchanged", "[unit][route]") {
+TEST_CASE("move step interpolates xz at player speed instead of snapping tile", "[unit][route]") {
   const auto loaded = rat::load_map_from_string(kRouteMap);
   REQUIRE(loaded.ok);
 
@@ -121,17 +129,24 @@ TEST_CASE("overlay tile moves one cell and authored EventDef.tile is unchanged",
   rat::EventRuntime runtime;
   REQUIRE(runtime.load(loaded.map).ok);
 
-  REQUIRE_FALSE(runtime.event_overlay("npc").has_value());
+  rat::PlayerBody player;
+  tick(runtime, state, player);
 
-  tick(runtime, state, rat::PlayerBody{});
-
-  const auto overlay = runtime.event_overlay("npc");
-  REQUIRE(overlay.has_value());
-  REQUIRE(overlay->tile.x == 2);
-  REQUIRE(overlay->tile.z == 2);
-  REQUIRE(runtime.map().events[0].tile.has_value());
+  const auto after_one = runtime.event_overlay("npc");
+  REQUIRE(after_one.has_value());
+  REQUIRE(after_one->tile.x == 1);
+  REQUIRE(after_one->tile.z == 2);
+  REQUIRE(after_one->x == Approx(1.5f + player.speed * kTickDt));
+  REQUIRE(after_one->z == Approx(2.5f));
   REQUIRE(runtime.map().events[0].tile->x == 1);
-  REQUIRE(runtime.map().events[0].tile->z == 2);
+
+  tick(runtime, state, player, frames_to_cross_tile(player) - 1);
+  const auto arrived = runtime.event_overlay("npc");
+  REQUIRE(arrived.has_value());
+  REQUIRE(arrived->tile.x == 2);
+  REQUIRE(arrived->tile.z == 2);
+  REQUIRE(arrived->x == Approx(2.5f));
+  REQUIRE(arrived->z == Approx(2.5f));
 }
 
 TEST_CASE("command_index stays on set_move_route while route runs", "[unit][route]") {
@@ -146,10 +161,10 @@ TEST_CASE("command_index stays on set_move_route while route runs", "[unit][rout
   const auto debug = runtime.foreground_debug();
   REQUIRE(debug.has_value());
   REQUIRE(debug->command_index == 0);
-  REQUIRE(debug->route_index == 1);
+  REQUIRE(debug->route_index == 0);
   REQUIRE_FALSE(state.get_switch(1));
 
-  tick(runtime, state, rat::PlayerBody{}, 8);
+  tick(runtime, state, rat::PlayerBody{}, frames_to_cross_tile(rat::PlayerBody{}) * 2 + 8);
   REQUIRE(state.get_switch(1));
   REQUIRE_FALSE(runtime.player_input_blocked());
 }
@@ -201,6 +216,12 @@ TEST_CASE("foreground occupancy by player does not block; blocker without throug
   tick(runtime, state, player);
   auto overlay = runtime.event_overlay("npc");
   REQUIRE(overlay.has_value());
+  REQUIRE(overlay->tile.x == 0);
+  REQUIRE(runtime.player_input_blocked());
+
+  tick(runtime, state, player, frames_to_cross_tile(player));
+  overlay = runtime.event_overlay("npc");
+  REQUIRE(overlay.has_value());
   REQUIRE(overlay->tile.x == 1);
   REQUIRE(runtime.player_input_blocked());
 
@@ -245,7 +266,7 @@ TEST_CASE("through ignores blocker and completes the step", "[unit][route]") {
   rat::GameState state;
   rat::EventRuntime runtime;
   REQUIRE(runtime.load(loaded.map).ok);
-  tick(runtime, state, rat::PlayerBody{});
+  tick(runtime, state, rat::PlayerBody{}, frames_to_cross_tile(rat::PlayerBody{}));
 
   const auto overlay = runtime.event_overlay("npc");
   REQUIRE(overlay.has_value());
@@ -301,7 +322,7 @@ TEST_CASE("parallel waits a frame when dest is occupied and does not lock the pl
   REQUIRE(overlay->tile.x == 0);
 
   player.x = 3.5f;
-  tick(runtime, state, player);
+  tick(runtime, state, player, frames_to_cross_tile(player));
   overlay = runtime.event_overlay("npc");
   REQUIRE(overlay.has_value());
   REQUIRE(overlay->tile.x == 1);
@@ -349,7 +370,7 @@ TEST_CASE("overlay-caused overlap does not start PlayerTouch", "[unit][route]") 
   player.x = 1.5f;
   player.z = 0.5f;
 
-  tick(runtime, state, player, 4);
+  tick(runtime, state, player, frames_to_cross_tile(player) + 2);
   REQUIRE(state.get_switch(1));
   REQUIRE_FALSE(state.get_switch(2));
   REQUIRE_FALSE(runtime.player_input_blocked());
@@ -396,7 +417,7 @@ TEST_CASE("player walking into live overlay bounds can still start PlayerTouch",
   rat::PlayerBody away;
   away.x = 6.5f;
   away.z = 0.5f;
-  tick(runtime, state, away, 6);
+  tick(runtime, state, away, frames_to_cross_tile(away) * 2 + 2);
   REQUIRE(state.get_switch(1));
   REQUIRE_FALSE(state.get_switch(2));
 
@@ -440,7 +461,7 @@ TEST_CASE("tile plus volume live bounds shift like translate_event_on_grid", "[u
   rat::PlayerBody at_spawn;
   at_spawn.x = 1.5f;
   at_spawn.z = 1.5f;
-  tick(runtime, state, at_spawn);
+  tick(runtime, state, at_spawn, frames_to_cross_tile(at_spawn));
 
   const auto overlay = runtime.event_overlay("npc");
   REQUIRE(overlay.has_value());
@@ -536,18 +557,30 @@ TEST_CASE("parallel budget counts set_move_route as one opcode like Wait", "[uni
   REQUIRE(runtime.last_parallel_commands_executed() == 1);
   const auto overlay = runtime.event_overlay("npc");
   REQUIRE(overlay.has_value());
-  REQUIRE(overlay->tile.x == 1);
+  REQUIRE(overlay->tile.x == 0);
+
+  tick(runtime, state, rat::PlayerBody{}, frames_to_cross_tile(rat::PlayerBody{}));
+  const auto arrived = runtime.event_overlay("npc");
+  REQUIRE(arrived.has_value());
+  REQUIRE(arrived->tile.x == 1);
 }
 
-TEST_CASE("markers follow overlay tile", "[unit][route]") {
+TEST_CASE("markers follow live overlay xz", "[unit][route]") {
   const auto loaded = rat::load_map_from_string(kRouteMap);
   REQUIRE(loaded.ok);
 
   rat::GameState state;
   rat::EventRuntime runtime;
   REQUIRE(runtime.load(loaded.map).ok);
-  tick(runtime, state, rat::PlayerBody{});
+  rat::PlayerBody player;
+  tick(runtime, state, player);
 
+  const auto mid = runtime.event_markers();
+  REQUIRE(mid.size() == 1);
+  REQUIRE(mid[0].x == Approx(1.5f + player.speed * kTickDt));
+  REQUIRE(mid[0].z == Approx(2.5f));
+
+  tick(runtime, state, player, frames_to_cross_tile(player) - 1);
   const auto markers = runtime.event_markers();
   REQUIRE(markers.size() == 1);
   REQUIRE(markers[0].x == Approx(2.5f));
@@ -676,7 +709,7 @@ TEST_CASE("set_move_route steps onto height_grid tiles west of world origin", "[
   rat::GameState state;
   rat::EventRuntime runtime;
   REQUIRE(runtime.load(loaded.map).ok);
-  tick(runtime, state, rat::PlayerBody{});
+  tick(runtime, state, rat::PlayerBody{}, frames_to_cross_tile(rat::PlayerBody{}));
 
   const auto overlay = runtime.event_overlay("npc");
   REQUIRE(overlay.has_value());

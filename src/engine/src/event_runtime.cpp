@@ -40,6 +40,11 @@ Aabb2 tile_aabb(TileCoord tile, float tile_size) {
   return Aabb2{center.x - h, center.z - h, center.x + h, center.z + h};
 }
 
+Aabb2 centered_tile_aabb(float x, float z, float tile_size) {
+  const float h = 0.5f * tile_size;
+  return Aabb2{x - h, z - h, x + h, z + h};
+}
+
 TileCoord step_tile(TileCoord tile, RampDirection dir) {
   switch (dir) {
     case RampDirection::North:
@@ -192,7 +197,7 @@ Aabb2 EventRuntime::event_bounds(const EventDef& event) const {
     return volume;
   }
   if (has_overlay) {
-    return tile_aabb(overlay_it->second.tile, tile_size);
+    return centered_tile_aabb(overlay_it->second.x, overlay_it->second.z, tile_size);
   }
   if (event.volume.has_value()) {
     return *event.volume;
@@ -529,7 +534,8 @@ void EventRuntime::step_interpreter(Interpreter& interp, GameState& state,
 }
 
 void EventRuntime::update(GameState& state, const PlayerBody& player, bool interact_pressed,
-                          float /*dt*/) {
+                          float dt) {
+  dt_ = dt > 0.0f ? dt : 0.0f;
   last_parallel_commands_executed_ = 0;
   last_commands_executed_ = 0;
 
@@ -619,7 +625,7 @@ const EventDef* EventRuntime::find_event(std::string_view event_id) const {
 Vec3 EventRuntime::live_event_xz(const EventDef& event) const {
   const auto overlay_it = overlays_.find(event.id);
   if (overlay_it != overlays_.end()) {
-    return tile_center_world(overlay_it->second.tile, runtime_map_.data.tile_size);
+    return Vec3{overlay_it->second.x, 0.0f, overlay_it->second.z};
   }
   if (event.tile.has_value()) {
     return tile_center_world(*event.tile, runtime_map_.data.tile_size);
@@ -639,6 +645,11 @@ EventOverlay& EventRuntime::ensure_overlay(const EventDef& event) {
   EventOverlay pose;
   if (event.tile.has_value()) {
     pose.tile = *event.tile;
+    const float tile_size =
+        runtime_map_.data.tile_size > 0.0f ? runtime_map_.data.tile_size : 1.0f;
+    const Vec3 center = tile_center_world(pose.tile, tile_size);
+    pose.x = center.x;
+    pose.z = center.z;
   }
   return overlays_[event.id] = pose;
 }
@@ -738,9 +749,24 @@ bool EventRuntime::exec_set_move_route(Interpreter& interp, const Command& comma
       if (dest_blocked(dest, player, command.through, interp.parallel)) {
         return false;
       }
-      pose.tile = dest;
       pose.facing = step.dir;
-      ++interp.route_index;
+      const float tile_size =
+          runtime_map_.data.tile_size > 0.0f ? runtime_map_.data.tile_size : 1.0f;
+      const Vec3 dest_center = tile_center_world(dest, tile_size);
+      const float dx = dest_center.x - pose.x;
+      const float dz = dest_center.z - pose.z;
+      const float dist = std::sqrt(dx * dx + dz * dz);
+      const float speed = player.speed > 0.0f ? player.speed : 5.0f;
+      const float step_len = speed * dt_;
+      if (dist <= step_len + 1.0e-5f) {
+        pose.x = dest_center.x;
+        pose.z = dest_center.z;
+        pose.tile = dest;
+        ++interp.route_index;
+        return false;
+      }
+      pose.x += dx * (step_len / dist);
+      pose.z += dz * (step_len / dist);
       return false;
     }
   }

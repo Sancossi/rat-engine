@@ -141,6 +141,14 @@ TEST_CASE("Headless mechanics: grey_yard walker leaves spawn on set_move_route",
   REQUIRE_FALSE(state.get_switch(2));
   REQUIRE_FALSE(state.has_item("rusty_cog"));
 
+  runtime.update(state, player, false, 1.0f / 60.0f);
+  runtime.update(state, player, false, 1.0f / 60.0f);
+  const auto mid = runtime.event_overlay("yard_walker");
+  REQUIRE(mid.has_value());
+  REQUIRE(mid->tile.x == -4);
+  REQUIRE(mid->tile.z == -1);
+  REQUIRE(mid->x > -3.5f);
+
   bool left_spawn = false;
   for (int i = 0; i < 30; ++i) {
     runtime.update(state, player, false, 1.0f / 60.0f);

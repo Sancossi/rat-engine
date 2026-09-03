@@ -44,6 +44,8 @@ enum class EventWhyNot {
 struct EventOverlay {
   TileCoord tile;
   RampDirection facing = RampDirection::South;
+  float x = 0.0f;
+  float z = 0.0f;
 };
 
 struct InterpreterDebug {
@@ -154,6 +156,7 @@ class EventRuntime {
   std::unique_ptr<SurfaceQuery> surface_query_;
   CollisionWorld collision_world_{};
   std::unordered_map<std::string, EventOverlay> overlays_;
+  float dt_ = 0.0f;
   bool have_last_player_ = false;
   float last_player_x_ = 0.0f;
   float last_player_y_ = 0.0f;
