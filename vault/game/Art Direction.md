@@ -59,5 +59,5 @@ tags: [game]
 - [x] Персонажи → **mesh + procedural anim**
 - [x] Иерархия тела → **RE-like segments** (голова / грудь / живот / руки сегментами / ноги сегментами)
 - [ ] Нужна ли ночь/день и как не сломать палитру — нет
-- [ ] Конкретные референсы (игры/артисты): chrono cross, zelda, final fantasy 6
+- [x] Конкретные референсы → движение **Metal Gear Solid 3**; арт **Final Fantasy 6** + **Chrono Cross**; диалоги **Disco Elysium** + **Divinity: Original Sin** (серия). Zelda — optional look-ref, не замена FF6/CC. Детали: [[Collect 5 reference games]].
 - [ ] Точный набор костей/сегментов (нужен ли отдельный neck/hips) — да
