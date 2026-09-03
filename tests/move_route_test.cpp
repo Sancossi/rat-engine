@@ -328,6 +328,52 @@ TEST_CASE("parallel waits a frame when dest is occupied and does not lock the pl
   REQUIRE(overlay->tile.x == 1);
 }
 
+TEST_CASE("started parallel lerp finishes even if dest becomes occupied", "[unit][route]") {
+  constexpr const char* kJson = R"({
+    "schema_version": 1,
+    "id": "par_inflight",
+    "width": 8,
+    "height": 8,
+    "events": [
+      {
+        "id": "npc",
+        "tile": { "x": 0, "z": 0 },
+        "pages": [
+          {
+            "trigger": "parallel",
+            "commands": [
+              { "op": "set_move_route", "route": [ { "op": "move", "dir": "east" } ] }
+            ]
+          }
+        ]
+      }
+    ]
+  })";
+
+  const auto loaded = rat::load_map_from_string(kJson);
+  REQUIRE(loaded.ok);
+
+  rat::GameState state;
+  rat::EventRuntime runtime;
+  REQUIRE(runtime.load(loaded.map).ok);
+
+  rat::PlayerBody player;
+  player.x = 3.5f;
+  player.z = 0.5f;
+  tick(runtime, state, player);
+  auto overlay = runtime.event_overlay("npc");
+  REQUIRE(overlay.has_value());
+  REQUIRE(overlay->tile.x == 0);
+  REQUIRE(overlay->x > 0.5f);
+
+  player.x = 1.5f;
+  tick(runtime, state, player, frames_to_cross_tile(player));
+  overlay = runtime.event_overlay("npc");
+  REQUIRE(overlay.has_value());
+  REQUIRE(overlay->tile.x == 1);
+  REQUIRE(overlay->x == Approx(1.5f));
+}
+
 TEST_CASE("overlay-caused overlap does not start PlayerTouch", "[unit][route]") {
   constexpr const char* kJson = R"({
     "schema_version": 1,

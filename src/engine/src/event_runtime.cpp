@@ -746,12 +746,15 @@ bool EventRuntime::exec_set_move_route(Interpreter& interp, const Command& comma
     case RouteStepOp::Move: {
       EventOverlay& pose = ensure_overlay(*event);
       const TileCoord dest = step_tile(pose.tile, step.dir);
-      if (dest_blocked(dest, player, command.through, interp.parallel)) {
+      const float tile_size =
+          runtime_map_.data.tile_size > 0.0f ? runtime_map_.data.tile_size : 1.0f;
+      const Vec3 from = tile_center_world(pose.tile, tile_size);
+      const bool at_start =
+          std::abs(pose.x - from.x) < 1e-4f && std::abs(pose.z - from.z) < 1e-4f;
+      if (at_start && dest_blocked(dest, player, command.through, interp.parallel)) {
         return false;
       }
       pose.facing = step.dir;
-      const float tile_size =
-          runtime_map_.data.tile_size > 0.0f ? runtime_map_.data.tile_size : 1.0f;
       const Vec3 dest_center = tile_center_world(dest, tile_size);
       const float dx = dest_center.x - pose.x;
       const float dz = dest_center.z - pose.z;
