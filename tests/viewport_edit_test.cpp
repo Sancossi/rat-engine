@@ -86,6 +86,21 @@ TEST_CASE("unproject center pixel hits camera focus xz", "[unit][viewport_edit]"
   REQUIRE(hit->z == Approx(params.focus.z).margin(0.01f));
 }
 
+TEST_CASE("project unprojected center pixel round-trips to screen center", "[unit][viewport_edit]") {
+  rat::OrthoCameraParams params;
+  params.focus = {3.0f, 0.0f, -2.0f};
+  params.mode = rat::CameraMode::TopDown;
+  const rat::OrthoCamera camera = rat::build_ortho_top_down(640, 480, params);
+
+  const auto hit = rat::unproject_to_ground_plane(camera, 320.0f, 240.0f, 640, 480);
+  REQUIRE(hit.has_value());
+
+  const auto pixel = rat::project_world_to_pixels(camera, *hit, 640, 480);
+  REQUIRE(pixel.has_value());
+  REQUIRE(pixel->x == Approx(320.0f).margin(2.0f));
+  REQUIRE(pixel->y == Approx(240.0f).margin(2.0f));
+}
+
 TEST_CASE("unproject off-center pixel follows top-down extents", "[unit][viewport_edit]") {
   rat::OrthoCameraParams params;
   params.focus = {3.0f, 0.0f, -2.0f};

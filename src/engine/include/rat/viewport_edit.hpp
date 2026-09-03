@@ -60,6 +60,15 @@ struct TileDelta {
   int tile_dz = 0;
 };
 
+struct PixelPos {
+  float x = 0.0f;
+  float y = 0.0f;
+};
+
+[[nodiscard]] std::optional<PixelPos> project_world_to_pixels(const OrthoCamera& camera, Vec3 world,
+                                                            std::uint32_t framebuffer_width,
+                                                            std::uint32_t framebuffer_height);
+
 [[nodiscard]] std::optional<Vec3> unproject_to_ground_plane(const OrthoCamera& camera, float pixel_x,
                                                             float pixel_y,
                                                             std::uint32_t framebuffer_width,

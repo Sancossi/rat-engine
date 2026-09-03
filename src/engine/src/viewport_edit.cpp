@@ -126,6 +126,13 @@ std::optional<Vec3> transform_clip_to_world(const float inv_clip[16], float ndc_
   return Vec3{x / w, y / w, z / w};
 }
 
+void mul_mat4_vec4(const float m[16], float x, float y, float z, float w, float out[4]) {
+  out[0] = m[0] * x + m[4] * y + m[8] * z + m[12] * w;
+  out[1] = m[1] * x + m[5] * y + m[9] * z + m[13] * w;
+  out[2] = m[2] * x + m[6] * y + m[10] * z + m[14] * w;
+  out[3] = m[3] * x + m[7] * y + m[11] * z + m[15] * w;
+}
+
 }  // namespace
 
 std::optional<Vec3> unproject_to_ground_plane(const OrthoCamera& camera, float pixel_x, float pixel_y,
@@ -156,6 +163,29 @@ std::optional<Vec3> unproject_to_ground_plane(const OrthoCamera& camera, float p
   }
   const float t = (ground_y - p0->y) / dy;
   return Vec3{p0->x + (p1->x - p0->x) * t, ground_y, p0->z + (p1->z - p0->z) * t};
+}
+
+std::optional<PixelPos> project_world_to_pixels(const OrthoCamera& camera, Vec3 world,
+                                               std::uint32_t framebuffer_width,
+                                               std::uint32_t framebuffer_height) {
+  const float width = static_cast<float>(std::max<std::uint32_t>(1, framebuffer_width));
+  const float height = static_cast<float>(std::max<std::uint32_t>(1, framebuffer_height));
+
+  float clip[16];
+  mul_mat4(camera.proj.m, camera.view.m, clip);
+
+  float clip_pos[4];
+  mul_mat4_vec4(clip, world.x, world.y, world.z, 1.0f, clip_pos);
+  if (std::fabs(clip_pos[3]) <= kEpsilon || clip_pos[3] < 0.0f) {
+    return std::nullopt;
+  }
+
+  const float inv_w = 1.0f / clip_pos[3];
+  const float ndc_x = clip_pos[0] * inv_w;
+  const float ndc_y = clip_pos[1] * inv_w;
+  const float pixel_x = (ndc_x + 1.0f) * 0.5f * width;
+  const float pixel_y = (1.0f - ndc_y) * 0.5f * height;
+  return PixelPos{pixel_x, pixel_y};
 }
 
 std::optional<ViewportPick> pick_map_object_xz(const MapData& map, Vec3 world_hit,

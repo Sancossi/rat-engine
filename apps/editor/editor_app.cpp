@@ -42,6 +42,7 @@ namespace rat {
 namespace {
 
 constexpr const char* kPlaySaveSlotPath = "saves/slot1.ratsave";
+constexpr float kEventMarkerStemHeight = 1.4f;
 
 }  // namespace
 
@@ -1144,6 +1145,33 @@ void EditorApp::draw_ui() {
   }
 
   ImGui::End();
+
+  if (app_mode_ == AppMode::Edit && edit_submode_ == EditSubmode::Events && engine_ != nullptr) {
+    const MapData& map = document_.visible_data();
+    const std::vector<Vec3> markers = event_markers_from_map(map);
+    const std::uint32_t fb_w = static_cast<std::uint32_t>(width_ > 0 ? width_ : 1);
+    const std::uint32_t fb_h = static_cast<std::uint32_t>(height_ > 0 ? height_ : 1);
+    const OrthoCamera& camera = engine_->greybox().camera();
+    ImDrawList* draw_list = ImGui::GetForegroundDrawList();
+    std::size_t marker_i = 0;
+    for (const EventDef& event : map.events) {
+      if (!event.tile.has_value() && !event.volume.has_value()) {
+        continue;
+      }
+      if (marker_i >= markers.size()) {
+        break;
+      }
+      Vec3 stem_top = markers[marker_i++];
+      stem_top.y += kEventMarkerStemHeight;
+      const auto pixel = project_world_to_pixels(camera, stem_top, fb_w, fb_h);
+      if (!pixel.has_value()) {
+        continue;
+      }
+      const ImVec2 text_size = ImGui::CalcTextSize(event.id.c_str());
+      draw_list->AddText(ImVec2(pixel->x - text_size.x * 0.5f, pixel->y - text_size.y),
+                         IM_COL32(255, 255, 255, 255), event.id.c_str());
+    }
+  }
 }
 
 }  // namespace rat
