@@ -578,22 +578,31 @@ void EditorApp::handle_edit_mouse_input(const ImGuiIO& io) {
   if (!host_.is_open() || engine_ == nullptr || app_mode_ != AppMode::Edit) {
     finish_cell_brush(false);
     mouse_left_was_down_ = false;
+    mouse_right_was_down_ = false;
     drag_active_ = false;
     return;
   }
 
   const bool left_down = host_.mouse_left_down();
-  if ((brush_active_ || document_.in_stroke()) &&
-      (host_.mouse_right_down() || host_.key_escape_down())) {
+  const bool right_down = host_.mouse_right_down();
+  const bool right_pressed = right_down && !mouse_right_was_down_;
+  const bool aborting_brush = (brush_active_ || document_.in_stroke()) &&
+                              (right_down || host_.key_escape_down());
+  if (aborting_brush) {
     finish_cell_brush(true);
   }
   if (brush_active_ && !document_.in_stroke()) {
     brush_active_ = false;
   }
 
+  auto remember_buttons = [&] {
+    mouse_left_was_down_ = left_down;
+    mouse_right_was_down_ = right_down;
+  };
+
   if (io.WantCaptureMouse) {
     finish_cell_brush(false);
-    mouse_left_was_down_ = left_down;
+    remember_buttons();
     if (!left_down) {
       drag_active_ = false;
     }
@@ -609,7 +618,7 @@ void EditorApp::handle_edit_mouse_input(const ImGuiIO& io) {
                                 static_cast<std::uint32_t>(width_ > 0 ? width_ : 1),
                                 static_cast<std::uint32_t>(height_ > 0 ? height_ : 1), 0.0f);
   if (!world_hit.has_value()) {
-    mouse_left_was_down_ = left_down;
+    remember_buttons();
     if (!left_down) {
       drag_active_ = false;
       finish_cell_brush(false);
@@ -620,6 +629,18 @@ void EditorApp::handle_edit_mouse_input(const ImGuiIO& io) {
   const bool pressed = left_down && !mouse_left_was_down_;
   const bool released = !left_down && mouse_left_was_down_;
   const MapData& map = document_.visible_data();
+
+  if (right_pressed && !aborting_brush && edit_submode_ == EditSubmode::Events) {
+    event_context_tile_ = world_to_tile_xz(*world_hit, map.tile_size);
+    if (const auto picked = pick_map_object_xz(map, *world_hit, EditSubmode::Events);
+        picked.has_value() && picked->kind == ViewportPickKind::Event) {
+      event_context_index_ = static_cast<int>(picked->index);
+      document_.select_event(event_context_index_);
+    } else {
+      event_context_index_ = -1;
+    }
+    event_context_open_ = true;
+  }
 
   if (pressed) {
     drag_active_ = false;
@@ -705,7 +726,7 @@ void EditorApp::handle_edit_mouse_input(const ImGuiIO& io) {
     drag_active_ = false;
     finish_cell_brush(false);
   }
-  mouse_left_was_down_ = left_down;
+  remember_buttons();
 }
 
 void EditorApp::simulate(float dt) {
@@ -951,6 +972,9 @@ void EditorApp::draw_ui() {
       }
       edit_submode_ = next;
       viewport_tool_ = ViewportTool::Select;
+      if (next != EditSubmode::Events) {
+        event_graph_open_ = false;
+      }
       if (next == EditSubmode::Terrain || next == EditSubmode::Objects) {
         document_.select_event(-1);
       }
@@ -1071,6 +1095,52 @@ void EditorApp::draw_ui() {
   ImGui::Text("Intro var0: %d", session_.state().get_variable(0));
   ImGui::Text("rusty_cog: %d", session_.state().item_quantity("rusty_cog"));
   ImGui::End();
+
+  if (event_context_open_) {
+    ImGui::OpenPopup("event_context");
+    event_context_open_ = false;
+  }
+  if (ImGui::BeginPopup("event_context")) {
+    const auto& events = document_.visible_data().events;
+    const bool on_event = event_context_index_ >= 0 &&
+                          event_context_index_ < static_cast<int>(events.size());
+    if (ImGui::MenuItem("Create")) {
+      TileCoord tile = event_context_tile_;
+      if (on_event && events[static_cast<std::size_t>(event_context_index_)].tile.has_value()) {
+        tile = *events[static_cast<std::size_t>(event_context_index_)].tile;
+      }
+      const std::string id = "stub_" + std::to_string(event_panel_.next_stub_event++);
+      (void)document_.execute(make_place_event_command(make_stub_event(id, tile.x, tile.z)));
+      document_.select_event(static_cast<int>(document_.data().events.size()) - 1);
+    }
+    if (on_event) {
+      if (ImGui::MenuItem("Edit")) {
+        document_.select_event(event_context_index_);
+        event_graph_open_ = true;
+      }
+      if (ImGui::MenuItem("Copy")) {
+        (void)document_.execute(make_duplicate_event_command(
+            document_.visible_data(), static_cast<std::size_t>(event_context_index_)));
+        document_.select_event(static_cast<int>(document_.data().events.size()) - 1);
+      }
+      if (ImGui::MenuItem("Delete")) {
+        (void)document_.execute(
+            make_delete_event_command(static_cast<std::size_t>(event_context_index_)));
+      }
+    }
+    ImGui::EndPopup();
+  }
+
+  if (app_mode_ == AppMode::Edit && edit_submode_ == EditSubmode::Events && event_graph_open_) {
+    const int selected = document_.selected_event();
+    const auto& events = document_.visible_data().events;
+    if (selected >= 0 && selected < static_cast<int>(events.size())) {
+      ImGui::Begin("Event Graph", &event_graph_open_);
+      ImGui::Text("id: %s", events[static_cast<std::size_t>(selected)].id.c_str());
+      ImGui::TextUnformatted("Full page/graph editor comes next.");
+      ImGui::End();
+    }
+  }
 
   if (app_mode_ == AppMode::Play && play_paused_) {
     ImGui::SetNextWindowPos(

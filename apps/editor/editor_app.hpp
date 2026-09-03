@@ -87,6 +87,11 @@ class EditorApp {
   EditSubmode edit_submode_{EditSubmode::Terrain};
   int fence_preset_index_ = 0;
   bool mouse_left_was_down_ = false;
+  bool mouse_right_was_down_ = false;
+  bool event_context_open_ = false;
+  int event_context_index_ = -1;
+  TileCoord event_context_tile_{};
+  bool event_graph_open_{false};
   bool drag_active_ = false;
   bool brush_active_ = false;
   ViewportPick drag_pick_{};

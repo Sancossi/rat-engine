@@ -422,6 +422,10 @@ std::unique_ptr<EditCommand> make_place_event_command(EventDef event) {
   return std::make_unique<PlaceEventCommand>(std::move(event));
 }
 
+std::unique_ptr<EditCommand> make_duplicate_event_command(const MapData& map, std::size_t index) {
+  return make_place_event_command(make_duplicate_event(map, index));
+}
+
 std::unique_ptr<EditCommand> make_delete_event_command(std::size_t index) {
   return std::make_unique<DeleteEventCommand>(index);
 }

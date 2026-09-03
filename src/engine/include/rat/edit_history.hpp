@@ -39,6 +39,8 @@ class EditCommand {
                                                                         BlockerDef next);
 
 [[nodiscard]] std::unique_ptr<EditCommand> make_place_event_command(EventDef event);
+[[nodiscard]] std::unique_ptr<EditCommand> make_duplicate_event_command(const MapData& map,
+                                                                        std::size_t index);
 [[nodiscard]] std::unique_ptr<EditCommand> make_delete_event_command(std::size_t index);
 [[nodiscard]] std::unique_ptr<EditCommand> make_move_event_command(std::size_t index, int tile_dx,
                                                                   int tile_dz, float tile_size);

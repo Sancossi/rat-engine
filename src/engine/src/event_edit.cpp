@@ -23,6 +23,61 @@ EventDef make_stub_event(std::string id, int tile_x, int tile_z) {
   return event;
 }
 
+namespace {
+
+[[nodiscard]] bool event_id_taken(const MapData& map, std::string_view id) {
+  for (const EventDef& event : map.events) {
+    if (event.id == id) {
+      return true;
+    }
+  }
+  return false;
+}
+
+[[nodiscard]] bool tile_occupied_by_event(const MapData& map, TileCoord tile) {
+  for (const EventDef& event : map.events) {
+    if (event.tile.has_value() && event.tile->x == tile.x && event.tile->z == tile.z) {
+      return true;
+    }
+  }
+  return false;
+}
+
+}  // namespace
+
+std::string allocate_unique_event_id(const MapData& map, std::string_view base) {
+  if (!event_id_taken(map, base)) {
+    return std::string(base);
+  }
+  const std::string copy = std::string(base) + "_copy";
+  if (!event_id_taken(map, copy)) {
+    return copy;
+  }
+  for (int n = 2;; ++n) {
+    const std::string candidate = std::string(base) + "_copy" + std::to_string(n);
+    if (!event_id_taken(map, candidate)) {
+      return candidate;
+    }
+  }
+}
+
+EventDef make_duplicate_event(const MapData& map, std::size_t index) {
+  EventDef copy = map.events[index];
+  copy.id = allocate_unique_event_id(map, copy.id);
+  if (!copy.tile.has_value()) {
+    return copy;
+  }
+  int dx = 1;
+  TileCoord candidate{copy.tile->x + dx, copy.tile->z};
+  while (tile_occupied_by_event(map, candidate)) {
+    ++dx;
+    candidate.x = copy.tile->x + dx;
+  }
+  const float tile_size = map.tile_size > 0.0f ? map.tile_size : 1.0f;
+  translate_event_on_grid(copy, dx, 0, tile_size);
+  return copy;
+}
+
 void translate_event_on_grid(EventDef& event, int tile_dx, int tile_dz, float tile_size) {
   if (event.tile.has_value()) {
     event.tile->x += tile_dx;
