@@ -2,6 +2,8 @@
 
 #include "rat/blocker_edit.hpp"
 
+#include <cstddef>
+
 namespace rat {
 
 Vec3 tile_center_world(TileCoord tile, float tile_size) {
@@ -104,6 +106,45 @@ int event_marker_index(const MapData& map, int event_index) {
     ++marker;
   }
   return -1;
+}
+
+int add_event_page(EventDef& event) {
+  EventPage page;
+  page.trigger = TriggerKind::Action;
+  event.pages.push_back(std::move(page));
+  return static_cast<int>(event.pages.size()) - 1;
+}
+
+int duplicate_event_page(EventDef& event, std::size_t index) {
+  if (index >= event.pages.size()) {
+    return -1;
+  }
+  EventPage copy = event.pages[index];
+  event.pages.insert(event.pages.begin() + static_cast<std::ptrdiff_t>(index) + 1, std::move(copy));
+  return static_cast<int>(index) + 1;
+}
+
+bool remove_event_page(EventDef& event, std::size_t index) {
+  if (index >= event.pages.size() || event.pages.size() == 1) {
+    return false;
+  }
+  event.pages.erase(event.pages.begin() + static_cast<std::ptrdiff_t>(index));
+  return true;
+}
+
+int add_page_condition(EventPage& page, ConditionType type) {
+  Condition condition;
+  condition.type = type;
+  page.conditions.push_back(std::move(condition));
+  return static_cast<int>(page.conditions.size()) - 1;
+}
+
+bool remove_page_condition(EventPage& page, std::size_t index) {
+  if (index >= page.conditions.size()) {
+    return false;
+  }
+  page.conditions.erase(page.conditions.begin() + static_cast<std::ptrdiff_t>(index));
+  return true;
 }
 
 }  // namespace rat

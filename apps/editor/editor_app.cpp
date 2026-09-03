@@ -1,6 +1,7 @@
 #include "editor_app.hpp"
 
 #include "imgui_bgfx.hpp"
+#include "panels/event_graph_window.hpp"
 #include "panels/ladder_panel.hpp"
 #include "platform/miniaudio_sink.hpp"
 
@@ -1055,7 +1056,7 @@ void EditorApp::draw_ui() {
             document_.visible_data().events[static_cast<std::size_t>(document_.selected_event())].id,
             session_.state(), session_.player(), false));
       }
-      draw_event_panel(document_, event_panel_, why_not);
+      draw_event_panel(document_, event_panel_, why_not, &event_graph_open_);
     }
   }
   {
@@ -1135,10 +1136,7 @@ void EditorApp::draw_ui() {
     const int selected = document_.selected_event();
     const auto& events = document_.visible_data().events;
     if (selected >= 0 && selected < static_cast<int>(events.size())) {
-      ImGui::Begin("Event Graph", &event_graph_open_);
-      ImGui::Text("id: %s", events[static_cast<std::size_t>(selected)].id.c_str());
-      ImGui::TextUnformatted("Full page/graph editor comes next.");
-      ImGui::End();
+      draw_event_graph_window(document_, event_panel_, &event_graph_open_);
     }
   }
 

@@ -144,6 +144,87 @@ TEST_CASE("duplicate event ids stay unique on the map", "[unit][event_edit]") {
   REQUIRE(map.events[2].id != map.events[1].id);
 }
 
+TEST_CASE("add_event_page appends blank Action pages", "[unit][event_edit]") {
+  rat::EventDef event = rat::make_stub_event("npc", 0, 0);
+  REQUIRE(event.pages.size() == 1);
+
+  const int second = rat::add_event_page(event);
+  REQUIRE(second == 1);
+  REQUIRE(event.pages.size() == 2);
+  REQUIRE(event.pages[1].trigger == rat::TriggerKind::Action);
+  REQUIRE(event.pages[1].conditions.empty());
+  REQUIRE(event.pages[1].commands.empty());
+  REQUIRE_FALSE(event.pages[1].graph.has_value());
+
+  const int third = rat::add_event_page(event);
+  REQUIRE(third == 2);
+  REQUIRE(event.pages.size() == 3);
+  REQUIRE(event.pages[0].commands.size() == 1);
+}
+
+TEST_CASE("duplicate_event_page copies graph after source index", "[unit][event_edit]") {
+  rat::EventDef event = rat::make_stub_event("npc", 0, 0);
+  event.pages[0].graph = rat::EventGraph{};
+  event.pages[0].graph->nodes.push_back({"n0", "show_text", "hi"});
+  event.pages[0].graph->edges.push_back({"entry", "n0", std::nullopt, std::nullopt});
+  (void)rat::add_event_page(event);
+
+  const int copied = rat::duplicate_event_page(event, 0);
+  REQUIRE(copied == 1);
+  REQUIRE(event.pages.size() == 3);
+  REQUIRE(event.pages[1].graph.has_value());
+  REQUIRE(event.pages[1].graph->nodes.size() == 1);
+  REQUIRE(event.pages[1].graph->nodes[0].id == "n0");
+  REQUIRE(event.pages[1].graph->nodes[0].text == "hi");
+  REQUIRE(event.pages[1].graph->edges.size() == 1);
+  REQUIRE(event.pages[2].commands.empty());
+  REQUIRE_FALSE(event.pages[2].graph.has_value());
+
+  event.pages[0].graph->nodes[0].text = "changed";
+  REQUIRE(event.pages[1].graph->nodes[0].text == "hi");
+
+  REQUIRE(rat::duplicate_event_page(event, 99) == -1);
+}
+
+TEST_CASE("remove_event_page keeps at least one page", "[unit][event_edit]") {
+  rat::EventDef event = rat::make_stub_event("npc", 0, 0);
+  REQUIRE_FALSE(rat::remove_event_page(event, 0));
+  REQUIRE(event.pages.size() == 1);
+  REQUIRE_FALSE(rat::remove_event_page(event, 4));
+
+  (void)rat::add_event_page(event);
+  REQUIRE(event.pages.size() == 2);
+  REQUIRE(rat::remove_event_page(event, 0));
+  REQUIRE(event.pages.size() == 1);
+  REQUIRE(event.pages[0].commands.empty());
+  REQUIRE_FALSE(rat::remove_event_page(event, 0));
+}
+
+TEST_CASE("add_page_condition appends Switch Variable Item SelfSwitch", "[unit][event_edit]") {
+  rat::EventPage page;
+  REQUIRE(rat::add_page_condition(page, rat::ConditionType::Switch) == 0);
+  REQUIRE(rat::add_page_condition(page, rat::ConditionType::Variable) == 1);
+  REQUIRE(rat::add_page_condition(page, rat::ConditionType::Item) == 2);
+  REQUIRE(rat::add_page_condition(page, rat::ConditionType::SelfSwitch) == 3);
+  REQUIRE(page.conditions.size() == 4);
+  REQUIRE(page.conditions[0].type == rat::ConditionType::Switch);
+  REQUIRE(page.conditions[1].type == rat::ConditionType::Variable);
+  REQUIRE(page.conditions[1].op == rat::CompareOp::Eq);
+  REQUIRE(page.conditions[2].type == rat::ConditionType::Item);
+  REQUIRE(page.conditions[3].type == rat::ConditionType::SelfSwitch);
+  REQUIRE(page.conditions[3].self_switch == 'A');
+}
+
+TEST_CASE("remove_page_condition erases by index", "[unit][event_edit]") {
+  rat::EventPage page;
+  (void)rat::add_page_condition(page, rat::ConditionType::Switch);
+  (void)rat::add_page_condition(page, rat::ConditionType::Item);
+  REQUIRE_FALSE(rat::remove_page_condition(page, 2));
+  REQUIRE(rat::remove_page_condition(page, 0));
+  REQUIRE(page.conditions.size() == 1);
+  REQUIRE(page.conditions[0].type == rat::ConditionType::Item);
+}
+
 TEST_CASE("make_duplicate_event_command undoes via EditHistory",
           "[unit][event_edit][edit_history]") {
   rat::MapData map;

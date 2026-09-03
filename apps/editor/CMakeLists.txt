@@ -47,6 +47,8 @@ add_executable(rat-editor
   panels/event_panel.hpp
   panels/event_graph_canvas.cpp
   panels/event_graph_canvas.hpp
+  panels/event_graph_window.cpp
+  panels/event_graph_window.hpp
   panels/ladder_panel.cpp
   panels/ladder_panel.hpp
 )

@@ -193,10 +193,16 @@ void draw_event_graph_canvas(EditorDocument& document, EventGraphCanvasState& ca
     ImGui::Text("Connecting from %s%s", canvas.pending_from.c_str(), pending_label.c_str());
   }
 
-  ImGui::BeginChild("event_graph_canvas", ImVec2(-1.0f, 280.0f), true);
+  const float remain = ImGui::GetContentRegionAvail().y;
+  constexpr float kReserveBelow = 200.0f;
+  float canvas_h = remain - kReserveBelow;
+  if (canvas_h < 400.0f) {
+    canvas_h = 400.0f;
+  }
+  ImGui::BeginChild("event_graph_canvas", ImVec2(-1.0f, canvas_h), true);
   ImDrawList* dl = ImGui::GetWindowDrawList();
   const ImVec2 origin = ImGui::GetCursorScreenPos();
-  ImGui::Dummy(ImVec2(520.0f, 250.0f));
+  ImGui::Dummy(ImVec2(520.0f, canvas_h - 16.0f));
 
   struct NodeRect {
     std::string id;
