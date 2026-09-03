@@ -157,14 +157,37 @@ TEST_CASE("unproject bx look-at left view hits center and off-center", "[unit][v
   REQUIRE(off->z == Approx(expected_z).margin(0.02f));
 }
 
-TEST_CASE("pick returns nearest and prefers blocker on tie", "[unit][viewport_edit]") {
+TEST_CASE("objects pick returns blocker and ignores overlapping event", "[unit][viewport_edit]") {
   rat::MapData map = make_test_map();
   map.blockers.push_back(make_blocker(0.0f, 0.0f, 1.0f, 1.0f));
   map.events.push_back(rat::make_stub_event("e0", 0, 0));
 
-  const auto picked = rat::pick_map_object_xz(map, rat::Vec3{0.5f, 0.0f, 0.5f});
+  const auto picked =
+      rat::pick_map_object_xz(map, rat::Vec3{0.5f, 0.0f, 0.5f}, rat::EditSubmode::Objects);
   REQUIRE(picked.has_value());
   REQUIRE(picked->kind == rat::ViewportPickKind::Blocker);
+  REQUIRE(picked->index == 0);
+}
+
+TEST_CASE("terrain pick returns nullopt over blocker and event", "[unit][viewport_edit]") {
+  rat::MapData map = make_test_map();
+  map.blockers.push_back(make_blocker(0.0f, 0.0f, 1.0f, 1.0f));
+  map.events.push_back(rat::make_stub_event("e0", 0, 0));
+
+  const auto picked =
+      rat::pick_map_object_xz(map, rat::Vec3{0.5f, 0.0f, 0.5f}, rat::EditSubmode::Terrain);
+  REQUIRE_FALSE(picked.has_value());
+}
+
+TEST_CASE("events pick returns event and ignores overlapping blocker", "[unit][viewport_edit]") {
+  rat::MapData map = make_test_map();
+  map.blockers.push_back(make_blocker(0.0f, 0.0f, 1.0f, 1.0f));
+  map.events.push_back(rat::make_stub_event("e0", 0, 0));
+
+  const auto picked =
+      rat::pick_map_object_xz(map, rat::Vec3{0.5f, 0.0f, 0.5f}, rat::EditSubmode::Events);
+  REQUIRE(picked.has_value());
+  REQUIRE(picked->kind == rat::ViewportPickKind::Event);
   REQUIRE(picked->index == 0);
 }
 
@@ -172,19 +195,19 @@ TEST_CASE("place tool resolves empty click into tile placement", "[unit][viewpor
   rat::MapData map = make_test_map();
   const rat::Vec3 world{2.9f, 0.0f, -0.1f};
 
-  const rat::ViewportClickAction action =
-      rat::resolve_viewport_click(map, rat::ViewportTool::PlaceBlocker, world);
+  const rat::ViewportClickAction action = rat::resolve_viewport_click(
+      map, rat::ViewportTool::PlaceBlocker, world, rat::EditSubmode::Objects);
   REQUIRE(action.kind == rat::ViewportClickActionKind::PlaceBlocker);
   REQUIRE(action.tile.x == 2);
   REQUIRE(action.tile.z == -1);
 }
 
-TEST_CASE("place tool click on object selects instead of placing", "[unit][viewport_edit]") {
+TEST_CASE("objects place blocker on existing blocker still selects", "[unit][viewport_edit]") {
   rat::MapData map = make_test_map();
   map.blockers.push_back(make_blocker(2.0f, 1.0f, 3.0f, 2.0f));
 
-  const rat::ViewportClickAction action =
-      rat::resolve_viewport_click(map, rat::ViewportTool::PlaceEvent, rat::Vec3{2.2f, 0.0f, 1.6f});
+  const rat::ViewportClickAction action = rat::resolve_viewport_click(
+      map, rat::ViewportTool::PlaceBlocker, rat::Vec3{2.2f, 0.0f, 1.6f}, rat::EditSubmode::Objects);
   REQUIRE(action.kind == rat::ViewportClickActionKind::SelectBlocker);
   REQUIRE(action.index == 0);
 }
@@ -193,8 +216,8 @@ TEST_CASE("place cube on empty tile returns that tile", "[unit][viewport_edit]")
   rat::MapData map = make_test_map();
   const rat::Vec3 world{2.9f, 0.0f, -0.1f};
 
-  const rat::ViewportClickAction action =
-      rat::resolve_viewport_click(map, rat::ViewportTool::PlaceCube, world);
+  const rat::ViewportClickAction action = rat::resolve_viewport_click(
+      map, rat::ViewportTool::PlaceCube, world, rat::EditSubmode::Terrain);
   REQUIRE(action.kind == rat::ViewportClickActionKind::PlaceCube);
   REQUIRE(action.tile.x == 2);
   REQUIRE(action.tile.z == -1);
@@ -217,8 +240,8 @@ TEST_CASE("place cube on ramp tile does not raise ground", "[unit][viewport_edit
   REQUIRE(rat::upsert_map_ramp(map, ramp).ok);
 
   const rat::Vec3 world{1.2f, 0.0f, 2.3f};
-  const rat::ViewportClickAction action =
-      rat::resolve_viewport_click(map, rat::ViewportTool::PlaceCube, world);
+  const rat::ViewportClickAction action = rat::resolve_viewport_click(
+      map, rat::ViewportTool::PlaceCube, world, rat::EditSubmode::Terrain);
   REQUIRE(action.kind == rat::ViewportClickActionKind::PlaceCube);
   REQUIRE(action.tile.x == 1);
   REQUIRE(action.tile.z == 2);
@@ -235,33 +258,53 @@ TEST_CASE("place fence on empty tile returns that tile", "[unit][viewport_edit]"
   rat::MapData map = make_test_map();
   const rat::Vec3 world{4.1f, 0.0f, 3.7f};
 
-  const rat::ViewportClickAction action =
-      rat::resolve_viewport_click(map, rat::ViewportTool::PlaceFence, world);
+  const rat::ViewportClickAction action = rat::resolve_viewport_click(
+      map, rat::ViewportTool::PlaceFence, world, rat::EditSubmode::Terrain);
   REQUIRE(action.kind == rat::ViewportClickActionKind::PlaceFence);
   REQUIRE(action.tile.x == 4);
   REQUIRE(action.tile.z == 3);
 }
 
-TEST_CASE("place cube and fence on object still select", "[unit][viewport_edit]") {
+TEST_CASE("terrain place cube and fence on blocker aabb still place", "[unit][viewport_edit]") {
   rat::MapData map = make_test_map();
   map.blockers.push_back(make_blocker(2.0f, 1.0f, 3.0f, 2.0f));
   const rat::Vec3 hit{2.2f, 0.0f, 1.6f};
 
   const rat::ViewportClickAction cube =
-      rat::resolve_viewport_click(map, rat::ViewportTool::PlaceCube, hit);
-  REQUIRE(cube.kind == rat::ViewportClickActionKind::SelectBlocker);
-  REQUIRE(cube.index == 0);
+      rat::resolve_viewport_click(map, rat::ViewportTool::PlaceCube, hit, rat::EditSubmode::Terrain);
+  REQUIRE(cube.kind == rat::ViewportClickActionKind::PlaceCube);
+  REQUIRE(cube.tile.x == 2);
+  REQUIRE(cube.tile.z == 1);
 
-  const rat::ViewportClickAction fence =
-      rat::resolve_viewport_click(map, rat::ViewportTool::PlaceFence, hit);
-  REQUIRE(fence.kind == rat::ViewportClickActionKind::SelectBlocker);
-  REQUIRE(fence.index == 0);
+  const rat::ViewportClickAction fence = rat::resolve_viewport_click(
+      map, rat::ViewportTool::PlaceFence, hit, rat::EditSubmode::Terrain);
+  REQUIRE(fence.kind == rat::ViewportClickActionKind::PlaceFence);
+  REQUIRE(fence.tile.x == 2);
+  REQUIRE(fence.tile.z == 1);
+
+  const rat::ViewportClickAction slab =
+      rat::resolve_viewport_click(map, rat::ViewportTool::PlaceSlab, hit, rat::EditSubmode::Terrain);
+  REQUIRE(slab.kind == rat::ViewportClickActionKind::PlaceSlab);
+  REQUIRE(slab.tile.x == 2);
+  REQUIRE(slab.tile.z == 1);
+}
+
+TEST_CASE("events click overlapping blocker selects event", "[unit][viewport_edit]") {
+  rat::MapData map = make_test_map();
+  map.blockers.push_back(make_blocker(0.0f, 0.0f, 1.0f, 1.0f));
+  map.events.push_back(rat::make_stub_event("e0", 0, 0));
+
+  const rat::ViewportClickAction action = rat::resolve_viewport_click(
+      map, rat::ViewportTool::Select, rat::Vec3{0.5f, 0.0f, 0.5f}, rat::EditSubmode::Events);
+  REQUIRE(action.kind == rat::ViewportClickActionKind::SelectEvent);
+  REQUIRE(action.index == 0);
 }
 
 TEST_CASE("place slab on empty tile returns that tile", "[unit][viewport_edit]") {
   rat::MapData map = make_test_map();
   const rat::ViewportClickAction action =
-      rat::resolve_viewport_click(map, rat::ViewportTool::PlaceSlab, rat::Vec3{2.9f, 0.0f, -0.1f});
+      rat::resolve_viewport_click(map, rat::ViewportTool::PlaceSlab, rat::Vec3{2.9f, 0.0f, -0.1f},
+                                 rat::EditSubmode::Terrain);
   REQUIRE(action.kind == rat::ViewportClickActionKind::PlaceSlab);
   REQUIRE(action.tile.x == 2);
   REQUIRE(action.tile.z == -1);
@@ -270,7 +313,8 @@ TEST_CASE("place slab on empty tile returns that tile", "[unit][viewport_edit]")
 TEST_CASE("place ladder on empty tile returns that tile", "[unit][viewport_edit]") {
   rat::MapData map = make_test_map();
   const rat::ViewportClickAction action =
-      rat::resolve_viewport_click(map, rat::ViewportTool::PlaceLadder, rat::Vec3{4.1f, 0.0f, 3.7f});
+      rat::resolve_viewport_click(map, rat::ViewportTool::PlaceLadder, rat::Vec3{4.1f, 0.0f, 3.7f},
+                                 rat::EditSubmode::Objects);
   REQUIRE(action.kind == rat::ViewportClickActionKind::PlaceLadder);
   REQUIRE(action.tile.x == 4);
   REQUIRE(action.tile.z == 3);
@@ -292,14 +336,16 @@ TEST_CASE("place fence near opposite faces of the same cell pick those facings",
   const rat::Vec3 west_hit{2.08f, 0.0f, 3.50f};
 
   const rat::ViewportClickAction east =
-      rat::resolve_viewport_click(map, rat::ViewportTool::PlaceFence, east_hit);
+      rat::resolve_viewport_click(map, rat::ViewportTool::PlaceFence, east_hit,
+                                 rat::EditSubmode::Terrain);
   REQUIRE(east.kind == rat::ViewportClickActionKind::PlaceFence);
   REQUIRE(east.tile.x == 2);
   REQUIRE(east.tile.z == 3);
   REQUIRE(east.edge == rat::RampDirection::East);
 
   const rat::ViewportClickAction west =
-      rat::resolve_viewport_click(map, rat::ViewportTool::PlaceFence, west_hit);
+      rat::resolve_viewport_click(map, rat::ViewportTool::PlaceFence, west_hit,
+                                 rat::EditSubmode::Terrain);
   REQUIRE(west.kind == rat::ViewportClickActionKind::PlaceFence);
   REQUIRE(west.tile.x == 2);
   REQUIRE(west.tile.z == 3);
@@ -309,7 +355,8 @@ TEST_CASE("place fence near opposite faces of the same cell pick those facings",
 TEST_CASE("place ladder click uses the nearest tile edge", "[unit][edit][viewport_edit]") {
   rat::MapData map = make_test_map();
   const rat::ViewportClickAction action =
-      rat::resolve_viewport_click(map, rat::ViewportTool::PlaceLadder, rat::Vec3{1.50f, 0.0f, 4.97f});
+      rat::resolve_viewport_click(map, rat::ViewportTool::PlaceLadder, rat::Vec3{1.50f, 0.0f, 4.97f},
+                                 rat::EditSubmode::Objects);
   REQUIRE(action.kind == rat::ViewportClickActionKind::PlaceLadder);
   REQUIRE(action.tile.x == 1);
   REQUIRE(action.tile.z == 4);
@@ -320,9 +367,10 @@ TEST_CASE("drag along a north wall picks north on each adjacent tile",
           "[unit][edit][viewport_edit]") {
   rat::MapData map = make_test_map();
   const rat::ViewportClickAction first =
-      rat::resolve_viewport_click(map, rat::ViewportTool::PlaceFence, rat::Vec3{0.50f, 0.0f, 0.05f});
-  const rat::ViewportClickAction second =
-      rat::resolve_viewport_click(map, rat::ViewportTool::PlaceFence, rat::Vec3{1.50f, 0.0f, 0.05f});
+      rat::resolve_viewport_click(map, rat::ViewportTool::PlaceFence, rat::Vec3{0.50f, 0.0f, 0.05f},
+                                 rat::EditSubmode::Terrain);
+  const rat::ViewportClickAction second = rat::resolve_viewport_click(
+      map, rat::ViewportTool::PlaceFence, rat::Vec3{1.50f, 0.0f, 0.05f}, rat::EditSubmode::Terrain);
   REQUIRE(first.kind == rat::ViewportClickActionKind::PlaceFence);
   REQUIRE(first.tile.x == 0);
   REQUIRE(first.tile.z == 0);
@@ -331,4 +379,44 @@ TEST_CASE("drag along a north wall picks north on each adjacent tile",
   REQUIRE(second.tile.x == 1);
   REQUIRE(second.tile.z == 0);
   REQUIRE(second.edge == rat::RampDirection::North);
+}
+
+TEST_CASE("events place event on blocker aabb still places", "[unit][viewport_edit]") {
+  rat::MapData map = make_test_map();
+  map.blockers.push_back(make_blocker(2.0f, 1.0f, 3.0f, 2.0f));
+
+  const rat::ViewportClickAction action = rat::resolve_viewport_click(
+      map, rat::ViewportTool::PlaceEvent, rat::Vec3{2.2f, 0.0f, 1.6f}, rat::EditSubmode::Events);
+  REQUIRE(action.kind == rat::ViewportClickActionKind::PlaceEvent);
+  REQUIRE(action.tile.x == 2);
+  REQUIRE(action.tile.z == 1);
+}
+
+TEST_CASE("viewport tool allowed matches edit submode", "[unit][viewport_edit]") {
+  using rat::EditSubmode;
+  using rat::ViewportTool;
+
+  REQUIRE(rat::viewport_tool_allowed(EditSubmode::Terrain, ViewportTool::Select));
+  REQUIRE(rat::viewport_tool_allowed(EditSubmode::Terrain, ViewportTool::PlaceCube));
+  REQUIRE(rat::viewport_tool_allowed(EditSubmode::Terrain, ViewportTool::PlaceFence));
+  REQUIRE(rat::viewport_tool_allowed(EditSubmode::Terrain, ViewportTool::PlaceSlab));
+  REQUIRE_FALSE(rat::viewport_tool_allowed(EditSubmode::Terrain, ViewportTool::PlaceBlocker));
+  REQUIRE_FALSE(rat::viewport_tool_allowed(EditSubmode::Terrain, ViewportTool::PlaceEvent));
+  REQUIRE_FALSE(rat::viewport_tool_allowed(EditSubmode::Terrain, ViewportTool::PlaceLadder));
+
+  REQUIRE(rat::viewport_tool_allowed(EditSubmode::Objects, ViewportTool::Select));
+  REQUIRE(rat::viewport_tool_allowed(EditSubmode::Objects, ViewportTool::PlaceBlocker));
+  REQUIRE(rat::viewport_tool_allowed(EditSubmode::Objects, ViewportTool::PlaceLadder));
+  REQUIRE_FALSE(rat::viewport_tool_allowed(EditSubmode::Objects, ViewportTool::PlaceCube));
+  REQUIRE_FALSE(rat::viewport_tool_allowed(EditSubmode::Objects, ViewportTool::PlaceFence));
+  REQUIRE_FALSE(rat::viewport_tool_allowed(EditSubmode::Objects, ViewportTool::PlaceSlab));
+  REQUIRE_FALSE(rat::viewport_tool_allowed(EditSubmode::Objects, ViewportTool::PlaceEvent));
+
+  REQUIRE(rat::viewport_tool_allowed(EditSubmode::Events, ViewportTool::Select));
+  REQUIRE(rat::viewport_tool_allowed(EditSubmode::Events, ViewportTool::PlaceEvent));
+  REQUIRE_FALSE(rat::viewport_tool_allowed(EditSubmode::Events, ViewportTool::PlaceBlocker));
+  REQUIRE_FALSE(rat::viewport_tool_allowed(EditSubmode::Events, ViewportTool::PlaceCube));
+  REQUIRE_FALSE(rat::viewport_tool_allowed(EditSubmode::Events, ViewportTool::PlaceFence));
+  REQUIRE_FALSE(rat::viewport_tool_allowed(EditSubmode::Events, ViewportTool::PlaceSlab));
+  REQUIRE_FALSE(rat::viewport_tool_allowed(EditSubmode::Events, ViewportTool::PlaceLadder));
 }

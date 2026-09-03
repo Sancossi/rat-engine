@@ -158,35 +158,44 @@ std::optional<Vec3> unproject_to_ground_plane(const OrthoCamera& camera, float p
   return Vec3{p0->x + (p1->x - p0->x) * t, ground_y, p0->z + (p1->z - p0->z) * t};
 }
 
-std::optional<ViewportPick> pick_map_object_xz(const MapData& map, Vec3 world_hit) {
+std::optional<ViewportPick> pick_map_object_xz(const MapData& map, Vec3 world_hit,
+                                              EditSubmode submode) {
+  if (submode == EditSubmode::Terrain) {
+    return std::nullopt;
+  }
+
   const float tile = safe_tile_size(map.tile_size);
   bool found = false;
   ViewportPick best{};
   float best_dist2 = std::numeric_limits<float>::infinity();
 
-  for (std::size_t i = 0; i < map.blockers.size(); ++i) {
-    const BlockerDef& blocker = map.blockers[i];
-    if (!contains_xz(blocker.bounds, world_hit)) {
-      continue;
-    }
-    const float d2 = dist2_xz(center_of_aabb(blocker.bounds), world_hit);
-    if (!found || d2 < best_dist2) {
-      found = true;
-      best = {ViewportPickKind::Blocker, i};
-      best_dist2 = d2;
+  if (submode == EditSubmode::Objects) {
+    for (std::size_t i = 0; i < map.blockers.size(); ++i) {
+      const BlockerDef& blocker = map.blockers[i];
+      if (!contains_xz(blocker.bounds, world_hit)) {
+        continue;
+      }
+      const float d2 = dist2_xz(center_of_aabb(blocker.bounds), world_hit);
+      if (!found || d2 < best_dist2) {
+        found = true;
+        best = {ViewportPickKind::Blocker, i};
+        best_dist2 = d2;
+      }
     }
   }
 
-  for (std::size_t i = 0; i < map.events.size(); ++i) {
-    const EventDef& event = map.events[i];
-    if (!event_contains_point(event, tile, world_hit)) {
-      continue;
-    }
-    const float d2 = dist2_xz(event_center(event, tile), world_hit);
-    if (!found || d2 < best_dist2) {
-      found = true;
-      best = {ViewportPickKind::Event, i};
-      best_dist2 = d2;
+  if (submode == EditSubmode::Events) {
+    for (std::size_t i = 0; i < map.events.size(); ++i) {
+      const EventDef& event = map.events[i];
+      if (!event_contains_point(event, tile, world_hit)) {
+        continue;
+      }
+      const float d2 = dist2_xz(event_center(event, tile), world_hit);
+      if (!found || d2 < best_dist2) {
+        found = true;
+        best = {ViewportPickKind::Event, i};
+        best_dist2 = d2;
+      }
     }
   }
 
@@ -235,8 +244,9 @@ TileDelta tile_delta_between(TileCoord from, TileCoord to) {
   };
 }
 
-ViewportClickAction resolve_viewport_click(const MapData& map, ViewportTool tool, Vec3 world_hit) {
-  if (const auto picked = pick_map_object_xz(map, world_hit); picked.has_value()) {
+ViewportClickAction resolve_viewport_click(const MapData& map, ViewportTool tool, Vec3 world_hit,
+                                           EditSubmode submode) {
+  if (const auto picked = pick_map_object_xz(map, world_hit, submode); picked.has_value()) {
     if (picked->kind == ViewportPickKind::Blocker) {
       return {ViewportClickActionKind::SelectBlocker, picked->index, {}};
     }
@@ -262,6 +272,20 @@ ViewportClickAction resolve_viewport_click(const MapData& map, ViewportTool tool
       return {ViewportClickActionKind::PlaceLadder, 0, tile, edge};
   }
   return {};
+}
+
+bool viewport_tool_allowed(EditSubmode submode, ViewportTool tool) {
+  switch (submode) {
+    case EditSubmode::Terrain:
+      return tool == ViewportTool::Select || tool == ViewportTool::PlaceCube ||
+             tool == ViewportTool::PlaceFence || tool == ViewportTool::PlaceSlab;
+    case EditSubmode::Objects:
+      return tool == ViewportTool::Select || tool == ViewportTool::PlaceBlocker ||
+             tool == ViewportTool::PlaceLadder;
+    case EditSubmode::Events:
+      return tool == ViewportTool::Select || tool == ViewportTool::PlaceEvent;
+  }
+  return false;
 }
 
 }  // namespace rat

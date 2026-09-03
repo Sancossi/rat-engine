@@ -22,6 +22,9 @@ struct TerrainPanelState {
   float ladder_y_lo = 0.0f;
   float ladder_y_hi = 1.6f;
   bool ladder_y_hi_user_set = false;
+  bool ladder_tile_sync_ready = false;
+  int ladder_last_tile_x = 0;
+  int ladder_last_tile_z = 0;
 };
 
 void draw_terrain_panel(EditorDocument& document, TerrainPanelState& state);

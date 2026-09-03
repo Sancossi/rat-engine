@@ -47,6 +47,8 @@ add_executable(rat-editor
   panels/event_panel.hpp
   panels/event_graph_canvas.cpp
   panels/event_graph_canvas.hpp
+  panels/ladder_panel.cpp
+  panels/ladder_panel.hpp
 )
 
 set(_rat_imgui_shader_out "${CMAKE_CURRENT_BINARY_DIR}/generated_shaders")

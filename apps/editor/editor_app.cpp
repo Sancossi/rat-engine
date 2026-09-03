@@ -1,6 +1,7 @@
 #include "editor_app.hpp"
 
 #include "imgui_bgfx.hpp"
+#include "panels/ladder_panel.hpp"
 #include "platform/miniaudio_sink.hpp"
 
 #include <rat/debug_snapshot.hpp>
@@ -621,7 +622,8 @@ void EditorApp::handle_edit_mouse_input(const ImGuiIO& io) {
 
   if (pressed) {
     drag_active_ = false;
-    const ViewportClickAction action = resolve_viewport_click(map, viewport_tool_, *world_hit);
+    const ViewportClickAction action =
+        resolve_viewport_click(map, viewport_tool_, *world_hit, edit_submode_);
     switch (action.kind) {
       case ViewportClickActionKind::Deselect:
         document_.clear_selection();
@@ -673,7 +675,8 @@ void EditorApp::handle_edit_mouse_input(const ImGuiIO& io) {
   }
 
   if (left_down && brush_active_) {
-    const ViewportClickAction action = resolve_viewport_click(map, viewport_tool_, *world_hit);
+    const ViewportClickAction action =
+        resolve_viewport_click(map, viewport_tool_, *world_hit, edit_submode_);
     const bool cell_tool = action.kind == ViewportClickActionKind::PlaceCube ||
                            action.kind == ViewportClickActionKind::PlaceSlab;
     const bool edge_tool = action.kind == ViewportClickActionKind::PlaceFence ||
@@ -940,66 +943,95 @@ void EditorApp::draw_ui() {
   }
   if (app_mode_ == AppMode::Edit) {
     ImGui::Separator();
-    ImGui::TextUnformatted("Mouse map tool");
-    if (ImGui::RadioButton("Select", viewport_tool_ == ViewportTool::Select)) {
+    ImGui::TextUnformatted("Edit submode");
+    auto apply_submode = [&](EditSubmode next) {
+      if (edit_submode_ == next) {
+        return;
+      }
+      edit_submode_ = next;
+      viewport_tool_ = ViewportTool::Select;
+      if (next == EditSubmode::Terrain || next == EditSubmode::Objects) {
+        document_.select_event(-1);
+      }
+      if (next == EditSubmode::Terrain || next == EditSubmode::Events) {
+        document_.select_blocker(-1);
+      }
+      if (!viewport_tool_allowed(edit_submode_, viewport_tool_)) {
+        viewport_tool_ = ViewportTool::Select;
+      }
+    };
+    if (ImGui::RadioButton("Terrain", edit_submode_ == EditSubmode::Terrain)) {
+      apply_submode(EditSubmode::Terrain);
+    }
+    ImGui::SameLine();
+    if (ImGui::RadioButton("Objects", edit_submode_ == EditSubmode::Objects)) {
+      apply_submode(EditSubmode::Objects);
+    }
+    ImGui::SameLine();
+    if (ImGui::RadioButton("Events", edit_submode_ == EditSubmode::Events)) {
+      apply_submode(EditSubmode::Events);
+    }
+    if (!viewport_tool_allowed(edit_submode_, viewport_tool_)) {
       viewport_tool_ = ViewportTool::Select;
     }
-    ImGui::SameLine();
-    if (ImGui::RadioButton("Place blocker", viewport_tool_ == ViewportTool::PlaceBlocker)) {
-      viewport_tool_ = ViewportTool::PlaceBlocker;
-    }
-    ImGui::SameLine();
-    if (ImGui::RadioButton("Place event", viewport_tool_ == ViewportTool::PlaceEvent)) {
-      viewport_tool_ = ViewportTool::PlaceEvent;
-    }
-    ImGui::SameLine();
-    if (ImGui::RadioButton("Place cube", viewport_tool_ == ViewportTool::PlaceCube)) {
-      viewport_tool_ = ViewportTool::PlaceCube;
-    }
-    ImGui::SameLine();
-    if (ImGui::RadioButton("Fence", viewport_tool_ == ViewportTool::PlaceFence)) {
-      viewport_tool_ = ViewportTool::PlaceFence;
-    }
-    ImGui::SameLine();
-    if (ImGui::RadioButton("Floor slab", viewport_tool_ == ViewportTool::PlaceSlab)) {
-      viewport_tool_ = ViewportTool::PlaceSlab;
-    }
-    ImGui::SameLine();
-    if (ImGui::RadioButton("Ladder", viewport_tool_ == ViewportTool::PlaceLadder)) {
-      viewport_tool_ = ViewportTool::PlaceLadder;
-    }
-    ImGui::TextUnformatted("Fence preset");
-    ImGui::SameLine();
-    ImGui::RadioButton("Mini 0.45", &fence_preset_index_, 0);
-    ImGui::SameLine();
-    ImGui::RadioButton("Full 1.6", &fence_preset_index_, 1);
-    ImGui::SameLine();
-    ImGui::RadioButton("Remove", &fence_preset_index_, 2);
-    draw_terrain_panel(document_, terrain_panel_);
-    float sampled_ground_y = 0.0f;
-    if (document_.selected_blocker() >= 0 &&
-        document_.selected_blocker() <
-            static_cast<int>(document_.visible_data().blockers.size())) {
-      const BlockerDef& selected =
-          document_.visible_data().blockers[static_cast<std::size_t>(document_.selected_blocker())];
-      const float center_x = 0.5f * (selected.bounds.min_x + selected.bounds.max_x);
-      const float center_z = 0.5f * (selected.bounds.min_z + selected.bounds.max_z);
-      if (session_.surface_query() == nullptr) {
-        session_.rebuild_surface();
+    ImGui::TextUnformatted("Mouse map tool");
+    bool first_tool = true;
+    auto tool_radio = [&](const char* label, ViewportTool tool) {
+      if (!viewport_tool_allowed(edit_submode_, tool)) {
+        return;
       }
-      sampled_ground_y = session_.surface_query() == nullptr
-                             ? 0.0f
-                             : session_.surface_query()->sample(center_x, center_z).y;
+      if (!first_tool) {
+        ImGui::SameLine();
+      }
+      first_tool = false;
+      if (ImGui::RadioButton(label, viewport_tool_ == tool)) {
+        viewport_tool_ = tool;
+      }
+    };
+    tool_radio("Select", ViewportTool::Select);
+    tool_radio("Place blocker", ViewportTool::PlaceBlocker);
+    tool_radio("Place event", ViewportTool::PlaceEvent);
+    tool_radio("Place cube", ViewportTool::PlaceCube);
+    tool_radio("Fence", ViewportTool::PlaceFence);
+    tool_radio("Floor slab", ViewportTool::PlaceSlab);
+    tool_radio("Ladder", ViewportTool::PlaceLadder);
+    if (edit_submode_ == EditSubmode::Terrain) {
+      ImGui::TextUnformatted("Fence preset");
+      ImGui::SameLine();
+      ImGui::RadioButton("Mini 0.45", &fence_preset_index_, 0);
+      ImGui::SameLine();
+      ImGui::RadioButton("Full 1.6", &fence_preset_index_, 1);
+      ImGui::SameLine();
+      ImGui::RadioButton("Remove", &fence_preset_index_, 2);
+      draw_terrain_panel(document_, terrain_panel_);
+    } else if (edit_submode_ == EditSubmode::Objects) {
+      float sampled_ground_y = 0.0f;
+      if (document_.selected_blocker() >= 0 &&
+          document_.selected_blocker() <
+              static_cast<int>(document_.visible_data().blockers.size())) {
+        const BlockerDef& selected =
+            document_.visible_data().blockers[static_cast<std::size_t>(document_.selected_blocker())];
+        const float center_x = 0.5f * (selected.bounds.min_x + selected.bounds.max_x);
+        const float center_z = 0.5f * (selected.bounds.min_z + selected.bounds.max_z);
+        if (session_.surface_query() == nullptr) {
+          session_.rebuild_surface();
+        }
+        sampled_ground_y = session_.surface_query() == nullptr
+                               ? 0.0f
+                               : session_.surface_query()->sample(center_x, center_z).y;
+      }
+      draw_blocker_panel(document_, blocker_panel_, sampled_ground_y, last_apply_error_);
+      draw_ladder_panel(document_, terrain_panel_);
+    } else {
+      const char* why_not = "";
+      if (document_.selected_event() >= 0 &&
+          document_.selected_event() < static_cast<int>(document_.visible_data().events.size())) {
+        why_not = event_why_not_name(session_.events().why_not_fired(
+            document_.visible_data().events[static_cast<std::size_t>(document_.selected_event())].id,
+            session_.state(), session_.player(), false));
+      }
+      draw_event_panel(document_, event_panel_, why_not);
     }
-    draw_blocker_panel(document_, blocker_panel_, sampled_ground_y, last_apply_error_);
-    const char* why_not = "";
-    if (document_.selected_event() >= 0 &&
-        document_.selected_event() < static_cast<int>(document_.visible_data().events.size())) {
-      why_not = event_why_not_name(session_.events().why_not_fired(
-          document_.visible_data().events[static_cast<std::size_t>(document_.selected_event())].id,
-          session_.state(), session_.player(), false));
-    }
-    draw_event_panel(document_, event_panel_, why_not);
   }
   {
     int mode = 0;

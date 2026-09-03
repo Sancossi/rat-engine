@@ -84,6 +84,7 @@ class EditorApp {
   std::string last_apply_error_;
   std::string last_serialize_status_;
   ViewportTool viewport_tool_ = ViewportTool::Select;
+  EditSubmode edit_submode_{EditSubmode::Terrain};
   int fence_preset_index_ = 0;
   bool mouse_left_was_down_ = false;
   bool drag_active_ = false;

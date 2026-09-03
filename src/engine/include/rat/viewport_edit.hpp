@@ -19,6 +19,12 @@ enum class ViewportTool {
   PlaceLadder,
 };
 
+enum class EditSubmode {
+  Terrain,
+  Objects,
+  Events,
+};
+
 enum class ViewportPickKind {
   Blocker,
   Event,
@@ -60,15 +66,18 @@ struct TileDelta {
                                                             std::uint32_t framebuffer_height,
                                                             float ground_y = 0.0f);
 
-// Picks only objects under the hit point; if several overlap, chooses nearest center.
-// Tie is resolved by preferring blockers.
-[[nodiscard]] std::optional<ViewportPick> pick_map_object_xz(const MapData& map, Vec3 world_hit);
+// Terrain never picks objects. Objects pick blockers only. Events pick events only.
+// If several of the allowed kind overlap, chooses nearest center.
+[[nodiscard]] std::optional<ViewportPick> pick_map_object_xz(const MapData& map, Vec3 world_hit,
+                                                            EditSubmode submode);
 
 [[nodiscard]] TileCoord world_to_tile_xz(Vec3 world_hit, float tile_size);
 [[nodiscard]] RampDirection nearest_tile_edge(Vec3 world_hit, float tile_size);
 [[nodiscard]] TileDelta tile_delta_between(TileCoord from, TileCoord to);
 
 [[nodiscard]] ViewportClickAction resolve_viewport_click(const MapData& map, ViewportTool tool,
-                                                         Vec3 world_hit);
+                                                         Vec3 world_hit, EditSubmode submode);
+
+[[nodiscard]] bool viewport_tool_allowed(EditSubmode submode, ViewportTool tool);
 
 }  // namespace rat
