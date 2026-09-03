@@ -522,7 +522,7 @@ TEST_CASE("SimulationSession restores switch and player from a FileStore save", 
 
   rat::GameState loaded;
   REQUIRE(rat::load_game(files, "saves/slot1.ratsave", loaded).ok);
-  session.apply_loaded_game(loaded);
+  REQUIRE(session.apply_loaded_game(loaded).ok);
 
   CHECK(session.state().get_switch(5));
   CHECK(session.state().get_variable(2) == 11);
@@ -534,6 +534,73 @@ TEST_CASE("SimulationSession restores switch and player from a FileStore save", 
   CHECK(session.state().player_x() == Approx(2.5f).margin(1e-5f));
   CHECK(session.state().player_z() == Approx(2.25f).margin(1e-5f));
   CHECK(session.jump().grounded);
+}
+
+TEST_CASE("SimulationSession load keeps saved player Y", "[unit][sim]") {
+  rat::SimulationSession session;
+  REQUIRE(session.load(make_flat_map()).ok);
+
+  rat::PlayerBody saved_player = make_start_player();
+  saved_player.y = 1.25f;
+  session.set_player(saved_player);
+
+  rat::MemoryFileStore files;
+  REQUIRE(rat::save_game(files, "saves/slot1.ratsave", session.state()).ok);
+
+  rat::PlayerBody mutated = session.player();
+  mutated.y = 0.0f;
+  session.set_player(mutated);
+
+  rat::GameState loaded;
+  REQUIRE(rat::load_game(files, "saves/slot1.ratsave", loaded).ok);
+  REQUIRE(session.apply_loaded_game(loaded).ok);
+
+  CHECK(session.player().y == Approx(1.25f).margin(1e-5f));
+  CHECK(session.state().player_y() == Approx(1.25f).margin(1e-5f));
+  CHECK(session.jump().grounded);
+}
+
+TEST_CASE("SimulationSession rejects a foreign map_id on load", "[unit][sim]") {
+  rat::SimulationSession session;
+  REQUIRE(session.load(make_flat_map()).ok);
+
+  const rat::PlayerBody start = make_start_player();
+  session.set_player(start);
+  session.state().set_switch(5, false);
+
+  rat::GameState foreign;
+  foreign.set_map_id("dungeon");
+  foreign.set_player_position(9.0f, 3.0f, 8.0f);
+  foreign.set_switch(5, true);
+
+  const rat::GameFileResult result = session.apply_loaded_game(foreign);
+  REQUIRE_FALSE(result.ok);
+  CHECK_FALSE(result.error.empty());
+
+  CHECK(session.player().x == Approx(start.x).margin(1e-5f));
+  CHECK(session.player().y == Approx(start.y).margin(1e-5f));
+  CHECK(session.player().z == Approx(start.z).margin(1e-5f));
+  CHECK_FALSE(session.state().get_switch(5));
+  CHECK(session.state().map_id() == "sim_flat");
+}
+
+TEST_CASE("SimulationSession applies a save with empty map_id", "[unit][sim]") {
+  rat::SimulationSession session;
+  REQUIRE(session.load(make_flat_map()).ok);
+
+  rat::PlayerBody saved_player = make_start_player();
+  saved_player.x = 2.0f;
+  session.set_player(saved_player);
+
+  rat::GameState loaded;
+  loaded.set_player_position(3.25f, 1.25f, 0.75f);
+  REQUIRE(loaded.map_id().empty());
+
+  REQUIRE(session.apply_loaded_game(loaded).ok);
+  CHECK(session.player().x == Approx(3.25f).margin(1e-5f));
+  CHECK(session.player().y == Approx(1.25f).margin(1e-5f));
+  CHECK(session.player().z == Approx(0.75f).margin(1e-5f));
+  CHECK(session.state().map_id().empty());
 }
 
 TEST_CASE("SimulationSession tick duration follows FakeClock auto-advance",

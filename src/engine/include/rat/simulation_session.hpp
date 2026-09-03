@@ -9,6 +9,7 @@
 #include "rat/map_data.hpp"
 #include "rat/map_document.hpp"
 #include "rat/player.hpp"
+#include "rat/save_game.hpp"
 
 #include <cstdint>
 #include <memory>
@@ -57,7 +58,8 @@ class SimulationSession {
   [[nodiscard]] SimulationLoadResult load(const MapData& map);
   // Apply a loaded GameState as session progress. Reloads event interpreters from
   // the current map so a prior session.load() cannot wipe switches/vars/items.
-  void apply_loaded_game(const GameState& loaded);
+  // Fails if loaded.map_id() is non-empty and does not match the current map.
+  [[nodiscard]] GameFileResult apply_loaded_game(const GameState& loaded);
   void set_player(PlayerBody player);
   void set_app_mode(AppMode mode);
   void set_notify(GameplayNotifyBus* notify);

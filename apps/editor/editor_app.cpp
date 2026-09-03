@@ -262,6 +262,13 @@ bool EditorApp::save_map_path(const std::string& path) {
 void EditorApp::save_play_slot() {
   std::error_code ec;
   std::filesystem::create_directories("saves", ec);
+  if (ec) {
+    last_save_status_ = "failed to create saves directory: " + ec.message();
+    if (logger_ != nullptr) {
+      log(*logger_, LogLevel::Error, "save", last_save_status_);
+    }
+    return;
+  }
   const GameFileResult result = save_game(os_files(), kPlaySaveSlotPath, session_.state());
   if (!result.ok) {
     last_save_status_ = result.error.empty() ? "Save failed" : result.error;
@@ -286,7 +293,14 @@ void EditorApp::load_play_slot() {
     }
     return;
   }
-  session_.apply_loaded_game(loaded);
+  const GameFileResult applied = session_.apply_loaded_game(loaded);
+  if (!applied.ok) {
+    last_save_status_ = applied.error.empty() ? "Load failed" : applied.error;
+    if (logger_ != nullptr) {
+      log(*logger_, LogLevel::Error, "save", last_save_status_);
+    }
+    return;
+  }
   if (engine_ != nullptr) {
     engine_->set_player(session_.player());
   }

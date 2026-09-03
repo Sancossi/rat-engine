@@ -38,7 +38,12 @@ SimulationLoadResult SimulationSession::load(const MapData& map) {
   return result;
 }
 
-void SimulationSession::apply_loaded_game(const GameState& loaded) {
+GameFileResult SimulationSession::apply_loaded_game(const GameState& loaded) {
+  if (!loaded.map_id().empty() && loaded.map_id() != events_.map().id) {
+    return GameFileResult{false, "save map_id '" + loaded.map_id() +
+                                     "' does not match current map '" + events_.map().id + "'"};
+  }
+
   const RuntimeMap runtime = events_.runtime_map();
   events_.load(runtime);
   rebuild_surface();
@@ -48,8 +53,15 @@ void SimulationSession::apply_loaded_game(const GameState& loaded) {
   body.y = loaded.player_y();
   body.z = loaded.player_z();
   set_player(body);
-  reset_jump_grounded();
+  jump_ = make_grounded_jump_state();
+  jump_.grounded = true;
+  jump_.jump_offset = 0.0f;
+  jump_.vertical_speed = 0.0f;
+  jump_.coyote_time_left = config_.jump_tuning.coyote_seconds;
+  jump_.jump_buffer_left = 0.0f;
+  jump_press_pending_ = false;
   clear_pending_input();
+  return GameFileResult{true, {}};
 }
 
 void SimulationSession::set_player(PlayerBody player) {
