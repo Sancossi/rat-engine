@@ -12,6 +12,7 @@
 #include <rat/height_edit.hpp>
 #include <rat/hot_apply.hpp>
 #include <rat/input.hpp>
+#include <rat/inventory_list.hpp>
 #include <rat/map_document.hpp>
 #include <rat/map_loader.hpp>
 #include <rat/replay.hpp>
@@ -537,6 +538,7 @@ void EditorApp::set_app_mode(AppMode next_mode) {
   session_.set_app_mode(next_mode);
   if (next_mode != AppMode::Play) {
     play_paused_ = false;
+    inventory_open_ = false;
   }
   refresh_mode_banner();
   sync_selection_to_engine();
@@ -728,11 +730,22 @@ void EditorApp::simulate(float dt) {
   if (app_mode_ == AppMode::Play && escape_down && !escape_was_down_) {
     play_paused_ = !play_paused_;
     if (play_paused_) {
+      inventory_open_ = false;
       session_.clear_pending_input();
       fixed_accumulator_ = 0.0f;
     }
   }
   escape_was_down_ = escape_down;
+
+  const bool i_down = host_.key_i_down();
+  if (app_mode_ == AppMode::Play && i_down && !i_was_down_ && !play_paused_) {
+    inventory_open_ = !inventory_open_;
+    if (inventory_open_) {
+      session_.clear_pending_input();
+      fixed_accumulator_ = 0.0f;
+    }
+  }
+  i_was_down_ = i_down;
 
   if (input.toggle_mode_pressed) {
     set_app_mode(toggle_app_mode(app_mode_));
@@ -789,7 +802,7 @@ void EditorApp::simulate(float dt) {
     }
   }
 
-  if (play_paused_ && app_mode_ == AppMode::Play) {
+  if (app_mode_ == AppMode::Play && (play_paused_ || inventory_open_)) {
     engine_->set_player(session_.player());
     engine_->greybox().tick(dt);
     return;
@@ -870,6 +883,7 @@ void EditorApp::draw_ui() {
       "WASD move | Space jump | E interact | Esc pause | C camera | F2 Play/Edit | F3 snapshot | F5 hot-apply");
   if (app_mode_ == AppMode::Play) {
     ImGui::TextUnformatted("Escape pause | Save/Load slot saves/slot1.ratsave");
+    ImGui::TextUnformatted("I inventory");
   }
   if (app_mode_ == AppMode::Edit) {
     ImGui::TextUnformatted("Ctrl+Z undo | Ctrl+Y / Ctrl+Shift+Z redo");
@@ -1026,6 +1040,20 @@ void EditorApp::draw_ui() {
     if (!last_save_status_.empty()) {
       ImGui::TextWrapped("%s", last_save_status_.c_str());
     }
+    ImGui::End();
+  }
+
+  if (app_mode_ == AppMode::Play && inventory_open_ && !play_paused_) {
+    ImGui::SetNextWindowPos(
+        ImVec2(viewport->WorkPos.x + 24.0f, viewport->WorkPos.y + 80.0f), ImGuiCond_Appearing);
+    ImGui::SetNextWindowBgAlpha(0.94f);
+    ImGui::Begin("Inventory", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
+    ImGui::TextUnformatted("Inventory");
+    ImGui::Separator();
+    for (const std::string& row : format_inventory_rows(session_.state().inventory())) {
+      ImGui::TextUnformatted(row.c_str());
+    }
+    ImGui::TextUnformatted("I close");
     ImGui::End();
   }
 

@@ -98,7 +98,9 @@ class EditorApp {
   float fixed_accumulator_ = 0.0f;
   double last_time_ = 0.0;
   bool play_paused_ = false;
+  bool inventory_open_ = false;
   bool escape_was_down_ = false;
+  bool i_was_down_ = false;
   std::string last_save_status_;
 };
 

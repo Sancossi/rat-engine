@@ -238,6 +238,10 @@ bool NativeWindow::key_escape_down() const {
   return window_ != nullptr && glfwGetKey(window_, GLFW_KEY_ESCAPE) == GLFW_PRESS;
 }
 
+bool NativeWindow::key_i_down() const {
+  return window_ != nullptr && glfwGetKey(window_, GLFW_KEY_I) == GLFW_PRESS;
+}
+
 void NativeWindow::cursor_pos(double& x, double& y) const {
   if (window_ == nullptr) {
     x = 0.0;
