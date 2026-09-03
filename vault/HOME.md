@@ -25,6 +25,6 @@ tags: [hub]
 
 ## Текущий спринт
 
-Смотри заметку спринта с `current: true`: [[Sprint 9 — First playable loop]]. Последний закрытый — [[Sprint 8 — Play feel and authoring]].
+Смотри заметку спринта с `current: true`: [[Sprint 10 — Grey yard content]]. Последний закрытый — [[Sprint 9 — First playable loop]].
 
 Доска: [[Task board]] — виды **Current sprint** (канбан спринта) и **In progress** (код / ревью / blocked). Статус в YAML заметки = колонка на доске.

@@ -89,6 +89,7 @@ Related: [[GDD]], [[S1: Acceptance playthrough checklist]], [[Sprint 9 — First
 ## Follow-up
 
 - Контент 2-го NPC / scare-blocker — только если остаёмся на `grey_yard`, отдельная task, не эта карточка.
+- [[feat: Grey yard apprentice NPC]] — третий NPC (Sprint 10).
 - [[feat: Loft event height]] — когда понадобится триггер на плите.
 - [[Art direction moodboard pass]] — look-lock FF6 / CC после playable loop.
 

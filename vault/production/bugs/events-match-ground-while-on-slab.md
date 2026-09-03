@@ -25,7 +25,7 @@ The ground-level event does not fire: player height does not match the event sur
 
 Origin: [[feat: Stacked surfaces caves and basements]] (final slice review). Взято в [[Sprint 9 — First playable loop]].
 
-Follow-up: [[feat: Loft event height]]
+Follow-up: [[feat: Loft event height]] (Sprint 10).
 
 ## Resolution
 

@@ -3,7 +3,7 @@ type: sprint
 status: Done
 dates: 2026-09-03/2026-09-16
 goal: First playable loop — stacked-floor events, persist a session, inventory UI, lock vertical-slice scope
-current: true
+current: false
 tags: [sprint]
 ---
 
