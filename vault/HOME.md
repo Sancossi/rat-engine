@@ -25,6 +25,6 @@ tags: [hub]
 
 ## Текущий спринт
 
-Смотри заметку спринта с `current: true`: [[Sprint 10 — Grey yard content]]. Последний закрытый — [[Sprint 9 — First playable loop]].
+Текущего спринта нет (`current: true`). Последний закрытый — [[Sprint 10 — Grey yard content]].
 
 Доска: [[Task board]] — виды **Current sprint** (канбан спринта) и **In progress** (код / ревью / blocked). Статус в YAML заметки = колонка на доске.

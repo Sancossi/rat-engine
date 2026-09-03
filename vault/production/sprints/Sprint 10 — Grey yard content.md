@@ -1,9 +1,9 @@
 ---
 type: sprint
-status: In progress
+status: Done
 dates: 2026-09-03/2026-09-17
 goal: Grey yard content — loft-placed events, a third NPC, art moodboard lock
-current: true
+current: false
 tags: [sprint]
 ---
 
@@ -22,3 +22,11 @@ DoD:
 Порядок:
 
 - [[feat: Loft event height]] → [[feat: Grey yard apprentice NPC]] → [[Art direction moodboard pass]] → [[research: Set Move Route]]
+
+## Итог
+
+DoD выполнен 2026-09-03. `loft_plank` на (0,4) с `y: 2.0`; третий голос `apprentice` (−3, 1); Moodboard — 7 hex в [[Art Direction]]. Research: overlay / `route[]` / один interpreter; impl — [[feat: Set Move Route (basic)]].
+
+## Bugs found
+
+none новых на закрытии. Backlog: [[feat: Event marker uses bind Y]], [[feat: Apprentice post-quest page]], [[chore: Named grey_yard look-refs]], [[feat: Set Move Route (basic)]].

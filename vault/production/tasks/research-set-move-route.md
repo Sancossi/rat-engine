@@ -1,7 +1,7 @@
 ---
 type: task
 area: Engine
-status: In review
+status: Done
 task_type: Research
 sprint: Sprint 10
 due:
@@ -52,3 +52,11 @@ Origin: [[Define vertical slice scope]] Out; [[Event System]] commands v1. Вз�
 - Event↔event коллизия (два NPC на одной клетке).
 
 **Follow-up:** [[feat: Set Move Route (basic)]] — следующий спринт, не Sprint 10. `CommandOp::SetMoveRoute` + parse/serialize `route[]` + overlay + yield + probe коллизии + markers из overlay. Карту `grey_yard` и Art Direction не трогать в том слайсе без отдельной content-карточки.
+
+## Resolution
+
+NPC ходит по runtime overlay (`event_id → {tile, facing}`), не по authored `EventDef`. Команда — один `set_move_route` с вложенным `route[]`; тик — тот же interpreter, yield как Wait. Foreground: занятость игрока = through; PlayerTouch только от шага игрока; tile+volume сдвигается как `translate_event_on_grid`. Runtime — [[feat: Set Move Route (basic)]], не этот слайс. Verify: читать Findings на этой карточке. Review: Approved.
+
+## Bugs found
+
+none.
