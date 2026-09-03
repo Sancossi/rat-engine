@@ -153,6 +153,19 @@
       ]
     },
     {
+      "id": "apprentice",
+      "tile": { "x": -3, "z": 1 },
+      "pages": [
+        {
+          "trigger": "action",
+          "conditions": [],
+          "commands": [
+            { "op": "show_text", "text": "Apprentice: Foreman is hunting a rusty cog for the gate winch. Scrap sits east of the crates — wait for his say-so before you dig." }
+          ]
+        }
+      ]
+    },
+    {
       "id": "crate_notice",
       "volume": { "min_x": 3.0, "min_z": -1.0, "max_x": 5.0, "max_z": 1.0 },
       "pages": [

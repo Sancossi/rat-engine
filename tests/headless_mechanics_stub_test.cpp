@@ -76,3 +76,40 @@ TEST_CASE("Headless mechanics: grey_yard cog quest end-to-end", "[mechanics][que
   interact_at(runtime, state, player);
   REQUIRE(state.get_switch(2));
 }
+
+TEST_CASE("Headless mechanics: grey_yard apprentice talks without starting the cog quest",
+          "[mechanics][quest]") {
+#ifndef RAT_TEST_DATA_DIR
+#error RAT_TEST_DATA_DIR must be defined
+#endif
+  const auto loaded =
+      rat::load_map_from_file(std::string(RAT_TEST_DATA_DIR) + "/maps/grey_yard.json");
+  REQUIRE(loaded.ok);
+
+  rat::GameState state;
+  rat::EventRuntime runtime;
+  REQUIRE(runtime.load(loaded.map).ok);
+
+  rat::PlayerBody player;
+  player.x = 0.5f;
+  player.z = 0.5f;
+
+  drain_messages(runtime, state, player);
+  REQUIRE(state.get_variable(0) == 1);
+  REQUIRE_FALSE(state.get_switch(1));
+
+  // Ground apprentice at the center of tile (-3, 1), off spawn / foreman / scrap / crates / loft.
+  player.x = -2.5f;
+  player.z = 1.5f;
+  REQUIRE(runtime.has_action_prompt(player, state));
+
+  runtime.update(state, player, true, 1.0f / 60.0f);
+  REQUIRE(runtime.active_message().has_value());
+  CHECK(runtime.active_message()->find("Apprentice") != std::string::npos);
+  REQUIRE_FALSE(state.get_switch(1));
+  REQUIRE_FALSE(state.get_switch(2));
+  REQUIRE_FALSE(state.has_item("rusty_cog"));
+
+  drain_messages(runtime, state, player);
+  REQUIRE_FALSE(state.get_switch(1));
+}
