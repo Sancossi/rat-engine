@@ -1,7 +1,7 @@
 ---
 type: task
 area: Game
-status: In review
+status: Done
 task_type: Chore
 sprint: Sprint 10
 roadmap: First playable loop
@@ -17,3 +17,13 @@ Intent: зафиксировать палитры и 3–5 look-refs под [[Co
 Acceptance: секция moodboard на [[Art Direction]] (двор `grey_yard`: металл/латунь/пыль, 32px, без магии). Чекбокс GDD про арт-референсы, если ещё открыт. Без новых мешей в репо.
 
 Origin: [[First playable loop]]; [[Define vertical slice scope]] (moodboard после playable). Взято в [[Sprint 10 — Grey yard content]].
+
+Follow-up: [[chore: Named grey_yard look-refs]]
+
+## Resolution
+
+Секция Moodboard в [[Art Direction]]: 7 hex-ролей для `grey_yard` (земля, пыль, дерево, латунь, сажа, туман, ржавчина). Take/don't take — силуэт FF6 vs painterly albedo Chrono Cross; указатель на [[Collect 5 reference games]]. GDD «Конкретные арт-референсы» отмечен. Verify: читать Moodboard + GDD checkbox; Play не менялся. Review: Approved.
+
+## Bugs found
+
+none. Review Minor (принципы вместо именованных кадров) → [[chore: Named grey_yard look-refs]].
