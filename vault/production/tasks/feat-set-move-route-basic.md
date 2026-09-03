@@ -16,7 +16,7 @@ Acceptance: `CommandOp::SetMoveRoute` + parse/serialize `route[]` (`move` N/E/S/
 
 Origin: [[research: Set Move Route]]. Взято в [[Sprint 11 — Set Move Route]]. Не трогать `grey_yard.json` (это [[feat: Grey yard move route]]).
 
-Follow-up: [[chore: Document set_move_route in map schema]]
+Follow-up: [[chore: Document set_move_route in map schema]], [[feat: Smooth move-route step]]
 
 ## Resolution
 
