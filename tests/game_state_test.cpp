@@ -1,4 +1,6 @@
+#include <rat/file_store.hpp>
 #include <rat/game_state.hpp>
+#include <rat/save_game.hpp>
 
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
@@ -90,4 +92,64 @@ TEST_CASE("GameState save/load memory roundtrip", "[unit][gamestate]") {
   REQUIRE(restored.player_x() == Approx(4.5f));
   REQUIRE(restored.player_y() == Approx(0.0f));
   REQUIRE(restored.player_z() == Approx(-2.0f));
+}
+
+TEST_CASE("save_game round-trips GameState through MemoryFileStore", "[unit][gamestate][file]") {
+  rat::GameState original;
+  original.set_switch(10, true);
+  original.set_variable(3, 99);
+  original.add_item("door_key", 1, true);
+  original.set_map_id("grey_yard");
+  original.set_player_position(4.5f, 1.25f, -2.0f);
+
+  rat::MemoryFileStore files;
+  const rat::GameFileResult saved = rat::save_game(files, "saves/slot1.ratsave", original);
+  REQUIRE(saved.ok);
+
+  rat::GameState restored;
+  const rat::GameFileResult loaded = rat::load_game(files, "saves/slot1.ratsave", restored);
+  REQUIRE(loaded.ok);
+  REQUIRE(restored.get_switch(10));
+  REQUIRE(restored.get_variable(3) == 99);
+  REQUIRE(restored.item_quantity("door_key") == 1);
+  REQUIRE(restored.map_id() == "grey_yard");
+  REQUIRE(restored.player_x() == Approx(4.5f));
+  REQUIRE(restored.player_y() == Approx(1.25f));
+  REQUIRE(restored.player_z() == Approx(-2.0f));
+}
+
+TEST_CASE("load_game fails on missing path and leaves GameState unchanged",
+          "[unit][gamestate][file]") {
+  rat::GameState state;
+  state.set_switch(1, true);
+  state.set_map_id("keep");
+  state.set_player_position(1.0f, 2.0f, 3.0f);
+
+  rat::MemoryFileStore files;
+  const rat::GameFileResult loaded = rat::load_game(files, "saves/missing.ratsave", state);
+  REQUIRE_FALSE(loaded.ok);
+  REQUIRE_FALSE(loaded.error.empty());
+  REQUIRE(state.get_switch(1));
+  REQUIRE(state.map_id() == "keep");
+  REQUIRE(state.player_x() == Approx(1.0f));
+}
+
+TEST_CASE("load_game fails on garbage bytes and leaves GameState unchanged",
+          "[unit][gamestate][file]") {
+  rat::GameState state;
+  state.set_switch(1, true);
+  state.set_variable(2, 7);
+  state.add_item("coin", 3);
+  state.set_map_id("keep");
+
+  rat::MemoryFileStore files;
+  REQUIRE(files.write("saves/slot1.ratsave", "not a ratsave").ok);
+
+  const rat::GameFileResult loaded = rat::load_game(files, "saves/slot1.ratsave", state);
+  REQUIRE_FALSE(loaded.ok);
+  REQUIRE_FALSE(loaded.error.empty());
+  REQUIRE(state.get_switch(1));
+  REQUIRE(state.get_variable(2) == 7);
+  REQUIRE(state.item_quantity("coin") == 3);
+  REQUIRE(state.map_id() == "keep");
 }

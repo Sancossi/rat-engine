@@ -16,6 +16,7 @@
 #include <rat/map_loader.hpp>
 #include <rat/replay.hpp>
 #include <rat/render_world.hpp>
+#include <rat/save_game.hpp>
 #include <rat/simulation_session.hpp>
 #include <rat/surface_query.hpp>
 #include <rat/viewport_edit.hpp>
@@ -26,13 +27,21 @@
 #include <imgui_impl_glfw.h>
 
 #include <cstdint>
+#include <filesystem>
 #include <iostream>
 #include <string>
 #include <string_view>
+#include <system_error>
 #include <utility>
 #include <vector>
 
 namespace rat {
+
+namespace {
+
+constexpr const char* kPlaySaveSlotPath = "saves/slot1.ratsave";
+
+}  // namespace
 
 EditorApp::~EditorApp() {
   shutdown();
@@ -247,6 +256,43 @@ bool EditorApp::save_map_path(const std::string& path) {
   document_.mark_clean();
   event_panel_.last_compile_error.clear();
   return true;
+}
+
+void EditorApp::save_play_slot() {
+  std::error_code ec;
+  std::filesystem::create_directories("saves", ec);
+  const GameFileResult result = save_game(os_files(), kPlaySaveSlotPath, session_.state());
+  if (!result.ok) {
+    last_save_status_ = result.error.empty() ? "Save failed" : result.error;
+    if (logger_ != nullptr) {
+      log(*logger_, LogLevel::Error, "save", last_save_status_);
+    }
+    return;
+  }
+  last_save_status_ = std::string("Saved ") + kPlaySaveSlotPath;
+  if (logger_ != nullptr) {
+    log(*logger_, LogLevel::Info, "save", last_save_status_);
+  }
+}
+
+void EditorApp::load_play_slot() {
+  GameState loaded;
+  const GameFileResult result = load_game(os_files(), kPlaySaveSlotPath, loaded);
+  if (!result.ok) {
+    last_save_status_ = result.error.empty() ? "Load failed" : result.error;
+    if (logger_ != nullptr) {
+      log(*logger_, LogLevel::Error, "save", last_save_status_);
+    }
+    return;
+  }
+  session_.apply_loaded_game(loaded);
+  if (engine_ != nullptr) {
+    engine_->set_player(session_.player());
+  }
+  last_save_status_ = std::string("Loaded ") + kPlaySaveSlotPath;
+  if (logger_ != nullptr) {
+    log(*logger_, LogLevel::Info, "save", last_save_status_);
+  }
 }
 
 bool EditorApp::apply_edited_map(bool preserve_player) {
@@ -489,6 +535,9 @@ void EditorApp::set_app_mode(AppMode next_mode) {
   document_.discard_preview();
   app_mode_ = next_mode;
   session_.set_app_mode(next_mode);
+  if (next_mode != AppMode::Play) {
+    play_paused_ = false;
+  }
   refresh_mode_banner();
   sync_selection_to_engine();
 }
@@ -675,6 +724,16 @@ void EditorApp::simulate(float dt) {
       map_input_frame(buttons, previous_buttons_, gating, input_eye, input_focus);
   previous_buttons_ = buttons;
 
+  const bool escape_down = host_.key_escape_down();
+  if (app_mode_ == AppMode::Play && escape_down && !escape_was_down_) {
+    play_paused_ = !play_paused_;
+    if (play_paused_) {
+      session_.clear_pending_input();
+      fixed_accumulator_ = 0.0f;
+    }
+  }
+  escape_was_down_ = escape_down;
+
   if (input.toggle_mode_pressed) {
     set_app_mode(toggle_app_mode(app_mode_));
   }
@@ -728,6 +787,12 @@ void EditorApp::simulate(float dt) {
     } else if (logger_ != nullptr) {
       log(*logger_, LogLevel::Error, "debug", std::string("failed to write snapshot ") + path);
     }
+  }
+
+  if (play_paused_ && app_mode_ == AppMode::Play) {
+    engine_->set_player(session_.player());
+    engine_->greybox().tick(dt);
+    return;
   }
 
   fixed_accumulator_ += std::max(0.0f, dt);
@@ -802,7 +867,10 @@ void EditorApp::draw_ui() {
     ImGui::TextUnformatted("loot scrap east of crates, return.");
   }
   ImGui::TextUnformatted(
-      "WASD move | Space jump | E interact | C camera | F2 Play/Edit | F3 snapshot | F5 hot-apply");
+      "WASD move | Space jump | E interact | Esc pause | C camera | F2 Play/Edit | F3 snapshot | F5 hot-apply");
+  if (app_mode_ == AppMode::Play) {
+    ImGui::TextUnformatted("Escape pause | Save/Load slot saves/slot1.ratsave");
+  }
   if (app_mode_ == AppMode::Edit) {
     ImGui::TextUnformatted("Ctrl+Z undo | Ctrl+Y / Ctrl+Shift+Z redo");
   }
@@ -835,6 +903,9 @@ void EditorApp::draw_ui() {
   }
   if (!last_serialize_status_.empty()) {
     ImGui::TextWrapped("%s", last_serialize_status_.c_str());
+  }
+  if (!last_save_status_.empty()) {
+    ImGui::TextWrapped("%s", last_save_status_.c_str());
   }
   if (app_mode_ == AppMode::Edit) {
     ImGui::Separator();
@@ -936,6 +1007,27 @@ void EditorApp::draw_ui() {
   ImGui::Text("Intro var0: %d", session_.state().get_variable(0));
   ImGui::Text("rusty_cog: %d", session_.state().item_quantity("rusty_cog"));
   ImGui::End();
+
+  if (app_mode_ == AppMode::Play && play_paused_) {
+    ImGui::SetNextWindowPos(
+        ImVec2(viewport->WorkPos.x + 24.0f, viewport->WorkPos.y + 80.0f), ImGuiCond_Appearing);
+    ImGui::SetNextWindowBgAlpha(0.94f);
+    ImGui::Begin("Pause", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
+    ImGui::TextUnformatted("Paused");
+    ImGui::TextWrapped("Slot: %s", kPlaySaveSlotPath);
+    if (ImGui::Button("Save")) {
+      save_play_slot();
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Load")) {
+      load_play_slot();
+    }
+    ImGui::TextUnformatted("Escape pause");
+    if (!last_save_status_.empty()) {
+      ImGui::TextWrapped("%s", last_save_status_.c_str());
+    }
+    ImGui::End();
+  }
 
   if (event_runtime_enabled(app_mode_) &&
       session_.events().has_action_prompt(session_.player(), session_.state()) &&

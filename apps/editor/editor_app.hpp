@@ -57,6 +57,8 @@ class EditorApp {
   void apply_cell_brush(const ViewportClickAction& action);
   void finish_cell_brush(bool abort);
   void bind_session_assets();
+  void save_play_slot();
+  void load_play_slot();
 
   static void on_host_resize(void* user, int width, int height);
 
@@ -95,6 +97,9 @@ class EditorApp {
   InputButtons previous_buttons_{};
   float fixed_accumulator_ = 0.0f;
   double last_time_ = 0.0;
+  bool play_paused_ = false;
+  bool escape_was_down_ = false;
+  std::string last_save_status_;
 };
 
 }  // namespace rat

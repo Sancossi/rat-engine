@@ -1,10 +1,12 @@
 #include <rat/clock.hpp>
+#include <rat/file_store.hpp>
 #include <rat/gameplay_notify.hpp>
 #include <rat/input.hpp>
 #include <rat/input_sequence.hpp>
 #include <rat/map_data.hpp>
 #include <rat/map_loader.hpp>
 #include <rat/player.hpp>
+#include <rat/save_game.hpp>
 #include <rat/simulation_session.hpp>
 #include <rat/surface_query.hpp>
 
@@ -493,6 +495,45 @@ TEST_CASE("run_input_sequence adapter matches SimulationSession ticks on grey_ya
   CHECK(seq.player.z == Approx(session.player().z).margin(1e-5f));
   CHECK(seq.state.get_variable(0) == session.state().get_variable(0));
   CHECK(seq.jump.grounded == session.jump().grounded);
+}
+
+TEST_CASE("SimulationSession restores switch and player from a FileStore save", "[unit][sim]") {
+  rat::SimulationSession session;
+  REQUIRE(session.load(make_flat_map()).ok);
+
+  rat::PlayerBody saved_player = make_start_player();
+  saved_player.x = 2.5f;
+  saved_player.z = 2.25f;
+  session.set_player(saved_player);
+  session.state().set_switch(5, true);
+  session.state().set_variable(2, 11);
+  session.state().add_item("rusty_cog", 1, true);
+
+  rat::MemoryFileStore files;
+  REQUIRE(rat::save_game(files, "saves/slot1.ratsave", session.state()).ok);
+
+  rat::PlayerBody mutated = make_start_player();
+  mutated.x = 0.5f;
+  mutated.z = 0.75f;
+  session.set_player(mutated);
+  session.state().set_switch(5, false);
+  session.state().set_variable(2, 0);
+  session.state().add_item("potion", 1);
+
+  rat::GameState loaded;
+  REQUIRE(rat::load_game(files, "saves/slot1.ratsave", loaded).ok);
+  session.apply_loaded_game(loaded);
+
+  CHECK(session.state().get_switch(5));
+  CHECK(session.state().get_variable(2) == 11);
+  CHECK(session.state().item_quantity("rusty_cog") == 1);
+  CHECK_FALSE(session.state().has_item("potion"));
+  CHECK(session.state().map_id() == "sim_flat");
+  CHECK(session.player().x == Approx(2.5f).margin(1e-5f));
+  CHECK(session.player().z == Approx(2.25f).margin(1e-5f));
+  CHECK(session.state().player_x() == Approx(2.5f).margin(1e-5f));
+  CHECK(session.state().player_z() == Approx(2.25f).margin(1e-5f));
+  CHECK(session.jump().grounded);
 }
 
 TEST_CASE("SimulationSession tick duration follows FakeClock auto-advance",

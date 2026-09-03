@@ -2,6 +2,7 @@
 #include <rat/map_document.hpp>
 #include <rat/map_loader.hpp>
 #include <rat/native_window_handle.hpp>
+#include <rat/save_game.hpp>
 #include <rat/simulation_session.hpp>
 
 #include <catch2/catch_test_macros.hpp>

@@ -30,6 +30,7 @@ add_library(rat_core
   src/player_jump.cpp
   src/replay.cpp
   src/render_world.cpp
+  src/save_game.cpp
   src/simulation_session.cpp
   src/surface_query.cpp
   src/terrain_geometry.cpp

@@ -55,6 +55,9 @@ class SimulationSession {
   explicit SimulationSession(SimulationConfig config);
 
   [[nodiscard]] SimulationLoadResult load(const MapData& map);
+  // Apply a loaded GameState as session progress. Reloads event interpreters from
+  // the current map so a prior session.load() cannot wipe switches/vars/items.
+  void apply_loaded_game(const GameState& loaded);
   void set_player(PlayerBody player);
   void set_app_mode(AppMode mode);
   void set_notify(GameplayNotifyBus* notify);

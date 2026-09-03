@@ -38,6 +38,20 @@ SimulationLoadResult SimulationSession::load(const MapData& map) {
   return result;
 }
 
+void SimulationSession::apply_loaded_game(const GameState& loaded) {
+  const RuntimeMap runtime = events_.runtime_map();
+  events_.load(runtime);
+  rebuild_surface();
+  state_ = loaded;
+  PlayerBody body = player_;
+  body.x = loaded.player_x();
+  body.y = loaded.player_y();
+  body.z = loaded.player_z();
+  set_player(body);
+  reset_jump_grounded();
+  clear_pending_input();
+}
+
 void SimulationSession::set_player(PlayerBody player) {
   player_ = player;
   state_.set_player_position(player_.x, player_.y, player_.z);
