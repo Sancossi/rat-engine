@@ -1,7 +1,7 @@
 ---
 type: task
 area: Game
-status: Not started
+status: In progress
 task_type: Research
 sprint: Sprint 9
 roadmap: First playable loop
