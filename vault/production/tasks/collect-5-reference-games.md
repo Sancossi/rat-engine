@@ -1,7 +1,7 @@
 ---
 type: task
 area: Game
-status: In review
+status: Done
 task_type: Research
 sprint: Sprint 9
 roadmap: First playable loop
@@ -126,3 +126,11 @@ Vertical slice **использует эти референсы**; конкре�
 - [[Define vertical slice scope]] — vertical slice опирается на эти пять; scope сессии на той карточке, не здесь.
 - [[Art direction moodboard pass]] — визуальный lock палитр FF6 / Chrono Cross (уже backlog; не трогаем в этом слайсе).
 - [[Art Direction]] — чекбокс конкретных референсов обновлён под эту пятёрку.
+
+## Resolution
+
+Пятёрка: MGS3 (движение), FF6 + Chrono Cross (арт), Disco Elysium + Divinity: Original Sin (диалоги). Take / don't take на этой карточке; The Sims не в списке. Verify: прочитать Findings; чекбокс в [[Art Direction]]. Review: Approved.
+
+## Bugs found
+
+none.
