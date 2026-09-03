@@ -1,7 +1,7 @@
 ---
 type: task
 area: Engine
-status: In progress
+status: In review
 task_type: Research
 sprint: Sprint 10
 due:
@@ -51,4 +51,4 @@ Origin: [[Define vertical slice scope]] Out; [[Event System]] commands v1. Вз�
 - Graph-нода Move Route в MVP canvas ([[research: Event node graph vs bytecode]]).
 - Event↔event коллизия (два NPC на одной клетке).
 
-**Follow-up:** следующий спринт, не Sprint 10 — `feat: Set Move Route (basic)`: `CommandOp::SetMoveRoute` + parse/serialize `route[]` + overlay + yield + probe коллизии + markers из overlay. Карту `grey_yard` и Art Direction не трогать в том слайсе без отдельной content-карточки.
+**Follow-up:** [[feat: Set Move Route (basic)]] — следующий спринт, не Sprint 10. `CommandOp::SetMoveRoute` + parse/serialize `route[]` + overlay + yield + probe коллизии + markers из overlay. Карту `grey_yard` и Art Direction не трогать в том слайсе без отдельной content-карточки.
