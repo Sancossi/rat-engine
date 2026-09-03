@@ -72,3 +72,4 @@ Show Text, Control Switch, Control Variable, Conditional Branch, Set Move Route 
 - [x] Формат хранения → **JSON**
 - [x] UX команд → **RM-like list** (графический граф — бэклог [[feat: Event node graph authoring]])
 - [x] Лимиты Parallel → **8 / 32 / no nested**
+- [x] Set Move Route (basic) → runtime overlay + `set_move_route.route[]` + тот же interpreter yield (как Wait); не второй VM. См. [[research: Set Move Route]]
