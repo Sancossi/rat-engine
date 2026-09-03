@@ -1,9 +1,9 @@
 ---
 type: sprint
-status: In progress
-dates: 2026-09-02/2026-09-15
+status: Done
+dates: 2026-09-02/2026-09-03
 goal: Play feel on grey_yard plus Sims-like edit and event node-graph authoring
-current: true
+current: false
 tags: [sprint]
 ---
 
@@ -25,3 +25,11 @@ DoD:
 Порядок:
 
 - [[climb-camera-locks-on-far-side]] → [[feat: Smooth camera turn]] → [[walk-off-slab-teleports-to-ground]] → [[research: Sims build-mode edit analog]] → [[feat: Edit hold-drag brush]] → [[feat: Edit paint clicked edge]] → [[research: Event node graph vs bytecode]] → [[walk-through-ladder]] → [[feat: Event graph model and compile]] → [[feat: Event graph editor canvas]] → [[chore: Event graph join golden and branch edges]]
+
+## Итог
+
+DoD выполнен 2026-09-03. Climb-камера за игроком, плавный поворот; сход со 2 этажа — Fall как прыжок; кисть и покраска ребра в Edit; события — optional graph, compile в `commands`, холст MVP. Play-баги: [[walk-off-slab-teleports-to-ground]], [[walk-through-ladder]] — Fixed.
+
+## Bugs found
+
+none новых на закрытии. Follow-up в [[Sprint 9 — First playable loop]]: [[events-match-ground-while-on-slab]].

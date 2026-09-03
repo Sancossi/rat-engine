@@ -3,7 +3,7 @@ type: task
 area: Game
 status: Not started
 task_type: Feature
-sprint: Sprint 0
+sprint: Sprint 9
 roadmap: Content vertical slice
 due:
 tags: [task]
