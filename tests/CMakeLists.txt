@@ -32,6 +32,7 @@ add_executable(rat_tests
   inventory_list_test.cpp
   map_document_test.cpp
   map_loader_test.cpp
+  move_route_test.cpp
   player_jump_test.cpp
   player_test.cpp
   play_se_test.cpp

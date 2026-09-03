@@ -119,6 +119,39 @@ std::vector<Command> parse_commands(const json& node) {
   return commands;
 }
 
+RouteStep parse_route_step(const json& node) {
+  RouteStep step;
+  const std::string op = node.at("op").get<std::string>();
+  if (op == "move") {
+    step.op = RouteStepOp::Move;
+    step.dir = parse_ramp_direction(node.at("dir").get<std::string>());
+  } else if (op == "wait") {
+    step.op = RouteStepOp::Wait;
+    step.frames = node.at("frames").get<int>();
+    if (step.frames < 0) {
+      throw std::runtime_error("route wait frames must be >= 0");
+    }
+  } else if (op == "turn") {
+    step.op = RouteStepOp::Turn;
+    step.dir = parse_ramp_direction(node.at("dir").get<std::string>());
+  } else {
+    throw std::runtime_error("unknown route step op: " + op);
+  }
+  return step;
+}
+
+std::vector<RouteStep> parse_route(const json& node) {
+  if (!node.is_array()) {
+    throw std::runtime_error("set_move_route route must be an array");
+  }
+  std::vector<RouteStep> route;
+  route.reserve(node.size());
+  for (const auto& item : node) {
+    route.push_back(parse_route_step(item));
+  }
+  return route;
+}
+
 Command parse_command(const json& node) {
   Command command;
   const std::string op = node.at("op").get<std::string>();
@@ -170,6 +203,12 @@ Command parse_command(const json& node) {
     command.text = node.at("id").get<std::string>();
     if (command.text.empty()) {
       throw std::runtime_error("play_se id must not be empty");
+    }
+  } else if (op == "set_move_route") {
+    command.op = CommandOp::SetMoveRoute;
+    command.through = node.value("through", false);
+    if (node.contains("route")) {
+      command.route = parse_route(node.at("route"));
     }
   } else if (op == "comment") {
     command.op = CommandOp::Comment;
@@ -641,6 +680,18 @@ json dump_condition(const Condition& condition) {
 
 json dump_commands(const std::vector<Command>& commands);
 
+json dump_route_step(const RouteStep& step) {
+  switch (step.op) {
+    case RouteStepOp::Move:
+      return json{{"op", "move"}, {"dir", ramp_direction_to_string(step.dir)}};
+    case RouteStepOp::Wait:
+      return json{{"op", "wait"}, {"frames", step.frames}};
+    case RouteStepOp::Turn:
+      return json{{"op", "turn"}, {"dir", ramp_direction_to_string(step.dir)}};
+  }
+  return json{{"op", "wait"}, {"frames", 0}};
+}
+
 json dump_command(const Command& command) {
   switch (command.op) {
     case CommandOp::ShowText:
@@ -677,6 +728,13 @@ json dump_command(const Command& command) {
                   {"key_item", command.key_item}};
     case CommandOp::PlaySE:
       return json{{"op", "play_se"}, {"id", command.text}};
+    case CommandOp::SetMoveRoute: {
+      json route = json::array();
+      for (const RouteStep& step : command.route) {
+        route.push_back(dump_route_step(step));
+      }
+      return json{{"op", "set_move_route"}, {"through", command.through}, {"route", std::move(route)}};
+    }
     case CommandOp::Comment:
       return json{{"op", "comment"}, {"text", command.text}};
   }

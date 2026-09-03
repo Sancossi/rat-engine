@@ -41,6 +41,8 @@ constexpr float kPinR = 7.0f;
       return "change_items";
     case CommandOp::PlaySE:
       return "play_se";
+    case CommandOp::SetMoveRoute:
+      return "set_move_route";
     case CommandOp::Comment:
       return "comment";
   }

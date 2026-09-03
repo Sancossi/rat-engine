@@ -829,6 +829,9 @@ void EditorApp::simulate(float dt) {
     log(*logger_, LogLevel::Warn, "sim", "simulation catch-up budget exceeded");
   }
   engine_->set_player(session_.player());
+  if (app_mode_ == AppMode::Play) {
+    engine_->set_event_markers(session_.events().event_markers());
+  }
   engine_->greybox().tick(dt);
 }
 

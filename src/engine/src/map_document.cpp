@@ -135,6 +135,13 @@ void validate_command(const Command& command, const std::string& path,
         add_error(issues, path, "play_se id must not be empty");
       }
       break;
+    case CommandOp::SetMoveRoute:
+      for (const RouteStep& step : command.route) {
+        if (step.op == RouteStepOp::Wait && step.frames < 0) {
+          add_error(issues, path, "set_move_route wait frames must be >= 0");
+        }
+      }
+      break;
     case CommandOp::Wait:
       if (command.frames < 0) {
         add_error(issues, path, "wait frames must be >= 0");

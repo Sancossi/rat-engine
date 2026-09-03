@@ -44,6 +44,7 @@ enum class CommandOp {
   TransferPlayer,
   ChangeItems,
   PlaySE,
+  SetMoveRoute,
   Comment,
 };
 
@@ -57,6 +58,18 @@ enum class RampDirection {
   East,
   South,
   West,
+};
+
+enum class RouteStepOp {
+  Move,
+  Wait,
+  Turn,
+};
+
+struct RouteStep {
+  RouteStepOp op = RouteStepOp::Wait;
+  RampDirection dir = RampDirection::South;
+  int frames = 0;
 };
 
 struct HeightGrid {
@@ -149,6 +162,8 @@ struct Command {
   Condition branch_condition{};
   std::vector<Command> then_commands;
   std::vector<Command> else_commands;
+  bool through = false;
+  std::vector<RouteStep> route;
 };
 
 struct EventGraphNode {

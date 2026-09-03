@@ -41,11 +41,17 @@ enum class EventWhyNot {
 
 [[nodiscard]] const char* event_why_not_name(EventWhyNot reason);
 
+struct EventOverlay {
+  TileCoord tile;
+  RampDirection facing = RampDirection::South;
+};
+
 struct InterpreterDebug {
   std::string event_id;
   int page_index = -1;
   int command_index = -1;
   int wait_frames = 0;
+  int route_index = 0;
   bool waiting_message = false;
   bool parallel = false;
 };
@@ -80,6 +86,8 @@ class EventRuntime {
   [[nodiscard]] EventWhyNot why_not_fired(std::string_view event_id, const GameState& state,
                                             const PlayerBody& player, bool interact_pressed) const;
   [[nodiscard]] bool player_overlaps(const EventDef& event, const PlayerBody& player) const;
+  [[nodiscard]] std::optional<EventOverlay> event_overlay(std::string_view event_id) const;
+  [[nodiscard]] std::vector<Vec3> event_markers() const;
 
  private:
   struct StackFrame {
@@ -92,6 +100,8 @@ class EventRuntime {
     int page_index = -1;
     std::vector<StackFrame> stack;
     int wait_frames = 0;
+    int route_index = 0;
+    bool route_budget_paid = false;
     bool waiting_message = false;
     bool parallel = false;
     bool autorun = false;
@@ -116,9 +126,17 @@ class EventRuntime {
   void try_start_player_touch(GameState& state, const PlayerBody& player);
 
   void start_page(const EventDef& event, int page_index, bool parallel, bool autorun);
-  void step_interpreter(Interpreter& interp, GameState& state, int& command_budget);
+  void step_interpreter(Interpreter& interp, GameState& state, const PlayerBody& player,
+                         int& command_budget);
   bool exec_command(Interpreter& interp, GameState& state, const Command& command);
   [[nodiscard]] InterpreterDebug to_debug(const Interpreter& interp) const;
+  [[nodiscard]] const EventDef* find_event(std::string_view event_id) const;
+  [[nodiscard]] Vec3 live_event_xz(const EventDef& event) const;
+  EventOverlay& ensure_overlay(const EventDef& event);
+  [[nodiscard]] bool tile_on_map(TileCoord tile) const;
+  [[nodiscard]] bool dest_blocked(TileCoord dest, const PlayerBody& player, bool through,
+                                   bool parallel) const;
+  bool exec_set_move_route(Interpreter& interp, const Command& command, const PlayerBody& player);
 
   RuntimeMap runtime_map_;
   Audio* audio_ = nullptr;
@@ -135,6 +153,11 @@ class EventRuntime {
   std::vector<std::string> warnings_;
   std::unique_ptr<SurfaceQuery> surface_query_;
   CollisionWorld collision_world_{};
+  std::unordered_map<std::string, EventOverlay> overlays_;
+  bool have_last_player_ = false;
+  float last_player_x_ = 0.0f;
+  float last_player_y_ = 0.0f;
+  float last_player_z_ = 0.0f;
 };
 
 [[nodiscard]] EventWhyNot event_why_not_fired(const EventRuntime& runtime,

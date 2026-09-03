@@ -1,6 +1,7 @@
 #include "rat/event_runtime.hpp"
 
 #include "rat/audio.hpp"
+#include "rat/blocker_edit.hpp"
 #include "rat/collision.hpp"
 #include "rat/event_edit.hpp"
 #include "rat/gameplay_notify.hpp"
@@ -31,6 +32,30 @@ bool compare(int left, CompareOp op, int right) {
       return left >= right;
   }
   return false;
+}
+
+Aabb2 tile_aabb(TileCoord tile, float tile_size) {
+  const Vec3 center = tile_center_world(tile, tile_size);
+  const float h = 0.5f * tile_size;
+  return Aabb2{center.x - h, center.z - h, center.x + h, center.z + h};
+}
+
+TileCoord step_tile(TileCoord tile, RampDirection dir) {
+  switch (dir) {
+    case RampDirection::North:
+      --tile.z;
+      break;
+    case RampDirection::East:
+      ++tile.x;
+      break;
+    case RampDirection::South:
+      ++tile.z;
+      break;
+    case RampDirection::West:
+      --tile.x;
+      break;
+  }
+  return tile;
 }
 
 }  // namespace
@@ -73,6 +98,8 @@ void EventRuntime::clear() {
   warnings_.clear();
   surface_query_.reset();
   collision_world_ = {};
+  overlays_.clear();
+  have_last_player_ = false;
 }
 
 bool EventRuntime::player_input_blocked() const {
@@ -150,13 +177,28 @@ int EventRuntime::select_page(const EventDef& event, const GameState& state) con
 }
 
 Aabb2 EventRuntime::event_bounds(const EventDef& event) const {
+  const auto overlay_it = overlays_.find(event.id);
+  const bool has_overlay = overlay_it != overlays_.end();
+  const float tile_size =
+      runtime_map_.data.tile_size > 0.0f ? runtime_map_.data.tile_size : 1.0f;
+
+  if (event.tile.has_value() && event.volume.has_value()) {
+    Aabb2 volume = *event.volume;
+    if (has_overlay) {
+      const int dx = overlay_it->second.tile.x - event.tile->x;
+      const int dz = overlay_it->second.tile.z - event.tile->z;
+      volume = translate_aabb_on_grid(volume, dx, dz, tile_size);
+    }
+    return volume;
+  }
+  if (has_overlay) {
+    return tile_aabb(overlay_it->second.tile, tile_size);
+  }
   if (event.volume.has_value()) {
     return *event.volume;
   }
   if (event.tile.has_value()) {
-    const Vec3 center = tile_center_world(*event.tile, runtime_map_.data.tile_size);
-    const float h = 0.5f * runtime_map_.data.tile_size;
-    return Aabb2{center.x - h, center.z - h, center.x + h, center.z + h};
+    return tile_aabb(*event.tile, tile_size);
   }
   return Aabb2{0, 0, 0, 0};
 }
@@ -166,15 +208,7 @@ SurfaceSample EventRuntime::event_surface_sample(const EventDef& event) const {
   if (!surface_query_) {
     return sample;
   }
-  Vec3 center{};
-  if (event.tile.has_value()) {
-    center = tile_center_world(*event.tile, runtime_map_.data.tile_size);
-  } else if (event.volume.has_value()) {
-    center.x = (event.volume->min_x + event.volume->max_x) * 0.5f;
-    center.z = (event.volume->min_z + event.volume->max_z) * 0.5f;
-  } else {
-    return sample;
-  }
+  const Vec3 center = live_event_xz(event);
   return surface_query_->sample(center.x, center.z);
 }
 
@@ -203,13 +237,7 @@ bool EventRuntime::event_height_matches_player(const EventDef& event, const Play
     player_ramp_index = player_support->ramp_index;
   }
 
-  Vec3 event_xz{};
-  if (event.tile.has_value()) {
-    event_xz = tile_center_world(*event.tile, runtime_map_.data.tile_size);
-  } else if (event.volume.has_value()) {
-    event_xz.x = (event.volume->min_x + event.volume->max_x) * 0.5f;
-    event_xz.z = (event.volume->min_z + event.volume->max_z) * 0.5f;
-  }
+  Vec3 event_xz = live_event_xz(event);
   // Probe at authored y when set so a loft bind hits the slab; otherwise
   // height-grid Y skips loft boxes (feet_y < y_lo).
   const float event_probe_y = event.y.value_or(grid_event.y);
@@ -250,8 +278,8 @@ bool EventRuntime::action_in_range(const EventDef& event, const PlayerBody& play
   if (!event_height_matches_player(event, player)) {
     return false;
   }
-  if (event.tile.has_value()) {
-    const Vec3 center = tile_center_world(*event.tile, runtime_map_.data.tile_size);
+  if (event.tile.has_value() || overlays_.contains(event.id)) {
+    const Vec3 center = live_event_xz(event);
     const float dx = player.x - center.x;
     const float dz = player.z - center.z;
     constexpr float kActionRadiusInTiles = 0.65f;
@@ -344,6 +372,12 @@ void EventRuntime::try_start_player_touch(GameState& state, const PlayerBody& pl
   if (foreground_.has_value() || active_message_.has_value()) {
     return;
   }
+  PlayerBody last_player = player;
+  if (have_last_player_) {
+    last_player.x = last_player_x_;
+    last_player.y = last_player_y_;
+    last_player.z = last_player_z_;
+  }
   for (const EventDef& event : runtime_map_.data.events) {
     const bool inside = player_overlaps(event, player);
     const bool was_inside = touch_inside_.contains(event.id);
@@ -353,6 +387,9 @@ void EventRuntime::try_start_player_touch(GameState& state, const PlayerBody& pl
       touch_inside_.erase(event.id);
     }
     if (!(inside && !was_inside)) {
+      continue;
+    }
+    if (have_last_player_ && player_overlaps(event, last_player)) {
       continue;
     }
     const int page_index = select_page(event, state);
@@ -414,13 +451,16 @@ bool EventRuntime::exec_command(Interpreter& interp, GameState& state, const Com
         audio_->play_sfx(command.text);
       }
       return true;
+    case CommandOp::SetMoveRoute:
+      return true;
     case CommandOp::Comment:
       return true;
   }
   return true;
 }
 
-void EventRuntime::step_interpreter(Interpreter& interp, GameState& state, int& command_budget) {
+void EventRuntime::step_interpreter(Interpreter& interp, GameState& state,
+                                    const PlayerBody& player, int& command_budget) {
   if (interp.finished) {
     return;
   }
@@ -444,6 +484,25 @@ void EventRuntime::step_interpreter(Interpreter& interp, GameState& state, int& 
     }
 
     const Command& command = (*frame.commands)[frame.index];
+    if (command.op == CommandOp::SetMoveRoute) {
+      if (!interp.route_budget_paid) {
+        ++last_commands_executed_;
+        if (interp.parallel) {
+          --command_budget;
+          ++last_parallel_commands_executed_;
+        }
+        interp.route_budget_paid = true;
+      }
+      const bool done = exec_set_move_route(interp, command, player);
+      if (done) {
+        ++frame.index;
+        interp.route_index = 0;
+        interp.route_budget_paid = false;
+        continue;
+      }
+      return;
+    }
+
     ++frame.index;
     ++last_commands_executed_;
     if (interp.parallel) {
@@ -484,7 +543,7 @@ void EventRuntime::update(GameState& state, const PlayerBody& player, bool inter
 
   if (foreground_.has_value()) {
     int unlimited = 100000;
-    step_interpreter(*foreground_, state, unlimited);
+    step_interpreter(*foreground_, state, player, unlimited);
     if (foreground_->finished) {
       foreground_.reset();
     }
@@ -496,7 +555,7 @@ void EventRuntime::update(GameState& state, const PlayerBody& player, bool inter
       warnings_.push_back("Parallel command budget exhausted (32/frame)");
       break;
     }
-    step_interpreter(interp, state, budget);
+    step_interpreter(interp, state, player, budget);
   }
 
   parallels_.erase(std::remove_if(parallels_.begin(), parallels_.end(),
@@ -542,6 +601,151 @@ void EventRuntime::update(GameState& state, const PlayerBody& player, bool inter
   }
 
   active_parallel_count_ = static_cast<int>(parallels_.size());
+  last_player_x_ = player.x;
+  last_player_y_ = player.y;
+  last_player_z_ = player.z;
+  have_last_player_ = true;
+}
+
+const EventDef* EventRuntime::find_event(std::string_view event_id) const {
+  for (const EventDef& event : runtime_map_.data.events) {
+    if (event.id == event_id) {
+      return &event;
+    }
+  }
+  return nullptr;
+}
+
+Vec3 EventRuntime::live_event_xz(const EventDef& event) const {
+  const auto overlay_it = overlays_.find(event.id);
+  if (overlay_it != overlays_.end()) {
+    return tile_center_world(overlay_it->second.tile, runtime_map_.data.tile_size);
+  }
+  if (event.tile.has_value()) {
+    return tile_center_world(*event.tile, runtime_map_.data.tile_size);
+  }
+  if (event.volume.has_value()) {
+    return Vec3{(event.volume->min_x + event.volume->max_x) * 0.5f, 0.0f,
+                 (event.volume->min_z + event.volume->max_z) * 0.5f};
+  }
+  return {};
+}
+
+EventOverlay& EventRuntime::ensure_overlay(const EventDef& event) {
+  const auto it = overlays_.find(event.id);
+  if (it != overlays_.end()) {
+    return it->second;
+  }
+  EventOverlay pose;
+  if (event.tile.has_value()) {
+    pose.tile = *event.tile;
+  }
+  return overlays_[event.id] = pose;
+}
+
+bool EventRuntime::tile_on_map(TileCoord tile) const {
+  const MapData& map = runtime_map_.data;
+  if (map.width > 0 && map.height > 0) {
+    return tile.x >= 0 && tile.z >= 0 && tile.x < map.width && tile.z < map.height;
+  }
+  const HeightGrid& grid = map.height_grid;
+  if (grid.width <= 0 || grid.height <= 0) {
+    return true;
+  }
+  const int local_x = tile.x - grid.origin_x;
+  const int local_z = tile.z - grid.origin_z;
+  return local_x >= 0 && local_z >= 0 && local_x < grid.width && local_z < grid.height;
+}
+
+bool EventRuntime::dest_blocked(TileCoord dest, const PlayerBody& player, bool through,
+                                 bool parallel) const {
+  if (!tile_on_map(dest)) {
+    return true;
+  }
+  if (through) {
+    return false;
+  }
+
+  const float tile_size =
+      runtime_map_.data.tile_size > 0.0f ? runtime_map_.data.tile_size : 1.0f;
+  const Aabb2 dest_box = tile_aabb(dest, tile_size);
+  const Vec3 center = tile_center_world(dest, tile_size);
+  float feet_y = 0.0f;
+  if (surface_query_) {
+    feet_y = surface_query_->sample(center.x, center.z).y;
+  }
+  const std::optional<SolidSupport> support =
+      query_solid_support(collision_world_, center.x, center.z, 0.0f, feet_y, 1.0e6f);
+  if (support.has_value()) {
+    feet_y = support->y;
+  }
+
+  if (parallel && circle_overlaps_aabb2(player.x, player.z, player.half_extent, dest_box)) {
+    return true;
+  }
+
+  for (const BlockerDef& blocker : runtime_map_.data.blockers) {
+    if (!blocker_blocks_feet(blocker, feet_y)) {
+      continue;
+    }
+    if (aabb_overlap(dest_box, blocker.bounds)) {
+      return true;
+    }
+  }
+
+  CollisionBody probe;
+  probe.x = center.x;
+  probe.y = feet_y;
+  probe.z = center.z;
+  probe.radius = 0.5f * tile_size;
+  probe.height = kPlayerCylinderHeight;
+  if (cylinder_hits_fences(probe, collision_world_) ||
+      cylinder_hits_walls(probe, collision_world_)) {
+    return true;
+  }
+  return false;
+}
+
+bool EventRuntime::exec_set_move_route(Interpreter& interp, const Command& command,
+                                         const PlayerBody& player) {
+  const EventDef* event = find_event(interp.event_id);
+  if (event == nullptr) {
+    return true;
+  }
+  if (!event->tile.has_value()) {
+    warnings_.push_back("set_move_route skipped volume-only event " + event->id);
+    return true;
+  }
+  if (interp.route_index >= static_cast<int>(command.route.size())) {
+    return true;
+  }
+
+  const RouteStep& step = command.route[static_cast<std::size_t>(interp.route_index)];
+  switch (step.op) {
+    case RouteStepOp::Wait:
+      interp.wait_frames = step.frames;
+      ++interp.route_index;
+      return false;
+    case RouteStepOp::Turn: {
+      EventOverlay& pose = ensure_overlay(*event);
+      pose.facing = step.dir;
+      ++interp.route_index;
+      return false;
+    }
+    case RouteStepOp::Move: {
+      EventOverlay& pose = ensure_overlay(*event);
+      const TileCoord dest = step_tile(pose.tile, step.dir);
+      if (dest_blocked(dest, player, command.through, interp.parallel)) {
+        return false;
+      }
+      pose.tile = dest;
+      pose.facing = step.dir;
+      ++interp.route_index;
+      return false;
+    }
+  }
+  ++interp.route_index;
+  return false;
 }
 
 InterpreterDebug EventRuntime::to_debug(const Interpreter& interp) const {
@@ -552,9 +756,34 @@ InterpreterDebug EventRuntime::to_debug(const Interpreter& interp) const {
     debug.command_index = static_cast<int>(interp.stack.back().index);
   }
   debug.wait_frames = interp.wait_frames;
+  debug.route_index = interp.route_index;
   debug.waiting_message = interp.waiting_message;
   debug.parallel = interp.parallel;
   return debug;
+}
+
+std::optional<EventOverlay> EventRuntime::event_overlay(std::string_view event_id) const {
+  const auto it = overlays_.find(std::string(event_id));
+  if (it == overlays_.end()) {
+    return std::nullopt;
+  }
+  return it->second;
+}
+
+std::vector<Vec3> EventRuntime::event_markers() const {
+  std::vector<Vec3> markers;
+  markers.reserve(runtime_map_.data.events.size());
+  for (const EventDef& event : runtime_map_.data.events) {
+    if (!event.tile.has_value() && !event.volume.has_value()) {
+      continue;
+    }
+    Vec3 marker = live_event_xz(event);
+    if (surface_query_) {
+      marker.y = surface_query_->sample(marker.x, marker.z).y;
+    }
+    markers.push_back(marker);
+  }
+  return markers;
 }
 
 std::vector<std::string> EventRuntime::overlapping_event_ids(const PlayerBody& player) const {
