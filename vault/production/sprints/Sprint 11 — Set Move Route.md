@@ -1,9 +1,9 @@
 ---
 type: sprint
-status: In progress
+status: Done
 dates: 2026-09-03/2026-10-01
 goal: Set Move Route — NPC walk on the grid, visible on grey_yard
-current: true
+current: false
 tags: [sprint]
 ---
 
@@ -22,3 +22,11 @@ DoD:
 Порядок:
 
 - [[feat: Set Move Route (basic)]] → [[feat: Grey yard move route]] → [[feat: Event marker uses bind Y]]
+
+## Итог
+
+DoD выполнен 2026-09-03. `set_move_route` + overlay; `yard_walker` Parallel на (−4, −1); маркеры с `EventDef.y` на плите. Schema: [[chore: Document set_move_route in map schema]].
+
+## Bugs found
+
+none новых на закрытии.

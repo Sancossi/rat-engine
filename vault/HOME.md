@@ -25,6 +25,6 @@ tags: [hub]
 
 ## Текущий спринт
 
-Смотри заметку спринта с `current: true`: [[Sprint 11 — Set Move Route]]. Последний закрытый — [[Sprint 10 — Grey yard content]].
+Текущего спринта нет (`current: true`). Последний закрытый — [[Sprint 11 — Set Move Route]].
 
 Доска: [[Task board]] — виды **Current sprint** (канбан спринта) и **In progress** (код / ревью / blocked). Статус в YAML заметки = колонка на доске.

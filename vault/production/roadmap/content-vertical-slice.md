@@ -12,6 +12,6 @@ notion_id: 3ccf3827-36cc-81d4-aab8-c510c4394b0d
 
 Locked session: [[Define vertical slice scope]] (не дублировать spec здесь).
 
-**In:** карта `grey_yard`; cog-квест (foreman + `rusty_cog`); третий NPC (`apprentice`); loft event `y` (`loft_plank`); field action = Climb лофта + прыжок на gantry; один Edit-жест (перетащить crate-blocker в Play без рестарта); moodboard lock в [[Art Direction]].
+**In:** карта `grey_yard`; cog-квест (foreman + `rusty_cog`); третий NPC (`apprentice`); loft event `y` (`loft_plank`); `yard_walker` Parallel `set_move_route`; field action = Climb лофта + прыжок на gantry; один Edit-жест (перетащить crate-blocker в Play без рестарта); moodboard lock в [[Art Direction]].
 
-**Out:** successor JSON, Set Move Route runtime, field physics, battle, meshes-required.
+**Out:** successor JSON, field physics, battle, meshes-required.

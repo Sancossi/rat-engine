@@ -1,7 +1,7 @@
 ---
 type: task
 area: Engine
-status: Not started
+status: Done
 task_type: Chore
 sprint: Sprint 11
 due:
@@ -15,3 +15,11 @@ Intent: `docs/schemas/map-event.schema.md` enumerates commands (`play_se` is the
 Acceptance: одна строка в таблице Commands: `op`, `through`, `route[]` (`move`/`wait`/`turn`). Не второй research.
 
 Origin: [[feat: Set Move Route (basic)]] (review Minor).
+
+## Resolution
+
+Строка `set_move_route` в таблице Commands: `through`, `route[]` (`move`/`wait`/`turn`). Wiki-only, без ревьюера. Verify: `docs/schemas/map-event.schema.md`.
+
+## Bugs found
+
+none.
