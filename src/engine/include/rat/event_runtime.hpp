@@ -1,5 +1,6 @@
 #pragma once
 
+#include "rat/collision.hpp"
 #include "rat/game_state.hpp"
 #include "rat/map_data.hpp"
 #include "rat/map_document.hpp"
@@ -133,6 +134,7 @@ class EventRuntime {
   int last_commands_executed_ = 0;
   std::vector<std::string> warnings_;
   std::unique_ptr<SurfaceQuery> surface_query_;
+  CollisionWorld collision_world_{};
 };
 
 [[nodiscard]] EventWhyNot event_why_not_fired(const EventRuntime& runtime,

@@ -39,6 +39,7 @@ void EventRuntime::load(const RuntimeMap& runtime) {
   clear();
   runtime_map_ = runtime;
   surface_query_ = std::make_unique<SurfaceQuery>(runtime_map_.data);
+  collision_world_ = bake_collision_world(runtime_map_.data, *surface_query_);
 }
 
 MapCompileResult EventRuntime::load(const MapData& map) {
@@ -71,6 +72,7 @@ void EventRuntime::clear() {
   last_commands_executed_ = 0;
   warnings_.clear();
   surface_query_.reset();
+  collision_world_ = {};
 }
 
 bool EventRuntime::player_input_blocked() const {
@@ -182,20 +184,52 @@ bool EventRuntime::event_height_matches_player(const EventDef& event, const Play
   }
   const float tile = runtime_map_.data.tile_size > 0.0f ? runtime_map_.data.tile_size : 1.0f;
   const float tolerance = kEventHeightToleranceTiles * tile;
-  const SurfaceSample player_surface = surface_query_->sample(player.x, player.z);
-  const SurfaceSample event_surface = event_surface_sample(event);
-  if (player_surface.surface_id != event_surface.surface_id) {
+  const SurfaceSample grid_event = event_surface_sample(event);
+  const SurfaceSample grid_player = surface_query_->sample(player.x, player.z);
+  if (grid_player.surface_id != grid_event.surface_id) {
     return false;
   }
-  if (player.y + kPlayerBelowGroundEpsilon < player_surface.y) {
+
+  const float radius = player.half_extent > 0.0f ? player.half_extent : 0.4f;
+  const std::optional<SolidSupport> player_support =
+      query_solid_support(collision_world_, player.x, player.z, radius, player.y, 1.0e6f);
+
+  float player_standing_y = grid_player.y;
+  bool player_on_ramp = grid_player.on_ramp;
+  int player_ramp_index = grid_player.ramp_index;
+  if (player_support.has_value()) {
+    player_standing_y = player_support->y;
+    player_on_ramp = player_support->on_ramp;
+    player_ramp_index = player_support->ramp_index;
+  }
+
+  Vec3 event_xz{};
+  if (event.tile.has_value()) {
+    event_xz = tile_center_world(*event.tile, runtime_map_.data.tile_size);
+  } else if (event.volume.has_value()) {
+    event_xz.x = (event.volume->min_x + event.volume->max_x) * 0.5f;
+    event_xz.z = (event.volume->min_z + event.volume->max_z) * 0.5f;
+  }
+  const std::optional<SolidSupport> event_support =
+      query_solid_support(collision_world_, event_xz.x, event_xz.z, 0.0f, grid_event.y, 1.0e6f);
+
+  float event_y = grid_event.y;
+  bool event_on_ramp = grid_event.on_ramp;
+  int event_ramp_index = grid_event.ramp_index;
+  if (event_support.has_value()) {
+    event_y = event_support->y;
+    event_on_ramp = event_support->on_ramp;
+    event_ramp_index = event_support->ramp_index;
+  }
+
+  if (player.y + kPlayerBelowGroundEpsilon < player_standing_y) {
     return false;
   }
-  if (player_surface.on_ramp && event_surface.on_ramp &&
-      player_surface.ramp_index == event_surface.ramp_index &&
-      player_surface.ramp_index >= 0) {
+  if (player_on_ramp && event_on_ramp && player_ramp_index == event_ramp_index &&
+      player_ramp_index >= 0) {
     return true;
   }
-  return std::abs(player_surface.y - event_surface.y) <= tolerance;
+  return std::abs(player_standing_y - event_y) <= tolerance;
 }
 
 bool EventRuntime::player_overlaps(const EventDef& event, const PlayerBody& player) const {
