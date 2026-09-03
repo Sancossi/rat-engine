@@ -1,7 +1,7 @@
 ---
 type: task
 area: Game
-status: In progress
+status: In review
 task_type: Feature
 sprint: Sprint 9
 roadmap: Content vertical slice
