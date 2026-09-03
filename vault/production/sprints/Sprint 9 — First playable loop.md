@@ -1,6 +1,6 @@
 ---
 type: sprint
-status: In progress
+status: Done
 dates: 2026-09-03/2026-09-16
 goal: First playable loop — stacked-floor events, persist a session, inventory UI, lock vertical-slice scope
 current: true
@@ -23,3 +23,11 @@ DoD:
 Порядок:
 
 - [[events-match-ground-while-on-slab]] → [[feat: Save load game file]] → [[feat: Inventory list UI]] → [[collect-5-reference-games]] → [[define-vertical-slice-scope]]
+
+## Итог
+
+DoD выполнен 2026-09-03. Ground-event не fire с плиты; Esc save/load (`saves/slot1.ratsave`); Play **I** — RM-список; пятёрка референсов; сессия = `grey_yard` ([[Define vertical slice scope]]).
+
+## Bugs found
+
+none новых на закрытии. Backlog: [[feat: Loft event height]].

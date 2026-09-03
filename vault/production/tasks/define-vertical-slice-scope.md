@@ -1,7 +1,7 @@
 ---
 type: task
 area: Game
-status: In review
+status: Done
 task_type: Feature
 sprint: Sprint 9
 roadmap: Content vertical slice
@@ -91,3 +91,11 @@ Related: [[GDD]], [[S1: Acceptance playthrough checklist]], [[Sprint 9 — First
 - Контент 2-го NPC / scare-blocker — только если остаёмся на `grey_yard`, отдельная task, не эта карточка.
 - [[feat: Loft event height]] — когда понадобится триггер на плите.
 - [[Art direction moodboard pass]] — look-lock FF6 / CC после playable loop.
+
+## Resolution
+
+Срез = `grey_yard`, 5–15 мин: cog-квест (foreman + scrap/`rusty_cog` + I), Climb лофта, прыжок на gantry, Esc save, один Edit-жест (F2 → отодвинуть crate **на два тайла** north → F2 Play). GDD 2–3 NPC / scare-blocker — не в этом lock. Verify: пройти beats 1–6 и жест crate; читать эту карточку. Review: Approved.
+
+## Bugs found
+
+none.
