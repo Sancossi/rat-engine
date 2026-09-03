@@ -1,7 +1,7 @@
 ---
 type: task
 area: Engine
-status: In review
+status: Done
 task_type: Feature
 sprint:
 due:
@@ -15,3 +15,11 @@ Intent: в Edit один плоский набор tools и все панели 
 Acceptance: Inspector переключатель Terrain | Objects | Events. Смена подрежима сбрасывает tool в Select и несовместимый selection. Terrain: cube/fence/slab + height/ramps, pick не выбирает events/blockers. Objects: blocker/ladder + blocker panel и ladder UI (вынести из terrain). Events: только events. Ladder pick в 3D не делать. Не путать с Play/Edit (`AppMode`).
 
 Origin: chat 2026-09-03 (план Edit submodes и окно графа). Follow-up: [[feat: Event names in edit viewport]], [[feat: Event RMB create edit copy delete]], [[feat: Event graph window pages and conditions]].
+
+## Resolution
+
+`EditSubmode` {Terrain, Objects, Events} фильтрует pick и tool row. Terrain кликает сквозь blockers/events (Place cube/fence/slab). Objects — только blockers + ladder panel. Events — только events. Смена подрежима сбрасывает Select и чужой selection. Verify: F2 → Inspector Terrain|Objects|Events; `.\build\tests\rat_tests.exe "[viewport_edit]"`. Review: Approved.
+
+## Bugs found
+
+none.
