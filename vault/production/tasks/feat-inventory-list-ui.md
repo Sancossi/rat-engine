@@ -1,7 +1,7 @@
 ---
 type: task
 area: Engine
-status: In review
+status: Done
 task_type: Feature
 sprint: Sprint 9
 due:
@@ -15,3 +15,11 @@ Intent: предметы уже в `GameState` и `change_items` (квест `ru
 Acceptance: открыть инвентарь в Play; видны id / quantity / key item; закрыть той же клавишей. Не экип, не drag-drop. Headless не обязателен для ImGui; состояние читается из `GameState`.
 
 Origin: [[GDD]] inventory. Взято в [[Sprint 9 — First playable loop]]. Related: [[S1: GameState switches/vars/inventory/position]].
+
+## Resolution
+
+Play: **I** открывает RM-like список `GameState.inventory()` (`id  xN`, `key`). Пустой — `(empty)`. Повторное I закрывает. Escape остаётся паузой; пока список открыт, симуляция не тикает. Verify: Play `grey_yard`, взять `rusty_cog`, нажать I; `.\build\tests\rat_tests.exe "[inventory]"`. Review: Approved.
+
+## Bugs found
+
+none.
