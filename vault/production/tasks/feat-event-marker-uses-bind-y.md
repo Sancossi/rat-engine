@@ -3,7 +3,7 @@ type: task
 area: Engine
 status: Not started
 task_type: Feature
-sprint:
+sprint: Sprint 11
 due:
 tags: [task]
 ---
@@ -14,4 +14,4 @@ Intent: greybox event marker stays at y=0 even when `EventDef.y` binds a loft. E
 
 Acceptance: selected event with `y` set draws/picks at that height; unbound events stay on the grid sample.
 
-Origin: [[feat: Loft event height]] (review Minor: `event_edit.cpp` marker).
+Origin: [[feat: Loft event height]] (review Minor: `event_edit.cpp` marker). Взято в [[Sprint 11 — Set Move Route]].
