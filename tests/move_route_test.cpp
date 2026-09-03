@@ -639,3 +639,47 @@ TEST_CASE("edge fence without through blocks dest cell", "[unit][route]") {
   REQUIRE(overlay.has_value());
   REQUIRE(overlay->tile.x == 0);
 }
+
+TEST_CASE("set_move_route steps onto height_grid tiles west of world origin", "[unit][route]") {
+  constexpr const char* kJson = R"({
+    "schema_version": 3,
+    "id": "neg_origin",
+    "width": 16,
+    "height": 16,
+    "tile_size": 1.0,
+    "height_grid": {
+      "origin_x": -4,
+      "origin_z": -3,
+      "width": 4,
+      "height": 4,
+      "ground_y": [0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0]
+    },
+    "events": [
+      {
+        "id": "npc",
+        "tile": { "x": -4, "z": -1 },
+        "pages": [
+          {
+            "trigger": "autorun",
+            "commands": [
+              { "op": "set_move_route", "through": false, "route": [ { "op": "move", "dir": "east" } ] }
+            ]
+          }
+        ]
+      }
+    ]
+  })";
+
+  const auto loaded = rat::load_map_from_string(kJson);
+  REQUIRE(loaded.ok);
+
+  rat::GameState state;
+  rat::EventRuntime runtime;
+  REQUIRE(runtime.load(loaded.map).ok);
+  tick(runtime, state, rat::PlayerBody{});
+
+  const auto overlay = runtime.event_overlay("npc");
+  REQUIRE(overlay.has_value());
+  REQUIRE(overlay->tile.x == -3);
+  REQUIRE(overlay->tile.z == -1);
+}

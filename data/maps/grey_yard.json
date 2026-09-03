@@ -195,6 +195,28 @@
       ]
     },
     {
+      "id": "yard_walker",
+      "tile": { "x": -4, "z": -1 },
+      "pages": [
+        {
+          "trigger": "parallel",
+          "conditions": [],
+          "commands": [
+            {
+              "op": "set_move_route",
+              "through": false,
+              "route": [
+                { "op": "move", "dir": "east" },
+                { "op": "wait", "frames": 20 },
+                { "op": "move", "dir": "west" },
+                { "op": "wait", "frames": 20 }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
       "id": "loft_plank",
       "tile": { "x": 0, "z": 4 },
       "y": 2.0,

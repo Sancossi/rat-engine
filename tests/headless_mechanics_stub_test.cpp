@@ -113,3 +113,45 @@ TEST_CASE("Headless mechanics: grey_yard apprentice talks without starting the c
   drain_messages(runtime, state, player);
   REQUIRE_FALSE(state.get_switch(1));
 }
+
+TEST_CASE("Headless mechanics: grey_yard walker leaves spawn on set_move_route",
+          "[mechanics][quest][route]") {
+#ifndef RAT_TEST_DATA_DIR
+#error RAT_TEST_DATA_DIR must be defined
+#endif
+  const auto loaded =
+      rat::load_map_from_file(std::string(RAT_TEST_DATA_DIR) + "/maps/grey_yard.json");
+  REQUIRE(loaded.ok);
+  REQUIRE_FALSE(loaded.map.events.empty());
+  REQUIRE(loaded.map.events.back().id == "loft_plank");
+  REQUIRE(loaded.map.events.back().y.has_value());
+  REQUIRE(*loaded.map.events.back().y == 2.0f);
+
+  rat::GameState state;
+  rat::EventRuntime runtime;
+  REQUIRE(runtime.load(loaded.map).ok);
+
+  rat::PlayerBody player;
+  player.x = 0.5f;
+  player.z = 0.5f;
+
+  drain_messages(runtime, state, player);
+  REQUIRE(state.get_variable(0) == 1);
+  REQUIRE_FALSE(state.get_switch(1));
+  REQUIRE_FALSE(state.get_switch(2));
+  REQUIRE_FALSE(state.has_item("rusty_cog"));
+
+  bool left_spawn = false;
+  for (int i = 0; i < 30; ++i) {
+    runtime.update(state, player, false, 1.0f / 60.0f);
+    const auto overlay = runtime.event_overlay("yard_walker");
+    if (overlay.has_value() && (overlay->tile.x != -4 || overlay->tile.z != -1)) {
+      left_spawn = true;
+      break;
+    }
+  }
+  REQUIRE(left_spawn);
+  REQUIRE_FALSE(state.get_switch(1));
+  REQUIRE_FALSE(state.get_switch(2));
+  REQUIRE_FALSE(state.has_item("rusty_cog"));
+}

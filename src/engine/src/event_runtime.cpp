@@ -645,16 +645,16 @@ EventOverlay& EventRuntime::ensure_overlay(const EventDef& event) {
 
 bool EventRuntime::tile_on_map(TileCoord tile) const {
   const MapData& map = runtime_map_.data;
+  const HeightGrid& grid = map.height_grid;
+  if (grid.width > 0 && grid.height > 0) {
+    const int local_x = tile.x - grid.origin_x;
+    const int local_z = tile.z - grid.origin_z;
+    return local_x >= 0 && local_z >= 0 && local_x < grid.width && local_z < grid.height;
+  }
   if (map.width > 0 && map.height > 0) {
     return tile.x >= 0 && tile.z >= 0 && tile.x < map.width && tile.z < map.height;
   }
-  const HeightGrid& grid = map.height_grid;
-  if (grid.width <= 0 || grid.height <= 0) {
-    return true;
-  }
-  const int local_x = tile.x - grid.origin_x;
-  const int local_z = tile.z - grid.origin_z;
-  return local_x >= 0 && local_z >= 0 && local_x < grid.width && local_z < grid.height;
+  return true;
 }
 
 bool EventRuntime::dest_blocked(TileCoord dest, const PlayerBody& player, bool through,
