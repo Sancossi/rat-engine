@@ -1,7 +1,7 @@
 ---
 type: bug
 area: Engine
-status: Investigating
+status: Fixed
 severity: Medium
 sprint: Sprint 9
 tags: [bug]
@@ -25,4 +25,12 @@ The ground-level event does not fire: player height does not match the event sur
 
 Origin: [[feat: Stacked surfaces caves and basements]] (final slice review). Взято в [[Sprint 9 — First playable loop]].
 
-Review: pending after `afc22e7` (`event_height_matches_player` uses solid support / `player.y`, not height-grid-only).
+Follow-up: [[feat: Loft event height]]
+
+## Resolution
+
+`EventRuntime` печёт `CollisionWorld` на load. Стоячая высота — `query_solid_support` у ног; Y события — solid в XZ тайла с пробы на height-grid/ramp, поэтому плита сверху не перетягивает ground-event. Verify: Play — встать на плиту над тайловым событием (не fire), пройти землю под той же клеткой (fire); `.\build\tests\rat_tests.exe "[event]"`. Review: Approved.
+
+## Bugs found
+
+none.
