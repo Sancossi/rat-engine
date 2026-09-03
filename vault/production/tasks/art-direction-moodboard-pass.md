@@ -1,7 +1,7 @@
 ---
 type: task
 area: Game
-status: In progress
+status: In review
 task_type: Chore
 sprint: Sprint 10
 roadmap: First playable loop
