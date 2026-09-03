@@ -174,6 +174,17 @@ struct EventGraphNode {
   bool bool_value = false;
   int frames = 0;
   Condition branch_condition{};
+  int int_value = 0;
+  char self_switch = 'A';
+  std::string map_id;
+  float x = 0.0f;
+  float y = 0.0f;
+  float z = 0.0f;
+  std::string item_id;
+  int item_delta = 0;
+  bool key_item = false;
+  bool through = false;
+  std::vector<RouteStep> route;
 };
 
 struct EventGraphEdge {

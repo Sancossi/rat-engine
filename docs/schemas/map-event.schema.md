@@ -175,17 +175,24 @@ At least one of `tile` / `volume` should be present for interactable events.
 | Field | Type | Required | Notes |
 |-------|------|----------|-------|
 | `id` | string | yes | Unique on the page graph |
-| `kind` | string | yes | MVP: `show_text`, `control_switch`, `conditional_branch`, `wait` |
+| `kind` | string | yes | Command kind (see table). Unknown kind is a compile/validation error, not a Comment. |
 | `params` | object | no | Kind-specific payload |
 
-MVP `kind` → `params`:
+`kind` → `params` (mirror command JSON names where possible):
 
 | `kind` | `params` | Compiles to `Command.op` |
 |--------|----------|--------------------------|
 | `show_text` | `text` (string) | `show_text` |
 | `control_switch` | `id` (uint), `value` (bool) | `control_switch` |
+| `control_variable` | `id` (uint), `value` (int) | `control_variable` |
+| `control_self_switch` | `key` (`A`-`D`), `value` (bool) | `control_self_switch` |
 | `conditional_branch` | `condition` (one condition object) | `conditional_branch` with nested `then` / `else` |
 | `wait` | `frames` (int ≥ 0) | `wait` |
+| `transfer_player` | `map_id` (string), `x`, `y`, `z` (numbers) | `transfer_player` |
+| `change_items` | `id` (string item), `delta` (int), optional `key_item` (bool) | `change_items` |
+| `play_se` | `id` (string clip id; stored on the node as `text`) | `play_se` |
+| `set_move_route` | optional `through` (bool, default false); `route` (array of steps, same shape as the command) | `set_move_route` |
+| `comment` | `text` (string) | `comment` |
 
 #### Edge
 

@@ -19,6 +19,9 @@ struct EventGraphCanvasState {
   std::string selected_edge_to;
   std::optional<std::string> selected_edge_branch;
   std::unordered_map<std::string, std::pair<float, float>> pos;
+  float pan_x = 0.0f;
+  float pan_y = 0.0f;
+  float zoom = 1.0f;
 };
 
 void draw_event_graph_canvas(EditorDocument& document, EventGraphCanvasState& canvas,

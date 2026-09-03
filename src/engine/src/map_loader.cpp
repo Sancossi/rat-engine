@@ -317,20 +317,84 @@ EventGraphNode parse_graph_node(const json& node) {
     return graph_node;
   }
   const json& params = node.at("params");
-  if (params.contains("text")) {
-    graph_node.text = params.at("text").get<std::string>();
-  }
-  if (params.contains("id") && params.at("id").is_number_unsigned()) {
-    graph_node.switch_id = params.at("id").get<std::uint32_t>();
-  }
-  if (params.contains("value") && params.at("value").is_boolean()) {
-    graph_node.bool_value = params.at("value").get<bool>();
-  }
-  if (params.contains("frames")) {
-    graph_node.frames = params.at("frames").get<int>();
-  }
-  if (params.contains("condition")) {
-    graph_node.branch_condition = parse_condition(params.at("condition"));
+  const auto take_uint_id = [&]() {
+    if (params.contains("id") && params.at("id").is_number_unsigned()) {
+      graph_node.switch_id = params.at("id").get<std::uint32_t>();
+    }
+  };
+  const auto take_bool_value = [&]() {
+    if (params.contains("value") && params.at("value").is_boolean()) {
+      graph_node.bool_value = params.at("value").get<bool>();
+    }
+  };
+  if (graph_node.kind == "show_text" || graph_node.kind == "comment") {
+    if (params.contains("text")) {
+      graph_node.text = params.at("text").get<std::string>();
+    }
+  } else if (graph_node.kind == "control_switch") {
+    take_uint_id();
+    take_bool_value();
+  } else if (graph_node.kind == "control_variable") {
+    take_uint_id();
+    if (params.contains("value") && params.at("value").is_number_integer()) {
+      graph_node.int_value = params.at("value").get<int>();
+    }
+  } else if (graph_node.kind == "control_self_switch") {
+    if (params.contains("key") && params.at("key").is_string()) {
+      const std::string key = params.at("key").get<std::string>();
+      if (key.size() == 1 && key[0] >= 'A' && key[0] <= 'D') {
+        graph_node.self_switch = key[0];
+      }
+    }
+    take_bool_value();
+  } else if (graph_node.kind == "wait") {
+    if (params.contains("frames")) {
+      graph_node.frames = params.at("frames").get<int>();
+    }
+  } else if (graph_node.kind == "conditional_branch") {
+    if (params.contains("condition")) {
+      graph_node.branch_condition = parse_condition(params.at("condition"));
+    }
+  } else if (graph_node.kind == "transfer_player") {
+    if (params.contains("map_id")) {
+      graph_node.map_id = params.at("map_id").get<std::string>();
+    }
+    if (params.contains("x")) {
+      graph_node.x = params.at("x").get<float>();
+    }
+    graph_node.y = params.value("y", 0.0f);
+    if (params.contains("z")) {
+      graph_node.z = params.at("z").get<float>();
+    }
+  } else if (graph_node.kind == "change_items") {
+    if (params.contains("id") && params.at("id").is_string()) {
+      graph_node.item_id = params.at("id").get<std::string>();
+    }
+    if (params.contains("delta")) {
+      graph_node.item_delta = params.at("delta").get<int>();
+    }
+    graph_node.key_item = params.value("key_item", false);
+  } else if (graph_node.kind == "play_se") {
+    if (params.contains("id") && params.at("id").is_string()) {
+      graph_node.text = params.at("id").get<std::string>();
+    }
+  } else if (graph_node.kind == "set_move_route") {
+    graph_node.through = params.value("through", false);
+    if (params.contains("route")) {
+      graph_node.route = parse_route(params.at("route"));
+    }
+  } else {
+    if (params.contains("text")) {
+      graph_node.text = params.at("text").get<std::string>();
+    }
+    take_uint_id();
+    take_bool_value();
+    if (params.contains("frames")) {
+      graph_node.frames = params.at("frames").get<int>();
+    }
+    if (params.contains("condition")) {
+      graph_node.branch_condition = parse_condition(params.at("condition"));
+    }
   }
   return graph_node;
 }
@@ -751,15 +815,39 @@ json dump_commands(const std::vector<Command>& commands) {
 
 json dump_graph_node(const EventGraphNode& node) {
   json params = json::object();
-  if (node.kind == "show_text") {
+  if (node.kind == "show_text" || node.kind == "comment") {
     params["text"] = node.text;
   } else if (node.kind == "control_switch") {
     params["id"] = node.switch_id;
+    params["value"] = node.bool_value;
+  } else if (node.kind == "control_variable") {
+    params["id"] = node.switch_id;
+    params["value"] = node.int_value;
+  } else if (node.kind == "control_self_switch") {
+    params["key"] = std::string(1, node.self_switch);
     params["value"] = node.bool_value;
   } else if (node.kind == "wait") {
     params["frames"] = node.frames;
   } else if (node.kind == "conditional_branch") {
     params["condition"] = dump_condition(node.branch_condition);
+  } else if (node.kind == "transfer_player") {
+    params["map_id"] = node.map_id;
+    params["x"] = node.x;
+    params["y"] = node.y;
+    params["z"] = node.z;
+  } else if (node.kind == "change_items") {
+    params["id"] = node.item_id;
+    params["delta"] = node.item_delta;
+    params["key_item"] = node.key_item;
+  } else if (node.kind == "play_se") {
+    params["id"] = node.text;
+  } else if (node.kind == "set_move_route") {
+    json route = json::array();
+    for (const RouteStep& step : node.route) {
+      route.push_back(dump_route_step(step));
+    }
+    params["through"] = node.through;
+    params["route"] = std::move(route);
   } else {
     if (!node.text.empty()) {
       params["text"] = node.text;

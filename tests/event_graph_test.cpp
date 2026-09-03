@@ -309,7 +309,7 @@ TEST_CASE("invalid graph fails validate and document load", "[unit][event][graph
       "trigger": "action",
       "commands": [],
       "graph": {
-        "nodes": [ { "id": "n1", "kind": "play_se", "params": { "id": "beep" } } ],
+        "nodes": [ { "id": "n1", "kind": "not_a_kind", "params": { "id": "beep" } } ],
         "edges": [ { "from": "entry", "to": "n1" }, { "from": "n1", "to": "exit" } ]
       }
     })";
@@ -394,6 +394,199 @@ TEST_CASE("invalid graph fails validate and document load", "[unit][event][graph
     REQUIRE(has_error_mentioning(rat::validate_map_document(loaded.map), "then"));
     REQUIRE_FALSE(rat::load_map_document_from_string(json).ok);
   }
+}
+
+TEST_CASE("unknown graph kind is a compile error", "[unit][event][graph]") {
+  rat::EventGraph graph;
+  graph.nodes = {
+      rat::EventGraphNode{.id = "n1", .kind = "not_a_kind"},
+  };
+  graph.edges = {
+      rat::EventGraphEdge{.from = "entry", .to = "n1"},
+      rat::EventGraphEdge{.from = "n1", .to = "exit"},
+  };
+
+  const rat::EventGraphCompileResult compiled = rat::compile_event_graph(graph);
+  REQUIRE_FALSE(compiled.ok);
+  REQUIRE(has_error_mentioning(compiled.issues, "unknown"));
+}
+
+TEST_CASE("compile control_variable node", "[unit][event][graph]") {
+  rat::EventGraph graph;
+  graph.nodes = {
+      rat::EventGraphNode{.id = "var", .kind = "control_variable", .switch_id = 4, .int_value = 9},
+  };
+  graph.edges = {
+      rat::EventGraphEdge{.from = "entry", .to = "var"},
+      rat::EventGraphEdge{.from = "var", .to = "exit"},
+  };
+
+  const rat::EventGraphCompileResult compiled = rat::compile_event_graph(graph);
+  REQUIRE(compiled.ok);
+  REQUIRE(compiled.commands.size() == 1);
+  REQUIRE(compiled.commands[0].op == rat::CommandOp::ControlVariable);
+  REQUIRE(compiled.commands[0].id == 4);
+  REQUIRE(compiled.commands[0].int_value == 9);
+}
+
+TEST_CASE("compile control_self_switch node", "[unit][event][graph]") {
+  rat::EventGraph graph;
+  graph.nodes = {
+      rat::EventGraphNode{
+          .id = "ss", .kind = "control_self_switch", .bool_value = true, .self_switch = 'C'},
+  };
+  graph.edges = {
+      rat::EventGraphEdge{.from = "entry", .to = "ss"},
+      rat::EventGraphEdge{.from = "ss", .to = "exit"},
+  };
+
+  const rat::EventGraphCompileResult compiled = rat::compile_event_graph(graph);
+  REQUIRE(compiled.ok);
+  REQUIRE(compiled.commands.size() == 1);
+  REQUIRE(compiled.commands[0].op == rat::CommandOp::ControlSelfSwitch);
+  REQUIRE(compiled.commands[0].self_switch == 'C');
+  REQUIRE(compiled.commands[0].bool_value == true);
+}
+
+TEST_CASE("compile transfer_player node", "[unit][event][graph]") {
+  rat::EventGraph graph;
+  graph.nodes = {
+      rat::EventGraphNode{.id = "tp",
+                          .kind = "transfer_player",
+                          .map_id = "grey_yard",
+                          .x = 1.5f,
+                          .y = 0.25f,
+                          .z = 3.0f},
+  };
+  graph.edges = {
+      rat::EventGraphEdge{.from = "entry", .to = "tp"},
+      rat::EventGraphEdge{.from = "tp", .to = "exit"},
+  };
+
+  const rat::EventGraphCompileResult compiled = rat::compile_event_graph(graph);
+  REQUIRE(compiled.ok);
+  REQUIRE(compiled.commands.size() == 1);
+  REQUIRE(compiled.commands[0].op == rat::CommandOp::TransferPlayer);
+  REQUIRE(compiled.commands[0].map_id == "grey_yard");
+  REQUIRE(compiled.commands[0].x == 1.5f);
+  REQUIRE(compiled.commands[0].y == 0.25f);
+  REQUIRE(compiled.commands[0].z == 3.0f);
+}
+
+TEST_CASE("compile change_items node", "[unit][event][graph]") {
+  rat::EventGraph graph;
+  graph.nodes = {
+      rat::EventGraphNode{.id = "it",
+                          .kind = "change_items",
+                          .item_id = "door_key",
+                          .item_delta = -1,
+                          .key_item = true},
+  };
+  graph.edges = {
+      rat::EventGraphEdge{.from = "entry", .to = "it"},
+      rat::EventGraphEdge{.from = "it", .to = "exit"},
+  };
+
+  const rat::EventGraphCompileResult compiled = rat::compile_event_graph(graph);
+  REQUIRE(compiled.ok);
+  REQUIRE(compiled.commands.size() == 1);
+  REQUIRE(compiled.commands[0].op == rat::CommandOp::ChangeItems);
+  REQUIRE(compiled.commands[0].item_id == "door_key");
+  REQUIRE(compiled.commands[0].item_delta == -1);
+  REQUIRE(compiled.commands[0].key_item == true);
+}
+
+TEST_CASE("compile play_se node", "[unit][event][graph]") {
+  rat::EventGraph graph;
+  graph.nodes = {
+      rat::EventGraphNode{.id = "se", .kind = "play_se", .text = "beep"},
+  };
+  graph.edges = {
+      rat::EventGraphEdge{.from = "entry", .to = "se"},
+      rat::EventGraphEdge{.from = "se", .to = "exit"},
+  };
+
+  const rat::EventGraphCompileResult compiled = rat::compile_event_graph(graph);
+  REQUIRE(compiled.ok);
+  REQUIRE(compiled.commands.size() == 1);
+  REQUIRE(compiled.commands[0].op == rat::CommandOp::PlaySE);
+  REQUIRE(compiled.commands[0].text == "beep");
+}
+
+TEST_CASE("compile set_move_route node", "[unit][event][graph]") {
+  rat::EventGraph graph;
+  graph.nodes = {
+      rat::EventGraphNode{
+          .id = "mv",
+          .kind = "set_move_route",
+          .through = true,
+          .route = {rat::RouteStep{.op = rat::RouteStepOp::Move, .dir = rat::RampDirection::East}},
+      },
+  };
+  graph.edges = {
+      rat::EventGraphEdge{.from = "entry", .to = "mv"},
+      rat::EventGraphEdge{.from = "mv", .to = "exit"},
+  };
+
+  const rat::EventGraphCompileResult compiled = rat::compile_event_graph(graph);
+  REQUIRE(compiled.ok);
+  REQUIRE(compiled.commands.size() == 1);
+  REQUIRE(compiled.commands[0].op == rat::CommandOp::SetMoveRoute);
+  REQUIRE(compiled.commands[0].through == true);
+  REQUIRE(compiled.commands[0].route.size() == 1);
+  REQUIRE(compiled.commands[0].route[0].op == rat::RouteStepOp::Move);
+  REQUIRE(compiled.commands[0].route[0].dir == rat::RampDirection::East);
+}
+
+TEST_CASE("compile comment node", "[unit][event][graph]") {
+  rat::EventGraph graph;
+  graph.nodes = {
+      rat::EventGraphNode{.id = "c", .kind = "comment", .text = "note"},
+  };
+  graph.edges = {
+      rat::EventGraphEdge{.from = "entry", .to = "c"},
+      rat::EventGraphEdge{.from = "c", .to = "exit"},
+  };
+
+  const rat::EventGraphCompileResult compiled = rat::compile_event_graph(graph);
+  REQUIRE(compiled.ok);
+  REQUIRE(compiled.commands.size() == 1);
+  REQUIRE(compiled.commands[0].op == rat::CommandOp::Comment);
+  REQUIRE(compiled.commands[0].text == "note");
+}
+
+TEST_CASE("play_se graph node round-trips through serialize/load", "[unit][event][graph][map]") {
+  constexpr const char* kPage = R"({
+    "trigger": "action",
+    "commands": [ { "op": "play_se", "id": "beep" } ],
+    "graph": {
+      "nodes": [ { "id": "se", "kind": "play_se", "params": { "id": "beep" } } ],
+      "edges": [ { "from": "entry", "to": "se" }, { "from": "se", "to": "exit" } ]
+    }
+  })";
+
+  const std::string json = map_json_with_page(kPage);
+  const rat::MapLoadResult loaded = rat::load_map_from_string(json);
+  REQUIRE(loaded.ok);
+  REQUIRE(loaded.map.events[0].pages[0].graph.has_value());
+  REQUIRE(loaded.map.events[0].pages[0].graph->nodes.size() == 1);
+  REQUIRE(loaded.map.events[0].pages[0].graph->nodes[0].kind == "play_se");
+  REQUIRE(loaded.map.events[0].pages[0].graph->nodes[0].text == "beep");
+
+  const rat::EventGraphCompileResult compiled =
+      rat::compile_event_graph(*loaded.map.events[0].pages[0].graph);
+  REQUIRE(compiled.ok);
+  REQUIRE(compiled.commands.size() == 1);
+  REQUIRE(compiled.commands[0].op == rat::CommandOp::PlaySE);
+  REQUIRE(compiled.commands[0].text == "beep");
+
+  const rat::MapSerializeResult serialized = rat::serialize_map_to_string(loaded.map);
+  REQUIRE(serialized.ok);
+  const rat::MapLoadResult again = rat::load_map_from_string(serialized.json_text);
+  REQUIRE(again.ok);
+  REQUIRE(again.map.events[0].pages[0].graph.has_value());
+  REQUIRE(again.map.events[0].pages[0].graph->nodes[0].kind == "play_se");
+  REQUIRE(again.map.events[0].pages[0].graph->nodes[0].text == "beep");
 }
 
 TEST_CASE("EventRuntime uses commands not graph", "[unit][event][graph]") {

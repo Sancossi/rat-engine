@@ -32,9 +32,11 @@ struct IndexedEdge {
   return id == kEntry || id == kExit;
 }
 
-[[nodiscard]] bool is_mvp_kind(std::string_view kind) {
-  return kind == "show_text" || kind == "control_switch" || kind == "conditional_branch" ||
-         kind == "wait";
+[[nodiscard]] bool is_allowed_kind(std::string_view kind) {
+  return kind == "show_text" || kind == "control_switch" || kind == "control_variable" ||
+         kind == "control_self_switch" || kind == "conditional_branch" || kind == "wait" ||
+         kind == "transfer_player" || kind == "change_items" || kind == "play_se" ||
+         kind == "set_move_route" || kind == "comment";
 }
 
 [[nodiscard]] std::string index_path(std::string_view prefix, std::size_t index) {
@@ -89,12 +91,41 @@ void add_error(EventGraphCompileResult& result, std::string json_path, std::stri
     command.op = CommandOp::ControlSwitch;
     command.id = node.switch_id;
     command.bool_value = node.bool_value;
+  } else if (node.kind == "control_variable") {
+    command.op = CommandOp::ControlVariable;
+    command.id = node.switch_id;
+    command.int_value = node.int_value;
+  } else if (node.kind == "control_self_switch") {
+    command.op = CommandOp::ControlSelfSwitch;
+    command.self_switch = node.self_switch;
+    command.bool_value = node.bool_value;
   } else if (node.kind == "wait") {
     command.op = CommandOp::Wait;
     command.frames = node.frames;
   } else if (node.kind == "conditional_branch") {
     command.op = CommandOp::ConditionalBranch;
     command.branch_condition = node.branch_condition;
+  } else if (node.kind == "transfer_player") {
+    command.op = CommandOp::TransferPlayer;
+    command.map_id = node.map_id;
+    command.x = node.x;
+    command.y = node.y;
+    command.z = node.z;
+  } else if (node.kind == "change_items") {
+    command.op = CommandOp::ChangeItems;
+    command.item_id = node.item_id;
+    command.item_delta = node.item_delta;
+    command.key_item = node.key_item;
+  } else if (node.kind == "play_se") {
+    command.op = CommandOp::PlaySE;
+    command.text = node.text;
+  } else if (node.kind == "set_move_route") {
+    command.op = CommandOp::SetMoveRoute;
+    command.through = node.through;
+    command.route = node.route;
+  } else if (node.kind == "comment") {
+    command.op = CommandOp::Comment;
+    command.text = node.text;
   } else {
     command.op = CommandOp::Comment;
     command.text = node.kind;
@@ -306,7 +337,7 @@ void validate_and_index(const EventGraph& graph, GraphIndex& index,
       add_error(result, node_path + "/id", "graph node id must be unique");
       continue;
     }
-    if (!is_mvp_kind(node.kind)) {
+    if (!is_allowed_kind(node.kind)) {
       add_error(result, node_path + "/kind", "unknown graph node kind: " + node.kind);
     }
     if (node.kind == "wait" && node.frames < 0) {

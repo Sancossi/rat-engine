@@ -130,9 +130,56 @@ TEST_CASE("invalid graph fails apply and leaves commands unchanged",
   REQUIRE(document.data().events[0].pages[0].commands[0].text == "stale list");
 }
 
+TEST_CASE("add_event_graph_node accepts every command kind", "[unit][event][edit][graph][event_edit]") {
+  rat::EventGraph graph;
+  REQUIRE(rat::add_event_graph_node(graph, "not_a_kind").empty());
+
+  const std::string variable = rat::add_event_graph_node(graph, "control_variable");
+  REQUIRE_FALSE(variable.empty());
+  REQUIRE(graph.nodes.back().kind == "control_variable");
+  REQUIRE(graph.nodes.back().switch_id == 1);
+  REQUIRE(graph.nodes.back().int_value == 0);
+
+  const std::string self_switch = rat::add_event_graph_node(graph, "control_self_switch");
+  REQUIRE_FALSE(self_switch.empty());
+  REQUIRE(graph.nodes.back().kind == "control_self_switch");
+  REQUIRE(graph.nodes.back().self_switch == 'A');
+  REQUIRE(graph.nodes.back().bool_value == true);
+
+  const std::string transfer = rat::add_event_graph_node(graph, "transfer_player");
+  REQUIRE_FALSE(transfer.empty());
+  REQUIRE(graph.nodes.back().kind == "transfer_player");
+  REQUIRE(graph.nodes.back().map_id == "grey_yard");
+  REQUIRE(graph.nodes.back().x == 0.0f);
+  REQUIRE(graph.nodes.back().z == 0.0f);
+
+  const std::string items = rat::add_event_graph_node(graph, "change_items");
+  REQUIRE_FALSE(items.empty());
+  REQUIRE(graph.nodes.back().kind == "change_items");
+  REQUIRE(graph.nodes.back().item_id == "item");
+  REQUIRE(graph.nodes.back().item_delta == 1);
+
+  const std::string se = rat::add_event_graph_node(graph, "play_se");
+  REQUIRE_FALSE(se.empty());
+  REQUIRE(graph.nodes.back().kind == "play_se");
+  REQUIRE(graph.nodes.back().text == "se");
+
+  const std::string route = rat::add_event_graph_node(graph, "set_move_route");
+  REQUIRE_FALSE(route.empty());
+  REQUIRE(graph.nodes.back().kind == "set_move_route");
+  REQUIRE(graph.nodes.back().route.size() == 1);
+  REQUIRE(graph.nodes.back().route[0].op == rat::RouteStepOp::Move);
+  REQUIRE(graph.nodes.back().route[0].dir == rat::RampDirection::East);
+
+  const std::string comment = rat::add_event_graph_node(graph, "comment");
+  REQUIRE_FALSE(comment.empty());
+  REQUIRE(graph.nodes.back().kind == "comment");
+  REQUIRE(graph.nodes.back().text == "comment");
+}
+
 TEST_CASE("unknown graph kind fails apply", "[unit][event][edit][graph]") {
   rat::EventGraph graph;
-  graph.nodes.push_back(rat::EventGraphNode{.id = "n1", .kind = "play_se"});
+  graph.nodes.push_back(rat::EventGraphNode{.id = "n1", .kind = "not_a_kind"});
   graph.edges = {
       rat::EventGraphEdge{.from = "entry", .to = "n1"},
       rat::EventGraphEdge{.from = "n1", .to = "exit"},

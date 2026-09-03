@@ -48,8 +48,10 @@ namespace {
 }  // namespace
 
 bool is_mvp_event_graph_kind(std::string_view kind) {
-  return kind == "show_text" || kind == "control_switch" || kind == "conditional_branch" ||
-         kind == "wait";
+  return kind == "show_text" || kind == "control_switch" || kind == "control_variable" ||
+         kind == "control_self_switch" || kind == "conditional_branch" || kind == "wait" ||
+         kind == "transfer_player" || kind == "change_items" || kind == "play_se" ||
+         kind == "set_move_route" || kind == "comment";
 }
 
 void ensure_event_page_graph(EventPage& page) {
@@ -83,12 +85,34 @@ std::string add_event_graph_node(EventGraph& graph, std::string_view kind) {
   } else if (kind == "control_switch") {
     node.switch_id = 1;
     node.bool_value = true;
+  } else if (kind == "control_variable") {
+    node.switch_id = 1;
+    node.int_value = 0;
+  } else if (kind == "control_self_switch") {
+    node.self_switch = 'A';
+    node.bool_value = true;
   } else if (kind == "wait") {
     node.frames = 60;
   } else if (kind == "conditional_branch") {
     node.branch_condition.type = ConditionType::Switch;
     node.branch_condition.id = 1;
     node.branch_condition.bool_value = true;
+  } else if (kind == "transfer_player") {
+    node.map_id = "grey_yard";
+    node.x = 0.0f;
+    node.z = 0.0f;
+  } else if (kind == "change_items") {
+    node.item_id = "item";
+    node.item_delta = 1;
+  } else if (kind == "play_se") {
+    node.text = "se";
+  } else if (kind == "set_move_route") {
+    RouteStep step;
+    step.op = RouteStepOp::Move;
+    step.dir = RampDirection::East;
+    node.route.push_back(step);
+  } else if (kind == "comment") {
+    node.text = "comment";
   }
   graph.nodes.push_back(node);
   return node.id;
