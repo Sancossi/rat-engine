@@ -184,6 +184,9 @@ struct EventDef {
   std::string id;
   std::optional<TileCoord> tile;
   std::optional<Aabb2> volume;
+  // Authored probe Y. When set, solid support is sampled at this height (loft/slab).
+  // Omit to keep the height-grid/ramp ground probe (Sprint 9).
+  std::optional<float> y;
   std::vector<EventPage> pages;
 };
 

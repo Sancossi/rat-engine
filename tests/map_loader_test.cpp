@@ -63,6 +63,43 @@ TEST_CASE("Map loader parses minimal map JSON", "[unit][map]") {
   REQUIRE(result.map.events[0].pages[0].commands[1].op == rat::CommandOp::ControlSwitch);
   REQUIRE(result.map.events[0].pages[0].commands[1].id == 9);
   REQUIRE(result.map.events[0].pages[0].commands[1].bool_value == true);
+  REQUIRE_FALSE(result.map.events[0].y.has_value());
+}
+
+TEST_CASE("Event optional y round-trips through serialize", "[unit][map][event]") {
+  constexpr const char* kJson = R"({
+    "schema_version": 3,
+    "id": "loft_y",
+    "width": 2,
+    "height": 2,
+    "height_grid": {
+      "origin_x": 0,
+      "origin_z": 0,
+      "width": 2,
+      "height": 2,
+      "ground_y": [0, 0, 0, 0]
+    },
+    "events": [
+      {
+        "id": "on_loft",
+        "tile": { "x": 0, "z": 0 },
+        "y": 2.0,
+        "pages": [{ "trigger": "action", "commands": [] }]
+      }
+    ]
+  })";
+
+  const auto loaded = rat::load_map_from_string(kJson);
+  REQUIRE(loaded.ok);
+  REQUIRE(loaded.map.events[0].y.has_value());
+  REQUIRE(*loaded.map.events[0].y == Catch::Approx(2.0f));
+
+  const auto serialized = rat::serialize_map_to_string(loaded.map);
+  REQUIRE(serialized.ok);
+  const auto again = rat::load_map_from_string(serialized.json_text);
+  REQUIRE(again.ok);
+  REQUIRE(again.map.events[0].y.has_value());
+  REQUIRE(*again.map.events[0].y == Catch::Approx(2.0f));
 }
 
 TEST_CASE("Map loader rejects unknown schema version", "[unit][map]") {
@@ -122,6 +159,7 @@ TEST_CASE("Example grey_yard.json loads without crash", "[unit][map]") {
   bool found_crate_notice = false;
   bool found_jumpable_blocker = false;
   bool found_elevated_event = false;
+  bool found_loft_event = false;
   int max_event_x = std::numeric_limits<int>::min();
   int max_event_z = std::numeric_limits<int>::min();
   int min_event_x = std::numeric_limits<int>::max();
@@ -143,6 +181,19 @@ TEST_CASE("Example grey_yard.json loads without crash", "[unit][map]") {
       REQUIRE(ev.pages[0].commands[1].id == 40);
       REQUIRE(ev.pages[0].commands[1].bool_value);
       found_elevated_event = true;
+    }
+    if (ev.id == "loft_plank") {
+      REQUIRE(ev.tile.has_value());
+      REQUIRE(ev.tile->x == 0);
+      REQUIRE(ev.tile->z == 4);
+      REQUIRE(ev.y.has_value());
+      REQUIRE(*ev.y == Catch::Approx(2.0f));
+      REQUIRE(ev.pages.size() == 1);
+      REQUIRE(ev.pages[0].trigger == rat::TriggerKind::Action);
+      REQUIRE(ev.pages[0].commands.size() == 2);
+      REQUIRE(ev.pages[0].commands[1].op == rat::CommandOp::ControlSwitch);
+      REQUIRE(ev.pages[0].commands[1].id == 43);
+      found_loft_event = true;
     }
     if (ev.id == "crate_notice") {
       REQUIRE(ev.volume.has_value());
@@ -240,6 +291,7 @@ TEST_CASE("Example grey_yard.json loads without crash", "[unit][map]") {
   REQUIRE(found_crate_notice);
   REQUIRE(found_jumpable_blocker);
   REQUIRE(found_elevated_event);
+  REQUIRE(found_loft_event);
   REQUIRE(found_standable_cube);
   REQUIRE(found_mini_fence);
   REQUIRE(found_full_fence);
@@ -281,7 +333,9 @@ TEST_CASE("Example grey_yard.json loads without crash", "[unit][map]") {
           Catch::Approx(result.map.edge_barriers[0].height));
   REQUIRE(from_serialized.map.blockers.size() == result.map.blockers.size());
   REQUIRE(from_serialized.map.events.size() == result.map.events.size());
-  REQUIRE(from_serialized.map.events.back().id == "elevated_after_blocker");
+  REQUIRE(from_serialized.map.events.back().id == "loft_plank");
+  REQUIRE(from_serialized.map.events.back().y.has_value());
+  REQUIRE(*from_serialized.map.events.back().y == Catch::Approx(2.0f));
 }
 
 TEST_CASE("Serialize map roundtrips blockers after edit", "[unit][map]") {

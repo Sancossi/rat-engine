@@ -363,6 +363,9 @@ EventDef parse_event(const json& node) {
   if (node.contains("volume")) {
     event.volume = parse_aabb(node.at("volume"));
   }
+  if (node.contains("y")) {
+    event.y = node.at("y").get<float>();
+  }
   if (!node.contains("pages") || !node.at("pages").is_array()) {
     throw std::runtime_error("event pages must be an array");
   }
@@ -755,6 +758,9 @@ json dump_event(const EventDef& event) {
   }
   if (event.volume.has_value()) {
     node["volume"] = dump_aabb(*event.volume);
+  }
+  if (event.y.has_value()) {
+    node["y"] = *event.y;
   }
   for (const EventPage& page : event.pages) {
     node["pages"].push_back(dump_page(page));

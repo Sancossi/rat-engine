@@ -140,6 +140,7 @@ Notes:
 | `id` | string | yes | Unique on map |
 | `tile` | object | no | `{ "x": int, "z": int }` snap helper |
 | `volume` | object | no | AABB same as blocker; trigger volume |
+| `y` | number | no | Authored probe height. When set, event support is sampled at this Y so a loft/slab trigger matches standing on that surface. Omit to keep the height-grid/ramp ground probe (walking the dirt under a slab does not fire a loft event, and standing on the slab does not fire an unbound ground event). |
 | `pages` | array | yes | At least one page preferred |
 
 At least one of `tile` / `volume` should be present for interactable events.
@@ -250,3 +251,4 @@ See `data/maps/grey_yard.json`.
 - For `schema_version: 1` and `2`, `floor_slabs` and `ladders` are ignored if present (empty vectors).
 - For `schema_version: 2` and `3`, invalid `ground_y` length (not equal to `width * height`) is rejected.
 - Serializer writes `height_grid` / `ramps` / `edge_barriers` when `schema_version >= 2`, and `floor_slabs` / `ladders` when `schema_version >= 3`. It does not bump the version.
+- Event `y` is optional on schema `1`/`2`/`3`. Missing `y` keeps the ground probe. No schema bump.

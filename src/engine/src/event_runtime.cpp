@@ -210,8 +210,11 @@ bool EventRuntime::event_height_matches_player(const EventDef& event, const Play
     event_xz.x = (event.volume->min_x + event.volume->max_x) * 0.5f;
     event_xz.z = (event.volume->min_z + event.volume->max_z) * 0.5f;
   }
+  // Probe at authored y when set so a loft bind hits the slab; otherwise
+  // height-grid Y skips loft boxes (feet_y < y_lo).
+  const float event_probe_y = event.y.value_or(grid_event.y);
   const std::optional<SolidSupport> event_support =
-      query_solid_support(collision_world_, event_xz.x, event_xz.z, 0.0f, grid_event.y, 1.0e6f);
+      query_solid_support(collision_world_, event_xz.x, event_xz.z, 0.0f, event_probe_y, 1.0e6f);
 
   float event_y = grid_event.y;
   bool event_on_ramp = grid_event.on_ramp;

@@ -10,6 +10,7 @@
 #include <imgui.h>
 
 #include <cstdio>
+#include <optional>
 #include <string>
 #include <utility>
 
@@ -125,6 +126,61 @@ void draw_event_panel(EditorDocument& document, EventPanelState& state, const ch
       (void)document.execute(make_move_event_command(
           static_cast<std::size_t>(document.selected_event()), 0, 1, tile));
       event = document.visible_data().events[static_cast<std::size_t>(document.selected_event())];
+    }
+  }
+
+  auto highest_slab_top = [&](TileCoord tile) -> std::optional<float> {
+    std::optional<float> top;
+    for (const FloorSlabDef& slab : document.visible_data().floor_slabs) {
+      if (slab.tile.x != tile.x || slab.tile.z != tile.z) {
+        continue;
+      }
+      if (!top.has_value() || slab.top_y > *top) {
+        top = slab.top_y;
+      }
+    }
+    return top;
+  };
+
+  bool bind_y = event.y.has_value();
+  if (ImGui::Checkbox("Bind Y", &bind_y)) {
+    if (bind_y) {
+      event.y = 0.0f;
+      if (event.tile.has_value()) {
+        if (const std::optional<float> slab_top = highest_slab_top(*event.tile)) {
+          event.y = *slab_top;
+        }
+      }
+    } else {
+      event.y.reset();
+    }
+    replace_selected_event(event);
+    event = document.visible_data().events[static_cast<std::size_t>(document.selected_event())];
+  }
+  if (event.y.has_value()) {
+    float bind = *event.y;
+    const EventDef y_snapshot = event;
+    if (ImGui::InputFloat("Event Y", &bind, 0.05f, 0.25f, "%.3f")) {
+      event.y = bind;
+      if (!state.field_origin) {
+        state.field_origin = y_snapshot;
+        state.field_origin_index = document.selected_event();
+      }
+      preview_selected_event(event);
+      event = document.visible_data().events[static_cast<std::size_t>(document.selected_event())];
+    }
+    commit_event_field_edit();
+    if (document.selected_event() >= 0 &&
+        document.selected_event() < static_cast<int>(document.visible_data().events.size())) {
+      event = document.visible_data().events[static_cast<std::size_t>(document.selected_event())];
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("On slab") && event.tile.has_value()) {
+      if (const std::optional<float> slab_top = highest_slab_top(*event.tile)) {
+        event.y = *slab_top;
+        replace_selected_event(event);
+        event = document.visible_data().events[static_cast<std::size_t>(document.selected_event())];
+      }
     }
   }
 

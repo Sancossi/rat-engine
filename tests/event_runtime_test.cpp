@@ -754,6 +754,139 @@ TEST_CASE("Event runtime ground under a slab still matches the ground tile event
   REQUIRE(state.get_switch(42));
 }
 
+TEST_CASE("Event runtime loft-bound tile event matches slab top not ground",
+          "[unit][events][event]") {
+  constexpr const char* kJson = R"({
+    "schema_version": 3,
+    "id": "loft_bound_event",
+    "width": 2,
+    "height": 2,
+    "tile_size": 1.0,
+    "height_grid": {
+      "origin_x": 0,
+      "origin_z": 0,
+      "width": 2,
+      "height": 2,
+      "ground_y": [0, 0, 0, 0]
+    },
+    "floor_slabs": [
+      { "tile": { "x": 0, "z": 0 }, "top_y": 2.0, "thickness": 0.25 }
+    ],
+    "events": [
+      {
+        "id": "loft_action",
+        "tile": { "x": 0, "z": 0 },
+        "y": 2.0,
+        "pages": [
+          {
+            "trigger": "action",
+            "commands": [{ "op": "control_switch", "id": 50, "value": true }]
+          }
+        ]
+      }
+    ]
+  })";
+
+  const auto loaded = rat::load_map_from_string(kJson);
+  REQUIRE(loaded.ok);
+  rat::GameState state;
+  rat::EventRuntime runtime;
+  REQUIRE(runtime.load(loaded.map).ok);
+
+  rat::PlayerBody on_slab;
+  on_slab.x = 0.5f;
+  on_slab.y = 2.0f;
+  on_slab.z = 0.5f;
+  rat::PlayerBody on_ground;
+  on_ground.x = 0.5f;
+  on_ground.y = 0.0f;
+  on_ground.z = 0.5f;
+
+  REQUIRE(rat::event_why_not_fired(runtime, "loft_action", state, on_slab, true) ==
+          rat::EventWhyNot::Ok);
+  REQUIRE(runtime.has_action_prompt(on_slab, state));
+  REQUIRE(rat::event_why_not_fired(runtime, "loft_action", state, on_ground, true) ==
+          rat::EventWhyNot::Height);
+  REQUIRE_FALSE(runtime.has_action_prompt(on_ground, state));
+
+  runtime.update(state, on_slab, true, 1.0f / 60.0f);
+  REQUIRE(state.get_switch(50));
+
+  rat::GameState ground_state;
+  rat::EventRuntime ground_runtime;
+  REQUIRE(ground_runtime.load(loaded.map).ok);
+  ground_runtime.update(ground_state, on_ground, true, 1.0f / 60.0f);
+  REQUIRE_FALSE(ground_state.get_switch(50));
+}
+
+TEST_CASE("Event runtime unbound ground event still ignores slab beside a loft bind",
+          "[unit][events][event]") {
+  constexpr const char* kJson = R"({
+    "schema_version": 3,
+    "id": "loft_and_ground_same_cell",
+    "width": 2,
+    "height": 2,
+    "tile_size": 1.0,
+    "height_grid": {
+      "origin_x": 0,
+      "origin_z": 0,
+      "width": 2,
+      "height": 2,
+      "ground_y": [0, 0, 0, 0]
+    },
+    "floor_slabs": [
+      { "tile": { "x": 0, "z": 0 }, "top_y": 2.0, "thickness": 0.25 }
+    ],
+    "events": [
+      {
+        "id": "loft_action",
+        "tile": { "x": 0, "z": 0 },
+        "y": 2.0,
+        "pages": [
+          {
+            "trigger": "action",
+            "commands": [{ "op": "control_switch", "id": 51, "value": true }]
+          }
+        ]
+      },
+      {
+        "id": "ground_touch",
+        "tile": { "x": 0, "z": 0 },
+        "pages": [
+          {
+            "trigger": "player_touch",
+            "commands": [{ "op": "control_switch", "id": 52, "value": true }]
+          }
+        ]
+      }
+    ]
+  })";
+
+  const auto loaded = rat::load_map_from_string(kJson);
+  REQUIRE(loaded.ok);
+  rat::GameState state;
+  rat::EventRuntime runtime;
+  REQUIRE(runtime.load(loaded.map).ok);
+
+  rat::PlayerBody on_slab;
+  on_slab.x = 0.5f;
+  on_slab.y = 2.0f;
+  on_slab.z = 0.5f;
+  REQUIRE(rat::event_why_not_fired(runtime, "loft_action", state, on_slab, true) ==
+          rat::EventWhyNot::Ok);
+  REQUIRE(rat::event_why_not_fired(runtime, "ground_touch", state, on_slab, false) ==
+          rat::EventWhyNot::Height);
+
+  rat::PlayerBody on_ground;
+  on_ground.x = 0.5f;
+  on_ground.y = 0.0f;
+  on_ground.z = 0.5f;
+  REQUIRE(rat::event_why_not_fired(runtime, "loft_action", state, on_ground, true) ==
+          rat::EventWhyNot::Height);
+  REQUIRE(rat::event_why_not_fired(runtime, "ground_touch", state, on_ground, false) ==
+          rat::EventWhyNot::Ok);
+}
+
 TEST_CASE("Event runtime different adjacent ramps do not bypass delta", "[unit][events]") {
   constexpr const char* kJson = R"({
     "schema_version": 2,

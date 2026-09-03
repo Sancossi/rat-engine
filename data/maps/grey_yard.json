@@ -180,6 +180,21 @@
           ]
         }
       ]
+    },
+    {
+      "id": "loft_plank",
+      "tile": { "x": 0, "z": 4 },
+      "y": 2.0,
+      "pages": [
+        {
+          "trigger": "action",
+          "conditions": [],
+          "commands": [
+            { "op": "show_text", "text": "From the loft you see the yard crates and the east scrap pile." },
+            { "op": "control_switch", "id": 43, "value": true }
+          ]
+        }
+      ]
     }
   ],
   "assets": [
