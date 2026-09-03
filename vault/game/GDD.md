@@ -128,5 +128,5 @@ tags: [game, gdd]
 - [x] Формат хранения events → **JSON** ([[ADR-007 Events and maps stored as JSON]])
 - [x] Parallel limits → **8 active / 32 cmds/frame / no nested** ([[ADR-008 Parallel and Autorun runtime limits]])
 - [ ] Ночь/день — нужна ли в MVP
-- [ ] Конкретные арт-референсы (игры/артисты)
+- [x] Конкретные арт-референсы → арт **Final Fantasy 6** + **Chrono Cross**; палитра двора `grey_yard` в [[Art Direction]]; take/don't take — [[Collect 5 reference games]]
 - [ ] Field physics puzzles (ящики / панели / провалы / двери с разбегу) — backlog [[feat: Field physics puzzles]]

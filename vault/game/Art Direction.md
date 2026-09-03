@@ -5,7 +5,7 @@ tags: [game]
 
 # Art Direction
 
-> **Status:** Working (2026-08-31). Цель — stylized 3D под пиксель-арт, ortho 3/4, без ряби.
+> **Status:** Working (2026-09-03). Цель — stylized 3D под пиксель-арт, ortho 3/4, без ряби. Первый scene lock: двор `grey_yard` (секция Moodboard).
 
 ## Визуальный язык
 
@@ -14,6 +14,34 @@ tags: [game]
 - **Персонажи:** **mesh** + **процедурные анимации** (не flipbook sprites как основа)
 - **Сеттинг look:** средневековье без магии + лёгкий стимпанк (механизмы, пар, металл)
 - **Не цель:** фотореализм, AAA lighting, perspective follow-cam, магический VFX-акцент
+
+## Moodboard
+
+Первый lock — двор **`grey_yard`**. Один двор = одна палитра: не смешивать второй региональный набор на той же карте. Texel **32px**, point sample; это look-lock (металл / латунь / пыль), не каталог мешей.
+
+### Палитра `grey_yard`
+
+| Роль | Hex | Имя |
+| --- | --- | --- |
+| Ground | `#6B5E4C` | packed dirt |
+| Ground dust | `#8F8372` | dust bloom |
+| Crate wood | `#7B5534` | weathered crate |
+| Brass | `#C6A45E` | workshop brass |
+| Soot / iron | `#2A2927` | sooted metal |
+| Sky / fog | `#9BA7B2` | overcast haze |
+| Rust accent | `#8A4B32` | rusty cog |
+
+Семь слотов: земля и пыль (двор), дерево ящиков, латунь лома, сажа на gantry/железе, холодный туман неба, ржавчина как единственный тёплый акцент квеста.
+
+### Look-refs (FF6 / Chrono Cross)
+
+Take / don't take целиком — [[Collect 5 reference games]]. Сюда только то, что красится на `grey_yard`:
+
+- **FF6 — берём:** читаемый силуэт пропа/NPC на ограниченной сценной палитре; один интерьер = один lock (урок замка/оперы, не сеттинг).
+- **Chrono Cross — берём:** живописный pixel albedo на 3D-формах (у нас 3D-двор + pixel textures); региональный тон + мягкий fog, без PBR.
+- **Не берём:** pre-render фоны (ломает Edit в том же exe), SNES-спрайты персонажей как пайплайн, магический VFX.
+
+Следующая карта — новый palette lock, не расширение этой таблицы.
 
 ## Pixel-perfect требования
 
