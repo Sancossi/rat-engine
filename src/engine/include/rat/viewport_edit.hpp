@@ -18,6 +18,7 @@ enum class ViewportTool {
   PlaceFence,
   PlaceSlab,
   PlaceLadder,
+  PlaceRamp,
 };
 
 enum class EditSubmode {
@@ -47,6 +48,7 @@ enum class ViewportClickActionKind {
   PlaceFence,
   PlaceSlab,
   PlaceLadder,
+  PlaceRamp,
 };
 
 struct ViewportClickAction {

@@ -176,6 +176,41 @@ void EditorApp::apply_cell_brush(const ViewportClickAction& action) {
       (void)document_.execute(make_upsert_map_ladder_command(std::move(ladder)));
       break;
     }
+    case ViewportClickActionKind::PlaceRamp: {
+      terrain_panel_.tile_x = action.tile.x;
+      terrain_panel_.tile_z = action.tile.z;
+      terrain_panel_.ramp_direction_index = static_cast<int>(action.edge);
+      RampDef ramp;
+      ramp.tile = action.tile;
+      ramp.direction = action.edge;
+      ramp.low_y = terrain_panel_.ramp_low_y;
+      ramp.high_y = terrain_panel_.ramp_high_y;
+      TileCoord neighbor = action.tile;
+      switch (action.edge) {
+        case RampDirection::North:
+          neighbor.z -= 1;
+          break;
+        case RampDirection::East:
+          neighbor.x += 1;
+          break;
+        case RampDirection::South:
+          neighbor.z += 1;
+          break;
+        case RampDirection::West:
+          neighbor.x -= 1;
+          break;
+      }
+      const HeightGetResult this_y =
+          get_tile_ground_y(document_.data().height_grid, action.tile.x, action.tile.z);
+      const HeightGetResult neighbor_y =
+          get_tile_ground_y(document_.data().height_grid, neighbor.x, neighbor.z);
+      if (this_y.ok && neighbor_y.ok && neighbor_y.value > this_y.value) {
+        ramp.high_y = neighbor_y.value;
+        terrain_panel_.ramp_high_y = ramp.high_y;
+      }
+      (void)document_.execute(make_upsert_map_ramp_command(std::move(ramp)));
+      break;
+    }
     default:
       break;
   }
@@ -706,6 +741,7 @@ void EditorApp::handle_edit_mouse_input(const ImGuiIO& io) {
       case ViewportClickActionKind::PlaceSlab:
       case ViewportClickActionKind::PlaceFence:
       case ViewportClickActionKind::PlaceLadder:
+      case ViewportClickActionKind::PlaceRamp:
         document_.begin_stroke();
         apply_cell_brush(action);
         brush_active_ = true;
@@ -723,7 +759,8 @@ void EditorApp::handle_edit_mouse_input(const ImGuiIO& io) {
     const bool cell_tool = action.kind == ViewportClickActionKind::PlaceCube ||
                            action.kind == ViewportClickActionKind::PlaceSlab;
     const bool edge_tool = action.kind == ViewportClickActionKind::PlaceFence ||
-                           action.kind == ViewportClickActionKind::PlaceLadder;
+                           action.kind == ViewportClickActionKind::PlaceLadder ||
+                           action.kind == ViewportClickActionKind::PlaceRamp;
     const bool tile_changed =
         action.tile.x != drag_last_tile_.x || action.tile.z != drag_last_tile_.z;
     const bool edge_changed = action.edge != drag_last_edge_;
@@ -1040,6 +1077,7 @@ void EditorApp::draw_ui() {
     tool_radio("Place cube", ViewportTool::PlaceCube);
     tool_radio("Fence", ViewportTool::PlaceFence);
     tool_radio("Floor slab", ViewportTool::PlaceSlab);
+    tool_radio("Place ramp", ViewportTool::PlaceRamp);
     tool_radio("Ladder", ViewportTool::PlaceLadder);
     if (edit_submode_ == EditSubmode::Terrain) {
       ImGui::TextUnformatted("Fence preset");

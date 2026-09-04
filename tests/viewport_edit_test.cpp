@@ -2,6 +2,8 @@
 #include <rat/event_edit.hpp>
 #include <rat/height_edit.hpp>
 #include <rat/hot_apply.hpp>
+#include <rat/player.hpp>
+#include <rat/surface_query.hpp>
 #include <rat/terrain_geometry.hpp>
 #include <rat/viewport_edit.hpp>
 
@@ -327,6 +329,12 @@ TEST_CASE("terrain place cube and fence on blocker aabb still place", "[unit][vi
   REQUIRE(slab.kind == rat::ViewportClickActionKind::PlaceSlab);
   REQUIRE(slab.tile.x == 2);
   REQUIRE(slab.tile.z == 1);
+
+  const rat::ViewportClickAction ramp = rat::resolve_viewport_click(
+      map, rat::ViewportTool::PlaceRamp, hit, rat::EditSubmode::Terrain);
+  REQUIRE(ramp.kind == rat::ViewportClickActionKind::PlaceRamp);
+  REQUIRE(ramp.tile.x == 2);
+  REQUIRE(ramp.tile.z == 1);
 }
 
 TEST_CASE("events click overlapping blocker selects event", "[unit][viewport_edit]") {
@@ -356,6 +364,17 @@ TEST_CASE("place ladder on empty tile returns that tile", "[unit][viewport_edit]
       rat::resolve_viewport_click(map, rat::ViewportTool::PlaceLadder, rat::Vec3{4.1f, 0.0f, 3.7f},
                                  rat::EditSubmode::Objects);
   REQUIRE(action.kind == rat::ViewportClickActionKind::PlaceLadder);
+  REQUIRE(action.tile.x == 4);
+  REQUIRE(action.tile.z == 3);
+}
+
+TEST_CASE("place ramp on empty tile returns that tile", "[unit][viewport_edit]") {
+  rat::MapData map = make_test_map();
+  const rat::Vec3 world{4.1f, 0.0f, 3.7f};
+
+  const rat::ViewportClickAction action = rat::resolve_viewport_click(
+      map, rat::ViewportTool::PlaceRamp, world, rat::EditSubmode::Terrain);
+  REQUIRE(action.kind == rat::ViewportClickActionKind::PlaceRamp);
   REQUIRE(action.tile.x == 4);
   REQUIRE(action.tile.z == 3);
 }
@@ -403,6 +422,106 @@ TEST_CASE("place ladder click uses the nearest tile edge", "[unit][edit][viewpor
   REQUIRE(action.edge == rat::RampDirection::South);
 }
 
+TEST_CASE("place ramp near opposite faces of the same cell pick those facings",
+          "[unit][edit][viewport_edit]") {
+  rat::MapData map = make_test_map();
+  const rat::Vec3 east_hit{2.92f, 0.0f, 3.50f};
+  const rat::Vec3 west_hit{2.08f, 0.0f, 3.50f};
+
+  const rat::ViewportClickAction east =
+      rat::resolve_viewport_click(map, rat::ViewportTool::PlaceRamp, east_hit,
+                                 rat::EditSubmode::Terrain);
+  REQUIRE(east.kind == rat::ViewportClickActionKind::PlaceRamp);
+  REQUIRE(east.tile.x == 2);
+  REQUIRE(east.tile.z == 3);
+  REQUIRE(east.edge == rat::RampDirection::East);
+
+  const rat::ViewportClickAction west =
+      rat::resolve_viewport_click(map, rat::ViewportTool::PlaceRamp, west_hit,
+                                 rat::EditSubmode::Terrain);
+  REQUIRE(west.kind == rat::ViewportClickActionKind::PlaceRamp);
+  REQUIRE(west.tile.x == 2);
+  REQUIRE(west.tile.z == 3);
+  REQUIRE(west.edge == rat::RampDirection::West);
+}
+
+TEST_CASE("place ramp west and south of a raised cell both climb in play",
+          "[unit][viewport_edit][player][surface]") {
+  rat::MapData map = make_elevated_map();
+  REQUIRE(rat::place_map_tile_cube(map, 1, 1).ok);
+  REQUIRE(rat::get_tile_ground_y(map.height_grid, 1, 1).value == Approx(1.0f));
+
+  // West neighbor (0,1): click east edge so high side faces the cube.
+  const rat::ViewportClickAction west_approach = rat::resolve_viewport_click(
+      map, rat::ViewportTool::PlaceRamp, rat::Vec3{0.92f, 0.0f, 1.50f}, rat::EditSubmode::Terrain);
+  REQUIRE(west_approach.kind == rat::ViewportClickActionKind::PlaceRamp);
+  REQUIRE(west_approach.tile.x == 0);
+  REQUIRE(west_approach.tile.z == 1);
+  REQUIRE(west_approach.edge == rat::RampDirection::East);
+
+  // South neighbor (1,2): click north edge so high side faces the cube.
+  const rat::ViewportClickAction south_approach = rat::resolve_viewport_click(
+      map, rat::ViewportTool::PlaceRamp, rat::Vec3{1.50f, 0.0f, 2.08f}, rat::EditSubmode::Terrain);
+  REQUIRE(south_approach.kind == rat::ViewportClickActionKind::PlaceRamp);
+  REQUIRE(south_approach.tile.x == 1);
+  REQUIRE(south_approach.tile.z == 2);
+  REQUIRE(south_approach.edge == rat::RampDirection::North);
+
+  rat::RampDef west_ramp;
+  west_ramp.tile = west_approach.tile;
+  west_ramp.direction = west_approach.edge;
+  west_ramp.low_y = 0.0f;
+  west_ramp.high_y = 1.0f;
+  REQUIRE(rat::upsert_map_ramp(map, west_ramp).ok);
+
+  rat::RampDef south_ramp;
+  south_ramp.tile = south_approach.tile;
+  south_ramp.direction = south_approach.edge;
+  south_ramp.low_y = 0.0f;
+  south_ramp.high_y = 1.0f;
+  REQUIRE(rat::upsert_map_ramp(map, south_ramp).ok);
+  REQUIRE(map.ramps.size() == 2);
+
+  const rat::SurfaceQuery query(map);
+  const rat::SurfaceSample west_mid = query.sample(0.5f, 1.5f);
+  REQUIRE(west_mid.on_ramp);
+  REQUIRE(west_mid.y == Approx(0.5f).margin(0.05f));
+  const rat::SurfaceSample south_mid = query.sample(1.5f, 2.5f);
+  REQUIRE(south_mid.on_ramp);
+  REQUIRE(south_mid.y == Approx(0.5f).margin(0.05f));
+  REQUIRE(query.sample(1.5f, 1.5f).y == Approx(1.0f).margin(0.05f));
+
+  auto climb = [&](rat::PlayerBody player, rat::MoveInput input) {
+    float prev_y = player.y;
+    for (int i = 0; i < 24; ++i) {
+      player = rat::integrate_player_surface(player, input, 1.0f / 60.0f, {}, query, 0.35f);
+      REQUIRE(player.y >= prev_y - 1e-4f);
+      prev_y = player.y;
+    }
+    return player;
+  };
+
+  rat::PlayerBody from_west;
+  from_west.x = 0.05f;
+  from_west.y = 0.0f;
+  from_west.z = 1.5f;
+  from_west.half_extent = 0.8f;
+  from_west.speed = 3.0f;
+  from_west = climb(from_west, rat::MoveInput{1.0f, 0.0f});
+  REQUIRE(from_west.x > 1.05f);
+  REQUIRE(from_west.y == Approx(1.0f).margin(0.05f));
+
+  rat::PlayerBody from_south;
+  from_south.x = 1.5f;
+  from_south.y = 0.0f;
+  from_south.z = 2.95f;
+  from_south.half_extent = 0.8f;
+  from_south.speed = 3.0f;
+  from_south = climb(from_south, rat::MoveInput{0.0f, -1.0f});
+  REQUIRE(from_south.z < 1.95f);
+  REQUIRE(from_south.y == Approx(1.0f).margin(0.05f));
+}
+
 TEST_CASE("drag along a north wall picks north on each adjacent tile",
           "[unit][edit][viewport_edit]") {
   rat::MapData map = make_test_map();
@@ -440,6 +559,7 @@ TEST_CASE("viewport tool allowed matches edit submode", "[unit][viewport_edit]")
   REQUIRE(rat::viewport_tool_allowed(EditSubmode::Terrain, ViewportTool::PlaceCube));
   REQUIRE(rat::viewport_tool_allowed(EditSubmode::Terrain, ViewportTool::PlaceFence));
   REQUIRE(rat::viewport_tool_allowed(EditSubmode::Terrain, ViewportTool::PlaceSlab));
+  REQUIRE(rat::viewport_tool_allowed(EditSubmode::Terrain, ViewportTool::PlaceRamp));
   REQUIRE_FALSE(rat::viewport_tool_allowed(EditSubmode::Terrain, ViewportTool::PlaceBlocker));
   REQUIRE_FALSE(rat::viewport_tool_allowed(EditSubmode::Terrain, ViewportTool::PlaceEvent));
   REQUIRE_FALSE(rat::viewport_tool_allowed(EditSubmode::Terrain, ViewportTool::PlaceLadder));
@@ -450,6 +570,7 @@ TEST_CASE("viewport tool allowed matches edit submode", "[unit][viewport_edit]")
   REQUIRE_FALSE(rat::viewport_tool_allowed(EditSubmode::Objects, ViewportTool::PlaceCube));
   REQUIRE_FALSE(rat::viewport_tool_allowed(EditSubmode::Objects, ViewportTool::PlaceFence));
   REQUIRE_FALSE(rat::viewport_tool_allowed(EditSubmode::Objects, ViewportTool::PlaceSlab));
+  REQUIRE_FALSE(rat::viewport_tool_allowed(EditSubmode::Objects, ViewportTool::PlaceRamp));
   REQUIRE_FALSE(rat::viewport_tool_allowed(EditSubmode::Objects, ViewportTool::PlaceEvent));
 
   REQUIRE(rat::viewport_tool_allowed(EditSubmode::Events, ViewportTool::Select));
@@ -459,6 +580,7 @@ TEST_CASE("viewport tool allowed matches edit submode", "[unit][viewport_edit]")
   REQUIRE_FALSE(rat::viewport_tool_allowed(EditSubmode::Events, ViewportTool::PlaceFence));
   REQUIRE_FALSE(rat::viewport_tool_allowed(EditSubmode::Events, ViewportTool::PlaceSlab));
   REQUIRE_FALSE(rat::viewport_tool_allowed(EditSubmode::Events, ViewportTool::PlaceLadder));
+  REQUIRE_FALSE(rat::viewport_tool_allowed(EditSubmode::Events, ViewportTool::PlaceRamp));
 }
 
 TEST_CASE("unproject y=0 misses east ramp tile under tilt45", "[unit][viewport_edit]") {
