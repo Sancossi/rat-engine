@@ -1,7 +1,7 @@
 ---
 type: bug
 area: Engine
-status: Investigating
+status: Fixed
 severity: High
 sprint: Sprint 14
 tags: [bug]
@@ -9,11 +9,11 @@ tags: [bug]
 
 # Cannot climb onto grey_yard bridge
 
-Origin: playtest 2026-09-04 after [[Sprint 13 — Grey yard map pass]] / [[feat: Grey yard layout pass]]. Related: [[feat: Walkable bridges over open ground]]. Follow-up: [[feat: Voxel 3D terrain and rotating ramps]]. Depends: [[feat: Rotating ramp voxels]]. Origin: [[Sprint 14 — Voxel 3D terrain]].
+Origin: playtest 2026-09-04 after [[Sprint 13 — Grey yard map pass]] / [[feat: Grey yard layout pass]]. Related: [[feat: Walkable bridges over open ground]]. Follow-up: [[feat: Voxel 3D terrain and rotating ramps]]. Depends: [[feat: Rotating ramp voxels]]. Origin: [[Sprint 14 — Voxel 3D terrain]]. Follow-up: [[chore: Bridge climb review test polish]].
 
-Occupancy-ramp high side сейчас omit’ит fence только у **occupancy solid**. У `floor_slabs` боковые fences остаются — без такого же omit цилиндр не выйдет на плиту `(6,5)`. Это часть фикса, не отдельный баг.
+Occupancy-ramp high side omit’ит fence у occupancy solid и у abutting `floor_slab` (иначе crest на плиту не выходит).
 
-Мост `(6–8, 5)` — airborne `floor_slabs` (`top_y` 2.0). Сверху ходить можно, снизу пройти можно, **забраться с земли/лофта нельзя**: нет рампы и нет лестницы на пролёт. Layout pass сознательно не ставил loft→мост лестницу.
+Мост `(6–8, 5)` — airborne `floor_slabs` (`top_y` 2.0). Сверху ходить можно, снизу пройти можно. Заход с земли — две occupancy-рампы.
 
 ## Repro
 
@@ -28,3 +28,13 @@ Occupancy-ramp high side сейчас omit’ит fence только у **occupa
 ## Actual
 
 Цилиндр остаётся на земле или на лофте; на `top_y` 2.0 не залезть.
+
+## Resolution
+
+Schema 5: occupancy-рампы `(4,0,5)` и `(5,1,5)` East к плитам `(6–8, 5)` `top_y` 2.0. Пролёт не заменён кубами 1 м; walk-under цилиндра 1.6 сохранён. Slab side fence на high-side рампы omit. Loft→мост не авторён (по брифу необязательно). Review: Approved.
+
+Verify: Play `grey_yard`, с запада по двум клиньям на мост; под пролётом пройти. `.\build\tests\rat_tests.exe "[map],[collision],[player],[quest]"`.
+
+## Bugs found
+
+none.

@@ -1,7 +1,7 @@
 ---
 type: task
 area: Engine
-status: Not started
+status: Done
 task_type: Feature
 sprint: Sprint 14
 due:
@@ -26,4 +26,10 @@ Split for [[Sprint 14 — Voxel 3D terrain]]: [[research: Voxel 3D terrain ADR]]
 
 ## Resolution
 
+Sprint 14 закрыл epic: [[ADR-015 Voxel 3D terrain]] (sparse occupancy 1 м + yaw-клинья); schema 5 parse/dump/bake; Edit Place/Remove voxel и Place ramp voxel; `grey_yard` заход на мост двумя клиньями без потери прохода снизу. Review цепочки: Approved.
+
+Verify: Edit → Terrain → Place voxel / Place ramp voxel; Play заход на мост с запада. `.\build\tests\rat_tests.exe "[map],[collision],[player],[viewport],[edit]"`.
+
 ## Bugs found
+
+none. Follow-up polish (не DoD): [[chore: Occupancy review test polish]], [[chore: Edit voxel review polish]], [[chore: Ramp voxel review polish]], [[chore: Bridge climb review test polish]].

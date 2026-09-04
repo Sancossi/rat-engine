@@ -1,9 +1,9 @@
 ---
 type: sprint
-status: In progress
+status: Done
 dates: 2026-09-04/2026-09-18
 goal: Voxel 3D terrain — multi-level maps with terrain and rotating ramps
-current: true
+current: false
 tags: [sprint]
 ---
 
@@ -29,3 +29,11 @@ DoD:
 Epic: [[feat: Voxel 3D terrain and rotating ramps]]
 
 Roadmap: [[Content vertical slice]]
+
+## Итог
+
+DoD выполнен 2026-09-04. [[ADR-015 Voxel 3D terrain]] Accepted (sparse occupancy 1 м, yaw-клинья, dual-read). Schema 5 `occupancy[]` + bake union. Edit: Place/Remove voxel, Place ramp voxel. [[Cannot climb onto grey_yard bridge]] Fixed: две рампы с запада на плиты, проход снизу сохранён.
+
+## Bugs found
+
+на закрытии: none. Polish вне порядка: [[chore: Occupancy review test polish]], [[chore: Edit voxel review polish]], [[chore: Ramp voxel review polish]], [[chore: Bridge climb review test polish]].
