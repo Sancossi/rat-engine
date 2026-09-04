@@ -510,8 +510,9 @@ MapAssetRef parse_map_asset(const json& node) {
 MapData parse_map(const json& root) {
   MapData map;
   map.schema_version = root.at("schema_version").get<int>();
-  if (map.schema_version != 1 && map.schema_version != 2 && map.schema_version != 3) {
-    throw std::runtime_error("unsupported schema_version (expected 1, 2, or 3)");
+  if (map.schema_version != 1 && map.schema_version != 2 && map.schema_version != 3 &&
+      map.schema_version != 4) {
+    throw std::runtime_error("unsupported schema_version (expected 1, 2, 3, or 4)");
   }
   map.id = root.at("id").get<std::string>();
   map.width = root.at("width").get<int>();
@@ -592,6 +593,17 @@ MapData parse_map(const json& root) {
         out.y_lo = node.at("y_lo").get<float>();
         out.y_hi = node.at("y_hi").get<float>();
         map.ladders.push_back(out);
+      }
+    }
+  }
+  if (map.schema_version >= 4) {
+    if (root.contains("indoor_volumes")) {
+      for (const auto& node : root.at("indoor_volumes")) {
+        IndoorVolume out;
+        out.xz = parse_aabb(node);
+        out.y_lo = node.at("y_lo").get<float>();
+        out.y_hi = node.at("y_hi").get<float>();
+        map.indoor_volumes.push_back(out);
       }
     }
   }
@@ -961,6 +973,15 @@ MapSerializeResult serialize_map_to_string(const MapData& map) {
                                        {"direction", ramp_direction_to_string(ladder.direction)},
                                        {"y_lo", ladder.y_lo},
                                        {"y_hi", ladder.y_hi}});
+      }
+    }
+    if (map.schema_version >= 4) {
+      root["indoor_volumes"] = json::array();
+      for (const IndoorVolume& volume : map.indoor_volumes) {
+        json node = dump_aabb(volume.xz);
+        node["y_lo"] = volume.y_lo;
+        node["y_hi"] = volume.y_hi;
+        root["indoor_volumes"].push_back(std::move(node));
       }
     }
     for (const BlockerDef& blocker : map.blockers) {

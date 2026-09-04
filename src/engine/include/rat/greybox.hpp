@@ -34,10 +34,7 @@ class GreyboxScene {
   void resize(std::uint32_t width, std::uint32_t height);
   void set_focus(float x, float y, float z);
   void set_camera_mode(CameraMode mode);
-  void set_player(const PlayerBody& player) {
-    player_ = player;
-    has_player_ = true;
-  }
+  void set_player(const PlayerBody& player);
   void set_climb_lock(bool locked, float into_x, float into_z);
   void tick(float dt);
   void set_blockers(std::span<const BlockerDef> blockers);
@@ -58,6 +55,7 @@ class GreyboxScene {
  private:
   void begin_camera_turn();
   void rebuild_camera();
+  void rebuild_terrain_visuals();
 
   bool initialized_ = false;
   bool has_player_ = false;
@@ -75,6 +73,8 @@ class GreyboxScene {
   OrthoCameraParams params_{};
   OrthoCamera camera_{};
   PlayerBody player_{};
+  MapData terrain_map_{};
+  bool has_terrain_map_ = false;
   std::vector<BlockerDef> blockers_;
   std::vector<Vec3> event_markers_;
   TerrainGeometry terrain_geometry_{};

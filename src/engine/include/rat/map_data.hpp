@@ -108,6 +108,12 @@ struct LadderDef {
   float y_hi = 1.6f;
 };
 
+struct IndoorVolume {
+  Aabb2 xz{};
+  float y_lo = 0.0f;
+  float y_hi = 1.6f;
+};
+
 struct BlockerDef {
   Aabb2 bounds{};
   std::optional<float> base_y{};
@@ -233,6 +239,7 @@ struct MapData {
   std::vector<EdgeBarrierDef> edge_barriers;
   std::vector<FloorSlabDef> floor_slabs;
   std::vector<LadderDef> ladders;
+  std::vector<IndoorVolume> indoor_volumes;
   std::vector<BlockerDef> blockers;
   std::vector<EventDef> events;
   std::vector<MapAssetRef> assets;

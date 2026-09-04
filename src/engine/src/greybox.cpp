@@ -1,6 +1,6 @@
 #include "rat/greybox.hpp"
 
-#include "rat/collision.hpp"
+#include "rat/indoor_volume.hpp"
 
 #include <bgfx/embedded_shader.h>
 #include <bx/bx.h>
@@ -116,6 +116,19 @@ void GreyboxScene::begin_camera_turn() {
   turn_t_ = 0.0f;
 }
 
+void GreyboxScene::set_player(const PlayerBody& player) {
+  const bool was_indoor =
+      has_player_ && has_terrain_map_ && player_inside_indoor_volume(terrain_map_, player_);
+  player_ = player;
+  has_player_ = true;
+  if (has_terrain_map_) {
+    const bool now_indoor = player_inside_indoor_volume(terrain_map_, player_);
+    if (was_indoor != now_indoor) {
+      rebuild_terrain_visuals();
+    }
+  }
+}
+
 void GreyboxScene::set_blockers(std::span<const BlockerDef> blockers) {
   blockers_.assign(blockers.begin(), blockers.end());
 }
@@ -125,138 +138,57 @@ void GreyboxScene::set_event_markers(std::span<const Vec3> markers) {
 }
 
 void GreyboxScene::set_terrain_map(const MapData& map) {
+  terrain_map_ = map;
+  has_terrain_map_ = true;
+  rebuild_terrain_visuals();
+}
+
+void GreyboxScene::rebuild_terrain_visuals() {
   terrain_vertex_data_.clear();
   terrain_indices_.clear();
   terrain_grid_line_data_.clear();
   terrain_geometry_ = {};
 
-  if (choose_terrain_render_policy(map) != TerrainRenderPolicy::HeightTerrain) {
+  if (!has_terrain_map_ ||
+      choose_terrain_render_policy(terrain_map_) != TerrainRenderPolicy::HeightTerrain) {
     return;
   }
+  const MapData& map = terrain_map_;
   terrain_geometry_ = build_terrain_geometry(map.height_grid, map.ramps, map.tile_size);
   if (terrain_geometry_.tiles.empty()) {
     terrain_geometry_ = {};
     return;
   }
-  const std::vector<TerrainSideFace> side_faces = build_terrain_side_faces(terrain_geometry_);
-  const std::vector<TerrainSideFace> fence_faces =
-      build_edge_barrier_faces(terrain_geometry_, map.edge_barriers);
-  constexpr std::size_t kSlabQuadsPerSlab = kFloorSlabFillQuadCount;
-  constexpr std::size_t kLadderQuadsPerLadder = 6;
-  const std::size_t slab_quads = map.floor_slabs.size() * kSlabQuadsPerSlab;
-  const std::size_t ladder_quads = map.ladders.size() * kLadderQuadsPerLadder;
-  if (!terrain_fill_quad_count_fits_u16(terrain_geometry_.tiles.size(), side_faces.size(),
-                                        fence_faces.size() + slab_quads + ladder_quads)) {
+
+  const GreyboxFillMesh fill = build_greybox_fill_mesh(map, player_, has_player_);
+  if (fill.vertices.empty()) {
     // Safe fallback: keep legacy floor/grid if geometry is invalid or exceeds uint16 indexing.
     terrain_geometry_ = {};
     return;
   }
+  terrain_vertex_data_.reserve(fill.vertices.size());
+  for (const GreyboxFillVertex& vertex : fill.vertices) {
+    terrain_vertex_data_.push_back(DebugColorVertex{vertex.x, vertex.y, vertex.z, vertex.abgr});
+  }
+  terrain_indices_ = fill.indices;
 
   auto push_vertex = [](std::vector<DebugColorVertex>& out, float x, float y, float z,
                         std::uint32_t color) {
     out.push_back(DebugColorVertex{x, y, z, color});
   };
 
-  const std::uint32_t terrain_color = 0xff707070;
-  const std::uint32_t fence_color = 0xff8a5a38;
-  const std::uint32_t slab_color = 0xff48a0c8;
-  const std::uint32_t ladder_color = 0xff38d070;
   const std::uint32_t grid_color = 0xff3a3a3a;
   const std::uint32_t axis_x = 0xff5050d0;
   const std::uint32_t axis_z = 0xffd05050;
   constexpr float kLineOffset = 0.03f;
-
-  if (!terrain_geometry_.tiles.empty()) {
-    const std::size_t quad_count = terrain_geometry_.tiles.size() + side_faces.size() +
-                                   fence_faces.size() + slab_quads + ladder_quads;
-    terrain_vertex_data_.reserve(quad_count * 4);
-    terrain_indices_.reserve(quad_count * 6);
-    std::uint32_t base_vertex = 0;
-    auto push_fill_quad = [&](float x0, float y0, float z0, float x1, float y1, float z1, float x2,
-                              float y2, float z2, float x3, float y3, float z3,
-                              std::uint32_t color) {
-      push_vertex(terrain_vertex_data_, x0, y0, z0, color);
-      push_vertex(terrain_vertex_data_, x1, y1, z1, color);
-      push_vertex(terrain_vertex_data_, x2, y2, z2, color);
-      push_vertex(terrain_vertex_data_, x3, y3, z3, color);
-      terrain_indices_.push_back(static_cast<std::uint16_t>(base_vertex + 0));
-      terrain_indices_.push_back(static_cast<std::uint16_t>(base_vertex + 2));
-      terrain_indices_.push_back(static_cast<std::uint16_t>(base_vertex + 1));
-      terrain_indices_.push_back(static_cast<std::uint16_t>(base_vertex + 0));
-      terrain_indices_.push_back(static_cast<std::uint16_t>(base_vertex + 3));
-      terrain_indices_.push_back(static_cast<std::uint16_t>(base_vertex + 2));
-      base_vertex += 4;
-    };
-    for (const TerrainTileQuad& tile : terrain_geometry_.tiles) {
-      push_fill_quad(tile.min_x, tile.y_nw, tile.min_z, tile.max_x, tile.y_ne, tile.min_z, tile.max_x,
-                     tile.y_se, tile.max_z, tile.min_x, tile.y_sw, tile.max_z, terrain_color);
-    }
-    for (const TerrainSideFace& face : side_faces) {
-      push_fill_quad(face.x0, face.y0_lo, face.z0, face.x0, face.y0_hi, face.z0, face.x1, face.y1_hi,
-                     face.z1, face.x1, face.y1_lo, face.z1, terrain_color);
-    }
-    for (const TerrainSideFace& face : fence_faces) {
-      push_fill_quad(face.x0, face.y0_lo, face.z0, face.x0, face.y0_hi, face.z0, face.x1, face.y1_hi,
-                     face.z1, face.x1, face.y1_lo, face.z1, fence_color);
-    }
-    const float ts = map.tile_size > 0.0f ? map.tile_size : 1.0f;
-    for (const FloorSlabDef& slab : map.floor_slabs) {
-      const std::vector<TerrainFillQuad> fill = build_floor_slab_fill_quads(slab, ts);
-      for (const TerrainFillQuad& quad : fill) {
-        push_fill_quad(quad.x0, quad.y0, quad.z0, quad.x1, quad.y1, quad.z1, quad.x2, quad.y2,
-                       quad.z2, quad.x3, quad.y3, quad.z3, slab_color);
-      }
-    }
-    for (const LadderDef& ladder : map.ladders) {
-      const float ox = static_cast<float>(ladder.tile.x) * ts;
-      const float oz = static_cast<float>(ladder.tile.z) * ts;
-      float min_x = ox;
-      float max_x = ox + ts;
-      float min_z = oz;
-      float max_z = oz + ts;
-      switch (ladder.direction) {
-        case RampDirection::East:
-          min_x = ox + ts - kLadderInset;
-          max_x = ox + ts;
-          break;
-        case RampDirection::West:
-          min_x = ox;
-          max_x = ox + kLadderInset;
-          break;
-        case RampDirection::South:
-          min_z = oz + ts - kLadderInset;
-          max_z = oz + ts;
-          break;
-        case RampDirection::North:
-          min_z = oz;
-          max_z = oz + kLadderInset;
-          break;
-      }
-      const float y_hi = ladder.y_hi;
-      const float y_lo = ladder.y_lo;
-      push_fill_quad(min_x, y_hi, min_z, max_x, y_hi, min_z, max_x, y_hi, max_z, min_x, y_hi, max_z,
-                     ladder_color);
-      push_fill_quad(min_x, y_lo, max_z, max_x, y_lo, max_z, max_x, y_lo, min_z, min_x, y_lo, min_z,
-                     ladder_color);
-      push_fill_quad(min_x, y_lo, min_z, min_x, y_hi, min_z, max_x, y_hi, min_z, max_x, y_lo, min_z,
-                     ladder_color);
-      push_fill_quad(max_x, y_lo, min_z, max_x, y_hi, min_z, max_x, y_hi, max_z, max_x, y_lo, max_z,
-                     ladder_color);
-      push_fill_quad(max_x, y_lo, max_z, max_x, y_hi, max_z, min_x, y_hi, max_z, min_x, y_lo, max_z,
-                     ladder_color);
-      push_fill_quad(min_x, y_lo, max_z, min_x, y_hi, max_z, min_x, y_hi, min_z, min_x, y_lo, min_z,
-                     ladder_color);
-    }
-
-    const auto lines = build_terrain_grid_lines(terrain_geometry_, kLineOffset);
-    terrain_grid_line_data_.reserve(lines.size() * 2);
-    for (const TerrainLineSegment& line : lines) {
-      const bool axis_z_line = line.a.z == 0.0f && line.b.z == 0.0f;
-      const bool axis_x_line = line.a.x == 0.0f && line.b.x == 0.0f;
-      const std::uint32_t color = axis_z_line ? axis_z : (axis_x_line ? axis_x : grid_color);
-      push_vertex(terrain_grid_line_data_, line.a.x, line.a.y, line.a.z, color);
-      push_vertex(terrain_grid_line_data_, line.b.x, line.b.y, line.b.z, color);
-    }
+  const auto lines = build_terrain_grid_lines(terrain_geometry_, kLineOffset);
+  terrain_grid_line_data_.reserve(lines.size() * 2);
+  for (const TerrainLineSegment& line : lines) {
+    const bool axis_z_line = line.a.z == 0.0f && line.b.z == 0.0f;
+    const bool axis_x_line = line.a.x == 0.0f && line.b.x == 0.0f;
+    const std::uint32_t color = axis_z_line ? axis_z : (axis_x_line ? axis_x : grid_color);
+    push_vertex(terrain_grid_line_data_, line.a.x, line.a.y, line.a.z, color);
+    push_vertex(terrain_grid_line_data_, line.b.x, line.b.y, line.b.z, color);
   }
 }
 
@@ -458,8 +390,12 @@ void GreyboxScene::draw(bgfx::ViewId view_id) {
     const float base_y = has_jump_heights ? *blockers_[i].base_y : (ground + 0.04f);
     const float top_y = has_jump_heights ? *blockers_[i].top_y : (base_y + 0.9f);
     const std::uint32_t base_color = has_jump_heights ? blocker_jumpable_color : blocker_color;
-    const std::uint32_t color =
-        (static_cast<int>(i) == selected_blocker_) ? selected_blocker_color : base_color;
+    std::uint32_t color = base_color;
+    if (has_player_ && has_terrain_map_ && static_cast<int>(i) != selected_blocker_) {
+      color = greybox_fill_abgr(terrain_map_, player_, center_x, top_y, center_z, base_color);
+    } else if (static_cast<int>(i) == selected_blocker_) {
+      color = selected_blocker_color;
+    }
     const DebugColorVertex verts[4] = {
         {b.min_x, top_y, b.min_z, color},
         {b.max_x, top_y, b.min_z, color},

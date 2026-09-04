@@ -141,9 +141,28 @@ TEST_CASE("jumpable blocker without vertical pair reports blocker path", "[unit]
 
 TEST_CASE("schema error from JSON is structured with path", "[unit][mapdoc]") {
   const rat::MapDocumentLoadResult loaded =
-      rat::load_map_document_from_string(R"({"schema_version":4,"id":"x","width":1,"height":1})");
+      rat::load_map_document_from_string(R"({"schema_version":5,"id":"x","width":1,"height":1})");
   REQUIRE_FALSE(loaded.ok);
   REQUIRE(has_error_at(loaded.issues, "/schema_version"));
+}
+
+TEST_CASE("schema 4 indoor volume with y_hi < y_lo reports /indoor_volumes/0/y_hi",
+          "[unit][mapdoc]") {
+  rat::MapData map = make_flat_document_map();
+  map.schema_version = 4;
+  map.indoor_volumes.push_back(rat::IndoorVolume{
+      .xz = {0.0f, 0.0f, 2.0f, 2.0f},
+      .y_lo = 2.0f,
+      .y_hi = 1.0f,
+  });
+  REQUIRE(has_error_at(rat::validate_map_document(map), "/indoor_volumes/0/y_hi"));
+}
+
+TEST_CASE("schema 4 empty indoor_volumes compiles", "[unit][mapdoc]") {
+  rat::MapData map = make_flat_document_map();
+  map.schema_version = 4;
+  const rat::MapCompileResult compiled = rat::compile_map_data(map);
+  REQUIRE(compiled.ok);
 }
 
 TEST_CASE("document replace bumps revision and invalidates prior RuntimeMap stamp",

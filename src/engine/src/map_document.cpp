@@ -242,8 +242,9 @@ std::vector<MapIssue> validate_map_document(const MapData& data) {
   if (data.id.empty()) {
     add_error(issues, "/id", "map id must not be empty");
   }
-  if (data.schema_version != 1 && data.schema_version != 2 && data.schema_version != 3) {
-    add_error(issues, "/schema_version", "unsupported schema_version (expected 1, 2, or 3)");
+  if (data.schema_version != 1 && data.schema_version != 2 && data.schema_version != 3 &&
+      data.schema_version != 4) {
+    add_error(issues, "/schema_version", "unsupported schema_version (expected 1, 2, 3, or 4)");
   }
   if (data.width <= 0 || data.height <= 0) {
     add_error(issues, "/width", "map width/height must be > 0");
@@ -343,6 +344,17 @@ std::vector<MapIssue> validate_map_document(const MapData& data) {
     }
   }
 
+  for (std::size_t i = 0; i < data.indoor_volumes.size(); ++i) {
+    const IndoorVolume& volume = data.indoor_volumes[i];
+    const std::string volume_path = index_path("/indoor_volumes", i);
+    if (volume.y_hi < volume.y_lo) {
+      add_error(issues, volume_path + "/y_hi", "indoor volume y_hi must be >= y_lo");
+    }
+    if (volume.xz.max_x < volume.xz.min_x || volume.xz.max_z < volume.xz.min_z) {
+      add_error(issues, volume_path, "indoor volume xz max must be >= min");
+    }
+  }
+
   for (std::size_t i = 0; i < data.blockers.size(); ++i) {
     const BlockerDef& blocker = data.blockers[i];
     const std::string blocker_path = index_path("/blockers", i);
@@ -435,8 +447,9 @@ MapDocumentLoadResult load_map_document_from_string(std::string_view json_text) 
       return result;
     }
     const int version = root.at("schema_version").get<int>();
-    if (version != 1 && version != 2 && version != 3) {
-      add_error(result.issues, "/schema_version", "unsupported schema_version (expected 1, 2, or 3)");
+    if (version != 1 && version != 2 && version != 3 && version != 4) {
+      add_error(result.issues, "/schema_version",
+                "unsupported schema_version (expected 1, 2, 3, or 4)");
       return result;
     }
   } catch (const std::exception& ex) {

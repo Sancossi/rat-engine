@@ -19,6 +19,7 @@ add_library(rat_core
   src/gameplay_notify.cpp
   src/height_edit.cpp
   src/hot_apply.cpp
+  src/indoor_volume.cpp
   src/input.cpp
   src/input_bindings.cpp
   src/inventory_list.cpp

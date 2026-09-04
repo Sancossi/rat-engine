@@ -103,7 +103,7 @@ TEST_CASE("Event optional y round-trips through serialize", "[unit][map][event]"
 }
 
 TEST_CASE("Map loader rejects unknown schema version", "[unit][map]") {
-  const auto result = rat::load_map_from_string(R"({"schema_version":4,"id":"x","width":1,"height":1})");
+  const auto result = rat::load_map_from_string(R"({"schema_version":5,"id":"x","width":1,"height":1})");
   REQUIRE_FALSE(result.ok);
   REQUIRE_FALSE(result.error.empty());
 }
@@ -1066,4 +1066,104 @@ TEST_CASE("v3 missing slab and ladder arrays loads empty", "[unit][map]") {
   REQUIRE(loaded.map.schema_version == 3);
   REQUIRE(loaded.map.floor_slabs.empty());
   REQUIRE(loaded.map.ladders.empty());
+  REQUIRE(loaded.map.indoor_volumes.empty());
+}
+
+TEST_CASE("Map loader v3 ignores indoor_volumes key", "[unit][map]") {
+  constexpr const char* kJson = R"({
+    "schema_version": 3,
+    "id": "v3_ignore_indoor",
+    "width": 1,
+    "height": 1,
+    "height_grid": {
+      "origin_x": 0, "origin_z": 0, "width": 1, "height": 1, "ground_y": [0.0]
+    },
+    "indoor_volumes": [
+      { "min_x": 0.0, "min_z": 0.0, "max_x": 2.0, "max_z": 2.0, "y_lo": 0.0, "y_hi": 2.5 }
+    ],
+    "events": []
+  })";
+  const auto loaded = rat::load_map_from_string(kJson);
+  REQUIRE(loaded.ok);
+  REQUIRE(loaded.map.indoor_volumes.empty());
+}
+
+TEST_CASE("Map loader v4 roundtrips indoor volume AABB", "[unit][map]") {
+  constexpr const char* kJson = R"({
+    "schema_version": 4,
+    "id": "house",
+    "width": 2,
+    "height": 2,
+    "height_grid": {
+      "origin_x": 0, "origin_z": 0, "width": 2, "height": 2,
+      "ground_y": [0.0, 0.0, 0.0, 0.0]
+    },
+    "indoor_volumes": [
+      { "min_x": 0.0, "min_z": 1.0, "max_x": 3.0, "max_z": 4.0, "y_lo": 0.5, "y_hi": 2.5 }
+    ],
+    "events": []
+  })";
+  const auto loaded = rat::load_map_from_string(kJson);
+  REQUIRE(loaded.ok);
+  REQUIRE(loaded.map.schema_version == 4);
+  REQUIRE(loaded.map.indoor_volumes.size() == 1);
+  REQUIRE(loaded.map.indoor_volumes[0].xz.min_x == Catch::Approx(0.0f));
+  REQUIRE(loaded.map.indoor_volumes[0].xz.min_z == Catch::Approx(1.0f));
+  REQUIRE(loaded.map.indoor_volumes[0].xz.max_x == Catch::Approx(3.0f));
+  REQUIRE(loaded.map.indoor_volumes[0].xz.max_z == Catch::Approx(4.0f));
+  REQUIRE(loaded.map.indoor_volumes[0].y_lo == Catch::Approx(0.5f));
+  REQUIRE(loaded.map.indoor_volumes[0].y_hi == Catch::Approx(2.5f));
+
+  const auto serialized = rat::serialize_map_to_string(loaded.map);
+  REQUIRE(serialized.ok);
+  REQUIRE(serialized.json_text.find("\"indoor_volumes\"") != std::string::npos);
+  const auto again = rat::load_map_from_string(serialized.json_text);
+  REQUIRE(again.ok);
+  REQUIRE(again.map.schema_version == 4);
+  REQUIRE(again.map.indoor_volumes.size() == 1);
+  REQUIRE(again.map.indoor_volumes[0].xz.max_z == Catch::Approx(4.0f));
+  REQUIRE(again.map.indoor_volumes[0].y_hi == Catch::Approx(2.5f));
+}
+
+TEST_CASE("Map loader v4 missing indoor_volumes loads empty array", "[unit][map]") {
+  constexpr const char* kJson = R"({
+    "schema_version": 4,
+    "id": "v4_empty",
+    "width": 1,
+    "height": 1,
+    "height_grid": {
+      "origin_x": 0, "origin_z": 0, "width": 1, "height": 1, "ground_y": [0.0]
+    },
+    "events": []
+  })";
+  const auto loaded = rat::load_map_from_string(kJson);
+  REQUIRE(loaded.ok);
+  REQUIRE(loaded.map.schema_version == 4);
+  REQUIRE(loaded.map.indoor_volumes.empty());
+
+  const auto serialized = rat::serialize_map_to_string(loaded.map);
+  REQUIRE(serialized.ok);
+  REQUIRE(serialized.json_text.find("\"indoor_volumes\"") != std::string::npos);
+}
+
+TEST_CASE("Map loader v3 dump omits indoor_volumes", "[unit][map]") {
+  rat::MapData map;
+  map.schema_version = 3;
+  map.id = "v3_dump";
+  map.width = 1;
+  map.height = 1;
+  map.height_grid.origin_x = 0;
+  map.height_grid.origin_z = 0;
+  map.height_grid.width = 1;
+  map.height_grid.height = 1;
+  map.height_grid.ground_y = {0.0f};
+  map.indoor_volumes.push_back(rat::IndoorVolume{
+      .xz = {0.0f, 0.0f, 1.0f, 1.0f},
+      .y_lo = 0.0f,
+      .y_hi = 2.0f,
+  });
+
+  const auto serialized = rat::serialize_map_to_string(map);
+  REQUIRE(serialized.ok);
+  REQUIRE(serialized.json_text.find("indoor_volumes") == std::string::npos);
 }
