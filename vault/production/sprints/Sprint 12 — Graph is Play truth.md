@@ -24,7 +24,7 @@ DoD:
 
 Порядок:
 
-- [[feat: Reverse-compile commands to graph]] → [[feat: Play walks event graph]] → [[chore: Drop event page commands]] → [[feat: Event graph in-node widgets]] → [[feat: Event graph RMB add copy delete and wiring]]
+- [[feat: Reverse-compile commands to graph]] → [[feat: Play walks event graph]] → [[chore: Drop event page commands]] → [[feat: Event graph in-node widgets]] → [[feat: Event graph RMB add copy delete and wiring]] → [[feat: Cyrillic in texts and comments]]
 
 Spec: `docs/superpowers/specs/2026-09-04-play-walks-event-graph-design.md`
 
