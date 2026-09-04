@@ -1,7 +1,7 @@
 ---
 type: bug
 area: Engine
-status: Investigating
+status: Fixed
 severity: Medium
 sprint: Sprint 12
 tags: [bug]
@@ -23,3 +23,11 @@ The event is selected (same as a ground-level tile).
 ## Actual
 
 Click does not hit the event. `handle_edit_mouse_input` always unprojects onto `y = 0`, so the ortho ray’s XZ on a sloped/raised surface is not the ramp tile. `pick_map_object_xz` then tests that XZ against the event AABB.
+
+## Resolution
+
+`unproject_to_terrain` бьёт лучом по квадам height-grid/рамп; редактор больше не сажает клик на y=0. Кубы y=1 тоже. Verify: Edit → Events, клик по маркеру на рампе (8,8); `.\build\tests\rat_tests.exe "[viewport_edit],[terrain]"`. Review: Approved.
+
+## Bugs found
+
+none.
