@@ -567,3 +567,31 @@ TEST_CASE("ladder upsert last-wins on tile and direction and undoes", "[unit][ed
   REQUIRE(history.undo(map));
   REQUIRE(map.ladders[0].y_hi == Approx(1.6f));
 }
+
+TEST_CASE("place two stacked occupancy solids, remove upper, undo restores",
+          "[unit][edit][height][viewport]") {
+  rat::MapData map = make_tiny_map();
+  map.schema_version = 5;
+  REQUIRE(rat::upgrade_map_schema_for_elevation(map).ok);
+  rat::EditHistory history;
+
+  REQUIRE(history.execute(map, rat::make_place_map_occupancy_solid_command(1, 0, 2)));
+  REQUIRE(history.execute(map, rat::make_place_map_occupancy_solid_command(1, 1, 2)));
+  REQUIRE(map.occupancy.size() == 2);
+
+  REQUIRE(history.execute(map, rat::make_remove_map_occupancy_cell_command(1, 1, 2)));
+  REQUIRE(map.occupancy.size() == 1);
+  REQUIRE(map.occupancy[0].x == 1);
+  REQUIRE(map.occupancy[0].y == 0);
+  REQUIRE(map.occupancy[0].z == 2);
+
+  REQUIRE(history.undo(map));
+  REQUIRE(map.occupancy.size() == 2);
+  bool found_upper = false;
+  for (const rat::OccupancyCell& cell : map.occupancy) {
+    if (cell.x == 1 && cell.y == 1 && cell.z == 2 && cell.kind == rat::OccupancyKind::Solid) {
+      found_upper = true;
+    }
+  }
+  REQUIRE(found_upper);
+}

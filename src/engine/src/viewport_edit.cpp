@@ -6,6 +6,8 @@
 #include <algorithm>
 #include <cmath>
 #include <limits>
+#include <span>
+#include <utility>
 
 namespace rat {
 namespace {
@@ -265,6 +267,108 @@ std::optional<Vec3> unproject_to_terrain(const OrthoCamera& camera, float pixel_
   return intersect_ray_ground_y(*ray, 0.0f);
 }
 
+namespace {
+
+std::optional<float> ray_aabb_t(Vec3 origin, Vec3 dir, Vec3 bmin, Vec3 bmax) {
+  float tmin = 0.0f;
+  float tmax = 1.0f;
+  const float origin_v[3] = {origin.x, origin.y, origin.z};
+  const float dir_v[3] = {dir.x, dir.y, dir.z};
+  const float min_v[3] = {bmin.x, bmin.y, bmin.z};
+  const float max_v[3] = {bmax.x, bmax.y, bmax.z};
+  for (int i = 0; i < 3; ++i) {
+    if (std::fabs(dir_v[i]) <= kEpsilon) {
+      if (origin_v[i] < min_v[i] || origin_v[i] > max_v[i]) {
+        return std::nullopt;
+      }
+      continue;
+    }
+    float t1 = (min_v[i] - origin_v[i]) / dir_v[i];
+    float t2 = (max_v[i] - origin_v[i]) / dir_v[i];
+    if (t1 > t2) {
+      std::swap(t1, t2);
+    }
+    tmin = std::max(tmin, t1);
+    tmax = std::min(tmax, t2);
+    if (tmin > tmax) {
+      return std::nullopt;
+    }
+  }
+  return tmin;
+}
+
+VoxelFace aabb_hit_face(Vec3 hit, Vec3 bmin, Vec3 bmax) {
+  const float dx_pos = std::fabs(hit.x - bmax.x);
+  const float dx_neg = std::fabs(hit.x - bmin.x);
+  const float dy_pos = std::fabs(hit.y - bmax.y);
+  const float dy_neg = std::fabs(hit.y - bmin.y);
+  const float dz_pos = std::fabs(hit.z - bmax.z);
+  const float dz_neg = std::fabs(hit.z - bmin.z);
+  float best = dx_pos;
+  VoxelFace face = VoxelFace::PosX;
+  const auto consider = [&](VoxelFace next, float dist) {
+    if (dist < best) {
+      best = dist;
+      face = next;
+    }
+  };
+  consider(VoxelFace::NegX, dx_neg);
+  consider(VoxelFace::PosY, dy_pos);
+  consider(VoxelFace::NegY, dy_neg);
+  consider(VoxelFace::PosZ, dz_pos);
+  consider(VoxelFace::NegZ, dz_neg);
+  return face;
+}
+
+void occupancy_cell_aabb(const OccupancyCell& cell, float tile_size, Vec3& bmin, Vec3& bmax) {
+  const float ts = safe_tile_size(tile_size);
+  bmin = {static_cast<float>(cell.x) * ts, static_cast<float>(cell.y) * ts,
+          static_cast<float>(cell.z) * ts};
+  bmax = {bmin.x + ts, bmin.y + ts, bmin.z + ts};
+}
+
+}  // namespace
+
+std::optional<Vec3> unproject_to_occupancy(const OrthoCamera& camera, float pixel_x, float pixel_y,
+                                           std::uint32_t framebuffer_width,
+                                           std::uint32_t framebuffer_height,
+                                           std::span<const OccupancyCell> occupancy,
+                                           float tile_size) {
+  const auto ray = unproject_camera_ray(camera, pixel_x, pixel_y, framebuffer_width, framebuffer_height);
+  if (!ray.has_value()) {
+    return std::nullopt;
+  }
+  const Vec3 dir = vec_sub(ray->far_world, ray->near_world);
+  bool found = false;
+  float best_dist2 = 0.0f;
+  Vec3 best_hit{};
+  for (const OccupancyCell& cell : occupancy) {
+    if (cell.kind != OccupancyKind::Solid) {
+      continue;
+    }
+    Vec3 bmin{};
+    Vec3 bmax{};
+    occupancy_cell_aabb(cell, tile_size, bmin, bmax);
+    const auto t = ray_aabb_t(ray->near_world, dir, bmin, bmax);
+    if (!t.has_value()) {
+      continue;
+    }
+    const Vec3 hit{ray->near_world.x + dir.x * *t, ray->near_world.y + dir.y * *t,
+                   ray->near_world.z + dir.z * *t};
+    const float dist2 = vec_dot(vec_sub(hit, camera.eye), vec_sub(hit, camera.eye));
+    if (found && dist2 >= best_dist2) {
+      continue;
+    }
+    found = true;
+    best_dist2 = dist2;
+    best_hit = hit;
+  }
+  if (!found) {
+    return std::nullopt;
+  }
+  return best_hit;
+}
+
 std::optional<PixelPos> project_world_to_pixels(const OrthoCamera& camera, Vec3 world,
                                                std::uint32_t framebuffer_width,
                                                std::uint32_t framebuffer_height) {
@@ -375,7 +479,7 @@ TileDelta tile_delta_between(TileCoord from, TileCoord to) {
 }
 
 ViewportClickAction resolve_viewport_click(const MapData& map, ViewportTool tool, Vec3 world_hit,
-                                           EditSubmode submode) {
+                                           EditSubmode submode, int voxel_layer) {
   if (const auto picked = pick_map_object_xz(map, world_hit, submode); picked.has_value()) {
     if (picked->kind == ViewportPickKind::Blocker) {
       return {ViewportClickActionKind::SelectBlocker, picked->index, {}};
@@ -404,6 +508,14 @@ ViewportClickAction resolve_viewport_click(const MapData& map, ViewportTool tool
       return {ViewportClickActionKind::PlaceLadder, 0, tile, edge};
     case ViewportTool::PlaceRamp:
       return {ViewportClickActionKind::PlaceRamp, 0, tile, edge};
+    case ViewportTool::PlaceVoxel: {
+      const VoxelCoord cell = voxel_cell_for_place(map, world_hit, voxel_layer);
+      return {ViewportClickActionKind::PlaceVoxel, 0, TileCoord{cell.x, cell.z}, edge, cell.y};
+    }
+    case ViewportTool::RemoveVoxel: {
+      const VoxelCoord cell = voxel_cell_for_remove(map, world_hit, voxel_layer);
+      return {ViewportClickActionKind::RemoveVoxel, 0, TileCoord{cell.x, cell.z}, edge, cell.y};
+    }
   }
   return {};
 }
@@ -413,7 +525,8 @@ bool viewport_tool_allowed(EditSubmode submode, ViewportTool tool) {
     case EditSubmode::Terrain:
       return tool == ViewportTool::Select || tool == ViewportTool::PlaceCube ||
              tool == ViewportTool::PlaceFence || tool == ViewportTool::PlaceSlab ||
-             tool == ViewportTool::PlaceBridge || tool == ViewportTool::PlaceRamp;
+             tool == ViewportTool::PlaceBridge || tool == ViewportTool::PlaceRamp ||
+             tool == ViewportTool::PlaceVoxel || tool == ViewportTool::RemoveVoxel;
     case EditSubmode::Objects:
       return tool == ViewportTool::Select || tool == ViewportTool::PlaceBlocker ||
              tool == ViewportTool::PlaceLadder;
@@ -421,6 +534,90 @@ bool viewport_tool_allowed(EditSubmode submode, ViewportTool tool) {
       return tool == ViewportTool::Select || tool == ViewportTool::PlaceEvent;
   }
   return false;
+}
+
+VoxelCoord adjacent_voxel(VoxelCoord cell, VoxelFace face) {
+  switch (face) {
+    case VoxelFace::PosX:
+      cell.x += 1;
+      break;
+    case VoxelFace::NegX:
+      cell.x -= 1;
+      break;
+    case VoxelFace::PosY:
+      cell.y += 1;
+      break;
+    case VoxelFace::NegY:
+      cell.y -= 1;
+      break;
+    case VoxelFace::PosZ:
+      cell.z += 1;
+      break;
+    case VoxelFace::NegZ:
+      cell.z -= 1;
+      break;
+  }
+  return cell;
+}
+
+std::optional<OccupancyFaceHit> pick_occupancy_face_at(std::span<const OccupancyCell> occupancy,
+                                                       Vec3 world_hit, float tile_size) {
+  constexpr float kFaceEps = 0.05f;
+  bool found = false;
+  float best_dist = 0.0f;
+  OccupancyFaceHit best{};
+  for (const OccupancyCell& cell : occupancy) {
+    if (cell.kind != OccupancyKind::Solid) {
+      continue;
+    }
+    Vec3 bmin{};
+    Vec3 bmax{};
+    occupancy_cell_aabb(cell, tile_size, bmin, bmax);
+    if (world_hit.x < bmin.x - kFaceEps || world_hit.x > bmax.x + kFaceEps ||
+        world_hit.y < bmin.y - kFaceEps || world_hit.y > bmax.y + kFaceEps ||
+        world_hit.z < bmin.z - kFaceEps || world_hit.z > bmax.z + kFaceEps) {
+      continue;
+    }
+    const VoxelFace face = aabb_hit_face(world_hit, bmin, bmax);
+    const float dist_x = std::min(std::fabs(world_hit.x - bmin.x), std::fabs(world_hit.x - bmax.x));
+    const float dist_y = std::min(std::fabs(world_hit.y - bmin.y), std::fabs(world_hit.y - bmax.y));
+    const float dist_z = std::min(std::fabs(world_hit.z - bmin.z), std::fabs(world_hit.z - bmax.z));
+    const float dist = std::min(dist_x, std::min(dist_y, dist_z));
+    if (dist > kFaceEps) {
+      continue;
+    }
+    if (found && dist >= best_dist) {
+      continue;
+    }
+    found = true;
+    best_dist = dist;
+    best.x = cell.x;
+    best.y = cell.y;
+    best.z = cell.z;
+    best.face = face;
+  }
+  if (!found) {
+    return std::nullopt;
+  }
+  return best;
+}
+
+VoxelCoord voxel_cell_for_place(const MapData& map, Vec3 world_hit, int layer_y) {
+  if (const auto face = pick_occupancy_face_at(map.occupancy, world_hit, map.tile_size);
+      face.has_value()) {
+    return adjacent_voxel(VoxelCoord{face->x, face->y, face->z}, face->face);
+  }
+  const TileCoord tile = world_to_tile_xz(world_hit, map.tile_size);
+  return {tile.x, layer_y, tile.z};
+}
+
+VoxelCoord voxel_cell_for_remove(const MapData& map, Vec3 world_hit, int layer_y) {
+  if (const auto face = pick_occupancy_face_at(map.occupancy, world_hit, map.tile_size);
+      face.has_value()) {
+    return {face->x, face->y, face->z};
+  }
+  const TileCoord tile = world_to_tile_xz(world_hit, map.tile_size);
+  return {tile.x, layer_y, tile.z};
 }
 
 }  // namespace rat

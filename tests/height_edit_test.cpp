@@ -491,3 +491,93 @@ TEST_CASE("Height edit schema upgrade keeps existing values", "[unit][height_edi
   REQUIRE(map.height_grid.ground_y[0] == Approx(0.0f));
   REQUIRE(map.height_grid.ground_y[5] == Approx(5.0f));
 }
+
+namespace {
+
+rat::MapData make_occupancy_edit_map(int schema) {
+  rat::MapData map;
+  map.schema_version = schema;
+  map.id = "occupancy_edit";
+  map.width = 4;
+  map.height = 4;
+  map.tile_size = 1.0f;
+  map.height_grid.origin_x = 0;
+  map.height_grid.origin_z = 0;
+  map.height_grid.width = 4;
+  map.height_grid.height = 4;
+  map.height_grid.ground_y.assign(16, 0.0f);
+  return map;
+}
+
+[[nodiscard]] const rat::OccupancyCell* find_occupancy(const rat::MapData& map, int x, int y,
+                                                       int z) {
+  for (const rat::OccupancyCell& cell : map.occupancy) {
+    if (cell.x == x && cell.y == y && cell.z == z) {
+      return &cell;
+    }
+  }
+  return nullptr;
+}
+
+}  // namespace
+
+TEST_CASE("Place occupancy solid stacks two cells in one XZ without fill-to-Y=0",
+          "[unit][height_edit][edit]") {
+  rat::MapData map = make_occupancy_edit_map(5);
+  const auto lower = rat::place_map_occupancy_solid(map, 1, 0, 2);
+  const auto upper = rat::place_map_occupancy_solid(map, 1, 1, 2);
+  REQUIRE(lower.ok);
+  REQUIRE(upper.ok);
+  REQUIRE(map.occupancy.size() == 2);
+  REQUIRE(map.schema_version == 5);
+  const rat::OccupancyCell* y0 = find_occupancy(map, 1, 0, 2);
+  const rat::OccupancyCell* y1 = find_occupancy(map, 1, 1, 2);
+  REQUIRE(y0 != nullptr);
+  REQUIRE(y1 != nullptr);
+  REQUIRE(y0->kind == rat::OccupancyKind::Solid);
+  REQUIRE(y1->kind == rat::OccupancyKind::Solid);
+  REQUIRE(rat::get_tile_ground_y(map.height_grid, 1, 2).value == Approx(0.0f));
+}
+
+TEST_CASE("Remove occupancy deletes the upper stacked solid and keeps the lower",
+          "[unit][height_edit][edit]") {
+  rat::MapData map = make_occupancy_edit_map(5);
+  REQUIRE(rat::place_map_occupancy_solid(map, 1, 0, 2).ok);
+  REQUIRE(rat::place_map_occupancy_solid(map, 1, 1, 2).ok);
+  const auto removed = rat::remove_map_occupancy_cell(map, 1, 1, 2);
+  REQUIRE(removed.ok);
+  REQUIRE(map.occupancy.size() == 1);
+  REQUIRE(find_occupancy(map, 1, 0, 2) != nullptr);
+  REQUIRE(find_occupancy(map, 1, 1, 2) == nullptr);
+}
+
+TEST_CASE("Remove occupancy is a no-op when the cell is empty", "[unit][height_edit][edit]") {
+  rat::MapData map = make_occupancy_edit_map(5);
+  const auto removed = rat::remove_map_occupancy_cell(map, 1, 3, 2);
+  REQUIRE_FALSE(removed.ok);
+  REQUIRE(map.occupancy.empty());
+}
+
+TEST_CASE("First occupancy write bumps schema 4 to 5", "[unit][height_edit][edit]") {
+  rat::MapData map = make_occupancy_edit_map(4);
+  REQUIRE(map.schema_version == 4);
+  REQUIRE(rat::place_map_occupancy_solid(map, 0, 0, 0).ok);
+  REQUIRE(map.schema_version == 5);
+  REQUIRE(map.occupancy.size() == 1);
+}
+
+TEST_CASE("Place occupancy solid last-wins on the same xyz", "[unit][height_edit][edit]") {
+  rat::MapData map = make_occupancy_edit_map(5);
+  map.occupancy.push_back(rat::OccupancyCell{
+      .x = 2, .y = 0, .z = 1, .kind = rat::OccupancyKind::Ramp, .yaw = rat::RampDirection::East});
+  REQUIRE(rat::place_map_occupancy_solid(map, 2, 0, 1).ok);
+  REQUIRE(map.occupancy.size() == 1);
+  REQUIRE(map.occupancy[0].kind == rat::OccupancyKind::Solid);
+}
+
+TEST_CASE("Place occupancy refuses xyz outside the height grid", "[unit][height_edit][edit]") {
+  rat::MapData map = make_occupancy_edit_map(5);
+  const auto refused = rat::place_map_occupancy_solid(map, 99, 0, 0);
+  REQUIRE_FALSE(refused.ok);
+  REQUIRE(map.occupancy.empty());
+}

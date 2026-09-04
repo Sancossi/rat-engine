@@ -61,6 +61,10 @@ class EditCommand {
 [[nodiscard]] std::unique_ptr<EditCommand> make_upsert_map_ladder_command(LadderDef ladder);
 [[nodiscard]] std::unique_ptr<EditCommand> make_remove_map_ladder_command(
     TileCoord tile, RampDirection direction);
+[[nodiscard]] std::unique_ptr<EditCommand> make_place_map_occupancy_solid_command(int x, int y,
+                                                                                   int z);
+[[nodiscard]] std::unique_ptr<EditCommand> make_remove_map_occupancy_cell_command(int x, int y,
+                                                                                   int z);
 
 class EditHistory {
  public:

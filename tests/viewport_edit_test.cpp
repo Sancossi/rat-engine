@@ -571,6 +571,8 @@ TEST_CASE("viewport tool allowed matches edit submode", "[unit][viewport_edit]")
   REQUIRE(rat::viewport_tool_allowed(EditSubmode::Terrain, ViewportTool::PlaceSlab));
   REQUIRE(rat::viewport_tool_allowed(EditSubmode::Terrain, ViewportTool::PlaceRamp));
   REQUIRE(rat::viewport_tool_allowed(EditSubmode::Terrain, ViewportTool::PlaceBridge));
+  REQUIRE(rat::viewport_tool_allowed(EditSubmode::Terrain, ViewportTool::PlaceVoxel));
+  REQUIRE(rat::viewport_tool_allowed(EditSubmode::Terrain, ViewportTool::RemoveVoxel));
   REQUIRE_FALSE(rat::viewport_tool_allowed(EditSubmode::Terrain, ViewportTool::PlaceBlocker));
   REQUIRE_FALSE(rat::viewport_tool_allowed(EditSubmode::Terrain, ViewportTool::PlaceEvent));
   REQUIRE_FALSE(rat::viewport_tool_allowed(EditSubmode::Terrain, ViewportTool::PlaceLadder));
@@ -584,6 +586,8 @@ TEST_CASE("viewport tool allowed matches edit submode", "[unit][viewport_edit]")
   REQUIRE_FALSE(rat::viewport_tool_allowed(EditSubmode::Objects, ViewportTool::PlaceRamp));
   REQUIRE_FALSE(rat::viewport_tool_allowed(EditSubmode::Objects, ViewportTool::PlaceBridge));
   REQUIRE_FALSE(rat::viewport_tool_allowed(EditSubmode::Objects, ViewportTool::PlaceEvent));
+  REQUIRE_FALSE(rat::viewport_tool_allowed(EditSubmode::Objects, ViewportTool::PlaceVoxel));
+  REQUIRE_FALSE(rat::viewport_tool_allowed(EditSubmode::Objects, ViewportTool::RemoveVoxel));
 
   REQUIRE(rat::viewport_tool_allowed(EditSubmode::Events, ViewportTool::Select));
   REQUIRE(rat::viewport_tool_allowed(EditSubmode::Events, ViewportTool::PlaceEvent));
@@ -594,6 +598,79 @@ TEST_CASE("viewport tool allowed matches edit submode", "[unit][viewport_edit]")
   REQUIRE_FALSE(rat::viewport_tool_allowed(EditSubmode::Events, ViewportTool::PlaceLadder));
   REQUIRE_FALSE(rat::viewport_tool_allowed(EditSubmode::Events, ViewportTool::PlaceRamp));
   REQUIRE_FALSE(rat::viewport_tool_allowed(EditSubmode::Events, ViewportTool::PlaceBridge));
+  REQUIRE_FALSE(rat::viewport_tool_allowed(EditSubmode::Events, ViewportTool::PlaceVoxel));
+  REQUIRE_FALSE(rat::viewport_tool_allowed(EditSubmode::Events, ViewportTool::RemoveVoxel));
+}
+
+TEST_CASE("place voxel on empty ground uses panel layer Y", "[unit][viewport_edit][edit]") {
+  rat::MapData map = make_test_map();
+  const rat::Vec3 world{2.4f, 0.0f, 1.7f};
+  const rat::ViewportClickAction action = rat::resolve_viewport_click(
+      map, rat::ViewportTool::PlaceVoxel, world, rat::EditSubmode::Terrain, 3);
+  REQUIRE(action.kind == rat::ViewportClickActionKind::PlaceVoxel);
+  REQUIRE(action.tile.x == 2);
+  REQUIRE(action.tile.z == 1);
+  REQUIRE(action.voxel_y == 3);
+
+  const rat::VoxelCoord cell = rat::voxel_cell_for_place(map, world, 3);
+  REQUIRE(cell.x == 2);
+  REQUIRE(cell.y == 3);
+  REQUIRE(cell.z == 1);
+}
+
+TEST_CASE("remove voxel on empty ground uses panel layer Y", "[unit][viewport_edit][edit]") {
+  rat::MapData map = make_test_map();
+  const rat::Vec3 world{0.2f, 0.0f, 4.9f};
+  const rat::ViewportClickAction action = rat::resolve_viewport_click(
+      map, rat::ViewportTool::RemoveVoxel, world, rat::EditSubmode::Terrain, 2);
+  REQUIRE(action.kind == rat::ViewportClickActionKind::RemoveVoxel);
+  REQUIRE(action.tile.x == 0);
+  REQUIRE(action.tile.z == 4);
+  REQUIRE(action.voxel_y == 2);
+
+  const rat::VoxelCoord cell = rat::voxel_cell_for_remove(map, world, 2);
+  REQUIRE(cell.x == 0);
+  REQUIRE(cell.y == 2);
+  REQUIRE(cell.z == 4);
+}
+
+TEST_CASE("place voxel on occupancy +Y face targets the adjacent empty cell",
+          "[unit][viewport_edit][edit]") {
+  rat::MapData map = make_test_map();
+  map.schema_version = 5;
+  map.occupancy.push_back(rat::OccupancyCell{
+      .x = 2, .y = 1, .z = 3, .kind = rat::OccupancyKind::Solid});
+  const rat::Vec3 face_hit{2.5f, 2.0f, 3.5f};
+  const rat::VoxelCoord placed = rat::voxel_cell_for_place(map, face_hit, 0);
+  REQUIRE(placed.x == 2);
+  REQUIRE(placed.y == 2);
+  REQUIRE(placed.z == 3);
+}
+
+TEST_CASE("remove voxel on occupancy +Y face targets the occupied cell",
+          "[unit][viewport_edit][edit]") {
+  rat::MapData map = make_test_map();
+  map.schema_version = 5;
+  map.occupancy.push_back(rat::OccupancyCell{
+      .x = 2, .y = 1, .z = 3, .kind = rat::OccupancyKind::Solid});
+  const rat::Vec3 face_hit{2.5f, 2.0f, 3.5f};
+  const rat::VoxelCoord removed = rat::voxel_cell_for_remove(map, face_hit, 0);
+  REQUIRE(removed.x == 2);
+  REQUIRE(removed.y == 1);
+  REQUIRE(removed.z == 3);
+}
+
+TEST_CASE("place voxel on occupancy +X face targets the east neighbor",
+          "[unit][viewport_edit][edit]") {
+  rat::MapData map = make_test_map();
+  map.schema_version = 5;
+  map.occupancy.push_back(rat::OccupancyCell{
+      .x = 2, .y = 1, .z = 3, .kind = rat::OccupancyKind::Solid});
+  const rat::Vec3 face_hit{3.0f, 1.5f, 3.5f};
+  const rat::VoxelCoord placed = rat::voxel_cell_for_place(map, face_hit, 9);
+  REQUIRE(placed.x == 3);
+  REQUIRE(placed.y == 1);
+  REQUIRE(placed.z == 3);
 }
 
 TEST_CASE("unproject y=0 misses east ramp tile under tilt45", "[unit][viewport_edit]") {

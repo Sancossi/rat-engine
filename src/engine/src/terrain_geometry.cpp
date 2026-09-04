@@ -376,4 +376,17 @@ std::vector<TerrainFillQuad> build_floor_slab_fill_quads(const FloorSlabDef& sla
   return out;
 }
 
+std::vector<TerrainFillQuad> build_occupancy_solid_fill_quads(const OccupancyCell& cell,
+                                                              float tile_size) {
+  if (cell.kind != OccupancyKind::Solid) {
+    return {};
+  }
+  const float ts = tile_size > 0.0f ? tile_size : 1.0f;
+  FloorSlabDef slab;
+  slab.tile = {cell.x, cell.z};
+  slab.top_y = static_cast<float>(cell.y + 1) * ts;
+  slab.thickness = ts;
+  return build_floor_slab_fill_quads(slab, ts);
+}
+
 }  // namespace rat

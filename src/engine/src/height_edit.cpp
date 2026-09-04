@@ -421,4 +421,61 @@ HeightEditResult remove_map_ladder(MapData& map, TileCoord tile, RampDirection d
   return ok_result();
 }
 
+int find_occupancy_index(const std::vector<OccupancyCell>& occupancy, int x, int y, int z) {
+  for (std::size_t i = 0; i < occupancy.size(); ++i) {
+    if (occupancy[i].x == x && occupancy[i].y == y && occupancy[i].z == z) {
+      return static_cast<int>(i);
+    }
+  }
+  return -1;
+}
+
+HeightEditResult upgrade_map_schema_for_occupancy(MapData& map) {
+  const HeightEditResult upgraded = upgrade_map_schema_for_elevation(map);
+  if (!upgraded.ok) {
+    return upgraded;
+  }
+  if (map.schema_version < 5) {
+    map.schema_version = 5;
+  }
+  return ok_result();
+}
+
+HeightEditResult place_map_occupancy_solid(MapData& map, int x, int y, int z) {
+  const HeightEditResult upgraded = upgrade_map_schema_for_occupancy(map);
+  if (!upgraded.ok) {
+    return upgraded;
+  }
+  std::size_t ignored = 0;
+  const HeightEditResult indexed = tile_to_index(map.height_grid, x, z, ignored);
+  if (!indexed.ok) {
+    return indexed;
+  }
+  OccupancyCell cell;
+  cell.x = x;
+  cell.y = y;
+  cell.z = z;
+  cell.kind = OccupancyKind::Solid;
+  const int existing = find_occupancy_index(map.occupancy, x, y, z);
+  if (existing >= 0) {
+    map.occupancy[static_cast<std::size_t>(existing)] = cell;
+  } else {
+    map.occupancy.push_back(cell);
+  }
+  return ok_result();
+}
+
+HeightEditResult remove_map_occupancy_cell(MapData& map, int x, int y, int z) {
+  const int existing = find_occupancy_index(map.occupancy, x, y, z);
+  if (existing < 0) {
+    return error_result("occupancy cell not found");
+  }
+  const HeightEditResult upgraded = upgrade_map_schema_for_occupancy(map);
+  if (!upgraded.ok) {
+    return upgraded;
+  }
+  map.occupancy.erase(map.occupancy.begin() + static_cast<std::ptrdiff_t>(existing));
+  return ok_result();
+}
+
 }  // namespace rat

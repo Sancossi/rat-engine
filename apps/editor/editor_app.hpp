@@ -97,6 +97,7 @@ class EditorApp {
   ViewportPick drag_pick_{};
   TileCoord drag_last_tile_{};
   RampDirection drag_last_edge_{};
+  int drag_last_voxel_y_ = 0;
   int width_ = 1280;
   int height_ = 720;
   bool running_ = false;

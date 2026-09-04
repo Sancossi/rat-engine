@@ -194,6 +194,19 @@ void draw_terrain_panel(EditorDocument& document, TerrainPanelState& state) {
     slab.thickness = state.slab_thickness;
     (void)run_height(make_upsert_map_floor_slab_command(std::move(slab)));
   }
+
+  ImGui::Separator();
+  ImGui::TextUnformatted("Voxel occupancy");
+  ImGui::InputInt("Voxel layer Y", &state.voxel_layer);
+  if (ImGui::Button("Place voxel")) {
+    (void)run_height(
+        make_place_map_occupancy_solid_command(state.tile_x, state.voxel_layer, state.tile_z));
+  }
+  ImGui::SameLine();
+  if (ImGui::Button("Remove voxel")) {
+    (void)run_height(
+        make_remove_map_occupancy_cell_command(state.tile_x, state.voxel_layer, state.tile_z));
+  }
 }
 
 }  // namespace rat

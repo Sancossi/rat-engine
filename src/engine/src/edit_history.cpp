@@ -257,6 +257,7 @@ class ReplaceElevationSnapshotCommand final : public EditCommand {
       map.edge_barriers = after_edge_barriers_;
       map.floor_slabs = after_floor_slabs_;
       map.ladders = after_ladders_;
+      map.occupancy = after_occupancy_;
       applied_successfully_ = true;
       return;
     }
@@ -266,6 +267,7 @@ class ReplaceElevationSnapshotCommand final : public EditCommand {
     before_edge_barriers_ = map.edge_barriers;
     before_floor_slabs_ = map.floor_slabs;
     before_ladders_ = map.ladders;
+    before_occupancy_ = map.occupancy;
 
     const HeightEditResult edited = edit_(map);
     if (!edited.ok) {
@@ -275,6 +277,7 @@ class ReplaceElevationSnapshotCommand final : public EditCommand {
       map.edge_barriers = before_edge_barriers_;
       map.floor_slabs = before_floor_slabs_;
       map.ladders = before_ladders_;
+      map.occupancy = before_occupancy_;
       applied_successfully_ = false;
       last_error_ = edited.error;
       return;
@@ -285,6 +288,7 @@ class ReplaceElevationSnapshotCommand final : public EditCommand {
     after_edge_barriers_ = map.edge_barriers;
     after_floor_slabs_ = map.floor_slabs;
     after_ladders_ = map.ladders;
+    after_occupancy_ = map.occupancy;
     committed_ = true;
     applied_successfully_ = true;
     last_error_.clear();
@@ -300,6 +304,7 @@ class ReplaceElevationSnapshotCommand final : public EditCommand {
     map.edge_barriers = before_edge_barriers_;
     map.floor_slabs = before_floor_slabs_;
     map.ladders = before_ladders_;
+    map.occupancy = before_occupancy_;
   }
 
   [[nodiscard]] bool applied_successfully() const override { return applied_successfully_; }
@@ -316,12 +321,14 @@ class ReplaceElevationSnapshotCommand final : public EditCommand {
   std::vector<EdgeBarrierDef> before_edge_barriers_{};
   std::vector<FloorSlabDef> before_floor_slabs_{};
   std::vector<LadderDef> before_ladders_{};
+  std::vector<OccupancyCell> before_occupancy_{};
   int after_schema_version_ = 1;
   HeightGrid after_height_grid_{};
   std::vector<RampDef> after_ramps_{};
   std::vector<EdgeBarrierDef> after_edge_barriers_{};
   std::vector<FloorSlabDef> after_floor_slabs_{};
   std::vector<LadderDef> after_ladders_{};
+  std::vector<OccupancyCell> after_occupancy_{};
   bool committed_ = false;
   bool applied_successfully_ = false;
   std::string last_error_{};
@@ -495,6 +502,16 @@ std::unique_ptr<EditCommand> make_remove_map_ladder_command(TileCoord tile,
                                                              RampDirection direction) {
   return std::make_unique<ReplaceElevationSnapshotCommand>(
       [tile, direction](MapData& map) { return remove_map_ladder(map, tile, direction); });
+}
+
+std::unique_ptr<EditCommand> make_place_map_occupancy_solid_command(int x, int y, int z) {
+  return std::make_unique<ReplaceElevationSnapshotCommand>(
+      [x, y, z](MapData& map) { return place_map_occupancy_solid(map, x, y, z); });
+}
+
+std::unique_ptr<EditCommand> make_remove_map_occupancy_cell_command(int x, int y, int z) {
+  return std::make_unique<ReplaceElevationSnapshotCommand>(
+      [x, y, z](MapData& map) { return remove_map_occupancy_cell(map, x, y, z); });
 }
 
 EditApplyResult EditHistory::execute(MapData& map, std::unique_ptr<EditCommand> command) {

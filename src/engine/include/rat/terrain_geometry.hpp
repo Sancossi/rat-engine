@@ -95,8 +95,11 @@ struct TerrainFillQuad {
 };
 
 inline constexpr std::size_t kFloorSlabFillQuadCount = 6;
+inline constexpr std::size_t kOccupancySolidFillQuadCount = 6;
 
 [[nodiscard]] std::vector<TerrainFillQuad> build_floor_slab_fill_quads(const FloorSlabDef& slab,
                                                                         float tile_size);
+[[nodiscard]] std::vector<TerrainFillQuad> build_occupancy_solid_fill_quads(
+    const OccupancyCell& cell, float tile_size);
 
 }  // namespace rat

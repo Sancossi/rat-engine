@@ -25,6 +25,7 @@
 #include <rat/viewport_edit.hpp>
 
 #include <algorithm>
+#include <cmath>
 
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
@@ -212,6 +213,20 @@ void EditorApp::apply_cell_brush(const ViewportClickAction& action) {
       (void)document_.execute(make_upsert_map_ramp_command(std::move(ramp)));
       break;
     }
+    case ViewportClickActionKind::PlaceVoxel:
+      terrain_panel_.tile_x = action.tile.x;
+      terrain_panel_.tile_z = action.tile.z;
+      terrain_panel_.voxel_layer = action.voxel_y;
+      (void)document_.execute(
+          make_place_map_occupancy_solid_command(action.tile.x, action.voxel_y, action.tile.z));
+      break;
+    case ViewportClickActionKind::RemoveVoxel:
+      terrain_panel_.tile_x = action.tile.x;
+      terrain_panel_.tile_z = action.tile.z;
+      terrain_panel_.voxel_layer = action.voxel_y;
+      (void)document_.execute(
+          make_remove_map_occupancy_cell_command(action.tile.x, action.voxel_y, action.tile.z));
+      break;
     default:
       break;
   }
@@ -670,11 +685,30 @@ void EditorApp::handle_edit_mouse_input(const ImGuiIO& io) {
   const MapData& map = document_.visible_data();
   const TerrainGeometry terrain =
       build_terrain_geometry(map.height_grid, map.ramps, map.tile_size);
-  const auto world_hit =
+  const auto terrain_hit =
       unproject_to_terrain(engine_->greybox().camera(), static_cast<float>(cursor_x),
                            static_cast<float>(cursor_y),
                            static_cast<std::uint32_t>(width_ > 0 ? width_ : 1),
                            static_cast<std::uint32_t>(height_ > 0 ? height_ : 1), terrain);
+  const auto occupancy_hit = unproject_to_occupancy(
+      engine_->greybox().camera(), static_cast<float>(cursor_x), static_cast<float>(cursor_y),
+      static_cast<std::uint32_t>(width_ > 0 ? width_ : 1),
+      static_cast<std::uint32_t>(height_ > 0 ? height_ : 1), map.occupancy, map.tile_size);
+  std::optional<Vec3> world_hit;
+  if (occupancy_hit.has_value() && terrain_hit.has_value()) {
+    const Vec3 eye = engine_->greybox().camera().eye;
+    const auto dist2 = [&](const Vec3& p) {
+      const float dx = p.x - eye.x;
+      const float dy = p.y - eye.y;
+      const float dz = p.z - eye.z;
+      return dx * dx + dy * dy + dz * dz;
+    };
+    world_hit = dist2(*occupancy_hit) <= dist2(*terrain_hit) ? occupancy_hit : terrain_hit;
+  } else if (occupancy_hit.has_value()) {
+    world_hit = occupancy_hit;
+  } else {
+    world_hit = terrain_hit;
+  }
   if (!world_hit.has_value()) {
     remember_buttons();
     if (!left_down) {
@@ -702,7 +736,8 @@ void EditorApp::handle_edit_mouse_input(const ImGuiIO& io) {
   if (pressed) {
     drag_active_ = false;
     const ViewportClickAction action =
-        resolve_viewport_click(map, viewport_tool_, *world_hit, edit_submode_);
+        resolve_viewport_click(map, viewport_tool_, *world_hit, edit_submode_,
+                               terrain_panel_.voxel_layer);
     switch (action.kind) {
       case ViewportClickActionKind::Deselect:
         document_.clear_selection();
@@ -744,11 +779,14 @@ void EditorApp::handle_edit_mouse_input(const ImGuiIO& io) {
       case ViewportClickActionKind::PlaceFence:
       case ViewportClickActionKind::PlaceLadder:
       case ViewportClickActionKind::PlaceRamp:
+      case ViewportClickActionKind::PlaceVoxel:
+      case ViewportClickActionKind::RemoveVoxel:
         document_.begin_stroke();
         apply_cell_brush(action);
         brush_active_ = true;
         drag_last_tile_ = action.tile;
         drag_last_edge_ = action.edge;
+        drag_last_voxel_y_ = action.voxel_y;
         break;
       case ViewportClickActionKind::None:
         break;
@@ -756,21 +794,25 @@ void EditorApp::handle_edit_mouse_input(const ImGuiIO& io) {
   }
 
   if (left_down && brush_active_) {
-    const ViewportClickAction action =
-        resolve_viewport_click(map, viewport_tool_, *world_hit, edit_submode_);
+    const ViewportClickAction action = resolve_viewport_click(
+        map, viewport_tool_, *world_hit, edit_submode_, terrain_panel_.voxel_layer);
     const bool cell_tool = action.kind == ViewportClickActionKind::PlaceCube ||
                            action.kind == ViewportClickActionKind::PlaceSlab ||
-                           action.kind == ViewportClickActionKind::PlaceBridge;
+                           action.kind == ViewportClickActionKind::PlaceBridge ||
+                           action.kind == ViewportClickActionKind::PlaceVoxel ||
+                           action.kind == ViewportClickActionKind::RemoveVoxel;
     const bool edge_tool = action.kind == ViewportClickActionKind::PlaceFence ||
                            action.kind == ViewportClickActionKind::PlaceLadder ||
                            action.kind == ViewportClickActionKind::PlaceRamp;
     const bool tile_changed =
-        action.tile.x != drag_last_tile_.x || action.tile.z != drag_last_tile_.z;
+        action.tile.x != drag_last_tile_.x || action.tile.z != drag_last_tile_.z ||
+        action.voxel_y != drag_last_voxel_y_;
     const bool edge_changed = action.edge != drag_last_edge_;
     if ((cell_tool && tile_changed) || (edge_tool && (tile_changed || edge_changed))) {
       apply_cell_brush(action);
       drag_last_tile_ = action.tile;
       drag_last_edge_ = action.edge;
+      drag_last_voxel_y_ = action.voxel_y;
     }
   }
 
@@ -1078,6 +1120,8 @@ void EditorApp::draw_ui() {
     tool_radio("Place blocker", ViewportTool::PlaceBlocker);
     tool_radio("Place event", ViewportTool::PlaceEvent);
     tool_radio("Place cube", ViewportTool::PlaceCube);
+    tool_radio("Place voxel", ViewportTool::PlaceVoxel);
+    tool_radio("Remove voxel", ViewportTool::RemoveVoxel);
     tool_radio("Fence", ViewportTool::PlaceFence);
     tool_radio("Floor slab", ViewportTool::PlaceSlab);
     tool_radio("Place bridge", ViewportTool::PlaceBridge);

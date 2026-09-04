@@ -25,6 +25,7 @@ struct TerrainPanelState {
   bool ladder_tile_sync_ready = false;
   int ladder_last_tile_x = 0;
   int ladder_last_tile_z = 0;
+  int voxel_layer = 0;
 };
 
 void draw_terrain_panel(EditorDocument& document, TerrainPanelState& state);

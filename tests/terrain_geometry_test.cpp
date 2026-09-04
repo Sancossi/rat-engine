@@ -689,3 +689,31 @@ TEST_CASE("Floor slab over open ground contributes top and bottom fill quads",
   REQUIRE(has_bottom);
 }
 
+TEST_CASE("Occupancy solid fill quads are a 1 m cube at voxel Y", "[unit][terrain][edit]") {
+  const rat::OccupancyCell cell{.x = 2, .y = 1, .z = 3, .kind = rat::OccupancyKind::Solid};
+  const std::vector<rat::TerrainFillQuad> quads =
+      rat::build_occupancy_solid_fill_quads(cell, 1.0f);
+  REQUIRE(quads.size() == rat::kOccupancySolidFillQuadCount);
+
+  bool has_top = false;
+  bool has_bottom = false;
+  for (const rat::TerrainFillQuad& quad : quads) {
+    const bool top = quad.y0 == Catch::Approx(2.0f) && quad.y1 == Catch::Approx(2.0f) &&
+                     quad.y2 == Catch::Approx(2.0f) && quad.y3 == Catch::Approx(2.0f);
+    const bool bottom = quad.y0 == Catch::Approx(1.0f) && quad.y1 == Catch::Approx(1.0f) &&
+                        quad.y2 == Catch::Approx(1.0f) && quad.y3 == Catch::Approx(1.0f);
+    if (top) {
+      has_top = true;
+      REQUIRE(quad.x0 == Catch::Approx(2.0f));
+      REQUIRE(quad.x2 == Catch::Approx(3.0f));
+      REQUIRE(quad.z0 == Catch::Approx(3.0f));
+      REQUIRE(quad.z2 == Catch::Approx(4.0f));
+    }
+    if (bottom) {
+      has_bottom = true;
+    }
+  }
+  REQUIRE(has_top);
+  REQUIRE(has_bottom);
+}
+

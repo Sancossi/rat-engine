@@ -171,3 +171,42 @@ TEST_CASE("greybox fill vertices dim outdoor quads when player is indoor",
   REQUIRE(outdoor_plain == indoor_plain);
   REQUIRE(rgb_channels_darker(outdoor_dim, outdoor_plain));
 }
+
+TEST_CASE("greybox fill includes a 1 m occupancy solid cube above the height grid",
+          "[unit][terrain][edit]") {
+  rat::MapData map = make_two_tile_map_with_house();
+  map.schema_version = 5;
+  map.occupancy.push_back(rat::OccupancyCell{
+      .x = 0, .y = 1, .z = 0, .kind = rat::OccupancyKind::Solid});
+
+  rat::PlayerBody body;
+  body.x = 1.5f;
+  body.y = 0.0f;
+  body.z = 0.5f;
+  const rat::GreyboxFillMesh without_player_dim =
+      rat::build_greybox_fill_mesh(map, body, false);
+  REQUIRE_FALSE(without_player_dim.vertices.empty());
+
+  bool has_occupancy_top = false;
+  bool has_ground_tile = false;
+  for (std::size_t i = 0; i + 3 < without_player_dim.vertices.size(); i += 4) {
+    const rat::GreyboxFillVertex& a = without_player_dim.vertices[i];
+    const rat::GreyboxFillVertex& b = without_player_dim.vertices[i + 1];
+    const rat::GreyboxFillVertex& c = without_player_dim.vertices[i + 2];
+    const rat::GreyboxFillVertex& d = without_player_dim.vertices[i + 3];
+    const bool flat_y2 = a.y == Catch::Approx(2.0f) && b.y == Catch::Approx(2.0f) &&
+                         c.y == Catch::Approx(2.0f) && d.y == Catch::Approx(2.0f);
+    const float qcx = 0.25f * (a.x + b.x + c.x + d.x);
+    const float qcz = 0.25f * (a.z + b.z + c.z + d.z);
+    if (flat_y2 && std::fabs(qcx - 0.5f) < 0.05f && std::fabs(qcz - 0.5f) < 0.05f) {
+      has_occupancy_top = true;
+    }
+    const bool flat_y0 = a.y == Catch::Approx(0.0f) && b.y == Catch::Approx(0.0f) &&
+                         c.y == Catch::Approx(0.0f) && d.y == Catch::Approx(0.0f);
+    if (flat_y0 && std::fabs(qcx - 0.5f) < 0.05f && std::fabs(qcz - 0.5f) < 0.05f) {
+      has_ground_tile = true;
+    }
+  }
+  REQUIRE(has_occupancy_top);
+  REQUIRE(has_ground_tile);
+}

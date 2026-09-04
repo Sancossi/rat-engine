@@ -54,4 +54,10 @@ inline constexpr float kEdgeBarrierFullHeight = 1.6f;
 [[nodiscard]] HeightEditResult remove_map_ladder(MapData& map, TileCoord tile,
                                                  RampDirection direction);
 
+[[nodiscard]] HeightEditResult upgrade_map_schema_for_occupancy(MapData& map);
+[[nodiscard]] int find_occupancy_index(const std::vector<OccupancyCell>& occupancy, int x, int y,
+                                       int z);
+[[nodiscard]] HeightEditResult place_map_occupancy_solid(MapData& map, int x, int y, int z);
+[[nodiscard]] HeightEditResult remove_map_occupancy_cell(MapData& map, int x, int y, int z);
+
 }  // namespace rat
