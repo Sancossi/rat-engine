@@ -1,7 +1,7 @@
 ---
 type: bug
 area: Engine
-status: Investigating
+status: Fixed
 severity: Medium
 sprint: Sprint 12
 tags: [bug]
@@ -25,3 +25,11 @@ Ramp is a clean slope; the high-side cells (the “second floor” of that step)
 Fill/shader on the ramp looks crooked; the high side / raised cells don’t read (missing or warped), and the tile grid looks broken around the ramp.
 
 Suspect: terrain fill uses `vs/fs_debugdraw_lines` (not a fill shader — see comment in `greybox.cpp`); sloped quads + grid lines on interpolated Y.
+
+## Resolution
+
+Не шейдер: `build_terrain_grid_lines` семплил швы через `floor()`, верх рампы уезжал в низкого соседа. Сетка обводит углы каждой клетки. Verify: `grey_yard` рампа (8,8) и кубы y=1; `.\build\tests\rat_tests.exe "[terrain],[surface],[collision]"`. Review: Approved.
+
+## Bugs found
+
+none.
