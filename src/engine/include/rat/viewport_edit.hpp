@@ -17,6 +17,7 @@ enum class ViewportTool {
   PlaceCube,
   PlaceFence,
   PlaceSlab,
+  PlaceBridge,
   PlaceLadder,
   PlaceRamp,
 };
@@ -47,6 +48,7 @@ enum class ViewportClickActionKind {
   PlaceCube,
   PlaceFence,
   PlaceSlab,
+  PlaceBridge,
   PlaceLadder,
   PlaceRamp,
 };

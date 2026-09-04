@@ -493,9 +493,8 @@ bool cylinder_hits_ceiling(const CollisionBody& body, const CollisionWorld& worl
     if (!point_on_walkable_box(body.x, body.z, box)) {
       continue;
     }
-    // Feet below the underside (not standing on the top). Head may still have a
-    // small gap (1.6 capsule under a 1.75 slab); Play clamps when the head crosses.
-    if (body.y < box.y_lo && body.y < box.y_hi) {
+    const float head = body.y + body.height;
+    if (body.y < box.y_lo && head > box.y_lo && body.y < box.y_hi) {
       return true;
     }
   }

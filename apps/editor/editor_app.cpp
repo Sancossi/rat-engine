@@ -139,7 +139,8 @@ void EditorApp::apply_cell_brush(const ViewportClickAction& action) {
       }
       break;
     }
-    case ViewportClickActionKind::PlaceSlab: {
+    case ViewportClickActionKind::PlaceSlab:
+    case ViewportClickActionKind::PlaceBridge: {
       terrain_panel_.tile_x = action.tile.x;
       terrain_panel_.tile_z = action.tile.z;
       FloorSlabDef slab;
@@ -739,6 +740,7 @@ void EditorApp::handle_edit_mouse_input(const ImGuiIO& io) {
       }
       case ViewportClickActionKind::PlaceCube:
       case ViewportClickActionKind::PlaceSlab:
+      case ViewportClickActionKind::PlaceBridge:
       case ViewportClickActionKind::PlaceFence:
       case ViewportClickActionKind::PlaceLadder:
       case ViewportClickActionKind::PlaceRamp:
@@ -757,7 +759,8 @@ void EditorApp::handle_edit_mouse_input(const ImGuiIO& io) {
     const ViewportClickAction action =
         resolve_viewport_click(map, viewport_tool_, *world_hit, edit_submode_);
     const bool cell_tool = action.kind == ViewportClickActionKind::PlaceCube ||
-                           action.kind == ViewportClickActionKind::PlaceSlab;
+                           action.kind == ViewportClickActionKind::PlaceSlab ||
+                           action.kind == ViewportClickActionKind::PlaceBridge;
     const bool edge_tool = action.kind == ViewportClickActionKind::PlaceFence ||
                            action.kind == ViewportClickActionKind::PlaceLadder ||
                            action.kind == ViewportClickActionKind::PlaceRamp;
@@ -1077,6 +1080,7 @@ void EditorApp::draw_ui() {
     tool_radio("Place cube", ViewportTool::PlaceCube);
     tool_radio("Fence", ViewportTool::PlaceFence);
     tool_radio("Floor slab", ViewportTool::PlaceSlab);
+    tool_radio("Place bridge", ViewportTool::PlaceBridge);
     tool_radio("Place ramp", ViewportTool::PlaceRamp);
     tool_radio("Ladder", ViewportTool::PlaceLadder);
     if (edit_submode_ == EditSubmode::Terrain) {

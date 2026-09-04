@@ -35,6 +35,7 @@ struct HeightGetResult {
 [[nodiscard]] bool remove_ramp_by_tile(std::vector<RampDef>& ramps, TileCoord tile);
 
 inline constexpr float kPlaceCubeDeltaY = 1.0f;
+inline constexpr float kBridgeOpenGroundMaxY = 1e-3f;
 inline constexpr float kEdgeBarrierMiniHeight = 0.45f;
 inline constexpr float kEdgeBarrierFullHeight = 1.6f;
 

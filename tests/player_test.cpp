@@ -701,3 +701,52 @@ TEST_CASE("East ladder climb uses camera steer not world WASD", "[unit][player][
   }
   REQUIRE(player.y == Approx(2.0f).margin(0.1f));
 }
+
+TEST_CASE("Player walks on a floor slab over open ground", "[unit][player][surface]") {
+  rat::MapData map = make_surface_map(2, 1, {0.0f, 0.0f});
+  map.floor_slabs.push_back({{0, 0}, 2.0f, 0.25f});
+  map.floor_slabs.push_back({{1, 0}, 2.0f, 0.25f});
+  const rat::SurfaceQuery query(map);
+  rat::PlayerBody player;
+  player.x = 0.5f;
+  player.y = 2.0f;
+  player.z = 0.5f;
+  player.speed = 4.0f;
+  player = rat::integrate_player_surface(player, {}, 1.0f / 60.0f, {}, query, 0.35f, {}, &map);
+  REQUIRE(player.y == Approx(2.0f).margin(1e-3f));
+  rat::MoveInput east{1.0f, 0.0f};
+  for (int i = 0; i < 20; ++i) {
+    player = rat::integrate_player_surface(player, east, 1.0f / 60.0f, {}, query, 0.35f, {}, &map);
+    REQUIRE(player.y == Approx(2.0f).margin(1e-3f));
+  }
+  REQUIRE(player.x > 1.0f);
+  REQUIRE(player.x < 2.0f);
+}
+
+TEST_CASE("Player walks under a high slab over open ground", "[unit][player][surface]") {
+  rat::MapData map = make_surface_map(3, 1, {0.0f, 0.0f, 0.0f});
+  map.floor_slabs.push_back({{1, 0}, 2.0f, 0.25f});
+  const rat::SurfaceQuery query(map);
+  rat::PlayerBody player;
+  player.x = 0.5f;
+  player.y = 0.0f;
+  player.z = 0.5f;
+  player.speed = 4.0f;
+  rat::JumpState jump = rat::make_grounded_jump_state();
+  rat::PlayerFrameInput input;
+  input.move = {1.0f, 0.0f};
+  bool was_under_span = false;
+  for (int i = 0; i < 40; ++i) {
+    const rat::PlayerFrameResult result = rat::integrate_player_frame_surface(
+        player, jump, input, 1.0f / 60.0f, {}, query, {}, 0.35f, {}, &map);
+    player = result.body;
+    jump = result.jump;
+    if (player.x > 1.0f && player.x < 2.0f) {
+      was_under_span = true;
+      REQUIRE(player.y == Approx(0.0f).margin(1e-3f));
+    }
+  }
+  REQUIRE(was_under_span);
+  REQUIRE(player.x > 1.0f);
+  REQUIRE(player.y == Approx(0.0f).margin(1e-3f));
+}

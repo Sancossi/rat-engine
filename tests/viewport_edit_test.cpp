@@ -358,6 +358,16 @@ TEST_CASE("place slab on empty tile returns that tile", "[unit][viewport_edit]")
   REQUIRE(action.tile.z == -1);
 }
 
+TEST_CASE("place bridge on empty tile returns that tile", "[unit][viewport_edit]") {
+  rat::MapData map = make_test_map();
+  const rat::ViewportClickAction action =
+      rat::resolve_viewport_click(map, rat::ViewportTool::PlaceBridge, rat::Vec3{2.9f, 0.0f, -0.1f},
+                                 rat::EditSubmode::Terrain);
+  REQUIRE(action.kind == rat::ViewportClickActionKind::PlaceBridge);
+  REQUIRE(action.tile.x == 2);
+  REQUIRE(action.tile.z == -1);
+}
+
 TEST_CASE("place ladder on empty tile returns that tile", "[unit][viewport_edit]") {
   rat::MapData map = make_test_map();
   const rat::ViewportClickAction action =
@@ -560,6 +570,7 @@ TEST_CASE("viewport tool allowed matches edit submode", "[unit][viewport_edit]")
   REQUIRE(rat::viewport_tool_allowed(EditSubmode::Terrain, ViewportTool::PlaceFence));
   REQUIRE(rat::viewport_tool_allowed(EditSubmode::Terrain, ViewportTool::PlaceSlab));
   REQUIRE(rat::viewport_tool_allowed(EditSubmode::Terrain, ViewportTool::PlaceRamp));
+  REQUIRE(rat::viewport_tool_allowed(EditSubmode::Terrain, ViewportTool::PlaceBridge));
   REQUIRE_FALSE(rat::viewport_tool_allowed(EditSubmode::Terrain, ViewportTool::PlaceBlocker));
   REQUIRE_FALSE(rat::viewport_tool_allowed(EditSubmode::Terrain, ViewportTool::PlaceEvent));
   REQUIRE_FALSE(rat::viewport_tool_allowed(EditSubmode::Terrain, ViewportTool::PlaceLadder));
@@ -571,6 +582,7 @@ TEST_CASE("viewport tool allowed matches edit submode", "[unit][viewport_edit]")
   REQUIRE_FALSE(rat::viewport_tool_allowed(EditSubmode::Objects, ViewportTool::PlaceFence));
   REQUIRE_FALSE(rat::viewport_tool_allowed(EditSubmode::Objects, ViewportTool::PlaceSlab));
   REQUIRE_FALSE(rat::viewport_tool_allowed(EditSubmode::Objects, ViewportTool::PlaceRamp));
+  REQUIRE_FALSE(rat::viewport_tool_allowed(EditSubmode::Objects, ViewportTool::PlaceBridge));
   REQUIRE_FALSE(rat::viewport_tool_allowed(EditSubmode::Objects, ViewportTool::PlaceEvent));
 
   REQUIRE(rat::viewport_tool_allowed(EditSubmode::Events, ViewportTool::Select));
@@ -581,6 +593,7 @@ TEST_CASE("viewport tool allowed matches edit submode", "[unit][viewport_edit]")
   REQUIRE_FALSE(rat::viewport_tool_allowed(EditSubmode::Events, ViewportTool::PlaceSlab));
   REQUIRE_FALSE(rat::viewport_tool_allowed(EditSubmode::Events, ViewportTool::PlaceLadder));
   REQUIRE_FALSE(rat::viewport_tool_allowed(EditSubmode::Events, ViewportTool::PlaceRamp));
+  REQUIRE_FALSE(rat::viewport_tool_allowed(EditSubmode::Events, ViewportTool::PlaceBridge));
 }
 
 TEST_CASE("unproject y=0 misses east ramp tile under tilt45", "[unit][viewport_edit]") {

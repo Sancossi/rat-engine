@@ -141,7 +141,7 @@ void GreyboxScene::set_terrain_map(const MapData& map) {
   const std::vector<TerrainSideFace> side_faces = build_terrain_side_faces(terrain_geometry_);
   const std::vector<TerrainSideFace> fence_faces =
       build_edge_barrier_faces(terrain_geometry_, map.edge_barriers);
-  constexpr std::size_t kSlabQuadsPerSlab = 6;
+  constexpr std::size_t kSlabQuadsPerSlab = kFloorSlabFillQuadCount;
   constexpr std::size_t kLadderQuadsPerLadder = 6;
   const std::size_t slab_quads = map.floor_slabs.size() * kSlabQuadsPerSlab;
   const std::size_t ladder_quads = map.ladders.size() * kLadderQuadsPerLadder;
@@ -201,24 +201,11 @@ void GreyboxScene::set_terrain_map(const MapData& map) {
     }
     const float ts = map.tile_size > 0.0f ? map.tile_size : 1.0f;
     for (const FloorSlabDef& slab : map.floor_slabs) {
-      const float min_x = static_cast<float>(slab.tile.x) * ts;
-      const float min_z = static_cast<float>(slab.tile.z) * ts;
-      const float max_x = min_x + ts;
-      const float max_z = min_z + ts;
-      const float y_hi = slab.top_y;
-      const float y_lo = slab.top_y - slab.thickness;
-      push_fill_quad(min_x, y_hi, min_z, max_x, y_hi, min_z, max_x, y_hi, max_z, min_x, y_hi, max_z,
-                     slab_color);
-      push_fill_quad(min_x, y_lo, max_z, max_x, y_lo, max_z, max_x, y_lo, min_z, min_x, y_lo, min_z,
-                     slab_color);
-      push_fill_quad(min_x, y_lo, min_z, min_x, y_hi, min_z, max_x, y_hi, min_z, max_x, y_lo, min_z,
-                     slab_color);
-      push_fill_quad(max_x, y_lo, min_z, max_x, y_hi, min_z, max_x, y_hi, max_z, max_x, y_lo, max_z,
-                     slab_color);
-      push_fill_quad(max_x, y_lo, max_z, max_x, y_hi, max_z, min_x, y_hi, max_z, min_x, y_lo, max_z,
-                     slab_color);
-      push_fill_quad(min_x, y_lo, max_z, min_x, y_hi, max_z, min_x, y_hi, min_z, min_x, y_lo, min_z,
-                     slab_color);
+      const std::vector<TerrainFillQuad> fill = build_floor_slab_fill_quads(slab, ts);
+      for (const TerrainFillQuad& quad : fill) {
+        push_fill_quad(quad.x0, quad.y0, quad.z0, quad.x1, quad.y1, quad.z1, quad.x2, quad.y2,
+                       quad.z2, quad.x3, quad.y3, quad.z3, slab_color);
+      }
     }
     for (const LadderDef& ladder : map.ladders) {
       const float ox = static_cast<float>(ladder.tile.x) * ts;

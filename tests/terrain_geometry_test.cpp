@@ -664,3 +664,28 @@ TEST_CASE("grey_yard ramp fill stays in uint16 and high cells keep a y=1 grid",
   REQUIRE(has_grid_segment(lines, 10.0f, 1.0f + kOff, 9.0f, 11.0f, 1.0f + kOff, 9.0f));
   REQUIRE(has_grid_segment(lines, 11.0f, 1.0f + kOff, 9.0f, 12.0f, 1.0f + kOff, 9.0f));
 }
+
+TEST_CASE("Floor slab over open ground contributes top and bottom fill quads",
+          "[unit][terrain]") {
+  const rat::FloorSlabDef slab{{0, 0}, 2.0f, 0.25f};
+  const std::vector<rat::TerrainFillQuad> quads = rat::build_floor_slab_fill_quads(slab, 1.0f);
+  REQUIRE(quads.size() == rat::kFloorSlabFillQuadCount);
+
+  bool has_top = false;
+  bool has_bottom = false;
+  for (const rat::TerrainFillQuad& quad : quads) {
+    const bool top = quad.y0 == Catch::Approx(2.0f) && quad.y1 == Catch::Approx(2.0f) &&
+                     quad.y2 == Catch::Approx(2.0f) && quad.y3 == Catch::Approx(2.0f);
+    const bool bottom = quad.y0 == Catch::Approx(1.75f) && quad.y1 == Catch::Approx(1.75f) &&
+                        quad.y2 == Catch::Approx(1.75f) && quad.y3 == Catch::Approx(1.75f);
+    if (top) {
+      has_top = true;
+    }
+    if (bottom) {
+      has_bottom = true;
+    }
+  }
+  REQUIRE(has_top);
+  REQUIRE(has_bottom);
+}
+

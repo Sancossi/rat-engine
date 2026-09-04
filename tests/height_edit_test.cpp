@@ -401,6 +401,7 @@ TEST_CASE("compile RuntimeMap after upsert_map_ramp drops fences on that tile",
 TEST_CASE("Upsert floor slab toggles same top_y and bumps schema to 3", "[unit][height_edit]") {
   rat::MapData map = make_v2_map();
   REQUIRE(map.schema_version == 2);
+  REQUIRE(rat::set_tile_ground_y(map.height_grid, -2, 3, 0.0f).ok);
   rat::FloorSlabDef slab;
   slab.tile = {-2, 3};
   slab.top_y = 2.0f;
@@ -422,6 +423,7 @@ TEST_CASE("Upsert floor slab toggles same top_y and bumps schema to 3", "[unit][
 
 TEST_CASE("Upsert floor slab adds a second slab at a different top_y", "[unit][height_edit]") {
   rat::MapData map = make_v2_map();
+  REQUIRE(rat::set_tile_ground_y(map.height_grid, -2, 3, 0.0f).ok);
   rat::FloorSlabDef lower;
   lower.tile = {-2, 3};
   lower.top_y = 1.6f;
@@ -433,6 +435,35 @@ TEST_CASE("Upsert floor slab adds a second slab at a different top_y", "[unit][h
   REQUIRE(map.floor_slabs.size() == 2);
   REQUIRE(map.floor_slabs[0].top_y == Approx(1.6f));
   REQUIRE(map.floor_slabs[1].top_y == Approx(2.0f));
+}
+
+TEST_CASE("Upsert floor slab on open ground succeeds; cube cell is refused",
+          "[unit][height_edit][terrain]") {
+  rat::MapData map;
+  map.schema_version = 2;
+  map.id = "bridge";
+  map.width = 2;
+  map.height = 1;
+  map.tile_size = 1.0f;
+  map.height_grid.origin_x = 0;
+  map.height_grid.origin_z = 0;
+  map.height_grid.width = 2;
+  map.height_grid.height = 1;
+  map.height_grid.ground_y = {0.0f, rat::kPlaceCubeDeltaY};
+
+  rat::FloorSlabDef open_span;
+  open_span.tile = {0, 0};
+  open_span.top_y = 2.0f;
+  open_span.thickness = 0.25f;
+  const auto placed = rat::upsert_map_floor_slab(map, open_span);
+  REQUIRE(placed.ok);
+  REQUIRE(map.floor_slabs.size() == 1);
+
+  rat::FloorSlabDef on_cube = open_span;
+  on_cube.tile = {1, 0};
+  const auto refused = rat::upsert_map_floor_slab(map, on_cube);
+  REQUIRE_FALSE(refused.ok);
+  REQUIRE(map.floor_slabs.size() == 1);
 }
 
 TEST_CASE("Height edit schema upgrade keeps existing values", "[unit][height_edit]") {

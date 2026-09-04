@@ -79,4 +79,24 @@ struct TerrainSideFace {
 [[nodiscard]] std::vector<TerrainSideFace> build_edge_barrier_faces(
     const TerrainGeometry& geometry, std::span<const EdgeBarrierDef> barriers);
 
+struct TerrainFillQuad {
+  float x0 = 0.0f;
+  float y0 = 0.0f;
+  float z0 = 0.0f;
+  float x1 = 0.0f;
+  float y1 = 0.0f;
+  float z1 = 0.0f;
+  float x2 = 0.0f;
+  float y2 = 0.0f;
+  float z2 = 0.0f;
+  float x3 = 0.0f;
+  float y3 = 0.0f;
+  float z3 = 0.0f;
+};
+
+inline constexpr std::size_t kFloorSlabFillQuadCount = 6;
+
+[[nodiscard]] std::vector<TerrainFillQuad> build_floor_slab_fill_quads(const FloorSlabDef& slab,
+                                                                        float tile_size);
+
 }  // namespace rat

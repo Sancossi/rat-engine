@@ -374,14 +374,20 @@ TEST_CASE("query_solid_support reports distinct ramp indices", "[collision]") {
   REQUIRE(first->ramp_index != second->ramp_index);
 }
 
-TEST_CASE("Cylinder head hits slab underside; feet on top do not", "[collision]") {
+TEST_CASE("Standing under a high slab does not hit ceiling; overlapping head does",
+          "[collision]") {
   rat::MapData map = make_grid(1, 1, 0.0f);
   map.floor_slabs.push_back({{0, 0}, 2.0f, 0.25f});
   const rat::CollisionWorld world = rat::bake_collision_world(map, rat::SurfaceQuery(map));
   rat::CollisionBody under;
-  under.x = 0.5f; under.y = 0.0f; under.z = 0.5f;
-  under.height = 1.6f;
-  REQUIRE(rat::cylinder_hits_ceiling(under, world));
+  under.x = 0.5f;
+  under.y = 0.0f;
+  under.z = 0.5f;
+  under.height = rat::kPlayerCylinderHeight;
+  REQUIRE_FALSE(rat::cylinder_hits_ceiling(under, world));
+  rat::CollisionBody overlapping = under;
+  overlapping.y = 0.2f;
+  REQUIRE(rat::cylinder_hits_ceiling(overlapping, world));
   rat::CollisionBody on_top = under;
   on_top.y = 2.0f;
   REQUIRE_FALSE(rat::cylinder_hits_ceiling(on_top, world));

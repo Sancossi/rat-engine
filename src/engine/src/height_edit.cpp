@@ -347,16 +347,26 @@ HeightEditResult upsert_map_floor_slab(MapData& map, FloorSlabDef slab) {
   if (!indexed.ok) {
     return indexed;
   }
-  if (map.schema_version < 3) {
-    map.schema_version = 3;
-  }
   constexpr float kSameTopY = 1e-4f;
   for (auto it = map.floor_slabs.begin(); it != map.floor_slabs.end(); ++it) {
     if (it->tile.x == slab.tile.x && it->tile.z == slab.tile.z &&
         std::fabs(it->top_y - slab.top_y) < kSameTopY) {
+      if (map.schema_version < 3) {
+        map.schema_version = 3;
+      }
       map.floor_slabs.erase(it);
       return ok_result();
     }
+  }
+  const HeightGetResult ground = get_tile_ground_y(map.height_grid, slab.tile.x, slab.tile.z);
+  if (!ground.ok) {
+    return error_result(ground.error);
+  }
+  if (ground.value > kBridgeOpenGroundMaxY) {
+    return error_result("bridge slab requires open ground, not a cube cell");
+  }
+  if (map.schema_version < 3) {
+    map.schema_version = 3;
   }
   map.floor_slabs.push_back(std::move(slab));
   return ok_result();

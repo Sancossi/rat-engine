@@ -398,6 +398,8 @@ ViewportClickAction resolve_viewport_click(const MapData& map, ViewportTool tool
       return {ViewportClickActionKind::PlaceFence, 0, tile, edge};
     case ViewportTool::PlaceSlab:
       return {ViewportClickActionKind::PlaceSlab, 0, tile, edge};
+    case ViewportTool::PlaceBridge:
+      return {ViewportClickActionKind::PlaceBridge, 0, tile, edge};
     case ViewportTool::PlaceLadder:
       return {ViewportClickActionKind::PlaceLadder, 0, tile, edge};
     case ViewportTool::PlaceRamp:
@@ -411,7 +413,7 @@ bool viewport_tool_allowed(EditSubmode submode, ViewportTool tool) {
     case EditSubmode::Terrain:
       return tool == ViewportTool::Select || tool == ViewportTool::PlaceCube ||
              tool == ViewportTool::PlaceFence || tool == ViewportTool::PlaceSlab ||
-             tool == ViewportTool::PlaceRamp;
+             tool == ViewportTool::PlaceBridge || tool == ViewportTool::PlaceRamp;
     case EditSubmode::Objects:
       return tool == ViewportTool::Select || tool == ViewportTool::PlaceBlocker ||
              tool == ViewportTool::PlaceLadder;

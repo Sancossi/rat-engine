@@ -357,4 +357,23 @@ std::vector<TerrainSideFace> build_edge_barrier_faces(const TerrainGeometry& geo
   return out;
 }
 
+std::vector<TerrainFillQuad> build_floor_slab_fill_quads(const FloorSlabDef& slab, float tile_size) {
+  const float ts = tile_size > 0.0f ? tile_size : 1.0f;
+  const float min_x = static_cast<float>(slab.tile.x) * ts;
+  const float min_z = static_cast<float>(slab.tile.z) * ts;
+  const float max_x = min_x + ts;
+  const float max_z = min_z + ts;
+  const float y_hi = slab.top_y;
+  const float y_lo = slab.top_y - slab.thickness;
+  std::vector<TerrainFillQuad> out;
+  out.reserve(kFloorSlabFillQuadCount);
+  out.push_back({min_x, y_hi, min_z, max_x, y_hi, min_z, max_x, y_hi, max_z, min_x, y_hi, max_z});
+  out.push_back({min_x, y_lo, max_z, max_x, y_lo, max_z, max_x, y_lo, min_z, min_x, y_lo, min_z});
+  out.push_back({min_x, y_lo, min_z, min_x, y_hi, min_z, max_x, y_hi, min_z, max_x, y_lo, min_z});
+  out.push_back({max_x, y_lo, min_z, max_x, y_hi, min_z, max_x, y_hi, max_z, max_x, y_lo, max_z});
+  out.push_back({max_x, y_lo, max_z, max_x, y_hi, max_z, min_x, y_hi, max_z, min_x, y_lo, max_z});
+  out.push_back({min_x, y_lo, max_z, min_x, y_hi, max_z, min_x, y_hi, min_z, min_x, y_lo, min_z});
+  return out;
+}
+
 }  // namespace rat
