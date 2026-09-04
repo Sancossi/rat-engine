@@ -1,7 +1,7 @@
 ---
 type: task
 area: Game
-status: In review
+status: Done
 task_type: Feature
 sprint: Sprint 13
 due:
@@ -24,4 +24,10 @@ Origin: chat 2026-09-04 (закрытие Sprint 12, «изменения по �
 
 ## Resolution
 
+`grey_yard` schema 4: три зоны (двор / лофт y=2 / gantry y=1). Дом на западе с inset indoor AABB; мост-плиты `(6–8,5)` над dirt; вторая рампа gantry `(9,7)` north. Южный обход crates со спавна восстановлен (дом сдвинут на запад; тест цилиндра spawn → юг → scrap). Русские `show_text` и cog-квест на земле. Review: Approved (после фикса bypass).
+
+Verify: Play — обойти ящики с юга; зайти в дом (улица тускнеет); пройти под мостом; две рампы на эстакаду. `.\build\tests\rat_tests.exe "[quest],[smoke],[map]"`.
+
 ## Bugs found
+
+none. Лестница loft→мост не делалась (Minor, вне скоупа).

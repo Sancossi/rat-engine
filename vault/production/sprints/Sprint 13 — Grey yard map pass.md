@@ -1,6 +1,6 @@
 ---
 type: sprint
-status: In progress
+status: Done
 dates: 2026-09-04/2026-09-18
 goal: Grey yard map pass — bridges, multi-side ramps, indoor dim, readable yard, Russian copy
 current: true
@@ -28,3 +28,11 @@ DoD:
 - [[feat: Place ramp from clicked tile edge]] → [[feat: Walkable bridges over open ground]] → [[feat: Indoor volume dims the street]] → [[feat: Grey yard layout pass]] → [[feat: Grey yard Russian texts]] → [[feat: Apprentice post-quest page]]
 
 Roadmap: [[Content vertical slice]]
+
+## Итог
+
+DoD выполнен 2026-09-04. Place ramp с кликнутой грани; мосты `floor_slabs` с проходом снизу; indoor volumes schema 4 затемняют улицу из дома; `grey_yard` — двор / лофт / gantry + дом и мост; все `show_text` по-русски; ученик после switch 2 не охотится за шестернёй. `[quest]` зелёный.
+
+## Bugs found
+
+none на закрытии. Южный обход ящиков чинили в [[feat: Grey yard layout pass]] до Done. [[Event graph self-pin drag stays armed]] остаётся в бэклоге (вне скоупа).
