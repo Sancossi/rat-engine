@@ -25,6 +25,6 @@ tags: [hub]
 
 ## Текущий спринт
 
-Текущего спринта нет (`current: true`). Последний закрытый — [[Sprint 11 — Set Move Route]].
+Текущий: [[Sprint 12 — Graph is Play truth]]. Предыдущий закрытый — [[Sprint 11 — Set Move Route]].
 
 Доска: [[Task board]] — виды **Current sprint** (канбан спринта) и **In progress** (код / ревью / blocked). Статус в YAML заметки = колонка на доске.
