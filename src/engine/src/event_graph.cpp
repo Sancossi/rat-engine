@@ -695,4 +695,76 @@ std::optional<std::string> graph_else_target(const EventGraph& graph, std::strin
   return first_edge_target(graph, node_id, is_else_edge);
 }
 
+EventGraphNodeMetrics event_graph_node_metrics(std::string_view kind,
+                                               std::size_t route_step_count) {
+  constexpr float kWidth = 220.0f;
+  constexpr float kTitleH = 22.0f;
+  constexpr float kPad = 8.0f;
+  constexpr float kRowH = 24.0f;
+  constexpr float kGap = 4.0f;
+  constexpr float kMultilineH = 52.0f;
+
+  struct Row {
+    float height = kRowH;
+    bool then_pin = false;
+    bool else_pin = false;
+  };
+  std::vector<Row> rows;
+  if (kind == "show_text" || kind == "comment") {
+    rows.push_back(Row{kMultilineH, false, false});
+  } else if (kind == "wait" || kind == "play_se") {
+    rows.push_back(Row{});
+  } else if (kind == "control_switch" || kind == "control_variable" ||
+             kind == "control_self_switch") {
+    rows.push_back(Row{});
+    rows.push_back(Row{});
+  } else if (kind == "conditional_branch") {
+    rows.push_back(Row{});
+    rows.push_back(Row{});
+    rows.push_back(Row{kRowH, true, false});
+    rows.push_back(Row{kRowH, false, true});
+  } else if (kind == "transfer_player") {
+    rows.push_back(Row{});
+    rows.push_back(Row{});
+    rows.push_back(Row{});
+    rows.push_back(Row{});
+  } else if (kind == "change_items") {
+    rows.push_back(Row{});
+    rows.push_back(Row{});
+    rows.push_back(Row{});
+  } else if (kind == "set_move_route") {
+    rows.push_back(Row{});
+    for (std::size_t i = 0; i < route_step_count; ++i) {
+      rows.push_back(Row{});
+    }
+    rows.push_back(Row{});
+  }
+
+  EventGraphNodeMetrics metrics;
+  metrics.width = kWidth;
+  metrics.title_h = kTitleH;
+  float y = kTitleH + kPad;
+  for (std::size_t i = 0; i < rows.size(); ++i) {
+    const float mid = y + rows[i].height * 0.5f;
+    if (rows[i].then_pin) {
+      metrics.then_pin_y = mid;
+    }
+    if (rows[i].else_pin) {
+      metrics.else_pin_y = mid;
+    }
+    y += rows[i].height;
+    if (i + 1 < rows.size()) {
+      y += kGap;
+    }
+  }
+  y += kPad;
+  if (rows.empty()) {
+    y = kTitleH + kPad;
+  }
+  metrics.height = y;
+  metrics.in_pin_y = metrics.height * 0.5f;
+  metrics.seq_out_pin_y = metrics.height * 0.5f;
+  return metrics;
+}
+
 }  // namespace rat

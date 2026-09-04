@@ -4,6 +4,7 @@
 #include <rat/map_document.hpp>
 #include <rat/map_loader.hpp>
 
+#include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
 #include <nlohmann/json.hpp>
 
@@ -984,4 +985,32 @@ TEST_CASE("EventRuntime missing else-edge finishes like empty else_commands",
   REQUIRE_FALSE(runtime.active_message().has_value());
   REQUIRE_FALSE(runtime.player_input_blocked());
   REQUIRE_FALSE(state.get_switch(5));
+}
+
+TEST_CASE("event graph node metrics grow with widget rows and place branch pins on option rows",
+          "[unit][event][graph][edit]") {
+  using Catch::Approx;
+  const rat::EventGraphNodeMetrics wait = rat::event_graph_node_metrics("wait");
+  const rat::EventGraphNodeMetrics show = rat::event_graph_node_metrics("show_text");
+  const rat::EventGraphNodeMetrics branch = rat::event_graph_node_metrics("conditional_branch");
+  const rat::EventGraphNodeMetrics route0 = rat::event_graph_node_metrics("set_move_route", 0);
+  const rat::EventGraphNodeMetrics route3 = rat::event_graph_node_metrics("set_move_route", 3);
+  const rat::EventGraphNodeMetrics entry = rat::event_graph_node_metrics("entry");
+  const rat::EventGraphNodeMetrics transfer = rat::event_graph_node_metrics("transfer_player");
+
+  REQUIRE(show.width == Approx(220.0f));
+  REQUIRE(wait.width == Approx(220.0f));
+  REQUIRE(show.height > wait.height);
+  REQUIRE(transfer.height > wait.height);
+  REQUIRE(entry.height < wait.height);
+  REQUIRE(route3.height > route0.height);
+
+  REQUIRE(wait.in_pin_y == Approx(wait.height * 0.5f));
+  REQUIRE(wait.seq_out_pin_y == Approx(wait.height * 0.5f));
+  REQUIRE(show.seq_out_pin_y == Approx(show.height * 0.5f));
+
+  REQUIRE(branch.then_pin_y > branch.title_h);
+  REQUIRE(branch.else_pin_y > branch.then_pin_y);
+  REQUIRE(branch.else_pin_y < branch.height);
+  REQUIRE(branch.then_pin_y != Approx(branch.height * 0.5f));
 }
