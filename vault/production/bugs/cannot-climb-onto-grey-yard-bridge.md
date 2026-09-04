@@ -11,6 +11,8 @@ tags: [bug]
 
 Origin: playtest 2026-09-04 after [[Sprint 13 — Grey yard map pass]] / [[feat: Grey yard layout pass]]. Related: [[feat: Walkable bridges over open ground]]. Follow-up: [[feat: Voxel 3D terrain and rotating ramps]]. Depends: [[feat: Rotating ramp voxels]]. Origin: [[Sprint 14 — Voxel 3D terrain]].
 
+Occupancy-ramp high side сейчас omit’ит fence только у **occupancy solid**. У `floor_slabs` боковые fences остаются — без такого же omit цилиндр не выйдет на плиту `(6,5)`. Это часть фикса, не отдельный баг.
+
 Мост `(6–8, 5)` — airborne `floor_slabs` (`top_y` 2.0). Сверху ходить можно, снизу пройти можно, **забраться с земли/лофта нельзя**: нет рампы и нет лестницы на пролёт. Layout pass сознательно не ставил loft→мост лестницу.
 
 ## Repro
