@@ -717,3 +717,39 @@ TEST_CASE("Occupancy solid fill quads are a 1 m cube at voxel Y", "[unit][terrai
   REQUIRE(has_bottom);
 }
 
+TEST_CASE("Occupancy ramp fill quads are a wedge spanning one metre of Y, not a cube",
+          "[unit][terrain][edit]") {
+  const rat::OccupancyCell cell{.x = 2,
+                                .y = 1,
+                                .z = 3,
+                                .kind = rat::OccupancyKind::Ramp,
+                                .yaw = rat::RampDirection::East};
+  const std::vector<rat::TerrainFillQuad> quads =
+      rat::build_occupancy_ramp_fill_quads(cell, 1.0f);
+  REQUIRE(quads.size() == rat::kOccupancyRampFillQuadCount);
+  REQUIRE(rat::build_occupancy_solid_fill_quads(cell, 1.0f).empty());
+
+  bool has_sloped_top = false;
+  bool has_flat_cube_top = false;
+  for (const rat::TerrainFillQuad& quad : quads) {
+    const bool all_y2 = quad.y0 == Catch::Approx(2.0f) && quad.y1 == Catch::Approx(2.0f) &&
+                        quad.y2 == Catch::Approx(2.0f) && quad.y3 == Catch::Approx(2.0f);
+    if (all_y2) {
+      has_flat_cube_top = true;
+    }
+    const bool low_west = (quad.y0 == Catch::Approx(1.0f) && quad.x0 == Catch::Approx(2.0f)) ||
+                          (quad.y1 == Catch::Approx(1.0f) && quad.x1 == Catch::Approx(2.0f)) ||
+                          (quad.y2 == Catch::Approx(1.0f) && quad.x2 == Catch::Approx(2.0f)) ||
+                          (quad.y3 == Catch::Approx(1.0f) && quad.x3 == Catch::Approx(2.0f));
+    const bool high_east = (quad.y0 == Catch::Approx(2.0f) && quad.x0 == Catch::Approx(3.0f)) ||
+                           (quad.y1 == Catch::Approx(2.0f) && quad.x1 == Catch::Approx(3.0f)) ||
+                           (quad.y2 == Catch::Approx(2.0f) && quad.x2 == Catch::Approx(3.0f)) ||
+                           (quad.y3 == Catch::Approx(2.0f) && quad.x3 == Catch::Approx(3.0f));
+    if (low_west && high_east) {
+      has_sloped_top = true;
+    }
+  }
+  REQUIRE(has_sloped_top);
+  REQUIRE_FALSE(has_flat_cube_top);
+}
+

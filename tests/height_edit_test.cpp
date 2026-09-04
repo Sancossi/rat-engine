@@ -581,3 +581,36 @@ TEST_CASE("Place occupancy refuses xyz outside the height grid", "[unit][height_
   REQUIRE_FALSE(refused.ok);
   REQUIRE(map.occupancy.empty());
 }
+
+TEST_CASE("Place occupancy ramp writes kind ramp and yaw, bumps schema 4 to 5",
+          "[unit][height_edit][edit]") {
+  rat::MapData map = make_occupancy_edit_map(4);
+  const auto placed =
+      rat::place_map_occupancy_ramp(map, 1, 0, 2, rat::RampDirection::East);
+  REQUIRE(placed.ok);
+  REQUIRE(map.schema_version == 5);
+  REQUIRE(map.occupancy.size() == 1);
+  const rat::OccupancyCell* cell = find_occupancy(map, 1, 0, 2);
+  REQUIRE(cell != nullptr);
+  REQUIRE(cell->kind == rat::OccupancyKind::Ramp);
+  REQUIRE(cell->yaw == rat::RampDirection::East);
+}
+
+TEST_CASE("Place occupancy ramp last-wins over a solid on the same xyz",
+          "[unit][height_edit][edit]") {
+  rat::MapData map = make_occupancy_edit_map(5);
+  REQUIRE(rat::place_map_occupancy_solid(map, 2, 1, 1).ok);
+  REQUIRE(rat::place_map_occupancy_ramp(map, 2, 1, 1, rat::RampDirection::South).ok);
+  REQUIRE(map.occupancy.size() == 1);
+  REQUIRE(map.occupancy[0].kind == rat::OccupancyKind::Ramp);
+  REQUIRE(map.occupancy[0].yaw == rat::RampDirection::South);
+}
+
+TEST_CASE("Place occupancy ramp refuses xyz outside the height grid",
+          "[unit][height_edit][edit]") {
+  rat::MapData map = make_occupancy_edit_map(5);
+  const auto refused =
+      rat::place_map_occupancy_ramp(map, 99, 0, 0, rat::RampDirection::North);
+  REQUIRE_FALSE(refused.ok);
+  REQUIRE(map.occupancy.empty());
+}

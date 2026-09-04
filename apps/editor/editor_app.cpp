@@ -220,6 +220,14 @@ void EditorApp::apply_cell_brush(const ViewportClickAction& action) {
       (void)document_.execute(
           make_place_map_occupancy_solid_command(action.tile.x, action.voxel_y, action.tile.z));
       break;
+    case ViewportClickActionKind::PlaceVoxelRamp:
+      terrain_panel_.tile_x = action.tile.x;
+      terrain_panel_.tile_z = action.tile.z;
+      terrain_panel_.voxel_layer = action.voxel_y;
+      terrain_panel_.ramp_direction_index = static_cast<int>(action.edge);
+      (void)document_.execute(make_place_map_occupancy_ramp_command(
+          action.tile.x, action.voxel_y, action.tile.z, action.edge));
+      break;
     case ViewportClickActionKind::RemoveVoxel:
       terrain_panel_.tile_x = action.tile.x;
       terrain_panel_.tile_z = action.tile.z;
@@ -780,6 +788,7 @@ void EditorApp::handle_edit_mouse_input(const ImGuiIO& io) {
       case ViewportClickActionKind::PlaceLadder:
       case ViewportClickActionKind::PlaceRamp:
       case ViewportClickActionKind::PlaceVoxel:
+      case ViewportClickActionKind::PlaceVoxelRamp:
       case ViewportClickActionKind::RemoveVoxel:
         document_.begin_stroke();
         apply_cell_brush(action);
@@ -803,7 +812,8 @@ void EditorApp::handle_edit_mouse_input(const ImGuiIO& io) {
                            action.kind == ViewportClickActionKind::RemoveVoxel;
     const bool edge_tool = action.kind == ViewportClickActionKind::PlaceFence ||
                            action.kind == ViewportClickActionKind::PlaceLadder ||
-                           action.kind == ViewportClickActionKind::PlaceRamp;
+                           action.kind == ViewportClickActionKind::PlaceRamp ||
+                           action.kind == ViewportClickActionKind::PlaceVoxelRamp;
     const bool tile_changed =
         action.tile.x != drag_last_tile_.x || action.tile.z != drag_last_tile_.z ||
         action.voxel_y != drag_last_voxel_y_;
@@ -1121,6 +1131,7 @@ void EditorApp::draw_ui() {
     tool_radio("Place event", ViewportTool::PlaceEvent);
     tool_radio("Place cube", ViewportTool::PlaceCube);
     tool_radio("Place voxel", ViewportTool::PlaceVoxel);
+    tool_radio("Place ramp voxel", ViewportTool::PlaceVoxelRamp);
     tool_radio("Remove voxel", ViewportTool::RemoveVoxel);
     tool_radio("Fence", ViewportTool::PlaceFence);
     tool_radio("Floor slab", ViewportTool::PlaceSlab);

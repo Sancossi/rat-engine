@@ -343,9 +343,6 @@ std::optional<Vec3> unproject_to_occupancy(const OrthoCamera& camera, float pixe
   float best_dist2 = 0.0f;
   Vec3 best_hit{};
   for (const OccupancyCell& cell : occupancy) {
-    if (cell.kind != OccupancyKind::Solid) {
-      continue;
-    }
     Vec3 bmin{};
     Vec3 bmax{};
     occupancy_cell_aabb(cell, tile_size, bmin, bmax);
@@ -512,6 +509,10 @@ ViewportClickAction resolve_viewport_click(const MapData& map, ViewportTool tool
       const VoxelCoord cell = voxel_cell_for_place(map, world_hit, voxel_layer);
       return {ViewportClickActionKind::PlaceVoxel, 0, TileCoord{cell.x, cell.z}, edge, cell.y};
     }
+    case ViewportTool::PlaceVoxelRamp: {
+      const VoxelCoord cell = voxel_cell_for_place(map, world_hit, voxel_layer);
+      return {ViewportClickActionKind::PlaceVoxelRamp, 0, TileCoord{cell.x, cell.z}, edge, cell.y};
+    }
     case ViewportTool::RemoveVoxel: {
       const VoxelCoord cell = voxel_cell_for_remove(map, world_hit, voxel_layer);
       return {ViewportClickActionKind::RemoveVoxel, 0, TileCoord{cell.x, cell.z}, edge, cell.y};
@@ -526,7 +527,8 @@ bool viewport_tool_allowed(EditSubmode submode, ViewportTool tool) {
       return tool == ViewportTool::Select || tool == ViewportTool::PlaceCube ||
              tool == ViewportTool::PlaceFence || tool == ViewportTool::PlaceSlab ||
              tool == ViewportTool::PlaceBridge || tool == ViewportTool::PlaceRamp ||
-             tool == ViewportTool::PlaceVoxel || tool == ViewportTool::RemoveVoxel;
+             tool == ViewportTool::PlaceVoxel || tool == ViewportTool::PlaceVoxelRamp ||
+             tool == ViewportTool::RemoveVoxel;
     case EditSubmode::Objects:
       return tool == ViewportTool::Select || tool == ViewportTool::PlaceBlocker ||
              tool == ViewportTool::PlaceLadder;
@@ -567,9 +569,6 @@ std::optional<OccupancyFaceHit> pick_occupancy_face_at(std::span<const Occupancy
   float best_dist = 0.0f;
   OccupancyFaceHit best{};
   for (const OccupancyCell& cell : occupancy) {
-    if (cell.kind != OccupancyKind::Solid) {
-      continue;
-    }
     Vec3 bmin{};
     Vec3 bmax{};
     occupancy_cell_aabb(cell, tile_size, bmin, bmax);

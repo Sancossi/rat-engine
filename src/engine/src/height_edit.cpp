@@ -465,6 +465,34 @@ HeightEditResult place_map_occupancy_solid(MapData& map, int x, int y, int z) {
   return ok_result();
 }
 
+HeightEditResult place_map_occupancy_ramp(MapData& map, int x, int y, int z, RampDirection yaw) {
+  if (!is_valid_direction(yaw)) {
+    return error_result("occupancy ramp yaw is invalid");
+  }
+  const HeightEditResult upgraded = upgrade_map_schema_for_occupancy(map);
+  if (!upgraded.ok) {
+    return upgraded;
+  }
+  std::size_t ignored = 0;
+  const HeightEditResult indexed = tile_to_index(map.height_grid, x, z, ignored);
+  if (!indexed.ok) {
+    return indexed;
+  }
+  OccupancyCell cell;
+  cell.x = x;
+  cell.y = y;
+  cell.z = z;
+  cell.kind = OccupancyKind::Ramp;
+  cell.yaw = yaw;
+  const int existing = find_occupancy_index(map.occupancy, x, y, z);
+  if (existing >= 0) {
+    map.occupancy[static_cast<std::size_t>(existing)] = cell;
+  } else {
+    map.occupancy.push_back(cell);
+  }
+  return ok_result();
+}
+
 HeightEditResult remove_map_occupancy_cell(MapData& map, int x, int y, int z) {
   const int existing = find_occupancy_index(map.occupancy, x, y, z);
   if (existing < 0) {

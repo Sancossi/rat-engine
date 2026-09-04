@@ -595,3 +595,19 @@ TEST_CASE("place two stacked occupancy solids, remove upper, undo restores",
   }
   REQUIRE(found_upper);
 }
+
+TEST_CASE("place occupancy ramp undoes back to empty", "[unit][edit][height][viewport]") {
+  rat::MapData map = make_tiny_map();
+  map.schema_version = 5;
+  REQUIRE(rat::upgrade_map_schema_for_elevation(map).ok);
+  rat::EditHistory history;
+
+  REQUIRE(history.execute(
+      map, rat::make_place_map_occupancy_ramp_command(0, 0, 1, rat::RampDirection::West)));
+  REQUIRE(map.occupancy.size() == 1);
+  REQUIRE(map.occupancy[0].kind == rat::OccupancyKind::Ramp);
+  REQUIRE(map.occupancy[0].yaw == rat::RampDirection::West);
+
+  REQUIRE(history.undo(map));
+  REQUIRE(map.occupancy.empty());
+}

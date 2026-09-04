@@ -1,4 +1,5 @@
 #include <rat/camera.hpp>
+#include <rat/collision.hpp>
 #include <rat/event_edit.hpp>
 #include <rat/height_edit.hpp>
 #include <rat/hot_apply.hpp>
@@ -572,6 +573,7 @@ TEST_CASE("viewport tool allowed matches edit submode", "[unit][viewport_edit]")
   REQUIRE(rat::viewport_tool_allowed(EditSubmode::Terrain, ViewportTool::PlaceRamp));
   REQUIRE(rat::viewport_tool_allowed(EditSubmode::Terrain, ViewportTool::PlaceBridge));
   REQUIRE(rat::viewport_tool_allowed(EditSubmode::Terrain, ViewportTool::PlaceVoxel));
+  REQUIRE(rat::viewport_tool_allowed(EditSubmode::Terrain, ViewportTool::PlaceVoxelRamp));
   REQUIRE(rat::viewport_tool_allowed(EditSubmode::Terrain, ViewportTool::RemoveVoxel));
   REQUIRE_FALSE(rat::viewport_tool_allowed(EditSubmode::Terrain, ViewportTool::PlaceBlocker));
   REQUIRE_FALSE(rat::viewport_tool_allowed(EditSubmode::Terrain, ViewportTool::PlaceEvent));
@@ -587,6 +589,7 @@ TEST_CASE("viewport tool allowed matches edit submode", "[unit][viewport_edit]")
   REQUIRE_FALSE(rat::viewport_tool_allowed(EditSubmode::Objects, ViewportTool::PlaceBridge));
   REQUIRE_FALSE(rat::viewport_tool_allowed(EditSubmode::Objects, ViewportTool::PlaceEvent));
   REQUIRE_FALSE(rat::viewport_tool_allowed(EditSubmode::Objects, ViewportTool::PlaceVoxel));
+  REQUIRE_FALSE(rat::viewport_tool_allowed(EditSubmode::Objects, ViewportTool::PlaceVoxelRamp));
   REQUIRE_FALSE(rat::viewport_tool_allowed(EditSubmode::Objects, ViewportTool::RemoveVoxel));
 
   REQUIRE(rat::viewport_tool_allowed(EditSubmode::Events, ViewportTool::Select));
@@ -599,6 +602,7 @@ TEST_CASE("viewport tool allowed matches edit submode", "[unit][viewport_edit]")
   REQUIRE_FALSE(rat::viewport_tool_allowed(EditSubmode::Events, ViewportTool::PlaceRamp));
   REQUIRE_FALSE(rat::viewport_tool_allowed(EditSubmode::Events, ViewportTool::PlaceBridge));
   REQUIRE_FALSE(rat::viewport_tool_allowed(EditSubmode::Events, ViewportTool::PlaceVoxel));
+  REQUIRE_FALSE(rat::viewport_tool_allowed(EditSubmode::Events, ViewportTool::PlaceVoxelRamp));
   REQUIRE_FALSE(rat::viewport_tool_allowed(EditSubmode::Events, ViewportTool::RemoveVoxel));
 }
 
@@ -671,6 +675,98 @@ TEST_CASE("place voxel on occupancy +X face targets the east neighbor",
   REQUIRE(placed.x == 3);
   REQUIRE(placed.y == 1);
   REQUIRE(placed.z == 3);
+}
+
+TEST_CASE("place ramp voxel on empty ground uses panel layer Y and clicked edge yaw",
+          "[unit][viewport_edit][edit]") {
+  rat::MapData map = make_test_map();
+  const rat::Vec3 world{2.92f, 0.0f, 1.50f};
+  const rat::ViewportClickAction action = rat::resolve_viewport_click(
+      map, rat::ViewportTool::PlaceVoxelRamp, world, rat::EditSubmode::Terrain, 2);
+  REQUIRE(action.kind == rat::ViewportClickActionKind::PlaceVoxelRamp);
+  REQUIRE(action.tile.x == 2);
+  REQUIRE(action.tile.z == 1);
+  REQUIRE(action.voxel_y == 2);
+  REQUIRE(action.edge == rat::RampDirection::East);
+}
+
+TEST_CASE("place ramp voxel on occupancy +Y face targets the adjacent empty cell",
+          "[unit][viewport_edit][edit]") {
+  rat::MapData map = make_test_map();
+  map.schema_version = 5;
+  map.occupancy.push_back(rat::OccupancyCell{
+      .x = 2, .y = 1, .z = 3, .kind = rat::OccupancyKind::Solid});
+  const rat::Vec3 face_hit{2.5f, 2.0f, 3.5f};
+  const rat::ViewportClickAction action = rat::resolve_viewport_click(
+      map, rat::ViewportTool::PlaceVoxelRamp, face_hit, rat::EditSubmode::Terrain, 0);
+  REQUIRE(action.kind == rat::ViewportClickActionKind::PlaceVoxelRamp);
+  REQUIRE(action.tile.x == 2);
+  REQUIRE(action.tile.z == 3);
+  REQUIRE(action.voxel_y == 2);
+}
+
+TEST_CASE("remove voxel on occupancy ramp +Y face targets the occupied cell",
+          "[unit][viewport_edit][edit]") {
+  rat::MapData map = make_test_map();
+  map.schema_version = 5;
+  map.occupancy.push_back(rat::OccupancyCell{
+      .x = 2,
+      .y = 1,
+      .z = 3,
+      .kind = rat::OccupancyKind::Ramp,
+      .yaw = rat::RampDirection::East,
+  });
+  const rat::Vec3 face_hit{2.5f, 2.0f, 3.5f};
+  const rat::VoxelCoord removed = rat::voxel_cell_for_remove(map, face_hit, 0);
+  REQUIRE(removed.x == 2);
+  REQUIRE(removed.y == 1);
+  REQUIRE(removed.z == 3);
+}
+
+TEST_CASE("place ramp voxel west of a solid climbs onto the neighbor top at y+1",
+          "[unit][viewport_edit][player][surface][collision]") {
+  rat::MapData map = make_elevated_map();
+  map.schema_version = 5;
+  REQUIRE(rat::place_map_occupancy_solid(map, 1, 0, 1).ok);
+
+  const rat::ViewportClickAction west_approach = rat::resolve_viewport_click(
+      map, rat::ViewportTool::PlaceVoxelRamp, rat::Vec3{0.92f, 0.0f, 1.50f},
+      rat::EditSubmode::Terrain, 0);
+  REQUIRE(west_approach.kind == rat::ViewportClickActionKind::PlaceVoxelRamp);
+  REQUIRE(west_approach.tile.x == 0);
+  REQUIRE(west_approach.tile.z == 1);
+  REQUIRE(west_approach.voxel_y == 0);
+  REQUIRE(west_approach.edge == rat::RampDirection::East);
+  REQUIRE(rat::place_map_occupancy_ramp(map, west_approach.tile.x, west_approach.voxel_y,
+                                        west_approach.tile.z, west_approach.edge)
+              .ok);
+
+  const rat::SurfaceQuery query(map);
+  const rat::CollisionWorld world = rat::bake_collision_world(map, query);
+  bool found_ramp = false;
+  for (const rat::WalkableRamp& ramp : world.ramps) {
+    if (ramp.tile.x == 0 && ramp.tile.z == 1 && ramp.direction == rat::RampDirection::East &&
+        ramp.low_y == Approx(0.0f) && ramp.high_y == Approx(1.0f)) {
+      found_ramp = true;
+    }
+  }
+  REQUIRE(found_ramp);
+
+  rat::PlayerBody player;
+  player.x = 0.05f;
+  player.y = 0.0f;
+  player.z = 1.5f;
+  player.half_extent = 0.4f;
+  player.speed = 3.0f;
+  float prev_y = player.y;
+  for (int i = 0; i < 40; ++i) {
+    player = rat::integrate_player_surface(player, rat::MoveInput{1.0f, 0.0f}, 1.0f / 60.0f, {},
+                                           query, 0.35f, {}, &map);
+    REQUIRE(player.y >= prev_y - 1e-4f);
+    prev_y = player.y;
+  }
+  REQUIRE(player.x > 1.05f);
+  REQUIRE(player.y == Approx(1.0f).margin(0.05f));
 }
 
 TEST_CASE("unproject y=0 misses east ramp tile under tilt45", "[unit][viewport_edit]") {

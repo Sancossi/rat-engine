@@ -22,6 +22,7 @@ enum class ViewportTool {
   PlaceLadder,
   PlaceRamp,
   PlaceVoxel,
+  PlaceVoxelRamp,
   RemoveVoxel,
 };
 
@@ -55,6 +56,7 @@ enum class ViewportClickActionKind {
   PlaceLadder,
   PlaceRamp,
   PlaceVoxel,
+  PlaceVoxelRamp,
   RemoveVoxel,
 };
 

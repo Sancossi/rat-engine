@@ -58,6 +58,8 @@ inline constexpr float kEdgeBarrierFullHeight = 1.6f;
 [[nodiscard]] int find_occupancy_index(const std::vector<OccupancyCell>& occupancy, int x, int y,
                                        int z);
 [[nodiscard]] HeightEditResult place_map_occupancy_solid(MapData& map, int x, int y, int z);
+[[nodiscard]] HeightEditResult place_map_occupancy_ramp(MapData& map, int x, int y, int z,
+                                                        RampDirection yaw);
 [[nodiscard]] HeightEditResult remove_map_occupancy_cell(MapData& map, int x, int y, int z);
 
 }  // namespace rat

@@ -110,14 +110,19 @@ GreyboxFillMesh build_greybox_fill_mesh(const MapData& map, const PlayerBody& bo
       build_edge_barrier_faces(geometry, map.edge_barriers);
   constexpr std::size_t kLadderQuadsPerLadder = 6;
   std::size_t occupancy_solid_count = 0;
+  std::size_t occupancy_ramp_count = 0;
   for (const OccupancyCell& cell : map.occupancy) {
     if (cell.kind == OccupancyKind::Solid) {
       ++occupancy_solid_count;
+    } else if (cell.kind == OccupancyKind::Ramp) {
+      ++occupancy_ramp_count;
     }
   }
   const std::size_t slab_quads = map.floor_slabs.size() * kFloorSlabFillQuadCount;
   const std::size_t ladder_quads = map.ladders.size() * kLadderQuadsPerLadder;
-  const std::size_t occupancy_quads = occupancy_solid_count * kOccupancySolidFillQuadCount;
+  const std::size_t occupancy_quads =
+      occupancy_solid_count * kOccupancySolidFillQuadCount +
+      occupancy_ramp_count * kOccupancyRampFillQuadCount;
   if (!terrain_fill_quad_count_fits_u16(geometry.tiles.size(), side_faces.size(),
                                         fence_faces.size() + slab_quads + ladder_quads +
                                             occupancy_quads)) {
@@ -208,10 +213,9 @@ GreyboxFillMesh build_greybox_fill_mesh(const MapData& map, const PlayerBody& bo
          kLadderFillAbgr);
   }
   for (const OccupancyCell& cell : map.occupancy) {
-    if (cell.kind != OccupancyKind::Solid) {
-      continue;
-    }
-    const std::vector<TerrainFillQuad> fill = build_occupancy_solid_fill_quads(cell, ts);
+    const std::vector<TerrainFillQuad> fill =
+        cell.kind == OccupancyKind::Ramp ? build_occupancy_ramp_fill_quads(cell, ts)
+                                         : build_occupancy_solid_fill_quads(cell, ts);
     for (const TerrainFillQuad& quad : fill) {
       push(quad.x0, quad.y0, quad.z0, quad.x1, quad.y1, quad.z1, quad.x2, quad.y2, quad.z2, quad.x3,
            quad.y3, quad.z3, kTerrainFillAbgr);

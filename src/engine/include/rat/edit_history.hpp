@@ -63,6 +63,8 @@ class EditCommand {
     TileCoord tile, RampDirection direction);
 [[nodiscard]] std::unique_ptr<EditCommand> make_place_map_occupancy_solid_command(int x, int y,
                                                                                    int z);
+[[nodiscard]] std::unique_ptr<EditCommand> make_place_map_occupancy_ramp_command(
+    int x, int y, int z, RampDirection yaw);
 [[nodiscard]] std::unique_ptr<EditCommand> make_remove_map_occupancy_cell_command(int x, int y,
                                                                                    int z);
 

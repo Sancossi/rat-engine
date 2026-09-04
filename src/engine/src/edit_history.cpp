@@ -509,6 +509,12 @@ std::unique_ptr<EditCommand> make_place_map_occupancy_solid_command(int x, int y
       [x, y, z](MapData& map) { return place_map_occupancy_solid(map, x, y, z); });
 }
 
+std::unique_ptr<EditCommand> make_place_map_occupancy_ramp_command(int x, int y, int z,
+                                                                   RampDirection yaw) {
+  return std::make_unique<ReplaceElevationSnapshotCommand>(
+      [x, y, z, yaw](MapData& map) { return place_map_occupancy_ramp(map, x, y, z, yaw); });
+}
+
 std::unique_ptr<EditCommand> make_remove_map_occupancy_cell_command(int x, int y, int z) {
   return std::make_unique<ReplaceElevationSnapshotCommand>(
       [x, y, z](MapData& map) { return remove_map_occupancy_cell(map, x, y, z); });

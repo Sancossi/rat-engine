@@ -82,6 +82,49 @@ void append_slab_side_fences(CollisionWorld& world, const WalkableBox& box) {
   add_edge(box.min_x, box.max_z, box.max_x, box.max_z);
 }
 
+[[nodiscard]] bool occupancy_ramp_high_at(std::span<const OccupancyCell> occupancy, int x, int y,
+                                          int z, RampDirection yaw) {
+  for (const OccupancyCell& cell : occupancy) {
+    if (cell.x == x && cell.y == y && cell.z == z && cell.kind == OccupancyKind::Ramp &&
+        cell.yaw == yaw) {
+      return true;
+    }
+  }
+  return false;
+}
+
+void append_occupancy_solid_fences(CollisionWorld& world, const WalkableBox& box,
+                                   const OccupancyCell& cell,
+                                   std::span<const OccupancyCell> occupancy) {
+  auto add_edge = [&](float ax, float az, float bx, float bz) {
+    FenceSolid solid;
+    solid.ax = ax;
+    solid.az = az;
+    solid.bx = bx;
+    solid.bz = bz;
+    solid.y_lo = box.y_lo;
+    solid.y_hi = box.y_hi;
+    solid.ay_lo = box.y_lo;
+    solid.ay_hi = box.y_hi;
+    solid.by_lo = box.y_lo;
+    solid.by_hi = box.y_hi;
+    solid.apply_max_step_up_skip = false;
+    world.fences.push_back(solid);
+  };
+  if (!occupancy_ramp_high_at(occupancy, cell.x - 1, cell.y, cell.z, RampDirection::East)) {
+    add_edge(box.min_x, box.min_z, box.min_x, box.max_z);
+  }
+  if (!occupancy_ramp_high_at(occupancy, cell.x + 1, cell.y, cell.z, RampDirection::West)) {
+    add_edge(box.max_x, box.min_z, box.max_x, box.max_z);
+  }
+  if (!occupancy_ramp_high_at(occupancy, cell.x, cell.y, cell.z - 1, RampDirection::South)) {
+    add_edge(box.min_x, box.min_z, box.max_x, box.min_z);
+  }
+  if (!occupancy_ramp_high_at(occupancy, cell.x, cell.y, cell.z + 1, RampDirection::North)) {
+    add_edge(box.min_x, box.max_z, box.max_x, box.max_z);
+  }
+}
+
 }  // namespace
 
 CollisionBody collision_body_from_player(const PlayerBody& player) {
@@ -317,7 +360,7 @@ void append_occupancy(CollisionWorld& world, std::span<const OccupancyCell> occu
     box.max_z = min_z + ts;
     box.y_lo = y_lo;
     box.y_hi = y_hi;
-    append_slab_side_fences(world, box);
+    append_occupancy_solid_fences(world, box, cell, occupancy);
     world.boxes.push_back(box);
   }
 }

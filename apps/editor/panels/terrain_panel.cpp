@@ -203,6 +203,12 @@ void draw_terrain_panel(EditorDocument& document, TerrainPanelState& state) {
         make_place_map_occupancy_solid_command(state.tile_x, state.voxel_layer, state.tile_z));
   }
   ImGui::SameLine();
+  if (ImGui::Button("Place ramp voxel")) {
+    (void)run_height(make_place_map_occupancy_ramp_command(
+        state.tile_x, state.voxel_layer, state.tile_z,
+        static_cast<RampDirection>(state.ramp_direction_index)));
+  }
+  ImGui::SameLine();
   if (ImGui::Button("Remove voxel")) {
     (void)run_height(
         make_remove_map_occupancy_cell_command(state.tile_x, state.voxel_layer, state.tile_z));

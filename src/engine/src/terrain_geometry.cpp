@@ -389,4 +389,68 @@ std::vector<TerrainFillQuad> build_occupancy_solid_fill_quads(const OccupancyCel
   return build_floor_slab_fill_quads(slab, ts);
 }
 
+std::vector<TerrainFillQuad> build_occupancy_ramp_fill_quads(const OccupancyCell& cell,
+                                                             float tile_size) {
+  if (cell.kind != OccupancyKind::Ramp) {
+    return {};
+  }
+  const float ts = tile_size > 0.0f ? tile_size : 1.0f;
+  const float min_x = static_cast<float>(cell.x) * ts;
+  const float min_z = static_cast<float>(cell.z) * ts;
+  const float max_x = min_x + ts;
+  const float max_z = min_z + ts;
+  const float y_lo = static_cast<float>(cell.y) * ts;
+  const float y_hi = static_cast<float>(cell.y + 1) * ts;
+  float y_nw = y_lo;
+  float y_ne = y_lo;
+  float y_se = y_lo;
+  float y_sw = y_lo;
+  switch (cell.yaw) {
+    case RampDirection::North:
+      y_nw = y_hi;
+      y_ne = y_hi;
+      break;
+    case RampDirection::East:
+      y_ne = y_hi;
+      y_se = y_hi;
+      break;
+    case RampDirection::South:
+      y_se = y_hi;
+      y_sw = y_hi;
+      break;
+    case RampDirection::West:
+      y_nw = y_hi;
+      y_sw = y_hi;
+      break;
+  }
+
+  std::vector<TerrainFillQuad> out;
+  out.reserve(kOccupancyRampFillQuadCount);
+  out.push_back({min_x, y_nw, min_z, max_x, y_ne, min_z, max_x, y_se, max_z, min_x, y_sw, max_z});
+  out.push_back({min_x, y_lo, max_z, max_x, y_lo, max_z, max_x, y_lo, min_z, min_x, y_lo, min_z});
+  switch (cell.yaw) {
+    case RampDirection::North:
+      out.push_back({min_x, y_lo, min_z, min_x, y_hi, min_z, max_x, y_hi, min_z, max_x, y_lo, min_z});
+      out.push_back({min_x, y_lo, min_z, min_x, y_hi, min_z, min_x, y_lo, max_z, min_x, y_lo, max_z});
+      out.push_back({max_x, y_lo, min_z, max_x, y_lo, max_z, max_x, y_lo, max_z, max_x, y_hi, min_z});
+      break;
+    case RampDirection::East:
+      out.push_back({max_x, y_lo, min_z, max_x, y_hi, min_z, max_x, y_hi, max_z, max_x, y_lo, max_z});
+      out.push_back({min_x, y_lo, min_z, max_x, y_lo, min_z, max_x, y_hi, min_z, min_x, y_lo, min_z});
+      out.push_back({min_x, y_lo, max_z, min_x, y_lo, max_z, max_x, y_hi, max_z, max_x, y_lo, max_z});
+      break;
+    case RampDirection::South:
+      out.push_back({min_x, y_lo, max_z, max_x, y_lo, max_z, max_x, y_hi, max_z, min_x, y_hi, max_z});
+      out.push_back({min_x, y_lo, min_z, min_x, y_lo, max_z, min_x, y_hi, max_z, min_x, y_lo, min_z});
+      out.push_back({max_x, y_lo, min_z, max_x, y_hi, max_z, max_x, y_lo, max_z, max_x, y_lo, min_z});
+      break;
+    case RampDirection::West:
+      out.push_back({min_x, y_lo, min_z, min_x, y_lo, max_z, min_x, y_hi, max_z, min_x, y_hi, min_z});
+      out.push_back({min_x, y_hi, min_z, max_x, y_lo, min_z, max_x, y_lo, min_z, min_x, y_lo, min_z});
+      out.push_back({min_x, y_lo, max_z, max_x, y_lo, max_z, max_x, y_lo, max_z, min_x, y_hi, max_z});
+      break;
+  }
+  return out;
+}
+
 }  // namespace rat

@@ -5,6 +5,7 @@
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
 
+#include <algorithm>
 #include <cmath>
 #include <cstdint>
 
@@ -209,4 +210,52 @@ TEST_CASE("greybox fill includes a 1 m occupancy solid cube above the height gri
   }
   REQUIRE(has_occupancy_top);
   REQUIRE(has_ground_tile);
+}
+
+TEST_CASE("greybox fill draws occupancy ramp as a sloped wedge not a cube",
+          "[unit][terrain][edit]") {
+  rat::MapData map = make_two_tile_map_with_house();
+  map.schema_version = 5;
+  map.occupancy.push_back(rat::OccupancyCell{
+      .x = 1,
+      .y = 0,
+      .z = 0,
+      .kind = rat::OccupancyKind::Ramp,
+      .yaw = rat::RampDirection::East,
+  });
+
+  rat::PlayerBody body;
+  body.x = 0.5f;
+  body.y = 0.0f;
+  body.z = 0.5f;
+  const rat::GreyboxFillMesh mesh = rat::build_greybox_fill_mesh(map, body, false);
+  REQUIRE_FALSE(mesh.vertices.empty());
+
+  bool has_sloped_wedge = false;
+  bool has_flat_cube_top = false;
+  for (std::size_t i = 0; i + 3 < mesh.vertices.size(); i += 4) {
+    const rat::GreyboxFillVertex& a = mesh.vertices[i];
+    const rat::GreyboxFillVertex& b = mesh.vertices[i + 1];
+    const rat::GreyboxFillVertex& c = mesh.vertices[i + 2];
+    const rat::GreyboxFillVertex& d = mesh.vertices[i + 3];
+    const float qcx = 0.25f * (a.x + b.x + c.x + d.x);
+    const float qcz = 0.25f * (a.z + b.z + c.z + d.z);
+    if (std::fabs(qcx - 1.5f) > 0.6f || std::fabs(qcz - 0.5f) > 0.6f) {
+      continue;
+    }
+    const bool all_y1 = a.y == Catch::Approx(1.0f) && b.y == Catch::Approx(1.0f) &&
+                        c.y == Catch::Approx(1.0f) && d.y == Catch::Approx(1.0f);
+    if (all_y1) {
+      has_flat_cube_top = true;
+    }
+    float min_y = a.y;
+    float max_y = a.y;
+    min_y = std::min(min_y, std::min(b.y, std::min(c.y, d.y)));
+    max_y = std::max(max_y, std::max(b.y, std::max(c.y, d.y)));
+    if (min_y == Catch::Approx(0.0f) && max_y == Catch::Approx(1.0f)) {
+      has_sloped_wedge = true;
+    }
+  }
+  REQUIRE(has_sloped_wedge);
+  REQUIRE_FALSE(has_flat_cube_top);
 }
