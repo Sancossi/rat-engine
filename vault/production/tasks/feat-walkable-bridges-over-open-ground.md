@@ -28,4 +28,4 @@ Verify: Edit → Terrain → Place bridge над dirt; Play — пройти с�
 
 ## Bugs found
 
-none.
+Playtest: [[Cannot climb onto grey_yard bridge]] (на пролёт нет подхода). Follow-up: [[feat: Voxel 3D terrain and rotating ramps]].

@@ -30,4 +30,4 @@ Verify: Play — обойти ящики с юга; зайти в дом (ули
 
 ## Bugs found
 
-none. Лестница loft→мост не делалась (Minor, вне скоупа).
+Playtest: [[Cannot climb onto grey_yard bridge]]. Follow-up: [[feat: Voxel 3D terrain and rotating ramps]].

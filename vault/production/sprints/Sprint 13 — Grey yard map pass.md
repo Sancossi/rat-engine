@@ -35,4 +35,4 @@ DoD выполнен 2026-09-04. Place ramp с кликнутой грани; м
 
 ## Bugs found
 
-none на закрытии. Южный обход ящиков чинили в [[feat: Grey yard layout pass]] до Done. [[Event graph self-pin drag stays armed]] остаётся в бэклоге (вне скоупа).
+на закрытии / плейтест: [[Cannot climb onto grey_yard bridge]]. Follow-up: [[feat: Voxel 3D terrain and rotating ramps]]. Южный обход ящиков чинили в [[feat: Grey yard layout pass]] до Done. [[Event graph self-pin drag stays armed]] остаётся в бэклоге.
