@@ -165,6 +165,30 @@ std::string duplicate_event_graph_node(EventGraph& graph, std::string_view id) {
   return graph.nodes.back().id;
 }
 
+bool event_graph_pin_contains(float center_x, float center_y, float radius, float mouse_x,
+                              float mouse_y) {
+  if (radius <= 0.0f) {
+    return false;
+  }
+  const float dx = mouse_x - center_x;
+  const float dy = mouse_y - center_y;
+  return dx * dx + dy * dy <= radius * radius;
+}
+
+EventGraphCanvasHistoryAction event_graph_canvas_history_action(bool ctrl, bool shift, bool z,
+                                                                bool y) {
+  if (!ctrl) {
+    return EventGraphCanvasHistoryAction::None;
+  }
+  if (z && !shift) {
+    return EventGraphCanvasHistoryAction::Undo;
+  }
+  if (y || (z && shift)) {
+    return EventGraphCanvasHistoryAction::Redo;
+  }
+  return EventGraphCanvasHistoryAction::None;
+}
+
 bool delete_event_graph_node(EventGraph& graph, std::string_view id) {
   if (id.empty() || is_reserved_graph_id(id)) {
     return false;

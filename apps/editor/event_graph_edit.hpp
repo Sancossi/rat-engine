@@ -33,6 +33,14 @@ bool connect_event_graph_nodes(EventGraph& graph, std::string from, std::string 
 
 [[nodiscard]] std::string duplicate_event_graph_node(EventGraph& graph, std::string_view id);
 
+[[nodiscard]] bool event_graph_pin_contains(float center_x, float center_y, float radius,
+                                            float mouse_x, float mouse_y);
+
+enum class EventGraphCanvasHistoryAction { None, Undo, Redo };
+
+[[nodiscard]] EventGraphCanvasHistoryAction event_graph_canvas_history_action(bool ctrl, bool shift,
+                                                                              bool z, bool y);
+
 bool delete_event_graph_node(EventGraph& graph, std::string_view id);
 
 bool delete_event_graph_edge(EventGraph& graph, std::string_view from, std::string_view to,

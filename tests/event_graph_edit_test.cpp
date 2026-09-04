@@ -258,3 +258,29 @@ TEST_CASE("duplicate_event_graph_node refuses entry exit and missing",
   REQUIRE(graph.nodes.size() == 1);
   REQUIRE(graph.edges.empty());
 }
+
+TEST_CASE("event_graph_pin_contains is a circle independent of submit order",
+          "[unit][event][edit][graph]") {
+  REQUIRE(rat::event_graph_pin_contains(10.0f, 20.0f, 7.0f, 10.0f, 20.0f));
+  REQUIRE(rat::event_graph_pin_contains(10.0f, 20.0f, 7.0f, 16.0f, 20.0f));
+  REQUIRE_FALSE(rat::event_graph_pin_contains(10.0f, 20.0f, 7.0f, 18.0f, 20.0f));
+  REQUIRE_FALSE(rat::event_graph_pin_contains(10.0f, 20.0f, 7.0f, 16.0f, 26.0f));
+  REQUIRE_FALSE(rat::event_graph_pin_contains(10.0f, 20.0f, 0.0f, 10.0f, 20.0f));
+}
+
+TEST_CASE("event_graph_canvas_history_action maps Ctrl+Z/Y chords",
+          "[unit][event][edit][graph]") {
+  using rat::EventGraphCanvasHistoryAction;
+  REQUIRE(rat::event_graph_canvas_history_action(true, false, true, false) ==
+          EventGraphCanvasHistoryAction::Undo);
+  REQUIRE(rat::event_graph_canvas_history_action(true, false, false, true) ==
+          EventGraphCanvasHistoryAction::Redo);
+  REQUIRE(rat::event_graph_canvas_history_action(true, true, true, false) ==
+          EventGraphCanvasHistoryAction::Redo);
+  REQUIRE(rat::event_graph_canvas_history_action(false, false, true, false) ==
+          EventGraphCanvasHistoryAction::None);
+  REQUIRE(rat::event_graph_canvas_history_action(true, false, false, false) ==
+          EventGraphCanvasHistoryAction::None);
+  REQUIRE(rat::event_graph_canvas_history_action(true, true, false, false) ==
+          EventGraphCanvasHistoryAction::None);
+}

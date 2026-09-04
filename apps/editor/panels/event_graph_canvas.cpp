@@ -475,7 +475,10 @@ void draw_event_graph_canvas(EditorDocument& document, EventGraphCanvasState& ca
       canvas.pending_from = id;
       canvas.pending_branch = branch;
     }
-    if (ImGui::IsItemHovered() && canvas.dragging_wire && canvas.drag_wire_from == id &&
+    const bool over_source =
+        ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenBlockedByActiveItem) ||
+        event_graph_pin_contains(center.x, center.y, pin_r, mouse.x, mouse.y);
+    if (over_source && canvas.dragging_wire && canvas.drag_wire_from == id &&
         canvas.drag_wire_branch == branch) {
       released_on_source_pin = true;
     }
@@ -487,8 +490,10 @@ void draw_event_graph_canvas(EditorDocument& document, EventGraphCanvasState& ca
   const auto handle_in_pin = [&](const std::string& id, ImVec2 center, const char* ui_id) {
     draw_pin(dl, center, false, pin_r);
     const bool clicked = pin_hit(ui_id, center, pin_r);
-    if (canvas.dragging_wire && ImGui::IsItemHovered() &&
-        ImGui::IsMouseReleased(ImGuiMouseButton_Left)) {
+    const bool over_in =
+        ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenBlockedByActiveItem) ||
+        event_graph_pin_contains(center.x, center.y, pin_r, mouse.x, mouse.y);
+    if (canvas.dragging_wire && over_in && ImGui::IsMouseReleased(ImGuiMouseButton_Left)) {
       connect_from = canvas.drag_wire_from;
       connect_to = id;
       connect_branch = canvas.drag_wire_branch;
@@ -615,38 +620,42 @@ void draw_event_graph_canvas(EditorDocument& document, EventGraphCanvasState& ca
 
   const bool canvas_hovered = ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows);
   if (canvas_hovered && ImGui::IsMouseClicked(ImGuiMouseButton_Right)) {
-    std::string hit_id;
-    for (const NodeRect& rect : rects) {
-      const ImVec2 pos = screen_of(rect.stored);
-      const float node_w = rect.metrics.width * zoom;
-      const float node_h = rect.metrics.height * zoom;
-      if (mouse.x >= pos.x && mouse.x <= pos.x + node_w && mouse.y >= pos.y &&
-          mouse.y <= pos.y + node_h) {
-        hit_id = rect.id;
-        break;
-      }
-    }
-    if (!hit_id.empty()) {
-      canvas.selected_id = hit_id;
-      canvas.selected_edge_from.clear();
-      canvas.selected_edge_to.clear();
-      canvas.selected_edge_branch.reset();
+    if (canvas.dragging_wire) {
+      cancel_pending_connect(canvas);
     } else {
-      for (const EdgeGeom& geom : edge_geoms) {
-        if (near_bezier(geom.a, geom.c1, geom.c2, geom.b, mouse, 8.0f * zoom)) {
-          canvas.selected_edge_from = geom.edge.from;
-          canvas.selected_edge_to = geom.edge.to;
-          canvas.selected_edge_branch = geom.edge.branch;
-          canvas.selected_id.clear();
+      std::string hit_id;
+      for (const NodeRect& rect : rects) {
+        const ImVec2 pos = screen_of(rect.stored);
+        const float node_w = rect.metrics.width * zoom;
+        const float node_h = rect.metrics.height * zoom;
+        if (mouse.x >= pos.x && mouse.x <= pos.x + node_w && mouse.y >= pos.y &&
+            mouse.y <= pos.y + node_h) {
+          hit_id = rect.id;
           break;
         }
       }
+      if (!hit_id.empty()) {
+        canvas.selected_id = hit_id;
+        canvas.selected_edge_from.clear();
+        canvas.selected_edge_to.clear();
+        canvas.selected_edge_branch.reset();
+      } else {
+        for (const EdgeGeom& geom : edge_geoms) {
+          if (near_bezier(geom.a, geom.c1, geom.c2, geom.b, mouse, 8.0f * zoom)) {
+            canvas.selected_edge_from = geom.edge.from;
+            canvas.selected_edge_to = geom.edge.to;
+            canvas.selected_edge_branch = geom.edge.branch;
+            canvas.selected_id.clear();
+            break;
+          }
+        }
+      }
+      const ImVec2 graph_at = screen_to_graph(origin, canvas, mouse);
+      canvas.context_x = graph_at.x;
+      canvas.context_y = graph_at.y;
+      cancel_pending_connect(canvas);
+      ImGui::OpenPopup("event_graph_context");
     }
-    const ImVec2 graph_at = screen_to_graph(origin, canvas, mouse);
-    canvas.context_x = graph_at.x;
-    canvas.context_y = graph_at.y;
-    cancel_pending_connect(canvas);
-    ImGui::OpenPopup("event_graph_context");
   }
 
   if (ImGui::BeginPopup("event_graph_context")) {
@@ -750,8 +759,20 @@ void draw_event_graph_canvas(EditorDocument& document, EventGraphCanvasState& ca
       paste_clipboard_node(document, event, canvas);
       canvas_need_reload = true;
     }
-    // Ctrl+Z / Ctrl+Y / Ctrl+Shift+Z: do not undo/redo here. editor_app.cpp already
-    // calls document_.undo()/redo() in Edit mode; a second call would double-apply.
+    if (io.WantCaptureKeyboard) {
+      const EventGraphCanvasHistoryAction history = event_graph_canvas_history_action(
+          io.KeyCtrl, io.KeyShift, ImGui::IsKeyPressed(ImGuiKey_Z, false),
+          ImGui::IsKeyPressed(ImGuiKey_Y, false));
+      if (history == EventGraphCanvasHistoryAction::Undo) {
+        if (document.undo().applied) {
+          canvas_need_reload = true;
+        }
+      } else if (history == EventGraphCanvasHistoryAction::Redo) {
+        if (document.redo().applied) {
+          canvas_need_reload = true;
+        }
+      }
+    }
   }
 
   if (canvas_hovered) {
