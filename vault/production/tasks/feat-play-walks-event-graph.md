@@ -1,7 +1,7 @@
 ---
 type: task
 area: Engine
-status: In review
+status: Done
 task_type: Feature
 sprint: Sprint 12
 due:
@@ -17,3 +17,11 @@ Acceptance: `start_page` требует graph (loader уже заполнил). 
 Depends: [[feat: Reverse-compile commands to graph]]. Origin: [[Sprint 12 — Graph is Play truth]]. Related: [[ADR-014 Play executes event graphs]]. Follow-up: [[chore: Drop event page commands]], [[feat: Event graph in-node widgets]].
 
 Spec: `docs/superpowers/specs/2026-09-04-play-walks-event-graph-design.md`
+
+## Resolution
+
+`EventRuntime` шагает `page.graph` (`node_id`, не command index). Wait / ShowText / Set Move Route yield как раньше; branch — then/else рёбра. `commands[]` в JSON пока остаются. Verify: `.\build\tests\rat_tests.exe "[event],[route],[quest],[graph]"`. Review: Approved.
+
+## Bugs found
+
+none.
