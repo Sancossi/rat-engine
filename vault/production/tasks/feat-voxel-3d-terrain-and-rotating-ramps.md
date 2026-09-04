@@ -3,7 +3,7 @@ type: task
 area: Engine
 status: Not started
 task_type: Feature
-sprint:
+sprint: Sprint 14
 due:
 tags: [task]
 ---
@@ -22,7 +22,7 @@ Acceptance:
 - Greybox + bake в collision solids. `grey_yard` можно собрать как многоэтажный двор (мост с заходом).
 - Unit/headless на два этажа + заход на пролёт. Не Minecraft-sculpt как продукт, не новый renderer.
 
-Origin: chat 2026-09-04 (плейтест моста; «переделать терейн на воксели», «вращающиеся рампы», «строить терейном многоуровневую карту»). Origin: [[Sprint 13 — Grey yard map pass]]. Related: [[Cannot climb onto grey_yard bridge]], [[feat: Walkable bridges over open ground]], [[feat: Stacked surfaces caves and basements]], [[feat: Place ramp from clicked tile edge]], [[Content vertical slice]].
+Split for [[Sprint 14 — Voxel 3D terrain]]: [[research: Voxel 3D terrain ADR]] → [[feat: Voxel occupancy schema and bake]] → [[feat: Edit place 3D terrain voxels]] → [[feat: Rotating ramp voxels]] → [[Cannot climb onto grey_yard bridge]]. Эта карточка — epic, не брать в работу отдельно.
 
 ## Resolution
 

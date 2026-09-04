@@ -3,7 +3,7 @@ type: sprint
 status: Done
 dates: 2026-09-04/2026-09-18
 goal: Grey yard map pass — bridges, multi-side ramps, indoor dim, readable yard, Russian copy
-current: true
+current: false
 tags: [sprint]
 ---
 

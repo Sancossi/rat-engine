@@ -3,13 +3,13 @@ type: bug
 area: Engine
 status: Open
 severity: High
-sprint:
+sprint: Sprint 14
 tags: [bug]
 ---
 
 # Cannot climb onto grey_yard bridge
 
-Origin: playtest 2026-09-04 after [[Sprint 13 — Grey yard map pass]] / [[feat: Grey yard layout pass]]. Related: [[feat: Walkable bridges over open ground]]. Follow-up: [[feat: Voxel 3D terrain and rotating ramps]].
+Origin: playtest 2026-09-04 after [[Sprint 13 — Grey yard map pass]] / [[feat: Grey yard layout pass]]. Related: [[feat: Walkable bridges over open ground]]. Follow-up: [[feat: Voxel 3D terrain and rotating ramps]]. Depends: [[feat: Rotating ramp voxels]]. Origin: [[Sprint 14 — Voxel 3D terrain]].
 
 Мост `(6–8, 5)` — airborne `floor_slabs` (`top_y` 2.0). Сверху ходить можно, снизу пройти можно, **забраться с земли/лофта нельзя**: нет рампы и нет лестницы на пролёт. Layout pass сознательно не ставил loft→мост лестницу.
 
