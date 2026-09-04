@@ -333,6 +333,129 @@ TEST_CASE("West ramp prism interpolates like SurfaceQuery and replaces the groun
   REQUIRE(rat::ramp_surface_y(world.ramps[0], 1.0f, 0.5f) == Approx(query.sample(1.0f, 0.5f).y).margin(1e-4f));
 }
 
+TEST_CASE("Two stacked occupancy solids bake two boxes with a gap, not fill-to-Y=0",
+          "[collision]") {
+  rat::MapData map = make_grid(1, 1, 0.0f);
+  map.schema_version = 5;
+  map.occupancy.push_back(rat::OccupancyCell{
+      .x = 0, .y = 0, .z = 0, .kind = rat::OccupancyKind::Solid});
+  map.occupancy.push_back(rat::OccupancyCell{
+      .x = 0, .y = 3, .z = 0, .kind = rat::OccupancyKind::Solid});
+  const rat::CollisionWorld world = rat::bake_collision_world(map, rat::SurfaceQuery(map));
+
+  int occupancy_boxes = 0;
+  bool found_lower = false;
+  bool found_upper = false;
+  bool filled_column = false;
+  for (const rat::WalkableBox& box : world.boxes) {
+    if (box.min_x != Approx(0.0f) || box.max_x != Approx(1.0f) || box.min_z != Approx(0.0f) ||
+        box.max_z != Approx(1.0f)) {
+      continue;
+    }
+    if (box.y_lo == Approx(0.0f) && box.y_hi == Approx(1.0f)) {
+      found_lower = true;
+      ++occupancy_boxes;
+    } else if (box.y_lo == Approx(3.0f) && box.y_hi == Approx(4.0f)) {
+      found_upper = true;
+      ++occupancy_boxes;
+    }
+    if (box.y_lo == Approx(0.0f) && box.y_hi >= Approx(3.0f)) {
+      filled_column = true;
+    }
+  }
+  REQUIRE(found_lower);
+  REQUIRE(found_upper);
+  REQUIRE(occupancy_boxes == 2);
+  REQUIRE_FALSE(filled_column);
+}
+
+TEST_CASE("Cylinder 1.6 stands on upper occupancy box and walks under a high gap",
+          "[collision]") {
+  rat::MapData map = make_grid(1, 1, 0.0f);
+  map.schema_version = 5;
+  map.occupancy.push_back(rat::OccupancyCell{
+      .x = 0, .y = 0, .z = 0, .kind = rat::OccupancyKind::Solid});
+  map.occupancy.push_back(rat::OccupancyCell{
+      .x = 0, .y = 3, .z = 0, .kind = rat::OccupancyKind::Solid});
+  const rat::CollisionWorld world = rat::bake_collision_world(map, rat::SurfaceQuery(map));
+
+  const auto on_upper = rat::query_solid_support(world, 0.5f, 0.5f, 0.4f, 4.0f, 1.0e6f);
+  REQUIRE(on_upper.has_value());
+  REQUIRE(on_upper->y == Approx(4.0f));
+  REQUIRE_FALSE(on_upper->on_ramp);
+
+  rat::CollisionBody under;
+  under.x = 0.5f;
+  under.y = 1.0f;
+  under.z = 0.5f;
+  under.radius = 0.4f;
+  under.height = rat::kPlayerCylinderHeight;
+  REQUIRE_FALSE(rat::cylinder_hits_ceiling(under, world));
+}
+
+TEST_CASE("Occupancy ramp bakes a prism spanning one metre of Y", "[collision]") {
+  rat::MapData map = make_grid(1, 1, 0.0f);
+  map.schema_version = 5;
+  map.occupancy.push_back(rat::OccupancyCell{
+      .x = 0,
+      .y = 1,
+      .z = 0,
+      .kind = rat::OccupancyKind::Ramp,
+      .yaw = rat::RampDirection::East,
+  });
+  const rat::CollisionWorld world = rat::bake_collision_world(map, rat::SurfaceQuery(map));
+  REQUIRE(world.ramps.size() == 1);
+  REQUIRE(world.ramps[0].direction == rat::RampDirection::East);
+  REQUIRE(world.ramps[0].low_y == Approx(1.0f));
+  REQUIRE(world.ramps[0].high_y == Approx(2.0f));
+  REQUIRE(world.ramps[0].min_x == Approx(0.0f));
+  REQUIRE(world.ramps[0].max_x == Approx(1.0f));
+  REQUIRE(rat::ramp_surface_y(world.ramps[0], 0.0f, 0.5f) == Approx(1.0f));
+  REQUIRE(rat::ramp_surface_y(world.ramps[0], 1.0f, 0.5f) == Approx(2.0f));
+}
+
+TEST_CASE("Occupancy solid wins over legacy ramp on the same 1 m AABB", "[collision]") {
+  rat::MapData map = make_grid(1, 1, 1.0f);
+  map.schema_version = 5;
+  map.ramps.push_back({.tile = {0, 0},
+                       .direction = rat::RampDirection::East,
+                       .low_y = 0.0f,
+                       .high_y = 1.0f});
+  map.occupancy.push_back(rat::OccupancyCell{
+      .x = 0, .y = 0, .z = 0, .kind = rat::OccupancyKind::Solid});
+  const rat::CollisionWorld world = rat::bake_collision_world(map, rat::SurfaceQuery(map));
+  REQUIRE(world.ramps.empty());
+  int same_aabb = 0;
+  for (const rat::WalkableBox& box : world.boxes) {
+    if (box.min_x == Approx(0.0f) && box.max_x == Approx(1.0f) && box.min_z == Approx(0.0f) &&
+        box.max_z == Approx(1.0f) && box.y_lo == Approx(0.0f) && box.y_hi == Approx(1.0f)) {
+      ++same_aabb;
+    }
+  }
+  REQUIRE(same_aabb == 1);
+}
+
+TEST_CASE("Thin floor slab at a different Y range stays in union with occupancy", "[collision]") {
+  rat::MapData map = make_grid(1, 1, 0.0f);
+  map.schema_version = 5;
+  map.floor_slabs.push_back({{0, 0}, 2.0f, 0.25f});
+  map.occupancy.push_back(rat::OccupancyCell{
+      .x = 0, .y = 0, .z = 0, .kind = rat::OccupancyKind::Solid});
+  const rat::CollisionWorld world = rat::bake_collision_world(map, rat::SurfaceQuery(map));
+  bool found_occupancy = false;
+  bool found_slab = false;
+  for (const rat::WalkableBox& box : world.boxes) {
+    if (box.y_lo == Approx(0.0f) && box.y_hi == Approx(1.0f)) {
+      found_occupancy = true;
+    }
+    if (box.y_hi == Approx(2.0f) && box.y_lo == Approx(1.75f)) {
+      found_slab = true;
+    }
+  }
+  REQUIRE(found_occupancy);
+  REQUIRE(found_slab);
+}
+
 TEST_CASE("Bake floor slab is a thin box not filled to Y=0", "[collision]") {
   rat::MapData map = make_grid(1, 1, 0.0f);
   map.floor_slabs.push_back({{0, 0}, 2.0f, 0.25f});

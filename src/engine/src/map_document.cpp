@@ -183,6 +183,14 @@ void validate_commands(const std::vector<Command>& commands, const std::string& 
 }
 
 [[nodiscard]] std::string guess_json_path_from_loader_error(std::string_view message) {
+  if (message.find("/occupancy/") != std::string_view::npos) {
+    const auto start = message.find("/occupancy/");
+    auto end = start;
+    while (end < message.size() && message[end] != ' ' && message[end] != ':') {
+      ++end;
+    }
+    return std::string(message.substr(start, end - start));
+  }
   if (message.find("schema_version") != std::string_view::npos) {
     return "/schema_version";
   }
@@ -243,8 +251,8 @@ std::vector<MapIssue> validate_map_document(const MapData& data) {
     add_error(issues, "/id", "map id must not be empty");
   }
   if (data.schema_version != 1 && data.schema_version != 2 && data.schema_version != 3 &&
-      data.schema_version != 4) {
-    add_error(issues, "/schema_version", "unsupported schema_version (expected 1, 2, 3, or 4)");
+      data.schema_version != 4 && data.schema_version != 5) {
+    add_error(issues, "/schema_version", "unsupported schema_version (expected 1, 2, 3, 4, or 5)");
   }
   if (data.width <= 0 || data.height <= 0) {
     add_error(issues, "/width", "map width/height must be > 0");
@@ -355,6 +363,17 @@ std::vector<MapIssue> validate_map_document(const MapData& data) {
     }
   }
 
+  for (std::size_t i = 0; i < data.occupancy.size(); ++i) {
+    const OccupancyCell& cell = data.occupancy[i];
+    const std::string cell_path = index_path("/occupancy", i);
+    if (cell.kind == OccupancyKind::Ramp && !valid_ramp_direction(cell.yaw)) {
+      add_error(issues, cell_path + "/yaw", "occupancy ramp yaw is invalid");
+    }
+    if (!tile_in_grid(data.height_grid, cell.x, cell.z)) {
+      add_error(issues, cell_path, "occupancy cell xz is outside height grid");
+    }
+  }
+
   for (std::size_t i = 0; i < data.blockers.size(); ++i) {
     const BlockerDef& blocker = data.blockers[i];
     const std::string blocker_path = index_path("/blockers", i);
@@ -447,9 +466,9 @@ MapDocumentLoadResult load_map_document_from_string(std::string_view json_text) 
       return result;
     }
     const int version = root.at("schema_version").get<int>();
-    if (version != 1 && version != 2 && version != 3 && version != 4) {
+    if (version != 1 && version != 2 && version != 3 && version != 4 && version != 5) {
       add_error(result.issues, "/schema_version",
-                "unsupported schema_version (expected 1, 2, 3, or 4)");
+                "unsupported schema_version (expected 1, 2, 3, 4, or 5)");
       return result;
     }
   } catch (const std::exception& ex) {

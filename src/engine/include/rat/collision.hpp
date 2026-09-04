@@ -84,10 +84,15 @@ struct CollisionWorld {
 void append_terrain_walls(CollisionWorld& world, const HeightGrid& grid,
                           std::span<const RampDef> ramps, float tile_size);
 void append_ground_boxes(CollisionWorld& world, const HeightGrid& grid,
-                         std::span<const RampDef> ramps, float tile_size);
-void append_floor_slabs(CollisionWorld& world, std::span<const FloorSlabDef> slabs, float tile_size);
+                         std::span<const RampDef> ramps, float tile_size,
+                         std::span<const OccupancyCell> occupancy = {});
+void append_floor_slabs(CollisionWorld& world, std::span<const FloorSlabDef> slabs, float tile_size,
+                        std::span<const OccupancyCell> occupancy = {});
 [[nodiscard]] float ramp_surface_y(const WalkableRamp& ramp, float x, float z);
-void append_ramp_prisms(CollisionWorld& world, std::span<const RampDef> ramps, float tile_size);
+void append_ramp_prisms(CollisionWorld& world, std::span<const RampDef> ramps, float tile_size,
+                        std::span<const OccupancyCell> occupancy = {});
+void append_occupancy(CollisionWorld& world, std::span<const OccupancyCell> occupancy,
+                      float tile_size);
 void append_ladders(CollisionWorld& world, std::span<const LadderDef> ladders, float tile_size);
 [[nodiscard]] const LadderVolume* overlapping_ladder(const CollisionBody& body,
                                                      const CollisionWorld& world);

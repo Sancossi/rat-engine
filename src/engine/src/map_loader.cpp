@@ -497,6 +497,50 @@ AssetKind parse_asset_kind(const std::string& value) {
   throw std::runtime_error("unknown asset kind: " + value);
 }
 
+void canonicalize_occupancy(std::vector<OccupancyCell>& occupancy) {
+  std::vector<OccupancyCell> unique;
+  unique.reserve(occupancy.size());
+  for (const OccupancyCell& incoming : occupancy) {
+    bool replaced = false;
+    for (OccupancyCell& existing : unique) {
+      if (existing.x == incoming.x && existing.y == incoming.y && existing.z == incoming.z) {
+        existing = incoming;
+        replaced = true;
+        break;
+      }
+    }
+    if (!replaced) {
+      unique.push_back(incoming);
+    }
+  }
+  occupancy = std::move(unique);
+}
+
+OccupancyKind parse_occupancy_kind(const std::string& value) {
+  if (value == "solid") {
+    return OccupancyKind::Solid;
+  }
+  if (value == "ramp") {
+    return OccupancyKind::Ramp;
+  }
+  throw std::runtime_error("unknown occupancy kind: " + value);
+}
+
+OccupancyCell parse_occupancy_cell(const json& node) {
+  OccupancyCell cell;
+  cell.x = node.at("x").get<int>();
+  cell.y = node.at("y").get<int>();
+  cell.z = node.at("z").get<int>();
+  cell.kind = parse_occupancy_kind(node.at("kind").get<std::string>());
+  if (cell.kind == OccupancyKind::Ramp) {
+    if (!node.contains("yaw")) {
+      throw std::runtime_error("occupancy ramp requires yaw");
+    }
+    cell.yaw = parse_ramp_direction(node.at("yaw").get<std::string>());
+  }
+  return cell;
+}
+
 MapAssetRef parse_map_asset(const json& node) {
   MapAssetRef ref;
   ref.id = make_asset_id(node.at("id").get<std::string>());
@@ -511,8 +555,8 @@ MapData parse_map(const json& root) {
   MapData map;
   map.schema_version = root.at("schema_version").get<int>();
   if (map.schema_version != 1 && map.schema_version != 2 && map.schema_version != 3 &&
-      map.schema_version != 4) {
-    throw std::runtime_error("unsupported schema_version (expected 1, 2, 3, or 4)");
+      map.schema_version != 4 && map.schema_version != 5) {
+    throw std::runtime_error("unsupported schema_version (expected 1, 2, 3, 4, or 5)");
   }
   map.id = root.at("id").get<std::string>();
   map.width = root.at("width").get<int>();
@@ -605,6 +649,30 @@ MapData parse_map(const json& root) {
         out.y_hi = node.at("y_hi").get<float>();
         map.indoor_volumes.push_back(out);
       }
+    }
+  }
+  if (map.schema_version >= 5) {
+    if (root.contains("occupancy")) {
+      if (!root.at("occupancy").is_array()) {
+        throw std::runtime_error("occupancy must be an array");
+      }
+      const auto& cells = root.at("occupancy");
+      for (std::size_t i = 0; i < cells.size(); ++i) {
+        try {
+          map.occupancy.push_back(parse_occupancy_cell(cells.at(i)));
+        } catch (const std::exception& ex) {
+          const std::string prefix = "/occupancy/" + std::to_string(i);
+          const std::string what = ex.what();
+          if (what.find("kind") != std::string::npos) {
+            throw std::runtime_error(prefix + "/kind: " + what);
+          }
+          if (what.find("yaw") != std::string::npos) {
+            throw std::runtime_error(prefix + "/yaw: " + what);
+          }
+          throw std::runtime_error(prefix + ": " + what);
+        }
+      }
+      canonicalize_occupancy(map.occupancy);
     }
   }
   if (root.contains("blockers")) {
@@ -982,6 +1050,19 @@ MapSerializeResult serialize_map_to_string(const MapData& map) {
         node["y_lo"] = volume.y_lo;
         node["y_hi"] = volume.y_hi;
         root["indoor_volumes"].push_back(std::move(node));
+      }
+    }
+    if (map.schema_version >= 5) {
+      root["occupancy"] = json::array();
+      for (const OccupancyCell& cell : map.occupancy) {
+        json node{{"x", cell.x}, {"y", cell.y}, {"z", cell.z}};
+        if (cell.kind == OccupancyKind::Ramp) {
+          node["kind"] = "ramp";
+          node["yaw"] = ramp_direction_to_string(cell.yaw);
+        } else {
+          node["kind"] = "solid";
+        }
+        root["occupancy"].push_back(std::move(node));
       }
     }
     for (const BlockerDef& blocker : map.blockers) {

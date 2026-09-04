@@ -141,7 +141,7 @@ TEST_CASE("jumpable blocker without vertical pair reports blocker path", "[unit]
 
 TEST_CASE("schema error from JSON is structured with path", "[unit][mapdoc]") {
   const rat::MapDocumentLoadResult loaded =
-      rat::load_map_document_from_string(R"({"schema_version":5,"id":"x","width":1,"height":1})");
+      rat::load_map_document_from_string(R"({"schema_version":6,"id":"x","width":1,"height":1})");
   REQUIRE_FALSE(loaded.ok);
   REQUIRE(has_error_at(loaded.issues, "/schema_version"));
 }
@@ -163,6 +163,28 @@ TEST_CASE("schema 4 empty indoor_volumes compiles", "[unit][mapdoc]") {
   map.schema_version = 4;
   const rat::MapCompileResult compiled = rat::compile_map_data(map);
   REQUIRE(compiled.ok);
+}
+
+TEST_CASE("schema 5 empty occupancy compiles", "[unit][mapdoc]") {
+  rat::MapData map = make_flat_document_map();
+  map.schema_version = 5;
+  const rat::MapCompileResult compiled = rat::compile_map_data(map);
+  REQUIRE(compiled.ok);
+}
+
+TEST_CASE("schema 5 occupancy unknown kind from JSON is structured with path", "[unit][mapdoc]") {
+  const rat::MapDocumentLoadResult loaded = rat::load_map_document_from_string(R"({
+    "schema_version": 5,
+    "id": "bad_occ",
+    "width": 1,
+    "height": 1,
+    "height_grid": {
+      "origin_x": 0, "origin_z": 0, "width": 1, "height": 1, "ground_y": [0.0]
+    },
+    "occupancy": [ { "x": 0, "y": 0, "z": 0, "kind": "glass" } ]
+  })");
+  REQUIRE_FALSE(loaded.ok);
+  REQUIRE(has_error_at(loaded.issues, "/occupancy/0/kind"));
 }
 
 TEST_CASE("document replace bumps revision and invalidates prior RuntimeMap stamp",
@@ -290,7 +312,13 @@ TEST_CASE("MapDocument save/load round-trip is semantically identical", "[unit][
   REQUIRE(reloaded.ok);
   const rat::MapSerializeResult again = rat::serialize_map_to_string(reloaded.document.data());
   REQUIRE(again.ok);
-  REQUIRE(again.json_text == serialized.json_text);
+
+  const rat::MapDocumentLoadResult reloaded_twice =
+      rat::load_map_document_from_string(again.json_text);
+  REQUIRE(reloaded_twice.ok);
+  const rat::MapSerializeResult third = rat::serialize_map_to_string(reloaded_twice.document.data());
+  REQUIRE(third.ok);
+  REQUIRE(third.json_text == again.json_text);
 }
 
 TEST_CASE("schema 1 missing height grid still compiles after v1 fallback", "[unit][mapdoc]") {

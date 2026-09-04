@@ -138,7 +138,7 @@ TEST_CASE("Event optional y round-trips through serialize", "[unit][map][event]"
 }
 
 TEST_CASE("Map loader rejects unknown schema version", "[unit][map]") {
-  const auto result = rat::load_map_from_string(R"({"schema_version":5,"id":"x","width":1,"height":1})");
+  const auto result = rat::load_map_from_string(R"({"schema_version":6,"id":"x","width":1,"height":1})");
   REQUIRE_FALSE(result.ok);
   REQUIRE_FALSE(result.error.empty());
 }
@@ -1366,6 +1366,190 @@ TEST_CASE("Map loader v4 missing indoor_volumes loads empty array", "[unit][map]
   const auto serialized = rat::serialize_map_to_string(loaded.map);
   REQUIRE(serialized.ok);
   REQUIRE(serialized.json_text.find("\"indoor_volumes\"") != std::string::npos);
+}
+
+TEST_CASE("Map loader v5 roundtrips occupancy solid and ramp", "[unit][map]") {
+  constexpr const char* kJson = R"({
+    "schema_version": 5,
+    "id": "vox",
+    "width": 2,
+    "height": 2,
+    "height_grid": {
+      "origin_x": 0, "origin_z": 0, "width": 2, "height": 2,
+      "ground_y": [0.0, 0.0, 0.0, 0.0]
+    },
+    "occupancy": [
+      { "x": 0, "y": 1, "z": 0, "kind": "solid" },
+      { "x": 1, "y": 0, "z": 0, "kind": "ramp", "yaw": "east" }
+    ],
+    "events": []
+  })";
+  const auto loaded = rat::load_map_from_string(kJson);
+  REQUIRE(loaded.ok);
+  REQUIRE(loaded.map.schema_version == 5);
+  REQUIRE(loaded.map.occupancy.size() == 2);
+  REQUIRE(loaded.map.occupancy[0].x == 0);
+  REQUIRE(loaded.map.occupancy[0].y == 1);
+  REQUIRE(loaded.map.occupancy[0].z == 0);
+  REQUIRE(loaded.map.occupancy[0].kind == rat::OccupancyKind::Solid);
+  REQUIRE(loaded.map.occupancy[1].x == 1);
+  REQUIRE(loaded.map.occupancy[1].y == 0);
+  REQUIRE(loaded.map.occupancy[1].z == 0);
+  REQUIRE(loaded.map.occupancy[1].kind == rat::OccupancyKind::Ramp);
+  REQUIRE(loaded.map.occupancy[1].yaw == rat::RampDirection::East);
+
+  const auto serialized = rat::serialize_map_to_string(loaded.map);
+  REQUIRE(serialized.ok);
+  REQUIRE(serialized.json_text.find("\"occupancy\"") != std::string::npos);
+  REQUIRE(serialized.json_text.find("\"kind\"") != std::string::npos);
+  REQUIRE(serialized.json_text.find("\"yaw\"") != std::string::npos);
+  const auto again = rat::load_map_from_string(serialized.json_text);
+  REQUIRE(again.ok);
+  REQUIRE(again.map.schema_version == 5);
+  REQUIRE(again.map.occupancy.size() == 2);
+  REQUIRE(again.map.occupancy[0].y == 1);
+  REQUIRE(again.map.occupancy[0].kind == rat::OccupancyKind::Solid);
+  REQUIRE(again.map.occupancy[1].kind == rat::OccupancyKind::Ramp);
+  REQUIRE(again.map.occupancy[1].yaw == rat::RampDirection::East);
+}
+
+TEST_CASE("Map loader v5 missing occupancy loads and dumps empty array", "[unit][map]") {
+  constexpr const char* kJson = R"({
+    "schema_version": 5,
+    "id": "v5_empty",
+    "width": 1,
+    "height": 1,
+    "height_grid": {
+      "origin_x": 0, "origin_z": 0, "width": 1, "height": 1, "ground_y": [0.0]
+    },
+    "events": []
+  })";
+  const auto loaded = rat::load_map_from_string(kJson);
+  REQUIRE(loaded.ok);
+  REQUIRE(loaded.map.schema_version == 5);
+  REQUIRE(loaded.map.occupancy.empty());
+
+  const auto serialized = rat::serialize_map_to_string(loaded.map);
+  REQUIRE(serialized.ok);
+  REQUIRE(serialized.json_text.find("\"occupancy\"") != std::string::npos);
+}
+
+TEST_CASE("Map loader v4 ignores occupancy key", "[unit][map]") {
+  constexpr const char* kJson = R"({
+    "schema_version": 4,
+    "id": "v4_occ",
+    "width": 1,
+    "height": 1,
+    "height_grid": {
+      "origin_x": 0, "origin_z": 0, "width": 1, "height": 1, "ground_y": [0.0]
+    },
+    "occupancy": [
+      { "x": 0, "y": 0, "z": 0, "kind": "solid" }
+    ],
+    "events": []
+  })";
+  const auto loaded = rat::load_map_from_string(kJson);
+  REQUIRE(loaded.ok);
+  REQUIRE(loaded.map.occupancy.empty());
+}
+
+TEST_CASE("Map loader v4 dump omits occupancy", "[unit][map]") {
+  rat::MapData map;
+  map.schema_version = 4;
+  map.id = "v4_dump_occ";
+  map.width = 1;
+  map.height = 1;
+  map.height_grid.origin_x = 0;
+  map.height_grid.origin_z = 0;
+  map.height_grid.width = 1;
+  map.height_grid.height = 1;
+  map.height_grid.ground_y = {0.0f};
+  map.occupancy.push_back(rat::OccupancyCell{
+      .x = 0,
+      .y = 0,
+      .z = 0,
+      .kind = rat::OccupancyKind::Solid,
+  });
+
+  const auto serialized = rat::serialize_map_to_string(map);
+  REQUIRE(serialized.ok);
+  REQUIRE(serialized.json_text.find("occupancy") == std::string::npos);
+}
+
+TEST_CASE("Map loader rejects unknown occupancy kind", "[unit][map]") {
+  constexpr const char* kJson = R"({
+    "schema_version": 5,
+    "id": "bad_kind",
+    "width": 1,
+    "height": 1,
+    "height_grid": {
+      "origin_x": 0, "origin_z": 0, "width": 1, "height": 1, "ground_y": [0.0]
+    },
+    "occupancy": [
+      { "x": 0, "y": 0, "z": 0, "kind": "glass" }
+    ]
+  })";
+  const auto loaded = rat::load_map_from_string(kJson);
+  REQUIRE_FALSE(loaded.ok);
+  REQUIRE(loaded.error.find("kind") != std::string::npos);
+}
+
+TEST_CASE("Map loader occupancy last-wins on duplicate x y z", "[unit][map]") {
+  constexpr const char* kJson = R"({
+    "schema_version": 5,
+    "id": "dup_cell",
+    "width": 1,
+    "height": 1,
+    "height_grid": {
+      "origin_x": 0, "origin_z": 0, "width": 1, "height": 1, "ground_y": [0.0]
+    },
+    "occupancy": [
+      { "x": 0, "y": 2, "z": 0, "kind": "solid" },
+      { "x": 0, "y": 2, "z": 0, "kind": "ramp", "yaw": "south" }
+    ]
+  })";
+  const auto loaded = rat::load_map_from_string(kJson);
+  REQUIRE(loaded.ok);
+  REQUIRE(loaded.map.occupancy.size() == 1);
+  REQUIRE(loaded.map.occupancy[0].kind == rat::OccupancyKind::Ramp);
+  REQUIRE(loaded.map.occupancy[0].yaw == rat::RampDirection::South);
+}
+
+TEST_CASE("Map loader occupancy ramp requires yaw", "[unit][map]") {
+  constexpr const char* kJson = R"({
+    "schema_version": 5,
+    "id": "ramp_no_yaw",
+    "width": 1,
+    "height": 1,
+    "height_grid": {
+      "origin_x": 0, "origin_z": 0, "width": 1, "height": 1, "ground_y": [0.0]
+    },
+    "occupancy": [
+      { "x": 0, "y": 0, "z": 0, "kind": "ramp" }
+    ]
+  })";
+  const auto loaded = rat::load_map_from_string(kJson);
+  REQUIRE_FALSE(loaded.ok);
+  REQUIRE_FALSE(loaded.error.empty());
+}
+
+TEST_CASE("Map loader occupancy solid ignores yaw", "[unit][map]") {
+  constexpr const char* kJson = R"({
+    "schema_version": 5,
+    "id": "solid_yaw",
+    "width": 1,
+    "height": 1,
+    "height_grid": {
+      "origin_x": 0, "origin_z": 0, "width": 1, "height": 1, "ground_y": [0.0]
+    },
+    "occupancy": [
+      { "x": 0, "y": 0, "z": 0, "kind": "solid", "yaw": "west" }
+    ]
+  })";
+  const auto loaded = rat::load_map_from_string(kJson);
+  REQUIRE(loaded.ok);
+  REQUIRE(loaded.map.occupancy.size() == 1);
+  REQUIRE(loaded.map.occupancy[0].kind == rat::OccupancyKind::Solid);
 }
 
 TEST_CASE("Map loader v3 dump omits indoor_volumes", "[unit][map]") {

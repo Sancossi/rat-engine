@@ -114,6 +114,19 @@ struct IndoorVolume {
   float y_hi = 1.6f;
 };
 
+enum class OccupancyKind {
+  Solid,
+  Ramp,
+};
+
+struct OccupancyCell {
+  int x = 0;
+  int y = 0;
+  int z = 0;
+  OccupancyKind kind = OccupancyKind::Solid;
+  RampDirection yaw = RampDirection::North;
+};
+
 struct BlockerDef {
   Aabb2 bounds{};
   std::optional<float> base_y{};
@@ -240,6 +253,7 @@ struct MapData {
   std::vector<FloorSlabDef> floor_slabs;
   std::vector<LadderDef> ladders;
   std::vector<IndoorVolume> indoor_volumes;
+  std::vector<OccupancyCell> occupancy;
   std::vector<BlockerDef> blockers;
   std::vector<EventDef> events;
   std::vector<MapAssetRef> assets;

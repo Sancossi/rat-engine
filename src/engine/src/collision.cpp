@@ -38,6 +38,24 @@ bool tile_has_ramp(std::span<const RampDef> ramps, int world_x, int world_z) {
   return false;
 }
 
+bool occupancy_owns_aabb(std::span<const OccupancyCell> occupancy, float min_x, float max_x,
+                         float min_z, float max_z, float y_lo, float y_hi, float tile_size) {
+  constexpr float kEps = 1e-4f;
+  const float ts = tile_size > 0.0f ? tile_size : 1.0f;
+  for (const OccupancyCell& cell : occupancy) {
+    const float cell_min_x = static_cast<float>(cell.x) * ts;
+    const float cell_min_z = static_cast<float>(cell.z) * ts;
+    const float cell_y_lo = static_cast<float>(cell.y) * ts;
+    const float cell_y_hi = static_cast<float>(cell.y + 1) * ts;
+    if (std::abs(min_x - cell_min_x) <= kEps && std::abs(max_x - (cell_min_x + ts)) <= kEps &&
+        std::abs(min_z - cell_min_z) <= kEps && std::abs(max_z - (cell_min_z + ts)) <= kEps &&
+        std::abs(y_lo - cell_y_lo) <= kEps && std::abs(y_hi - cell_y_hi) <= kEps) {
+      return true;
+    }
+  }
+  return false;
+}
+
 bool point_on_walkable_box(float x, float z, const WalkableBox& box) {
   return x >= box.min_x && x < box.max_x && z >= box.min_z && z < box.max_z;
 }
@@ -160,7 +178,8 @@ void append_terrain_walls(CollisionWorld& world, const HeightGrid& grid,
 }
 
 void append_ground_boxes(CollisionWorld& world, const HeightGrid& grid,
-                         std::span<const RampDef> ramps, float tile_size) {
+                         std::span<const RampDef> ramps, float tile_size,
+                         std::span<const OccupancyCell> occupancy) {
   const int width = std::max(0, grid.width);
   const int height = std::max(0, grid.height);
   const float ts = tile_size > 0.0f ? tile_size : 1.0f;
@@ -189,12 +208,17 @@ void append_ground_boxes(CollisionWorld& world, const HeightGrid& grid,
       box.max_z = box.min_z + ts;
       box.y_lo = 0.0f;
       box.y_hi = grid.ground_y[index];
+      if (occupancy_owns_aabb(occupancy, box.min_x, box.max_x, box.min_z, box.max_z, box.y_lo,
+                              box.y_hi, ts)) {
+        continue;
+      }
       world.boxes.push_back(box);
     }
   }
 }
 
-void append_floor_slabs(CollisionWorld& world, std::span<const FloorSlabDef> slabs, float tile_size) {
+void append_floor_slabs(CollisionWorld& world, std::span<const FloorSlabDef> slabs, float tile_size,
+                        std::span<const OccupancyCell> occupancy) {
   const float ts = tile_size > 0.0f ? tile_size : 1.0f;
   world.boxes.reserve(world.boxes.size() + slabs.size());
   world.fences.reserve(world.fences.size() + slabs.size() * 4);
@@ -206,6 +230,10 @@ void append_floor_slabs(CollisionWorld& world, std::span<const FloorSlabDef> sla
     box.max_z = box.min_z + ts;
     box.y_hi = slab.top_y;
     box.y_lo = slab.top_y - slab.thickness;
+    if (occupancy_owns_aabb(occupancy, box.min_x, box.max_x, box.min_z, box.max_z, box.y_lo,
+                            box.y_hi, ts)) {
+      continue;
+    }
     append_slab_side_fences(world, box);
     world.boxes.push_back(box);
   }
@@ -234,7 +262,8 @@ float ramp_surface_y(const WalkableRamp& ramp, float x, float z) {
   return ramp.low_y + (ramp.high_y - ramp.low_y) * std::clamp(t, 0.0f, 1.0f);
 }
 
-void append_ramp_prisms(CollisionWorld& world, std::span<const RampDef> ramps, float tile_size) {
+void append_ramp_prisms(CollisionWorld& world, std::span<const RampDef> ramps, float tile_size,
+                        std::span<const OccupancyCell> occupancy) {
   const float ts = tile_size > 0.0f ? tile_size : 1.0f;
   world.ramps.reserve(world.ramps.size() + ramps.size());
   for (const RampDef& ramp : ramps) {
@@ -247,8 +276,49 @@ void append_ramp_prisms(CollisionWorld& world, std::span<const RampDef> ramps, f
     prism.min_z = static_cast<float>(ramp.tile.z) * ts;
     prism.max_x = prism.min_x + ts;
     prism.max_z = prism.min_z + ts;
+    if (occupancy_owns_aabb(occupancy, prism.min_x, prism.max_x, prism.min_z, prism.max_z,
+                            prism.low_y, prism.high_y, ts)) {
+      continue;
+    }
     prism.ramp_index = static_cast<int>(world.ramps.size());
     world.ramps.push_back(prism);
+  }
+}
+
+void append_occupancy(CollisionWorld& world, std::span<const OccupancyCell> occupancy,
+                      float tile_size) {
+  const float ts = tile_size > 0.0f ? tile_size : 1.0f;
+  world.boxes.reserve(world.boxes.size() + occupancy.size());
+  world.ramps.reserve(world.ramps.size() + occupancy.size());
+  world.fences.reserve(world.fences.size() + occupancy.size() * 4);
+  for (const OccupancyCell& cell : occupancy) {
+    const float min_x = static_cast<float>(cell.x) * ts;
+    const float min_z = static_cast<float>(cell.z) * ts;
+    const float y_lo = static_cast<float>(cell.y) * ts;
+    const float y_hi = static_cast<float>(cell.y + 1) * ts;
+    if (cell.kind == OccupancyKind::Ramp) {
+      WalkableRamp prism;
+      prism.tile = TileCoord{cell.x, cell.z};
+      prism.direction = cell.yaw;
+      prism.low_y = y_lo;
+      prism.high_y = y_hi;
+      prism.min_x = min_x;
+      prism.min_z = min_z;
+      prism.max_x = min_x + ts;
+      prism.max_z = min_z + ts;
+      prism.ramp_index = static_cast<int>(world.ramps.size());
+      world.ramps.push_back(prism);
+      continue;
+    }
+    WalkableBox box;
+    box.min_x = min_x;
+    box.min_z = min_z;
+    box.max_x = min_x + ts;
+    box.max_z = min_z + ts;
+    box.y_lo = y_lo;
+    box.y_hi = y_hi;
+    append_slab_side_fences(world, box);
+    world.boxes.push_back(box);
   }
 }
 
@@ -337,10 +407,11 @@ CollisionWorld bake_collision_world(const MapData& map, const SurfaceQuery& quer
   CollisionWorld world = bake_fence_world(map.edge_barriers, query);
   const float ts = query.tile_size() > 0.0f ? query.tile_size() : 1.0f;
   append_terrain_walls(world, map.height_grid, map.ramps, ts);
-  append_ground_boxes(world, map.height_grid, map.ramps, ts);
-  append_ramp_prisms(world, map.ramps, ts);
-  append_floor_slabs(world, map.floor_slabs, ts);
+  append_ground_boxes(world, map.height_grid, map.ramps, ts, map.occupancy);
+  append_ramp_prisms(world, map.ramps, ts, map.occupancy);
+  append_floor_slabs(world, map.floor_slabs, ts, map.occupancy);
   append_ladders(world, map.ladders, ts);
+  append_occupancy(world, map.occupancy, ts);
   return world;
 }
 

@@ -1,4 +1,4 @@
-# Map + Event JSON schema (v1 + v2 + v3 + v4)
+# Map + Event JSON schema (v1 + v2 + v3 + v4 + v5)
 
 Human-readable schema for map/event data. Files live under `data/maps/<id>.json`.
 
@@ -6,17 +6,18 @@ Human-readable schema for map/event data. Files live under `data/maps/<id>.json`
 
 | Field | Type | Required | Notes |
 |-------|------|----------|-------|
-| `schema_version` | int | yes | `1` (legacy flat map), `2` (height grid + ramps), `3` (floor slabs + ladders), or `4` (indoor volumes) |
+| `schema_version` | int | yes | `1` (legacy flat map), `2` (height grid + ramps), `3` (floor slabs + ladders), `4` (indoor volumes), or `5` (voxel occupancy) |
 | `id` | string | yes | Map id (e.g. `grey_yard`) |
 | `width` | int | yes | Helper grid width in tiles |
 | `height` | int | yes | Helper grid height in tiles |
 | `tile_size` | number | no | World units per tile (default `1`) |
-| `height_grid` | object | v2+ | Elevation grid, required for schema `2`, `3`, and `4` |
+| `height_grid` | object | v2+ | Elevation grid, required for schema `2`, `3`, `4`, and `5` |
 | `ramps` | array | v2+ | Optional ramp definitions for schema `2+` |
 | `edge_barriers` | array | v2+ | Optional tile-edge fences for schema `2+` |
 | `floor_slabs` | array | v3+ | Optional airborne floor slabs for schema `3+` |
 | `ladders` | array | v3+ | Optional climbable ladders for schema `3+` |
-| `indoor_volumes` | array | v4 | Optional indoor AABBs for greybox street dim; schema `4` |
+| `indoor_volumes` | array | v4+ | Optional indoor AABBs for greybox street dim; schema `4+` |
+| `occupancy` | array | v5 | Optional sparse 1 m voxels; schema `5`. Missing key loads empty. |
 | `blockers` | array | no | Static blockers on XZ (legacy full walls + optional height-aware jumpables) |
 | `events` | array | no | Event definitions |
 | `assets` | array | no | Stable `AssetId` refs (`id`, `kind`, optional `debug_name`). Kinds: `texture`, `audio_clip`, `mesh`, `material`. Gameplay looks up ids in `AssetRegistry`; omit when unused. |
@@ -123,6 +124,34 @@ Document validation:
 
 - Reject `y_hi < y_lo` (`/indoor_volumes/N/y_hi`).
 - Reject inverted xz (`max < min`) (`/indoor_volumes/N`).
+
+### OccupancyCell (v5)
+
+Sparse occupied voxel. Air is the absence of a record. World AABB is
+`[x, x+1] × [y, y+1] × [z, z+1]` × `tile_size`. One record per cell; last-wins on
+duplicate `(x, y, z)`.
+
+| Field | Type | Required | Notes |
+|-------|------|----------|-------|
+| `x`, `y`, `z` | int | yes | Cell coordinates (`x`/`z` like a tile, including negative origin) |
+| `kind` | string | yes | `solid` or `ramp`. Unknown kind is a load error (`/occupancy/N/kind`) |
+| `yaw` | string | ramp | `north`, `east`, `south`, `west`. Required for `ramp`; omit/ignore for `solid` |
+
+```json
+{ "x": 0, "y": 1, "z": 0, "kind": "solid" }
+{ "x": 1, "y": 0, "z": 0, "kind": "ramp", "yaw": "east" }
+```
+
+`solid` bakes to a `WalkableBox` cube (not filled to Y=0). `ramp` bakes to the
+existing ramp prism with `low_y = y * tile_size`, `high_y = (y+1) * tile_size`.
+Bake is a union with legacy ground boxes / ramps / slabs; occupancy wins when a
+legacy piece fully occupies the same 1 m AABB. A thin `floor_slab` at a different
+Y range in the same XZ stays.
+
+Document validation:
+
+- Reject occupancy `x`/`z` outside `height_grid` (`/occupancy/N`).
+- Reject invalid ramp `yaw` (`/occupancy/N/yaw`).
 
 ### Blocker
 
@@ -280,9 +309,11 @@ See `data/maps/grey_yard.json`.
 - Loader accepts `schema_version: 2` and reads explicit `height_grid` + optional `ramps` + optional `edge_barriers`.
 - Loader accepts `schema_version: 3` and reads the same elevation fields as v2, plus optional `floor_slabs` and `ladders`. Missing slab/ladder arrays load as empty. `height_grid` is required (same as v2).
 - Loader accepts `schema_version: 4` and reads the same fields as v3, plus optional `indoor_volumes`. Missing `indoor_volumes` loads as empty. `height_grid` is required (same as v2).
+- Loader accepts `schema_version: 5` and reads the same fields as v4, plus optional `occupancy`. Missing `occupancy` loads as empty. `height_grid` is required (same as v2).
 - For `schema_version: 1`, `edge_barriers` is ignored if present.
 - For `schema_version: 1` and `2`, `floor_slabs` and `ladders` are ignored if present (empty vectors).
 - For `schema_version: 1`, `2`, and `3`, `indoor_volumes` is ignored if present (empty vector).
-- For `schema_version: 2`, `3`, and `4`, invalid `ground_y` length (not equal to `width * height`) is rejected.
-- Serializer writes `height_grid` / `ramps` / `edge_barriers` when `schema_version >= 2`, `floor_slabs` / `ladders` when `schema_version >= 3`, and `indoor_volumes` when `schema_version >= 4` (empty array OK). It does not bump the version.
-- Event `y` is optional on schema `1`/`2`/`3`/`4`. Missing `y` keeps the ground probe. No schema bump.
+- For `schema_version: 1`, `2`, `3`, and `4`, `occupancy` is ignored if present (empty vector).
+- For `schema_version: 2`, `3`, `4`, and `5`, invalid `ground_y` length (not equal to `width * height`) is rejected.
+- Serializer writes `height_grid` / `ramps` / `edge_barriers` when `schema_version >= 2`, `floor_slabs` / `ladders` when `schema_version >= 3`, `indoor_volumes` when `schema_version >= 4`, and `occupancy` when `schema_version >= 5` (empty array OK). It does not bump the version.
+- Event `y` is optional on schema `1`/`2`/`3`/`4`/`5`. Missing `y` keeps the ground probe. No schema bump.
