@@ -9,6 +9,7 @@
 #include <catch2/catch_test_macros.hpp>
 
 #include <algorithm>
+#include <cmath>
 #include <string>
 #include <vector>
 
@@ -232,4 +233,77 @@ TEST_CASE("Grey yard elevation slice: ramp, jumpable blocker, elevated action", 
   REQUIRE_FALSE(runtime_low.has_action_prompt(low_player, state_low));
   runtime_low.update(state_low, low_player, true, 1.0f / 60.0f);
   REQUIRE_FALSE(state_low.get_switch(40));
+}
+
+TEST_CASE("grey_yard south crate bypass walks spawn to scrap without going north",
+          "[mechanics][quest][map]") {
+#ifndef RAT_TEST_DATA_DIR
+#error RAT_TEST_DATA_DIR must be defined
+#endif
+  const auto loaded =
+      rat::load_map_from_file(std::string(RAT_TEST_DATA_DIR) + "/maps/grey_yard.json");
+  REQUIRE(loaded.ok);
+  const rat::MapData& map = loaded.map;
+  REQUIRE(map.schema_version == 4);
+
+  rat::SurfaceQuery query(map);
+  rat::PlayerBody player;
+  player.x = 0.5f;
+  player.y = 0.0f;
+  player.z = 0.5f;
+  player.speed = 5.0f;
+  REQUIRE(player.half_extent == Approx(0.4f));
+  rat::JumpState jump = rat::make_grounded_jump_state();
+
+  // South around crates: (2,-1) and (3,-2) must stay open. Never use z>=1 (north bypass).
+  const struct Waypoint {
+    float x;
+    float z;
+  } kWaypoints[] = {
+      {0.5f, -0.5f},
+      {2.5f, -0.5f},
+      {2.5f, -1.5f},
+      {3.5f, -1.5f},
+      {5.5f, -1.5f},
+      {6.5f, 0.5f},
+  };
+
+  std::size_t waypoint = 0;
+  constexpr float kDt = 1.0f / 120.0f;
+  constexpr float kArrive = 0.22f;
+  int stuck_frames = 0;
+  float last_x = player.x;
+  float last_z = player.z;
+  for (int frame = 0; frame < 3600 && waypoint < 6; ++frame) {
+    REQUIRE(player.z < 1.0f);
+    REQUIRE(player.y < 0.5f);
+
+    const float dx = kWaypoints[waypoint].x - player.x;
+    const float dz = kWaypoints[waypoint].z - player.z;
+    const float dist = std::sqrt(dx * dx + dz * dz);
+    if (dist <= kArrive) {
+      ++waypoint;
+      stuck_frames = 0;
+      continue;
+    }
+
+    rat::PlayerFrameInput input;
+    input.move.axis_x = dx / dist;
+    input.move.axis_z = dz / dist;
+    const rat::PlayerFrameResult result = rat::integrate_player_frame_surface(
+        player, jump, input, kDt, map.blockers, query, {}, 0.35f, {}, &map);
+    player = result.body;
+    jump = result.jump;
+
+    const float moved = std::hypot(player.x - last_x, player.z - last_z);
+    stuck_frames = moved < 1e-4f ? stuck_frames + 1 : 0;
+    last_x = player.x;
+    last_z = player.z;
+    REQUIRE(stuck_frames < 45);
+  }
+
+  REQUIRE(waypoint == 6);
+  REQUIRE(player.x == Approx(6.5f).margin(0.35f));
+  REQUIRE(player.z == Approx(0.5f).margin(0.35f));
+  REQUIRE(player.z < 1.0f);
 }
