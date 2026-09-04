@@ -2,6 +2,7 @@
 
 #include "rat/camera.hpp"
 #include "rat/map_data.hpp"
+#include "rat/terrain_geometry.hpp"
 
 #include <cstddef>
 #include <cstdint>
@@ -74,6 +75,13 @@ struct PixelPos {
                                                             std::uint32_t framebuffer_width,
                                                             std::uint32_t framebuffer_height,
                                                             float ground_y = 0.0f);
+
+// Pixel ray vs terrain tile quads (ramps and raised cubes). Empty geometry falls back to y=0.
+[[nodiscard]] std::optional<Vec3> unproject_to_terrain(const OrthoCamera& camera, float pixel_x,
+                                                       float pixel_y,
+                                                       std::uint32_t framebuffer_width,
+                                                       std::uint32_t framebuffer_height,
+                                                       const TerrainGeometry& geometry);
 
 // Terrain never picks objects. Objects pick blockers only. Events pick events only.
 // If several of the allowed kind overlap, chooses nearest center.

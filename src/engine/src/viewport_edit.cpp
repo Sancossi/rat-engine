@@ -133,12 +133,26 @@ void mul_mat4_vec4(const float m[16], float x, float y, float z, float w, float 
   out[3] = m[3] * x + m[7] * y + m[11] * z + m[15] * w;
 }
 
-}  // namespace
+struct CameraRay {
+  Vec3 near_world{};
+  Vec3 far_world{};
+};
 
-std::optional<Vec3> unproject_to_ground_plane(const OrthoCamera& camera, float pixel_x, float pixel_y,
-                                              std::uint32_t framebuffer_width,
-                                              std::uint32_t framebuffer_height, float ground_y) {
-  // Invert live view/proj as opaque world-to-clip 4x4 (what bgfx::setViewTransform consumes).
+Vec3 vec_sub(Vec3 a, Vec3 b) {
+  return {a.x - b.x, a.y - b.y, a.z - b.z};
+}
+
+Vec3 vec_cross(Vec3 a, Vec3 b) {
+  return {a.y * b.z - a.z * b.y, a.z * b.x - a.x * b.z, a.x * b.y - a.y * b.x};
+}
+
+float vec_dot(Vec3 a, Vec3 b) {
+  return a.x * b.x + a.y * b.y + a.z * b.z;
+}
+
+std::optional<CameraRay> unproject_camera_ray(const OrthoCamera& camera, float pixel_x,
+                                              float pixel_y, std::uint32_t framebuffer_width,
+                                              std::uint32_t framebuffer_height) {
   const float width = static_cast<float>(std::max<std::uint32_t>(1, framebuffer_width));
   const float height = static_cast<float>(std::max<std::uint32_t>(1, framebuffer_height));
   const float ndc_x = 2.0f * pixel_x / width - 1.0f;
@@ -156,13 +170,99 @@ std::optional<Vec3> unproject_to_ground_plane(const OrthoCamera& camera, float p
   if (!p0.has_value() || !p1.has_value()) {
     return std::nullopt;
   }
+  return CameraRay{*p0, *p1};
+}
 
-  const float dy = p1->y - p0->y;
+std::optional<Vec3> intersect_ray_ground_y(const CameraRay& ray, float ground_y) {
+  const float dy = ray.far_world.y - ray.near_world.y;
   if (std::fabs(dy) <= kEpsilon) {
     return std::nullopt;
   }
-  const float t = (ground_y - p0->y) / dy;
-  return Vec3{p0->x + (p1->x - p0->x) * t, ground_y, p0->z + (p1->z - p0->z) * t};
+  const float t = (ground_y - ray.near_world.y) / dy;
+  return Vec3{ray.near_world.x + (ray.far_world.x - ray.near_world.x) * t, ground_y,
+              ray.near_world.z + (ray.far_world.z - ray.near_world.z) * t};
+}
+
+std::optional<float> ray_triangle_t(Vec3 origin, Vec3 dir, Vec3 v0, Vec3 v1, Vec3 v2) {
+  const Vec3 edge1 = vec_sub(v1, v0);
+  const Vec3 edge2 = vec_sub(v2, v0);
+  const Vec3 h = vec_cross(dir, edge2);
+  const float a = vec_dot(edge1, h);
+  if (std::fabs(a) <= kEpsilon) {
+    return std::nullopt;
+  }
+  const float f = 1.0f / a;
+  const Vec3 s = vec_sub(origin, v0);
+  const float u = f * vec_dot(s, h);
+  if (u < -kEpsilon || u > 1.0f + kEpsilon) {
+    return std::nullopt;
+  }
+  const Vec3 q = vec_cross(s, edge1);
+  const float v = f * vec_dot(dir, q);
+  if (v < -kEpsilon || u + v > 1.0f + kEpsilon) {
+    return std::nullopt;
+  }
+  const float t = f * vec_dot(edge2, q);
+  return t;
+}
+
+void consider_triangle(const CameraRay& ray, Vec3 eye, Vec3 v0, Vec3 v1, Vec3 v2, bool& found,
+                       float& best_dist2, Vec3& best_hit) {
+  const Vec3 dir = vec_sub(ray.far_world, ray.near_world);
+  const auto t = ray_triangle_t(ray.near_world, dir, v0, v1, v2);
+  if (!t.has_value()) {
+    return;
+  }
+  const Vec3 hit{ray.near_world.x + dir.x * *t, ray.near_world.y + dir.y * *t,
+                 ray.near_world.z + dir.z * *t};
+  const float dist2 = vec_dot(vec_sub(hit, eye), vec_sub(hit, eye));
+  if (found && dist2 >= best_dist2) {
+    return;
+  }
+  found = true;
+  best_dist2 = dist2;
+  best_hit = hit;
+}
+
+}  // namespace
+
+std::optional<Vec3> unproject_to_ground_plane(const OrthoCamera& camera, float pixel_x, float pixel_y,
+                                              std::uint32_t framebuffer_width,
+                                              std::uint32_t framebuffer_height, float ground_y) {
+  const auto ray = unproject_camera_ray(camera, pixel_x, pixel_y, framebuffer_width, framebuffer_height);
+  if (!ray.has_value()) {
+    return std::nullopt;
+  }
+  return intersect_ray_ground_y(*ray, ground_y);
+}
+
+std::optional<Vec3> unproject_to_terrain(const OrthoCamera& camera, float pixel_x, float pixel_y,
+                                         std::uint32_t framebuffer_width,
+                                         std::uint32_t framebuffer_height,
+                                         const TerrainGeometry& geometry) {
+  const auto ray = unproject_camera_ray(camera, pixel_x, pixel_y, framebuffer_width, framebuffer_height);
+  if (!ray.has_value()) {
+    return std::nullopt;
+  }
+  if (geometry.tiles.empty()) {
+    return intersect_ray_ground_y(*ray, 0.0f);
+  }
+
+  bool found = false;
+  float best_dist2 = 0.0f;
+  Vec3 best_hit{};
+  for (const TerrainTileQuad& tile : geometry.tiles) {
+    const Vec3 nw{tile.min_x, tile.y_nw, tile.min_z};
+    const Vec3 ne{tile.max_x, tile.y_ne, tile.min_z};
+    const Vec3 se{tile.max_x, tile.y_se, tile.max_z};
+    const Vec3 sw{tile.min_x, tile.y_sw, tile.max_z};
+    consider_triangle(*ray, camera.eye, nw, ne, se, found, best_dist2, best_hit);
+    consider_triangle(*ray, camera.eye, nw, se, sw, found, best_dist2, best_hit);
+  }
+  if (found) {
+    return best_hit;
+  }
+  return intersect_ray_ground_y(*ray, 0.0f);
 }
 
 std::optional<PixelPos> project_world_to_pixels(const OrthoCamera& camera, Vec3 world,

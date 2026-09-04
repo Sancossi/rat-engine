@@ -631,11 +631,14 @@ void EditorApp::handle_edit_mouse_input(const ImGuiIO& io) {
   double cursor_x = 0.0;
   double cursor_y = 0.0;
   host_.cursor_pos(cursor_x, cursor_y);
+  const MapData& map = document_.visible_data();
+  const TerrainGeometry terrain =
+      build_terrain_geometry(map.height_grid, map.ramps, map.tile_size);
   const auto world_hit =
-      unproject_to_ground_plane(engine_->greybox().camera(), static_cast<float>(cursor_x),
-                                static_cast<float>(cursor_y),
-                                static_cast<std::uint32_t>(width_ > 0 ? width_ : 1),
-                                static_cast<std::uint32_t>(height_ > 0 ? height_ : 1), 0.0f);
+      unproject_to_terrain(engine_->greybox().camera(), static_cast<float>(cursor_x),
+                           static_cast<float>(cursor_y),
+                           static_cast<std::uint32_t>(width_ > 0 ? width_ : 1),
+                           static_cast<std::uint32_t>(height_ > 0 ? height_ : 1), terrain);
   if (!world_hit.has_value()) {
     remember_buttons();
     if (!left_down) {
@@ -647,7 +650,6 @@ void EditorApp::handle_edit_mouse_input(const ImGuiIO& io) {
 
   const bool pressed = left_down && !mouse_left_was_down_;
   const bool released = !left_down && mouse_left_was_down_;
-  const MapData& map = document_.visible_data();
 
   if (right_pressed && !aborting_brush && edit_submode_ == EditSubmode::Events) {
     event_context_tile_ = world_to_tile_xz(*world_hit, map.tile_size);

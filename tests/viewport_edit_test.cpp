@@ -1,6 +1,8 @@
 #include <rat/camera.hpp>
 #include <rat/event_edit.hpp>
 #include <rat/height_edit.hpp>
+#include <rat/hot_apply.hpp>
+#include <rat/terrain_geometry.hpp>
 #include <rat/viewport_edit.hpp>
 
 #include <catch2/catch_approx.hpp>
@@ -62,6 +64,29 @@ rat::MapData make_test_map() {
   map.width = 8;
   map.height = 8;
   map.tile_size = 1.0f;
+  return map;
+}
+
+rat::MapData make_elevated_map() {
+  rat::MapData map = make_test_map();
+  map.schema_version = 2;
+  map.height_grid.origin_x = 0;
+  map.height_grid.origin_z = 0;
+  map.height_grid.width = 8;
+  map.height_grid.height = 8;
+  map.height_grid.ground_y.assign(64, 0.0f);
+  return map;
+}
+
+rat::MapData make_east_ramp_map_with_event() {
+  rat::MapData map = make_elevated_map();
+  rat::RampDef ramp;
+  ramp.tile = {2, 2};
+  ramp.direction = rat::RampDirection::East;
+  ramp.low_y = 0.0f;
+  ramp.high_y = 1.0f;
+  REQUIRE(rat::upsert_map_ramp(map, ramp).ok);
+  map.events.push_back(rat::make_stub_event("on_ramp", 2, 2));
   return map;
 }
 
@@ -434,4 +459,172 @@ TEST_CASE("viewport tool allowed matches edit submode", "[unit][viewport_edit]")
   REQUIRE_FALSE(rat::viewport_tool_allowed(EditSubmode::Events, ViewportTool::PlaceFence));
   REQUIRE_FALSE(rat::viewport_tool_allowed(EditSubmode::Events, ViewportTool::PlaceSlab));
   REQUIRE_FALSE(rat::viewport_tool_allowed(EditSubmode::Events, ViewportTool::PlaceLadder));
+}
+
+TEST_CASE("unproject y=0 misses east ramp tile under tilt45", "[unit][viewport_edit]") {
+  const rat::MapData map = make_east_ramp_map_with_event();
+  const auto markers = rat::event_markers_from_map(map);
+  REQUIRE(markers.size() == 1);
+  REQUIRE(markers[0].y == Approx(0.5f).margin(0.01f));
+
+  rat::OrthoCameraParams params;
+  params.focus = {2.5f, 0.0f, 2.5f};
+  const rat::OrthoCamera camera = rat::build_ortho_tilt45(800, 600, params);
+  const auto pixel = rat::project_world_to_pixels(camera, markers[0], 800, 600);
+  REQUIRE(pixel.has_value());
+
+  const auto hit = rat::unproject_to_ground_plane(camera, pixel->x, pixel->y, 800, 600, 0.0f);
+  REQUIRE(hit.has_value());
+  const rat::TileCoord tile = rat::world_to_tile_xz(*hit, map.tile_size);
+  REQUIRE_FALSE((tile.x == 2 && tile.z == 2));
+
+  const auto picked = rat::pick_map_object_xz(map, *hit, rat::EditSubmode::Events);
+  REQUIRE_FALSE(picked.has_value());
+}
+
+TEST_CASE("unproject to terrain selects event on ramp under tilt45", "[unit][viewport_edit]") {
+  const rat::MapData map = make_east_ramp_map_with_event();
+  const auto markers = rat::event_markers_from_map(map);
+  REQUIRE(markers.size() == 1);
+
+  rat::OrthoCameraParams params;
+  params.focus = {2.5f, 0.0f, 2.5f};
+  const rat::OrthoCamera camera = rat::build_ortho_tilt45(800, 600, params);
+  const auto pixel = rat::project_world_to_pixels(camera, markers[0], 800, 600);
+  REQUIRE(pixel.has_value());
+
+  const rat::TerrainGeometry geometry =
+      rat::build_terrain_geometry(map.height_grid, map.ramps, map.tile_size);
+  const auto hit =
+      rat::unproject_to_terrain(camera, pixel->x, pixel->y, 800, 600, geometry);
+  REQUIRE(hit.has_value());
+  const rat::TileCoord tile = rat::world_to_tile_xz(*hit, map.tile_size);
+  REQUIRE(tile.x == 2);
+  REQUIRE(tile.z == 2);
+
+  const auto picked = rat::pick_map_object_xz(map, *hit, rat::EditSubmode::Events);
+  REQUIRE(picked.has_value());
+  REQUIRE(picked->kind == rat::ViewportPickKind::Event);
+  REQUIRE(picked->index == 0);
+}
+
+TEST_CASE("unproject to terrain hits ramp high side under three-quarter", "[unit][viewport_edit]") {
+  const rat::MapData map = make_east_ramp_map_with_event();
+  const rat::TerrainGeometry geometry =
+      rat::build_terrain_geometry(map.height_grid, map.ramps, map.tile_size);
+  const rat::Vec3 surface{2.95f, rat::sample_terrain_height(geometry, 2.95f, 2.05f), 2.05f};
+
+  rat::OrthoCameraParams params;
+  params.focus = {2.5f, 0.0f, 2.5f};
+  const rat::OrthoCamera camera = rat::build_ortho_three_quarter(800, 600, params);
+  const auto pixel = rat::project_world_to_pixels(camera, surface, 800, 600);
+  REQUIRE(pixel.has_value());
+
+  const auto hit =
+      rat::unproject_to_terrain(camera, pixel->x, pixel->y, 800, 600, geometry);
+  REQUIRE(hit.has_value());
+  const rat::TileCoord tile = rat::world_to_tile_xz(*hit, map.tile_size);
+  REQUIRE(tile.x == 2);
+  REQUIRE(tile.z == 2);
+
+  const auto picked = rat::pick_map_object_xz(map, *hit, rat::EditSubmode::Events);
+  REQUIRE(picked.has_value());
+  REQUIRE(picked->kind == rat::ViewportPickKind::Event);
+  REQUIRE(picked->index == 0);
+}
+
+TEST_CASE("unproject to terrain selects event on raised cube under tilt45", "[unit][viewport_edit]") {
+  rat::MapData map = make_elevated_map();
+  REQUIRE(rat::place_map_tile_cube(map, 3, 3).ok);
+  map.events.push_back(rat::make_stub_event("on_cube", 3, 3));
+  const auto markers = rat::event_markers_from_map(map);
+  REQUIRE(markers.size() == 1);
+  REQUIRE(markers[0].y == Approx(1.0f).margin(0.01f));
+
+  rat::OrthoCameraParams params;
+  params.focus = {3.5f, 0.0f, 3.5f};
+  const rat::OrthoCamera camera = rat::build_ortho_tilt45(800, 600, params);
+  const auto pixel = rat::project_world_to_pixels(camera, markers[0], 800, 600);
+  REQUIRE(pixel.has_value());
+
+  const auto y0 = rat::unproject_to_ground_plane(camera, pixel->x, pixel->y, 800, 600, 0.0f);
+  REQUIRE(y0.has_value());
+  const rat::TileCoord y0_tile = rat::world_to_tile_xz(*y0, map.tile_size);
+  REQUIRE_FALSE((y0_tile.x == 3 && y0_tile.z == 3));
+
+  const rat::TerrainGeometry geometry =
+      rat::build_terrain_geometry(map.height_grid, map.ramps, map.tile_size);
+  const auto hit =
+      rat::unproject_to_terrain(camera, pixel->x, pixel->y, 800, 600, geometry);
+  REQUIRE(hit.has_value());
+  const rat::TileCoord tile = rat::world_to_tile_xz(*hit, map.tile_size);
+  REQUIRE(tile.x == 3);
+  REQUIRE(tile.z == 3);
+
+  const auto picked = rat::pick_map_object_xz(map, *hit, rat::EditSubmode::Events);
+  REQUIRE(picked.has_value());
+  REQUIRE(picked->kind == rat::ViewportPickKind::Event);
+  REQUIRE(picked->index == 0);
+}
+
+TEST_CASE("unproject to terrain still picks ground event under top-down", "[unit][viewport_edit]") {
+  rat::MapData map = make_elevated_map();
+  map.events.push_back(rat::make_stub_event("ground", 1, 1));
+  const auto markers = rat::event_markers_from_map(map);
+  REQUIRE(markers.size() == 1);
+
+  rat::OrthoCameraParams params;
+  params.focus = {1.5f, 0.0f, 1.5f};
+  params.mode = rat::CameraMode::TopDown;
+  const rat::OrthoCamera camera = rat::build_ortho_top_down(640, 480, params);
+  const auto pixel = rat::project_world_to_pixels(camera, markers[0], 640, 480);
+  REQUIRE(pixel.has_value());
+
+  const rat::TerrainGeometry geometry =
+      rat::build_terrain_geometry(map.height_grid, map.ramps, map.tile_size);
+  const auto hit =
+      rat::unproject_to_terrain(camera, pixel->x, pixel->y, 640, 480, geometry);
+  REQUIRE(hit.has_value());
+  REQUIRE(hit->x == Approx(1.5f).margin(0.05f));
+  REQUIRE(hit->z == Approx(1.5f).margin(0.05f));
+
+  const auto picked = rat::pick_map_object_xz(map, *hit, rat::EditSubmode::Events);
+  REQUIRE(picked.has_value());
+  REQUIRE(picked->kind == rat::ViewportPickKind::Event);
+  REQUIRE(picked->index == 0);
+}
+
+TEST_CASE("unproject to terrain falls back to y=0 when geometry is empty", "[unit][viewport_edit]") {
+  rat::OrthoCameraParams params;
+  params.focus = {3.0f, 0.0f, -2.0f};
+  params.mode = rat::CameraMode::TopDown;
+  const rat::OrthoCamera camera = rat::build_ortho_top_down(640, 480, params);
+
+  const auto hit = rat::unproject_to_terrain(camera, 320.0f, 240.0f, 640, 480, {});
+  REQUIRE(hit.has_value());
+  REQUIRE(hit->x == Approx(params.focus.x).margin(0.01f));
+  REQUIRE(hit->y == Approx(0.0f).margin(0.001f));
+  REQUIRE(hit->z == Approx(params.focus.z).margin(0.01f));
+}
+
+TEST_CASE("unproject y=0 misses east ramp tile under three-quarter", "[unit][viewport_edit]") {
+  const rat::MapData map = make_east_ramp_map_with_event();
+  const rat::TerrainGeometry geometry =
+      rat::build_terrain_geometry(map.height_grid, map.ramps, map.tile_size);
+  // High NE of the east ramp: enough Y that a 3/4 ray's y=0 XZ leaves the tile.
+  const rat::Vec3 surface{2.95f, rat::sample_terrain_height(geometry, 2.95f, 2.05f), 2.05f};
+  REQUIRE(surface.y == Approx(0.95f).margin(0.01f));
+  REQUIRE(rat::world_to_tile_xz(surface, map.tile_size).x == 2);
+  REQUIRE(rat::world_to_tile_xz(surface, map.tile_size).z == 2);
+
+  rat::OrthoCameraParams params;
+  params.focus = {2.5f, 0.0f, 2.5f};
+  const rat::OrthoCamera camera = rat::build_ortho_three_quarter(800, 600, params);
+  const auto pixel = rat::project_world_to_pixels(camera, surface, 800, 600);
+  REQUIRE(pixel.has_value());
+
+  const auto hit = rat::unproject_to_ground_plane(camera, pixel->x, pixel->y, 800, 600, 0.0f);
+  REQUIRE(hit.has_value());
+  const rat::TileCoord tile = rat::world_to_tile_xz(*hit, map.tile_size);
+  REQUIRE_FALSE((tile.x == 2 && tile.z == 2));
 }
