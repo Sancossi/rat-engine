@@ -1,8 +1,8 @@
 ---
 type: adr
 area: Engine
-status: Proposed
-decided:
+status: Accepted
+decided: 2026-09-04
 tags: [adr]
 ---
 
@@ -47,6 +47,7 @@ occupancy[]: { x, y, z, kind: "solid" | "ramp", yaw?: "north"|"east"|"south"|"we
 - Loader **обязан** читать schema 1–4 как сейчас: `height_grid`, `ramps`, `floor_slabs`, `edge_barriers`, `ladders`, `indoor_volumes`.
 - Следующий schema bump **добавляет** `occupancy[]`. Пока поля нет — карта schema 4 валидна.
 - Bake = **union**: legacy solids (`append_ground_boxes` / ramp prisms / `append_floor_slabs` / walls) **плюс** occupancy → те же `WalkableBox` / `WalkableRamp`. Новых типов в `CollisionWorld` нет.
+- **Overlap:** если occupancy-клетка `(x,y,z)` пересекает legacy solid в том же 1 м AABB, **occupancy wins** — этот legacy кусок в bake не дублировать. Тонкая `floor_slab` (0.25 м) в той же XZ на другом Y-диапазоне остаётся в union (не тот же AABB).
 - `grey_yard` остаётся schema 4, пока отдельная карточка не поставит клин к мосту. `floor_slabs` и `ladders` не выкидывать: тонкие деки и рельсы лазания occupancy 1 м не выражает.
 - Place cube на `height_grid` (заливка колонки) остаётся legacy. Новый Place voxel пишет occupancy.
 

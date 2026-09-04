@@ -1,7 +1,7 @@
 ---
 type: task
 area: Engine
-status: In review
+status: Done
 task_type: Research
 sprint: Sprint 14
 due:
@@ -18,4 +18,10 @@ Origin: [[feat: Voxel 3D terrain and rotating ramps]]. Origin: [[Sprint 14 — V
 
 ## Resolution
 
+[[ADR-015 Voxel 3D terrain]] Accepted: sparse occupancy 1 м (`solid` куб / `ramp` yaw-клин), dual-read schema 1–4, bake union в существующий `CollisionWorld`. Pitch нет в v1. `floor_slabs` остаются (0.25 м ≠ куб 1 м). Кода вокселей в этом срезе нет. Review: Approved.
+
+Verify: открыть ADR-015; строка Voxel occupancy в [[Systems Index]].
+
 ## Bugs found
+
+none. Follow-up overlap/precedence зафиксирован в ADR (occupancy wins на том же 1 м AABB) для [[feat: Voxel occupancy schema and bake]].
