@@ -15,4 +15,7 @@ struct EventGraphCompileResult {
 
 [[nodiscard]] EventGraphCompileResult compile_event_graph(const EventGraph& graph);
 
+[[nodiscard]] EventGraph commands_to_graph(const std::vector<Command>& commands);
+void ensure_page_graph_from_commands(EventPage& page);
+
 }  // namespace rat

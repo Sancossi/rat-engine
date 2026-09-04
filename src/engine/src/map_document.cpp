@@ -402,6 +402,11 @@ std::vector<MapIssue> validate_map_document(const MapData& data) {
 MapCompileResult compile_map_data(const MapData& data) {
   MapData migrated = data;
   apply_v1_height_fallback(migrated);
+  for (EventDef& event : migrated.events) {
+    for (EventPage& page : event.pages) {
+      ensure_page_graph_from_commands(page);
+    }
+  }
   MapCompileResult result;
   result.issues = validate_map_document(migrated);
   result.ok = !map_issues_have_errors(result.issues);

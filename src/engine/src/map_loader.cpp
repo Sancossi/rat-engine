@@ -1,5 +1,7 @@
 #include "rat/map_loader.hpp"
 
+#include "rat/event_graph.hpp"
+
 #include <nlohmann/json.hpp>
 
 #include <cstddef>
@@ -450,6 +452,7 @@ EventPage parse_page(const json& node) {
   if (node.contains("graph")) {
     page.graph = parse_graph(node.at("graph"));
   }
+  ensure_page_graph_from_commands(page);
   return page;
 }
 

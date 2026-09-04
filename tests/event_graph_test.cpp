@@ -7,6 +7,7 @@
 #include <catch2/catch_test_macros.hpp>
 
 #include <string>
+#include <vector>
 
 namespace {
 
@@ -39,6 +40,38 @@ namespace {
     }
   }
   return false;
+}
+
+void require_commands_equal(const std::vector<rat::Command>& actual,
+                            const std::vector<rat::Command>& expected) {
+  REQUIRE(actual.size() == expected.size());
+  for (std::size_t i = 0; i < expected.size(); ++i) {
+    REQUIRE(actual[i].op == expected[i].op);
+    REQUIRE(actual[i].text == expected[i].text);
+    REQUIRE(actual[i].id == expected[i].id);
+    REQUIRE(actual[i].bool_value == expected[i].bool_value);
+    REQUIRE(actual[i].int_value == expected[i].int_value);
+    REQUIRE(actual[i].frames == expected[i].frames);
+    REQUIRE(actual[i].through == expected[i].through);
+    REQUIRE(actual[i].branch_condition.type == expected[i].branch_condition.type);
+    REQUIRE(actual[i].branch_condition.id == expected[i].branch_condition.id);
+    REQUIRE(actual[i].branch_condition.bool_value == expected[i].branch_condition.bool_value);
+    REQUIRE(actual[i].route.size() == expected[i].route.size());
+    for (std::size_t r = 0; r < expected[i].route.size(); ++r) {
+      REQUIRE(actual[i].route[r].op == expected[i].route[r].op);
+      REQUIRE(actual[i].route[r].dir == expected[i].route[r].dir);
+      REQUIRE(actual[i].route[r].frames == expected[i].route[r].frames);
+    }
+    require_commands_equal(actual[i].then_commands, expected[i].then_commands);
+    require_commands_equal(actual[i].else_commands, expected[i].else_commands);
+  }
+}
+
+void require_round_trip(const std::vector<rat::Command>& cmds) {
+  const rat::EventGraph graph = rat::commands_to_graph(cmds);
+  const rat::EventGraphCompileResult compiled = rat::compile_event_graph(graph);
+  REQUIRE(compiled.ok);
+  require_commands_equal(compiled.commands, cmds);
 }
 
 }  // namespace
@@ -294,7 +327,6 @@ TEST_CASE("page without graph still loads commands", "[unit][event][graph][map]"
 
   const rat::MapLoadResult loaded = rat::load_map_from_string(map_json_with_page(kPage));
   REQUIRE(loaded.ok);
-  REQUIRE_FALSE(loaded.map.events[0].pages[0].graph.has_value());
   REQUIRE(loaded.map.events[0].pages[0].commands.size() == 1);
   REQUIRE(loaded.map.events[0].pages[0].commands[0].text == "No graph");
 
@@ -587,6 +619,89 @@ TEST_CASE("play_se graph node round-trips through serialize/load", "[unit][event
   REQUIRE(again.map.events[0].pages[0].graph.has_value());
   REQUIRE(again.map.events[0].pages[0].graph->nodes[0].kind == "play_se");
   REQUIRE(again.map.events[0].pages[0].graph->nodes[0].text == "beep");
+}
+
+TEST_CASE("reverse-compile linear show_text then wait", "[unit][event][graph]") {
+  rat::Command say;
+  say.op = rat::CommandOp::ShowText;
+  say.text = "Hello";
+  rat::Command pause;
+  pause.op = rat::CommandOp::Wait;
+  pause.frames = 12;
+  require_round_trip({say, pause});
+}
+
+TEST_CASE("reverse-compile control_switch and set_move_route", "[unit][event][graph]") {
+  rat::Command sw;
+  sw.op = rat::CommandOp::ControlSwitch;
+  sw.id = 7;
+  sw.bool_value = true;
+  rat::Command move;
+  move.op = rat::CommandOp::SetMoveRoute;
+  move.through = true;
+  move.route = {rat::RouteStep{.op = rat::RouteStepOp::Move, .dir = rat::RampDirection::East}};
+  require_round_trip({sw, move});
+}
+
+TEST_CASE("reverse-compile nested conditional_branch then and else", "[unit][event][graph]") {
+  rat::Command inner_then;
+  inner_then.op = rat::CommandOp::ShowText;
+  inner_then.text = "inner-then";
+  rat::Command inner_else;
+  inner_else.op = rat::CommandOp::ShowText;
+  inner_else.text = "inner-else";
+  rat::Command inner;
+  inner.op = rat::CommandOp::ConditionalBranch;
+  inner.branch_condition.type = rat::ConditionType::Switch;
+  inner.branch_condition.id = 2;
+  inner.branch_condition.bool_value = true;
+  inner.then_commands = {inner_then};
+  inner.else_commands = {inner_else};
+
+  rat::Command outer_else;
+  outer_else.op = rat::CommandOp::ShowText;
+  outer_else.text = "outer-else";
+  rat::Command outer;
+  outer.op = rat::CommandOp::ConditionalBranch;
+  outer.branch_condition.type = rat::ConditionType::Switch;
+  outer.branch_condition.id = 1;
+  outer.branch_condition.bool_value = true;
+  outer.then_commands = {inner};
+  outer.else_commands = {outer_else};
+
+  rat::Command after;
+  after.op = rat::CommandOp::Wait;
+  after.frames = 5;
+  require_round_trip({outer, after});
+}
+
+TEST_CASE("reverse-compile empty commands is entry to exit", "[unit][event][graph]") {
+  const rat::EventGraph graph = rat::commands_to_graph({});
+  REQUIRE(graph.nodes.empty());
+  REQUIRE(graph.edges.size() == 1);
+  REQUIRE(graph.edges[0].from == "entry");
+  REQUIRE(graph.edges[0].to == "exit");
+  require_round_trip({});
+}
+
+TEST_CASE("JSON commands without graph get reverse-compiled", "[unit][event][graph][map]") {
+  constexpr const char* kPage = R"({
+    "trigger": "action",
+    "commands": [ { "op": "show_text", "text": "No graph" } ]
+  })";
+
+  const rat::MapLoadResult loaded = rat::load_map_from_string(map_json_with_page(kPage));
+  REQUIRE(loaded.ok);
+
+  const rat::MapCompileResult compiled = rat::compile_map_data(loaded.map);
+  REQUIRE(compiled.ok);
+  REQUIRE(compiled.runtime.data.events[0].pages[0].graph.has_value());
+  REQUIRE_FALSE(compiled.runtime.data.events[0].pages[0].graph->nodes.empty());
+
+  rat::EventRuntime runtime;
+  REQUIRE(runtime.load(loaded.map).ok);
+  REQUIRE(runtime.map().events[0].pages[0].graph.has_value());
+  REQUIRE_FALSE(runtime.map().events[0].pages[0].graph->nodes.empty());
 }
 
 TEST_CASE("EventRuntime uses commands not graph", "[unit][event][graph]") {

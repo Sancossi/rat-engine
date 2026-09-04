@@ -133,6 +133,118 @@ void add_error(EventGraphCompileResult& result, std::string json_path, std::stri
   return command;
 }
 
+[[nodiscard]] EventGraphNode node_from_command(const Command& command) {
+  EventGraphNode node;
+  if (command.op == CommandOp::ShowText) {
+    node.kind = "show_text";
+    node.text = command.text;
+  } else if (command.op == CommandOp::ControlSwitch) {
+    node.kind = "control_switch";
+    node.switch_id = command.id;
+    node.bool_value = command.bool_value;
+  } else if (command.op == CommandOp::ControlVariable) {
+    node.kind = "control_variable";
+    node.switch_id = command.id;
+    node.int_value = command.int_value;
+  } else if (command.op == CommandOp::ControlSelfSwitch) {
+    node.kind = "control_self_switch";
+    node.self_switch = command.self_switch;
+    node.bool_value = command.bool_value;
+  } else if (command.op == CommandOp::Wait) {
+    node.kind = "wait";
+    node.frames = command.frames;
+  } else if (command.op == CommandOp::ConditionalBranch) {
+    node.kind = "conditional_branch";
+    node.branch_condition = command.branch_condition;
+  } else if (command.op == CommandOp::TransferPlayer) {
+    node.kind = "transfer_player";
+    node.map_id = command.map_id;
+    node.x = command.x;
+    node.y = command.y;
+    node.z = command.z;
+  } else if (command.op == CommandOp::ChangeItems) {
+    node.kind = "change_items";
+    node.item_id = command.item_id;
+    node.item_delta = command.item_delta;
+    node.key_item = command.key_item;
+  } else if (command.op == CommandOp::PlaySE) {
+    node.kind = "play_se";
+    node.text = command.text;
+  } else if (command.op == CommandOp::SetMoveRoute) {
+    node.kind = "set_move_route";
+    node.through = command.through;
+    node.route = command.route;
+  } else {
+    node.kind = "comment";
+    node.text = command.text;
+  }
+  return node;
+}
+
+struct ReverseCompiler {
+  EventGraph graph;
+  int next_id = 1;
+
+  [[nodiscard]] std::string alloc_id() {
+    std::string id = "n";
+    id += std::to_string(next_id++);
+    return id;
+  }
+
+  [[nodiscard]] std::string emit_list(const std::vector<Command>& commands,
+                                      const std::string& join) {
+    if (commands.empty()) {
+      return join;
+    }
+
+    std::vector<std::string> ids;
+    ids.reserve(commands.size());
+    for (const Command& command : commands) {
+      EventGraphNode node = node_from_command(command);
+      node.id = alloc_id();
+      ids.push_back(node.id);
+      graph.nodes.push_back(std::move(node));
+    }
+
+    for (std::size_t i = 0; i < commands.size(); ++i) {
+      const std::string& id = ids[i];
+      const Command& command = commands[i];
+      const std::string next = (i + 1 < commands.size()) ? ids[i + 1] : join;
+
+      if (command.op == CommandOp::ConditionalBranch) {
+        const std::string then_head = emit_list(command.then_commands, next);
+        EventGraphEdge then_edge;
+        then_edge.from = id;
+        then_edge.to = then_head;
+        then_edge.branch = std::string("then");
+        graph.edges.push_back(std::move(then_edge));
+
+        if (!command.else_commands.empty()) {
+          const std::string else_head = emit_list(command.else_commands, next);
+          EventGraphEdge else_edge;
+          else_edge.from = id;
+          else_edge.to = else_head;
+          else_edge.branch = std::string("else");
+          graph.edges.push_back(std::move(else_edge));
+        } else if (next != kExit) {
+          EventGraphEdge else_edge;
+          else_edge.from = id;
+          else_edge.to = next;
+          else_edge.branch = std::string("else");
+          graph.edges.push_back(std::move(else_edge));
+        }
+      } else {
+        EventGraphEdge seq;
+        seq.from = id;
+        seq.to = next;
+        graph.edges.push_back(std::move(seq));
+      }
+    }
+
+    return ids.front();
+  }
+};
+
 struct GraphIndex {
   std::unordered_map<std::string, std::size_t> node_index;
   std::unordered_map<std::string, std::vector<IndexedEdge>> outgoing;
@@ -495,6 +607,23 @@ EventGraphCompileResult compile_event_graph(const EventGraph& graph) {
   result.commands = emitter.emit_chain(kEntry, {}, path);
   result.ok = result.issues.empty();
   return result;
+}
+
+EventGraph commands_to_graph(const std::vector<Command>& commands) {
+  ReverseCompiler compiler;
+  const std::string head = compiler.emit_list(commands, kExit);
+  EventGraphEdge entry;
+  entry.from = kEntry;
+  entry.to = head;
+  compiler.graph.edges.insert(compiler.graph.edges.begin(), std::move(entry));
+  return compiler.graph;
+}
+
+void ensure_page_graph_from_commands(EventPage& page) {
+  if (page.graph.has_value() && !page.graph->nodes.empty()) {
+    return;
+  }
+  page.graph = commands_to_graph(page.commands);
 }
 
 }  // namespace rat
