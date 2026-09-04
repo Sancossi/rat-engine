@@ -1,7 +1,7 @@
 ---
 type: task
 area: Engine
-status: In review
+status: Done
 task_type: Feature
 sprint: Sprint 13
 due:
@@ -22,4 +22,10 @@ Origin: chat 2026-09-04 (Sprint 13, мосты «пройти под терей�
 
 ## Resolution
 
+Мост = существующий `floor_slabs` над открытой землёй (`ground_y ≈ 0`), не куб до Y=0. Place Bridge (и Floor slab upsert) отказывает на клетке-кубе. Цилиндр 1.6 ходит по верху и проходит снизу, если `top_y - thickness > ~1.65` (`cylinder_hits_ceiling` только при пересечении головы с низом плиты). Greybox: верх и низ пролёта. Review: Approved.
+
+Verify: Edit → Terrain → Place bridge над dirt; Play — пройти сверху и под плитой. `.\build\tests\rat_tests.exe "[collision],[player],[viewport_edit],[terrain]"`.
+
 ## Bugs found
+
+none.
