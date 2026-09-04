@@ -1,7 +1,7 @@
 ---
 type: task
 area: Engine
-status: In review
+status: Done
 task_type: Feature
 sprint: Sprint 13
 due:
@@ -22,4 +22,10 @@ Origin: chat 2026-09-04 (Sprint 13, рампы с разных сторон). Or
 
 ## Resolution
 
+Viewport **Place ramp** (Terrain): клик у грани клетки ставит `RampDirection` через `nearest_tile_edge`, как Fence/Ladder. Combo в панели остаётся override. Один `RampDef` на тайл; два подхода к платформе — две соседние клетки (west + south), оба climb в Play. Side-entry на одну рампу не открывали. Review: Approved.
+
+Verify: Edit → Terrain → Place ramp, клик у восточной грани низкой клетки к кубу; вторая рампа с юга. `.\build\tests\rat_tests.exe "[viewport_edit],[height_edit]"`.
+
 ## Bugs found
+
+none.
