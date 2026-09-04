@@ -2,6 +2,8 @@
 
 #include "editor_document.hpp"
 
+#include <rat/map_data.hpp>
+
 #include <optional>
 #include <string>
 #include <unordered_map>
@@ -22,6 +24,14 @@ struct EventGraphCanvasState {
   float pan_x = 0.0f;
   float pan_y = 0.0f;
   float zoom = 1.0f;
+  std::optional<EventGraphNode> clipboard;
+  float clipboard_x = 0.0f;
+  float clipboard_y = 0.0f;
+  bool dragging_wire = false;
+  std::string drag_wire_from;
+  std::optional<std::string> drag_wire_branch;
+  float context_x = 180.0f;
+  float context_y = 24.0f;
 };
 
 void draw_event_graph_canvas(EditorDocument& document, EventGraphCanvasState& canvas,

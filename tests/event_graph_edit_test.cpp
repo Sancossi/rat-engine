@@ -195,3 +195,66 @@ TEST_CASE("page without graph keeps inspector command list on apply",
   REQUIRE(document.data().events[0].pages[0].commands.size() == 1);
   REQUIRE(document.data().events[0].pages[0].commands[0].text == "edited list");
 }
+
+TEST_CASE("duplicate_event_graph_node copies payload and leaves edges unchanged",
+          "[unit][event][edit][graph]") {
+  rat::EventGraph graph;
+  const std::string say = rat::add_event_graph_node(graph, "show_text");
+  REQUIRE_FALSE(say.empty());
+  graph.nodes[0].text = "Hello copy";
+  graph.nodes[0].frames = 7;
+  graph.nodes[0].switch_id = 3;
+  graph.nodes[0].bool_value = true;
+  graph.nodes[0].int_value = 9;
+  graph.nodes[0].self_switch = 'B';
+  graph.nodes[0].map_id = "yard";
+  graph.nodes[0].x = 1.5f;
+  graph.nodes[0].item_id = "scrap";
+  graph.nodes[0].item_delta = -2;
+  graph.nodes[0].key_item = true;
+  graph.nodes[0].through = true;
+  graph.nodes[0].route.push_back(rat::RouteStep{});
+
+  REQUIRE(rat::connect_event_graph_nodes(graph, rat::kEventGraphEntryId, say));
+  REQUIRE(rat::connect_event_graph_nodes(graph, say, rat::kEventGraphExitId));
+  const std::size_t edge_count = graph.edges.size();
+  REQUIRE(edge_count == 2);
+
+  const std::string copy = rat::duplicate_event_graph_node(graph, say);
+  REQUIRE_FALSE(copy.empty());
+  REQUIRE(copy != say);
+  REQUIRE(graph.nodes.size() == 2);
+  REQUIRE(graph.nodes[1].id == copy);
+  REQUIRE(graph.nodes[1].kind == "show_text");
+  REQUIRE(graph.nodes[1].text == "Hello copy");
+  REQUIRE(graph.nodes[1].frames == 7);
+  REQUIRE(graph.nodes[1].switch_id == 3);
+  REQUIRE(graph.nodes[1].bool_value == true);
+  REQUIRE(graph.nodes[1].int_value == 9);
+  REQUIRE(graph.nodes[1].self_switch == 'B');
+  REQUIRE(graph.nodes[1].map_id == "yard");
+  REQUIRE(graph.nodes[1].x == 1.5f);
+  REQUIRE(graph.nodes[1].item_id == "scrap");
+  REQUIRE(graph.nodes[1].item_delta == -2);
+  REQUIRE(graph.nodes[1].key_item == true);
+  REQUIRE(graph.nodes[1].through == true);
+  REQUIRE(graph.nodes[1].route.size() == 1);
+  REQUIRE(graph.edges.size() == edge_count);
+  for (const rat::EventGraphEdge& edge : graph.edges) {
+    REQUIRE(edge.from != copy);
+    REQUIRE(edge.to != copy);
+  }
+}
+
+TEST_CASE("duplicate_event_graph_node refuses entry exit and missing",
+          "[unit][event][edit][graph]") {
+  rat::EventGraph graph;
+  const std::string say = rat::add_event_graph_node(graph, "show_text");
+  REQUIRE_FALSE(say.empty());
+  REQUIRE(rat::duplicate_event_graph_node(graph, rat::kEventGraphEntryId).empty());
+  REQUIRE(rat::duplicate_event_graph_node(graph, rat::kEventGraphExitId).empty());
+  REQUIRE(rat::duplicate_event_graph_node(graph, "missing").empty());
+  REQUIRE(rat::duplicate_event_graph_node(graph, "").empty());
+  REQUIRE(graph.nodes.size() == 1);
+  REQUIRE(graph.edges.empty());
+}

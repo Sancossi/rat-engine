@@ -31,6 +31,8 @@ void ensure_event_page_graph(EventPage& page);
 bool connect_event_graph_nodes(EventGraph& graph, std::string from, std::string to,
                                std::optional<std::string> branch = {});
 
+[[nodiscard]] std::string duplicate_event_graph_node(EventGraph& graph, std::string_view id);
+
 bool delete_event_graph_node(EventGraph& graph, std::string_view id);
 
 bool delete_event_graph_edge(EventGraph& graph, std::string_view from, std::string_view to,

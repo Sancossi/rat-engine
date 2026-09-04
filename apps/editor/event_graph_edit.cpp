@@ -147,6 +147,24 @@ bool connect_event_graph_nodes(EventGraph& graph, std::string from, std::string 
   return true;
 }
 
+std::string duplicate_event_graph_node(EventGraph& graph, std::string_view id) {
+  if (id.empty() || is_reserved_graph_id(id)) {
+    return {};
+  }
+  const auto source = std::find_if(graph.nodes.begin(), graph.nodes.end(),
+                                   [&](const EventGraphNode& node) { return node.id == id; });
+  if (source == graph.nodes.end()) {
+    return {};
+  }
+  EventGraphNode copy = *source;
+  copy.id = allocate_event_graph_node_id(graph);
+  if (copy.id.empty()) {
+    return {};
+  }
+  graph.nodes.push_back(std::move(copy));
+  return graph.nodes.back().id;
+}
+
 bool delete_event_graph_node(EventGraph& graph, std::string_view id) {
   if (id.empty() || is_reserved_graph_id(id)) {
     return false;
