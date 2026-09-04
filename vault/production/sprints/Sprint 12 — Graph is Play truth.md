@@ -1,9 +1,9 @@
 ---
 type: sprint
-status: In progress
-dates: 2026-09-04/2026-09-18
+status: Done
+dates: 2026-09-04/2026-09-04
 goal: Play executes event graphs; nodes are editable cards; commands[] leave the runtime
-current: true
+current: false
 tags: [sprint]
 ---
 
@@ -29,3 +29,11 @@ DoD:
 Spec: `docs/superpowers/specs/2026-09-04-play-walks-event-graph-design.md`
 
 ADR: [[ADR-014 Play executes event graphs]]
+
+## Итог
+
+DoD выполнен 2026-09-04. Play ходит по `page.graph`; save без `commands`; canvas — виджеты на ноде, RMB add/copy/delete, drag-связи, undo; кириллица в Show Text / Comment (Noto Sans). Playtest: сетка рампы по углам клетки; клик ивента на рампе через `unproject_to_terrain`.
+
+## Bugs found
+
+на закрытии: [[Event graph self-pin drag stays armed]] (Low, в бэклог). Playtest-фиксы в этом спринте: [[Ramp greybox fill breaks cells and hides the high side]], [[Event on ramp is not mouse-clickable in Edit]] — Fixed.

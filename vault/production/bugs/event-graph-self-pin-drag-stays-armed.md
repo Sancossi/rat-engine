@@ -3,7 +3,7 @@ type: bug
 area: Engine
 status: Open
 severity: Low
-sprint: Sprint 12
+sprint:
 tags: [bug]
 ---
 

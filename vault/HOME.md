@@ -25,6 +25,6 @@ tags: [hub]
 
 ## Текущий спринт
 
-Текущий: [[Sprint 12 — Graph is Play truth]]. Предыдущий закрытый — [[Sprint 11 — Set Move Route]].
+Текущий: [[Sprint 13 — Grey yard map pass]]. Предыдущий закрытый — [[Sprint 12 — Graph is Play truth]].
 
 Доска: [[Task board]] — виды **Current sprint** (канбан спринта) и **In progress** (код / ревью / blocked). Статус в YAML заметки = колонка на доске.
