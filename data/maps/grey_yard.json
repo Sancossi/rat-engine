@@ -1,5 +1,5 @@
 {
-  "schema_version": 4,
+  "schema_version": 5,
   "id": "grey_yard",
   "width": 16,
   "height": 16,
@@ -53,6 +53,10 @@
   ],
   "indoor_volumes": [
     { "min_x": 0.2, "min_z": -1.8, "max_x": 1.6, "max_z": -1.2, "y_lo": 0.0, "y_hi": 2.5 }
+  ],
+  "occupancy": [
+    { "x": 4, "y": 0, "z": 5, "kind": "ramp", "yaw": "east" },
+    { "x": 5, "y": 1, "z": 5, "kind": "ramp", "yaw": "east" }
   ],
   "blockers": [
     { "min_x": 3.0, "min_z": -1.0, "max_x": 5.0, "max_z": 1.0 },

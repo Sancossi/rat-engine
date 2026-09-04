@@ -723,6 +723,58 @@ TEST_CASE("Player walks on a floor slab over open ground", "[unit][player][surfa
   REQUIRE(player.x < 2.0f);
 }
 
+TEST_CASE("Player climbs occupancy ramps onto a thin floor slab", "[unit][player][collision]") {
+  rat::MapData map = make_surface_map(3, 1, {0.0f, 0.0f, 0.0f});
+  map.schema_version = 5;
+  map.floor_slabs.push_back({{2, 0}, 2.0f, 0.25f});
+  map.occupancy.push_back(rat::OccupancyCell{
+      .x = 0,
+      .y = 0,
+      .z = 0,
+      .kind = rat::OccupancyKind::Ramp,
+      .yaw = rat::RampDirection::East,
+  });
+  map.occupancy.push_back(rat::OccupancyCell{
+      .x = 1,
+      .y = 1,
+      .z = 0,
+      .kind = rat::OccupancyKind::Ramp,
+      .yaw = rat::RampDirection::East,
+  });
+  const rat::SurfaceQuery query(map);
+
+  rat::PlayerBody player;
+  player.x = 0.15f;
+  player.y = 0.0f;
+  player.z = 0.5f;
+  player.speed = 5.0f;
+  rat::JumpState jump = rat::make_grounded_jump_state();
+  rat::PlayerFrameInput input;
+  input.move = {1.0f, 0.0f};
+  for (int i = 0; i < 240; ++i) {
+    const rat::PlayerFrameResult result = rat::integrate_player_frame_surface(
+        player, jump, input, 1.0f / 120.0f, {}, query, {}, 0.35f, {}, &map);
+    player = result.body;
+    jump = result.jump;
+    if (player.x >= 2.0f && player.x < 3.0f && player.y > 1.8f && jump.grounded) {
+      break;
+    }
+  }
+
+  REQUIRE(player.x >= 2.0f);
+  REQUIRE(player.x < 3.0f);
+  REQUIRE(player.y == Approx(2.0f).margin(0.06f));
+  REQUIRE(jump.grounded);
+  bool stood_on_occupancy_solid = false;
+  for (const rat::OccupancyCell& cell : map.occupancy) {
+    if (cell.kind == rat::OccupancyKind::Solid && player.x >= static_cast<float>(cell.x) &&
+        player.x < static_cast<float>(cell.x + 1)) {
+      stood_on_occupancy_solid = true;
+    }
+  }
+  REQUIRE_FALSE(stood_on_occupancy_solid);
+}
+
 TEST_CASE("Player walks under a high slab over open ground", "[unit][player][surface]") {
   rat::MapData map = make_surface_map(3, 1, {0.0f, 0.0f, 0.0f});
   map.floor_slabs.push_back({{1, 0}, 2.0f, 0.25f});

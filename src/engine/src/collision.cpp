@@ -60,7 +60,20 @@ bool point_on_walkable_box(float x, float z, const WalkableBox& box) {
   return x >= box.min_x && x < box.max_x && z >= box.min_z && z < box.max_z;
 }
 
-void append_slab_side_fences(CollisionWorld& world, const WalkableBox& box) {
+[[nodiscard]] bool occupancy_ramp_high_at(std::span<const OccupancyCell> occupancy, int x, int y,
+                                          int z, RampDirection yaw) {
+  for (const OccupancyCell& cell : occupancy) {
+    if (cell.x == x && cell.y == y && cell.z == z && cell.kind == OccupancyKind::Ramp &&
+        cell.yaw == yaw) {
+      return true;
+    }
+  }
+  return false;
+}
+
+void append_slab_side_fences(CollisionWorld& world, const WalkableBox& box,
+                             const FloorSlabDef& slab, std::span<const OccupancyCell> occupancy,
+                             float tile_size) {
   auto add_edge = [&](float ax, float az, float bx, float bz) {
     FenceSolid solid;
     solid.ax = ax;
@@ -76,21 +89,20 @@ void append_slab_side_fences(CollisionWorld& world, const WalkableBox& box) {
     solid.apply_max_step_up_skip = false;
     world.fences.push_back(solid);
   };
-  add_edge(box.min_x, box.min_z, box.min_x, box.max_z);
-  add_edge(box.max_x, box.min_z, box.max_x, box.max_z);
-  add_edge(box.min_x, box.min_z, box.max_x, box.min_z);
-  add_edge(box.min_x, box.max_z, box.max_x, box.max_z);
-}
-
-[[nodiscard]] bool occupancy_ramp_high_at(std::span<const OccupancyCell> occupancy, int x, int y,
-                                          int z, RampDirection yaw) {
-  for (const OccupancyCell& cell : occupancy) {
-    if (cell.x == x && cell.y == y && cell.z == z && cell.kind == OccupancyKind::Ramp &&
-        cell.yaw == yaw) {
-      return true;
-    }
+  const float ts = tile_size > 0.0f ? tile_size : 1.0f;
+  const int layer = static_cast<int>(std::lround(static_cast<double>(slab.top_y / ts))) - 1;
+  if (!occupancy_ramp_high_at(occupancy, slab.tile.x - 1, layer, slab.tile.z, RampDirection::East)) {
+    add_edge(box.min_x, box.min_z, box.min_x, box.max_z);
   }
-  return false;
+  if (!occupancy_ramp_high_at(occupancy, slab.tile.x + 1, layer, slab.tile.z, RampDirection::West)) {
+    add_edge(box.max_x, box.min_z, box.max_x, box.max_z);
+  }
+  if (!occupancy_ramp_high_at(occupancy, slab.tile.x, layer, slab.tile.z - 1, RampDirection::South)) {
+    add_edge(box.min_x, box.min_z, box.max_x, box.min_z);
+  }
+  if (!occupancy_ramp_high_at(occupancy, slab.tile.x, layer, slab.tile.z + 1, RampDirection::North)) {
+    add_edge(box.min_x, box.max_z, box.max_x, box.max_z);
+  }
 }
 
 void append_occupancy_solid_fences(CollisionWorld& world, const WalkableBox& box,
@@ -277,7 +289,7 @@ void append_floor_slabs(CollisionWorld& world, std::span<const FloorSlabDef> sla
                             box.y_hi, ts)) {
       continue;
     }
-    append_slab_side_fences(world, box);
+    append_slab_side_fences(world, box, slab, occupancy, ts);
     world.boxes.push_back(box);
   }
 }

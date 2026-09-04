@@ -456,6 +456,36 @@ TEST_CASE("Thin floor slab at a different Y range stays in union with occupancy"
   REQUIRE(found_slab);
 }
 
+TEST_CASE("Occupancy ramp high side omits the abutting floor slab fence", "[collision]") {
+  rat::MapData map = make_grid(2, 1, 0.0f);
+  map.schema_version = 5;
+  map.floor_slabs.push_back({{1, 0}, 2.0f, 0.25f});
+  map.occupancy.push_back(rat::OccupancyCell{
+      .x = 0,
+      .y = 1,
+      .z = 0,
+      .kind = rat::OccupancyKind::Ramp,
+      .yaw = rat::RampDirection::East,
+  });
+  const rat::CollisionWorld world = rat::bake_collision_world(map, rat::SurfaceQuery(map));
+
+  int west_slab_fences = 0;
+  int other_slab_fences = 0;
+  for (const rat::FenceSolid& fence : world.fences) {
+    if (fence.y_lo != Approx(1.75f) || fence.y_hi != Approx(2.0f)) {
+      continue;
+    }
+    const bool vertical_west = fence.ax == Approx(1.0f) && fence.bx == Approx(1.0f);
+    if (vertical_west) {
+      ++west_slab_fences;
+    } else {
+      ++other_slab_fences;
+    }
+  }
+  REQUIRE(west_slab_fences == 0);
+  REQUIRE(other_slab_fences == 3);
+}
+
 TEST_CASE("Bake floor slab is a thin box not filled to Y=0", "[collision]") {
   rat::MapData map = make_grid(1, 1, 0.0f);
   map.floor_slabs.push_back({{0, 0}, 2.0f, 0.25f});

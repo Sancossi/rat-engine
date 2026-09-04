@@ -1,3 +1,4 @@
+#include <rat/collision.hpp>
 #include <rat/event_runtime.hpp>
 #include <rat/game_state.hpp>
 #include <rat/map_data.hpp>
@@ -64,7 +65,7 @@ TEST_CASE("Grey yard elevation slice: ramp, jumpable blocker, elevated action", 
   const auto loaded =
       rat::load_map_from_file(std::string(RAT_TEST_DATA_DIR) + "/maps/grey_yard.json");
   REQUIRE(loaded.ok);
-  REQUIRE(loaded.map.schema_version == 4);
+  REQUIRE(loaded.map.schema_version == 5);
 
   const rat::BlockerDef* low_blocker = find_jumpable_blocker(loaded.map);
   REQUIRE(low_blocker != nullptr);
@@ -244,7 +245,7 @@ TEST_CASE("grey_yard south crate bypass walks spawn to scrap without going north
       rat::load_map_from_file(std::string(RAT_TEST_DATA_DIR) + "/maps/grey_yard.json");
   REQUIRE(loaded.ok);
   const rat::MapData& map = loaded.map;
-  REQUIRE(map.schema_version == 4);
+  REQUIRE(map.schema_version == 5);
 
   rat::SurfaceQuery query(map);
   rat::PlayerBody player;
@@ -306,4 +307,89 @@ TEST_CASE("grey_yard south crate bypass walks spawn to scrap without going north
   REQUIRE(player.x == Approx(6.5f).margin(0.35f));
   REQUIRE(player.z == Approx(0.5f).margin(0.35f));
   REQUIRE(player.z < 1.0f);
+}
+
+TEST_CASE("grey_yard cylinder walks from dirt onto bridge slab top_y 2.0",
+          "[mechanics][map][collision][player]") {
+#ifndef RAT_TEST_DATA_DIR
+#error RAT_TEST_DATA_DIR must be defined
+#endif
+  const auto loaded =
+      rat::load_map_from_file(std::string(RAT_TEST_DATA_DIR) + "/maps/grey_yard.json");
+  REQUIRE(loaded.ok);
+  const rat::MapData& map = loaded.map;
+  REQUIRE(map.schema_version == 5);
+
+  bool stood_on_bridge_slab = false;
+  for (const rat::FloorSlabDef& slab : map.floor_slabs) {
+    if (slab.tile.x == 6 && slab.tile.z == 5 && slab.top_y == Approx(2.0f)) {
+      stood_on_bridge_slab = true;
+    }
+  }
+  REQUIRE(stood_on_bridge_slab);
+
+  rat::SurfaceQuery query(map);
+  rat::PlayerBody player;
+  player.x = 3.5f;
+  player.y = 0.0f;
+  player.z = 5.5f;
+  player.speed = 5.0f;
+  rat::JumpState jump = rat::make_grounded_jump_state();
+  rat::PlayerFrameInput input;
+  input.move = {1.0f, 0.0f};
+  for (int frame = 0; frame < 480; ++frame) {
+    const rat::PlayerFrameResult result = rat::integrate_player_frame_surface(
+        player, jump, input, 1.0f / 120.0f, map.blockers, query, {}, 0.35f, {}, &map);
+    player = result.body;
+    jump = result.jump;
+    if (player.x >= 6.0f && player.x < 9.0f && player.y > 1.8f && jump.grounded) {
+      break;
+    }
+  }
+
+  REQUIRE(player.x >= 6.0f);
+  REQUIRE(player.x < 9.0f);
+  REQUIRE(player.y == Approx(2.0f).margin(0.08f));
+  REQUIRE(jump.grounded);
+  REQUIRE(player.z == Approx(5.5f).margin(0.15f));
+}
+
+TEST_CASE("grey_yard cylinder still walks under the bridge span",
+          "[mechanics][map][collision][player]") {
+#ifndef RAT_TEST_DATA_DIR
+#error RAT_TEST_DATA_DIR must be defined
+#endif
+  const auto loaded =
+      rat::load_map_from_file(std::string(RAT_TEST_DATA_DIR) + "/maps/grey_yard.json");
+  REQUIRE(loaded.ok);
+  const rat::MapData& map = loaded.map;
+
+  rat::SurfaceQuery query(map);
+  const rat::CollisionWorld world = rat::bake_collision_world(map, query);
+  rat::PlayerBody player;
+  player.x = 6.5f;
+  player.y = 0.0f;
+  player.z = 5.5f;
+  player.speed = 5.0f;
+  rat::CollisionBody under = rat::collision_body_from_player(player);
+  REQUIRE_FALSE(rat::cylinder_hits_ceiling(under, world));
+
+  rat::JumpState jump = rat::make_grounded_jump_state();
+  rat::PlayerFrameInput input;
+  input.move = {1.0f, 0.0f};
+  bool under_span = false;
+  for (int frame = 0; frame < 180; ++frame) {
+    const rat::PlayerFrameResult result = rat::integrate_player_frame_surface(
+        player, jump, input, 1.0f / 120.0f, map.blockers, query, {}, 0.35f, {}, &map);
+    player = result.body;
+    jump = result.jump;
+    if (player.x > 6.0f && player.x < 9.0f) {
+      under_span = true;
+      REQUIRE(player.y == Approx(0.0f).margin(0.06f));
+      REQUIRE(jump.grounded);
+    }
+  }
+  REQUIRE(under_span);
+  REQUIRE(player.x > 7.5f);
+  REQUIRE(player.y == Approx(0.0f).margin(0.06f));
 }
