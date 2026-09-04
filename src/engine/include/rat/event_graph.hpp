@@ -30,11 +30,16 @@ void ensure_page_graph_from_commands(EventPage& page);
 [[nodiscard]] std::optional<std::string> graph_else_target(const EventGraph& graph,
                                                            std::string_view node_id);
 
-// Graph-space layout for editor node cards (imgui-free). Pins are Y from the node top.
+// Graph-space layout for editor node cards (imgui-free). Pin X/Y are relative to the
+// node top-left; pin centers sit fully outside the card so editor child windows do not
+// eat the inner half of the hit circle.
 struct EventGraphNodeMetrics {
   float width = 220.0f;
   float height = 36.0f;
   float title_h = 22.0f;
+  float pin_r = 7.0f;
+  float in_pin_x = 0.0f;
+  float out_pin_x = 0.0f;
   float in_pin_y = 18.0f;
   float seq_out_pin_y = 18.0f;
   float then_pin_y = 0.0f;

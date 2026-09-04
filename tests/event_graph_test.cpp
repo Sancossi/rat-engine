@@ -1009,6 +1009,16 @@ TEST_CASE("event graph node metrics grow with widget rows and place branch pins 
   REQUIRE(wait.seq_out_pin_y == Approx(wait.height * 0.5f));
   REQUIRE(show.seq_out_pin_y == Approx(show.height * 0.5f));
 
+  REQUIRE(wait.pin_r == Approx(7.0f));
+  REQUIRE(wait.in_pin_x == Approx(-wait.pin_r));
+  REQUIRE(wait.out_pin_x == Approx(wait.width + wait.pin_r));
+  REQUIRE(wait.in_pin_x < 0.0f);
+  REQUIRE(wait.out_pin_x > wait.width);
+  REQUIRE(branch.in_pin_x == Approx(-branch.pin_r));
+  REQUIRE(branch.out_pin_x == Approx(branch.width + branch.pin_r));
+  REQUIRE(entry.in_pin_x == Approx(-entry.pin_r));
+  REQUIRE(entry.out_pin_x == Approx(entry.width + entry.pin_r));
+
   REQUIRE(branch.then_pin_y > branch.title_h);
   REQUIRE(branch.else_pin_y > branch.then_pin_y);
   REQUIRE(branch.else_pin_y < branch.height);

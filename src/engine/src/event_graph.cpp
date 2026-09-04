@@ -762,6 +762,8 @@ EventGraphNodeMetrics event_graph_node_metrics(std::string_view kind,
     y = kTitleH + kPad;
   }
   metrics.height = y;
+  metrics.in_pin_x = -metrics.pin_r;
+  metrics.out_pin_x = metrics.width + metrics.pin_r;
   metrics.in_pin_y = metrics.height * 0.5f;
   metrics.seq_out_pin_y = metrics.height * 0.5f;
   return metrics;

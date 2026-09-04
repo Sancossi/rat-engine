@@ -88,6 +88,10 @@ void commit_event(EditorDocument& document, EventDef event) {
       static_cast<std::size_t>(document.selected_event()), std::move(event)));
 }
 
+void preview_event(EditorDocument& document, EventDef event) {
+  (void)document.preview_event(document.selected_event(), std::move(event));
+}
+
 [[nodiscard]] EventGraphNode* find_node(EventGraph& graph, std::string_view id) {
   for (EventGraphNode& node : graph.nodes) {
     if (node.id == id) {
@@ -297,7 +301,7 @@ void draw_event_graph_canvas(EditorDocument& document, EventGraphCanvasState& ca
     if (from == nullptr || to == nullptr) {
       continue;
     }
-    ImVec2 a_stored(from->stored.x + from->metrics.width,
+    ImVec2 a_stored(from->stored.x + from->metrics.out_pin_x,
                     from->stored.y + from->metrics.seq_out_pin_y);
     if (from->branch && edge.branch.has_value() && *edge.branch == "else") {
       a_stored.y = from->stored.y + from->metrics.else_pin_y;
@@ -305,7 +309,8 @@ void draw_event_graph_canvas(EditorDocument& document, EventGraphCanvasState& ca
       a_stored.y = from->stored.y + from->metrics.then_pin_y;
     }
     const ImVec2 a = screen_of(a_stored);
-    const ImVec2 b = screen_of(ImVec2(to->stored.x, to->stored.y + to->metrics.in_pin_y));
+    const ImVec2 b =
+        screen_of(ImVec2(to->stored.x + to->metrics.in_pin_x, to->stored.y + to->metrics.in_pin_y));
     const float handle = 40.0f * zoom;
     const ImVec2 c1(a.x + handle, a.y);
     const ImVec2 c2(b.x - handle, b.y);
@@ -393,7 +398,11 @@ void draw_event_graph_canvas(EditorDocument& document, EventGraphCanvasState& ca
     if (live != nullptr) {
       ImGui::SetCursorPos(ImVec2(8.0f * zoom, (rect.metrics.title_h + 8.0f) * zoom));
       ImGui::PushItemWidth((rect.metrics.width - 16.0f) * zoom);
-      if (draw_event_graph_node_fields(*live, zoom)) {
+      const EventGraphNodeFieldResult fields = draw_event_graph_node_fields(*live, zoom);
+      if (fields.preview) {
+        preview_event(document, event);
+      }
+      if (fields.commit) {
         commit_event(document, event);
       }
       ImGui::PopItemWidth();
@@ -410,28 +419,30 @@ void draw_event_graph_canvas(EditorDocument& document, EventGraphCanvasState& ca
     if (rect.id != kEventGraphExitId) {
       if (rect.branch) {
         handle_out_pin(rect.id,
-                       screen_of(ImVec2(rect.stored.x + rect.metrics.width,
+                       screen_of(ImVec2(rect.stored.x + rect.metrics.out_pin_x,
                                         rect.stored.y + rect.metrics.then_pin_y)),
                        std::string("then"), (std::string("##out_then_") + rect.id).c_str());
         handle_out_pin(rect.id,
-                       screen_of(ImVec2(rect.stored.x + rect.metrics.width,
+                       screen_of(ImVec2(rect.stored.x + rect.metrics.out_pin_x,
                                         rect.stored.y + rect.metrics.else_pin_y)),
                        std::string("else"), (std::string("##out_else_") + rect.id).c_str());
       } else {
         handle_out_pin(rect.id,
-                       screen_of(ImVec2(rect.stored.x + rect.metrics.width,
+                       screen_of(ImVec2(rect.stored.x + rect.metrics.out_pin_x,
                                         rect.stored.y + rect.metrics.seq_out_pin_y)),
                        std::nullopt, (std::string("##out_") + rect.id).c_str());
       }
     }
     if (rect.id != kEventGraphEntryId) {
       handle_in_pin(rect.id,
-                    screen_of(ImVec2(rect.stored.x, rect.stored.y + rect.metrics.in_pin_y)),
+                    screen_of(ImVec2(rect.stored.x + rect.metrics.in_pin_x,
+                                     rect.stored.y + rect.metrics.in_pin_y)),
                     (std::string("##in_") + rect.id).c_str());
     }
   }
 
-  if (ImGui::IsWindowHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Right)) {
+  if (ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows) &&
+      ImGui::IsMouseClicked(ImGuiMouseButton_Right)) {
     canvas.pending_from.clear();
     canvas.pending_branch.reset();
   }
@@ -457,7 +468,7 @@ void draw_event_graph_canvas(EditorDocument& document, EventGraphCanvasState& ca
   }
 
   const ImGuiIO& io = ImGui::GetIO();
-  if (ImGui::IsWindowHovered()) {
+  if (ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows)) {
     if (io.MouseWheel != 0.0f) {
       const float old_zoom = zoom;
       float new_zoom = old_zoom * (io.MouseWheel > 0.0f ? 1.1f : 1.0f / 1.1f);
