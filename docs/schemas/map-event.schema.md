@@ -194,6 +194,8 @@ At least one of `tile` / `volume` should be present for interactable events.
 | `set_move_route` | optional `through` (bool, default false); `route` (array of steps, same shape as the command) | `set_move_route` |
 | `comment` | `text` (string) | `comment` |
 
+`text` on `show_text` and `comment` is UTF-8 (Cyrillic allowed).
+
 #### Edge
 
 | Field | Type | Required | Notes |

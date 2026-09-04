@@ -991,6 +991,65 @@ TEST_CASE("Map loader v2 ignores floor_slabs and ladders keys", "[unit][map]") {
   REQUIRE(loaded.map.ladders.empty());
 }
 
+TEST_CASE("Cyrillic show_text and comment round-trip through serialize",
+          "[unit][map][graph][event]") {
+  // UTF-8 code units (not source-charset literals) so MSVC without /utf-8 cannot mangle them.
+  // Привет / Комментарий
+  const std::string privet{"\xD0\x9F\xD1\x80\xD0\xB8\xD0\xB2\xD0\xB5\xD1\x82"};
+  const std::string comment{
+      "\xD0\x9A\xD0\xBE\xD0\xBC\xD0\xBC\xD0\xB5\xD0\xBD\xD1\x82\xD0\xB0\xD1\x80\xD0\xB8\xD0\xB9"};
+
+  const std::string json = std::string(R"({
+    "schema_version": 1,
+    "id": "cyrillic",
+    "width": 2,
+    "height": 2,
+    "events": [{
+      "id": "npc",
+      "tile": {"x": 0, "z": 0},
+      "pages": [{
+        "trigger": "action",
+        "graph": {
+          "nodes": [
+            {"id": "say", "kind": "show_text", "params": {"text": ")") +
+                           privet + R"("}},
+            {"id": "note", "kind": "comment", "params": {"text": ")" + comment + R"("}}
+          ],
+          "edges": [
+            {"from": "entry", "to": "say"},
+            {"from": "say", "to": "note"},
+            {"from": "note", "to": "exit"}
+          ]
+        }
+      }]
+    }]
+  })";
+
+  const rat::MapLoadResult loaded = rat::load_map_from_string(json);
+  REQUIRE(loaded.ok);
+  REQUIRE(loaded.map.events.size() == 1);
+  REQUIRE(loaded.map.events[0].pages.size() == 1);
+  const rat::EventPage& page = loaded.map.events[0].pages[0];
+  REQUIRE(page.graph.has_value());
+  REQUIRE(page.graph->nodes.size() == 2);
+  REQUIRE(page.graph->nodes[0].kind == "show_text");
+  REQUIRE(page.graph->nodes[0].text == privet);
+  REQUIRE(page.graph->nodes[1].kind == "comment");
+  REQUIRE(page.graph->nodes[1].text == comment);
+
+  const rat::MapSerializeResult serialized = rat::serialize_map_to_string(loaded.map);
+  REQUIRE(serialized.ok);
+  // Prefer readable UTF-8 in dump (nlohmann dump(2) default ensure_ascii=false).
+  REQUIRE(serialized.json_text.find(privet) != std::string::npos);
+  REQUIRE(serialized.json_text.find(comment) != std::string::npos);
+
+  const rat::MapLoadResult again = rat::load_map_from_string(serialized.json_text);
+  REQUIRE(again.ok);
+  REQUIRE(again.map.events[0].pages[0].graph.has_value());
+  REQUIRE(again.map.events[0].pages[0].graph->nodes[0].text == privet);
+  REQUIRE(again.map.events[0].pages[0].graph->nodes[1].text == comment);
+}
+
 TEST_CASE("v3 missing slab and ladder arrays loads empty", "[unit][map]") {
   constexpr const char* kJson = R"({
     "schema_version": 3,

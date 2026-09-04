@@ -44,6 +44,23 @@ namespace {
 
 constexpr const char* kPlaySaveSlotPath = "saves/slot1.ratsave";
 constexpr float kEventMarkerStemHeight = 1.4f;
+constexpr float kUiFontSizePx = 16.0f;
+
+void try_load_cyrillic_ui_font(ImGuiIO& io, Logger& logger) {
+  const std::string path = std::string(RAT_DATA_DIR) + "/fonts/NotoSans-Regular.ttf";
+  std::error_code ec;
+  if (!std::filesystem::is_regular_file(path, ec)) {
+    log(logger, LogLevel::Error, "editor",
+        std::string("UI font missing, using default: ") + path);
+    return;
+  }
+  ImFont* font = io.Fonts->AddFontFromFileTTF(path.c_str(), kUiFontSizePx, nullptr,
+                                              io.Fonts->GetGlyphRangesCyrillic());
+  if (font == nullptr) {
+    log(logger, LogLevel::Error, "editor",
+        std::string("Failed to load UI font, using default: ") + path);
+  }
+}
 
 }  // namespace
 
@@ -455,6 +472,7 @@ bool EditorApp::init() {
   io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
   io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
   ImGui::StyleColorsDark();
+  try_load_cyrillic_ui_font(io, *logger_);
 
   if (!ImGui_ImplGlfw_InitForOther(host_.glfw_window(), true)) {
     log(*logger_, LogLevel::Error, "editor", "ImGui_ImplGlfw_InitForOther failed");
