@@ -704,7 +704,7 @@ TEST_CASE("JSON commands without graph get reverse-compiled", "[unit][event][gra
   REQUIRE_FALSE(runtime.map().events[0].pages[0].graph->nodes.empty());
 }
 
-TEST_CASE("EventRuntime uses commands not graph", "[unit][event][graph]") {
+TEST_CASE("EventRuntime uses graph not commands", "[unit][event][graph]") {
   constexpr const char* kPage = R"({
     "trigger": "autorun",
     "commands": [ { "op": "show_text", "text": "FromCommands" } ],
@@ -721,5 +721,162 @@ TEST_CASE("EventRuntime uses commands not graph", "[unit][event][graph]") {
   rat::EventRuntime runtime;
   REQUIRE(runtime.load(loaded.map).ok);
   runtime.update(state, rat::PlayerBody{}, false, 1.0f / 60.0f);
-  REQUIRE(runtime.active_message() == "FromCommands");
+  REQUIRE(runtime.active_message() == "FromGraph");
+}
+
+TEST_CASE("graph_sequence_successor follows unlabeled edge", "[unit][event][graph]") {
+  rat::EventGraph graph;
+  graph.nodes = {
+      rat::EventGraphNode{.id = "a", .kind = "show_text", .text = "A"},
+      rat::EventGraphNode{.id = "b", .kind = "wait", .frames = 1},
+  };
+  graph.edges = {
+      rat::EventGraphEdge{.from = "entry", .to = "a"},
+      rat::EventGraphEdge{.from = "a", .to = "b"},
+      rat::EventGraphEdge{.from = "b", .to = "exit"},
+  };
+
+  REQUIRE(rat::graph_sequence_successor(graph, "entry") == "a");
+  REQUIRE(rat::graph_sequence_successor(graph, "a") == "b");
+  REQUIRE(rat::graph_sequence_successor(graph, "b") == "exit");
+  REQUIRE_FALSE(rat::graph_sequence_successor(graph, "missing").has_value());
+}
+
+TEST_CASE("graph then and else targets from conditional_branch", "[unit][event][graph]") {
+  rat::EventGraph graph;
+  rat::EventGraphNode branch;
+  branch.id = "br";
+  branch.kind = "conditional_branch";
+  graph.nodes = {
+      branch,
+      rat::EventGraphNode{.id = "yes", .kind = "show_text", .text = "On"},
+      rat::EventGraphNode{.id = "no", .kind = "show_text", .text = "Off"},
+  };
+  graph.edges = {
+      rat::EventGraphEdge{.from = "entry", .to = "br"},
+      rat::EventGraphEdge{.from = "br", .to = "yes", .branch = std::string("then")},
+      rat::EventGraphEdge{.from = "br", .to = "no", .branch = std::string("else")},
+      rat::EventGraphEdge{.from = "yes", .to = "exit"},
+      rat::EventGraphEdge{.from = "no", .to = "exit"},
+  };
+
+  REQUIRE(rat::graph_then_target(graph, "br") == "yes");
+  REQUIRE(rat::graph_else_target(graph, "br") == "no");
+  REQUIRE_FALSE(rat::graph_then_target(graph, "yes").has_value());
+}
+
+TEST_CASE("graph_else_target is empty when else-edge is omitted", "[unit][event][graph]") {
+  rat::EventGraph graph;
+  rat::EventGraphNode branch;
+  branch.id = "br";
+  branch.kind = "conditional_branch";
+  graph.nodes = {
+      branch,
+      rat::EventGraphNode{.id = "yes", .kind = "show_text", .text = "On"},
+  };
+  graph.edges = {
+      rat::EventGraphEdge{.from = "entry", .to = "br"},
+      rat::EventGraphEdge{.from = "br", .to = "yes", .branch = std::string("then")},
+      rat::EventGraphEdge{.from = "yes", .to = "exit"},
+  };
+
+  REQUIRE(rat::graph_then_target(graph, "br") == "yes");
+  REQUIRE_FALSE(rat::graph_else_target(graph, "br").has_value());
+}
+
+TEST_CASE("command_from_node maps show_text payload", "[unit][event][graph]") {
+  rat::EventGraphNode node;
+  node.id = "say";
+  node.kind = "show_text";
+  node.text = "Hi";
+  const rat::Command command = rat::command_from_node(node);
+  REQUIRE(command.op == rat::CommandOp::ShowText);
+  REQUIRE(command.text == "Hi");
+}
+
+TEST_CASE("EventRuntime follows graph then and else edges", "[unit][event][graph]") {
+  constexpr const char* kPage = R"({
+    "trigger": "autorun",
+    "commands": [
+      {
+        "op": "conditional_branch",
+        "condition": { "type": "switch", "id": 1, "value": true },
+        "then": [ { "op": "show_text", "text": "CommandsThen" } ],
+        "else": [ { "op": "show_text", "text": "CommandsElse" } ]
+      }
+    ],
+    "graph": {
+      "nodes": [
+        { "id": "br", "kind": "conditional_branch",
+          "params": { "condition": { "type": "switch", "id": 1, "value": true } } },
+        { "id": "yes", "kind": "show_text", "params": { "text": "GraphThen" } },
+        { "id": "no", "kind": "show_text", "params": { "text": "GraphElse" } }
+      ],
+      "edges": [
+        { "from": "entry", "to": "br" },
+        { "from": "br", "to": "yes", "branch": "then" },
+        { "from": "br", "to": "no", "branch": "else" },
+        { "from": "yes", "to": "exit" },
+        { "from": "no", "to": "exit" }
+      ]
+    }
+  })";
+
+  const rat::MapLoadResult loaded = rat::load_map_from_string(map_json_with_page(kPage));
+  REQUIRE(loaded.ok);
+
+  SECTION("then-edge when condition is true") {
+    rat::GameState state;
+    state.set_switch(1, true);
+    rat::EventRuntime runtime;
+    REQUIRE(runtime.load(loaded.map).ok);
+    runtime.update(state, rat::PlayerBody{}, false, 1.0f / 60.0f);
+    REQUIRE(runtime.active_message() == "GraphThen");
+  }
+
+  SECTION("else-edge when condition is false") {
+    rat::GameState state;
+    rat::EventRuntime runtime;
+    REQUIRE(runtime.load(loaded.map).ok);
+    runtime.update(state, rat::PlayerBody{}, false, 1.0f / 60.0f);
+    REQUIRE(runtime.active_message() == "GraphElse");
+  }
+}
+
+TEST_CASE("EventRuntime missing else-edge finishes like empty else_commands",
+          "[unit][event][graph]") {
+  constexpr const char* kPage = R"({
+    "trigger": "autorun",
+    "commands": [
+      {
+        "op": "conditional_branch",
+        "condition": { "type": "switch", "id": 1, "value": true },
+        "then": [ { "op": "show_text", "text": "CommandsThen" } ]
+      },
+      { "op": "control_switch", "id": 5, "value": true }
+    ],
+    "graph": {
+      "nodes": [
+        { "id": "br", "kind": "conditional_branch",
+          "params": { "condition": { "type": "switch", "id": 1, "value": true } } },
+        { "id": "yes", "kind": "show_text", "params": { "text": "GraphThen" } }
+      ],
+      "edges": [
+        { "from": "entry", "to": "br" },
+        { "from": "br", "to": "yes", "branch": "then" },
+        { "from": "yes", "to": "exit" }
+      ]
+    }
+  })";
+
+  const rat::MapLoadResult loaded = rat::load_map_from_string(map_json_with_page(kPage));
+  REQUIRE(loaded.ok);
+
+  rat::GameState state;
+  rat::EventRuntime runtime;
+  REQUIRE(runtime.load(loaded.map).ok);
+  runtime.update(state, rat::PlayerBody{}, false, 1.0f / 60.0f);
+  REQUIRE_FALSE(runtime.active_message().has_value());
+  REQUIRE_FALSE(runtime.player_input_blocked());
+  REQUIRE_FALSE(state.get_switch(5));
 }

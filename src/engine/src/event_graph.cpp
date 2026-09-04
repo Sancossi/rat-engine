@@ -1,6 +1,7 @@
 #include "rat/event_graph.hpp"
 
 #include <algorithm>
+#include <optional>
 #include <queue>
 #include <string>
 #include <string_view>
@@ -82,55 +83,50 @@ void add_error(EventGraphCompileResult& result, std::string json_path, std::stri
   return a.source_index < b.source_index;
 }
 
-[[nodiscard]] Command command_from_node(const EventGraphNode& node) {
-  Command command;
-  if (node.kind == "show_text") {
-    command.op = CommandOp::ShowText;
-    command.text = node.text;
-  } else if (node.kind == "control_switch") {
-    command.op = CommandOp::ControlSwitch;
-    command.id = node.switch_id;
-    command.bool_value = node.bool_value;
-  } else if (node.kind == "control_variable") {
-    command.op = CommandOp::ControlVariable;
-    command.id = node.switch_id;
-    command.int_value = node.int_value;
-  } else if (node.kind == "control_self_switch") {
-    command.op = CommandOp::ControlSelfSwitch;
-    command.self_switch = node.self_switch;
-    command.bool_value = node.bool_value;
-  } else if (node.kind == "wait") {
-    command.op = CommandOp::Wait;
-    command.frames = node.frames;
-  } else if (node.kind == "conditional_branch") {
-    command.op = CommandOp::ConditionalBranch;
-    command.branch_condition = node.branch_condition;
-  } else if (node.kind == "transfer_player") {
-    command.op = CommandOp::TransferPlayer;
-    command.map_id = node.map_id;
-    command.x = node.x;
-    command.y = node.y;
-    command.z = node.z;
-  } else if (node.kind == "change_items") {
-    command.op = CommandOp::ChangeItems;
-    command.item_id = node.item_id;
-    command.item_delta = node.item_delta;
-    command.key_item = node.key_item;
-  } else if (node.kind == "play_se") {
-    command.op = CommandOp::PlaySE;
-    command.text = node.text;
-  } else if (node.kind == "set_move_route") {
-    command.op = CommandOp::SetMoveRoute;
-    command.through = node.through;
-    command.route = node.route;
-  } else if (node.kind == "comment") {
-    command.op = CommandOp::Comment;
-    command.text = node.text;
-  } else {
-    command.op = CommandOp::Comment;
-    command.text = node.kind;
+[[nodiscard]] bool is_sequence_edge(const EventGraphEdge& edge) {
+  return !edge.branch.has_value() || edge.branch->empty();
+}
+
+[[nodiscard]] bool is_then_edge(const EventGraphEdge& edge) {
+  return edge.branch.has_value() && *edge.branch == "then";
+}
+
+[[nodiscard]] bool is_else_edge(const EventGraphEdge& edge) {
+  return edge.branch.has_value() && *edge.branch == "else";
+}
+
+[[nodiscard]] bool edge_better(const EventGraphEdge& candidate, std::size_t candidate_index,
+                               const EventGraphEdge& best, std::size_t best_index) {
+  const int oc = candidate.order.value_or(0);
+  const int ob = best.order.value_or(0);
+  if (oc != ob) {
+    return oc < ob;
   }
-  return command;
+  if (candidate.to != best.to) {
+    return candidate.to < best.to;
+  }
+  return candidate_index < best_index;
+}
+
+[[nodiscard]] std::optional<std::string> first_edge_target(
+    const EventGraph& graph, std::string_view from,
+    bool (*matches)(const EventGraphEdge&)) {
+  const EventGraphEdge* best = nullptr;
+  std::size_t best_index = 0;
+  for (std::size_t i = 0; i < graph.edges.size(); ++i) {
+    const EventGraphEdge& edge = graph.edges[i];
+    if (edge.from != from || !matches(edge)) {
+      continue;
+    }
+    if (best == nullptr || edge_better(edge, i, *best, best_index)) {
+      best = &edge;
+      best_index = i;
+    }
+  }
+  if (best == nullptr) {
+    return std::nullopt;
+  }
+  return best->to;
 }
 
 [[nodiscard]] EventGraphNode node_from_command(const Command& command) {
@@ -624,6 +620,79 @@ void ensure_page_graph_from_commands(EventPage& page) {
     return;
   }
   page.graph = commands_to_graph(page.commands);
+}
+
+Command command_from_node(const EventGraphNode& node) {
+  Command command;
+  if (node.kind == "show_text") {
+    command.op = CommandOp::ShowText;
+    command.text = node.text;
+  } else if (node.kind == "control_switch") {
+    command.op = CommandOp::ControlSwitch;
+    command.id = node.switch_id;
+    command.bool_value = node.bool_value;
+  } else if (node.kind == "control_variable") {
+    command.op = CommandOp::ControlVariable;
+    command.id = node.switch_id;
+    command.int_value = node.int_value;
+  } else if (node.kind == "control_self_switch") {
+    command.op = CommandOp::ControlSelfSwitch;
+    command.self_switch = node.self_switch;
+    command.bool_value = node.bool_value;
+  } else if (node.kind == "wait") {
+    command.op = CommandOp::Wait;
+    command.frames = node.frames;
+  } else if (node.kind == "conditional_branch") {
+    command.op = CommandOp::ConditionalBranch;
+    command.branch_condition = node.branch_condition;
+  } else if (node.kind == "transfer_player") {
+    command.op = CommandOp::TransferPlayer;
+    command.map_id = node.map_id;
+    command.x = node.x;
+    command.y = node.y;
+    command.z = node.z;
+  } else if (node.kind == "change_items") {
+    command.op = CommandOp::ChangeItems;
+    command.item_id = node.item_id;
+    command.item_delta = node.item_delta;
+    command.key_item = node.key_item;
+  } else if (node.kind == "play_se") {
+    command.op = CommandOp::PlaySE;
+    command.text = node.text;
+  } else if (node.kind == "set_move_route") {
+    command.op = CommandOp::SetMoveRoute;
+    command.through = node.through;
+    command.route = node.route;
+  } else if (node.kind == "comment") {
+    command.op = CommandOp::Comment;
+    command.text = node.text;
+  } else {
+    command.op = CommandOp::Comment;
+    command.text = node.kind;
+  }
+  return command;
+}
+
+const EventGraphNode* find_graph_node(const EventGraph& graph, std::string_view id) {
+  for (const EventGraphNode& node : graph.nodes) {
+    if (node.id == id) {
+      return &node;
+    }
+  }
+  return nullptr;
+}
+
+std::optional<std::string> graph_sequence_successor(const EventGraph& graph,
+                                                    std::string_view node_id) {
+  return first_edge_target(graph, node_id, is_sequence_edge);
+}
+
+std::optional<std::string> graph_then_target(const EventGraph& graph, std::string_view node_id) {
+  return first_edge_target(graph, node_id, is_then_edge);
+}
+
+std::optional<std::string> graph_else_target(const EventGraph& graph, std::string_view node_id) {
+  return first_edge_target(graph, node_id, is_else_edge);
 }
 
 }  // namespace rat

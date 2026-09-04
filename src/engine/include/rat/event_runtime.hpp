@@ -22,6 +22,7 @@ class Audio;
 class GameplayNotifyBus;
 
 inline constexpr int kMaxParallelEvents = 8;
+// Counted as graph nodes per frame; name kept for debug/snapshot API stability.
 inline constexpr int kMaxParallelCommandsPerFrame = 32;
 
 enum class EventWhyNot {
@@ -92,15 +93,10 @@ class EventRuntime {
   [[nodiscard]] std::vector<Vec3> event_markers() const;
 
  private:
-  struct StackFrame {
-    const std::vector<Command>* commands = nullptr;
-    std::size_t index = 0;
-  };
-
   struct Interpreter {
     std::string event_id;
     int page_index = -1;
-    std::vector<StackFrame> stack;
+    std::string node_id;
     int wait_frames = 0;
     int route_index = 0;
     bool route_budget_paid = false;
@@ -129,10 +125,13 @@ class EventRuntime {
 
   void start_page(const EventDef& event, int page_index, bool parallel, bool autorun);
   void step_interpreter(Interpreter& interp, GameState& state, const PlayerBody& player,
-                         int& command_budget);
+                         int& node_budget);
   bool exec_command(Interpreter& interp, GameState& state, const Command& command);
   [[nodiscard]] InterpreterDebug to_debug(const Interpreter& interp) const;
   [[nodiscard]] const EventDef* find_event(std::string_view event_id) const;
+  [[nodiscard]] EventPage* mutable_page(std::string_view event_id, int page_index);
+  [[nodiscard]] const EventPage* interpreter_page(const Interpreter& interp) const;
+  [[nodiscard]] const EventGraph* interpreter_graph(const Interpreter& interp) const;
   [[nodiscard]] Vec3 live_event_xz(const EventDef& event) const;
   EventOverlay& ensure_overlay(const EventDef& event);
   [[nodiscard]] bool tile_on_map(TileCoord tile) const;

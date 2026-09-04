@@ -4,6 +4,7 @@
 #include "rat/blocker_edit.hpp"
 #include "rat/collision.hpp"
 #include "rat/event_edit.hpp"
+#include "rat/event_graph.hpp"
 #include "rat/gameplay_notify.hpp"
 #include "rat/map_document.hpp"
 
@@ -61,6 +62,14 @@ TileCoord step_tile(TileCoord tile, RampDirection dir) {
       break;
   }
   return tile;
+}
+
+constexpr const char* kGraphEntry = "entry";
+constexpr const char* kGraphExit = "exit";
+
+[[nodiscard]] std::string successor_or_exit(const EventGraph& graph, std::string_view from) {
+  const std::optional<std::string> next = graph_sequence_successor(graph, from);
+  return next.value_or(std::string(kGraphExit));
 }
 
 }  // namespace
@@ -296,13 +305,20 @@ bool EventRuntime::action_in_range(const EventDef& event, const PlayerBody& play
 }
 
 void EventRuntime::start_page(const EventDef& event, int page_index, bool parallel, bool autorun) {
-  const EventPage& page = event.pages[static_cast<std::size_t>(page_index)];
+  EventPage* page = mutable_page(event.id, page_index);
+  if (page != nullptr) {
+    ensure_page_graph_from_commands(*page);
+  }
+
   Interpreter interp;
   interp.event_id = event.id;
   interp.page_index = page_index;
-  interp.stack.push_back(StackFrame{&page.commands, 0});
   interp.parallel = parallel;
   interp.autorun = autorun;
+  interp.node_id = kGraphExit;
+  if (page != nullptr && page->graph.has_value()) {
+    interp.node_id = successor_or_exit(*page->graph, kGraphEntry);
+  }
   if (parallel) {
     parallels_.push_back(std::move(interp));
   } else {
@@ -427,12 +443,8 @@ bool EventRuntime::exec_command(Interpreter& interp, GameState& state, const Com
     case CommandOp::ControlSelfSwitch:
       state.set_self_switch(interp.event_id, command.self_switch, command.bool_value);
       return true;
-    case CommandOp::ConditionalBranch: {
-      const bool ok = condition_met(command.branch_condition, state, interp.event_id);
-      const std::vector<Command>& branch = ok ? command.then_commands : command.else_commands;
-      interp.stack.push_back(StackFrame{&branch, 0});
+    case CommandOp::ConditionalBranch:
       return true;
-    }
     case CommandOp::Wait:
       interp.wait_frames = command.frames;
       return true;
@@ -465,7 +477,7 @@ bool EventRuntime::exec_command(Interpreter& interp, GameState& state, const Com
 }
 
 void EventRuntime::step_interpreter(Interpreter& interp, GameState& state,
-                                    const PlayerBody& player, int& command_budget) {
+                                    const PlayerBody& player, int& node_budget) {
   if (interp.finished) {
     return;
   }
@@ -477,30 +489,49 @@ void EventRuntime::step_interpreter(Interpreter& interp, GameState& state,
     return;
   }
 
-  while (!interp.stack.empty()) {
-    if (interp.parallel && command_budget <= 0) {
+  const EventGraph* graph = interpreter_graph(interp);
+  if (graph == nullptr) {
+    interp.finished = true;
+    return;
+  }
+
+  while (true) {
+    if (interp.parallel && node_budget <= 0) {
       return;
     }
 
-    StackFrame& frame = interp.stack.back();
-    if (frame.commands == nullptr || frame.index >= frame.commands->size()) {
-      interp.stack.pop_back();
+    if (interp.node_id.empty() || interp.node_id == kGraphExit) {
+      interp.finished = true;
+      return;
+    }
+    if (interp.node_id == kGraphEntry) {
+      interp.node_id = successor_or_exit(*graph, kGraphEntry);
       continue;
     }
 
-    const Command& command = (*frame.commands)[frame.index];
-    if (command.op == CommandOp::SetMoveRoute) {
+    const EventGraphNode* node = find_graph_node(*graph, interp.node_id);
+    if (node == nullptr) {
+      interp.finished = true;
+      return;
+    }
+
+    const auto pay_node = [&]() {
+      ++last_commands_executed_;
+      if (interp.parallel) {
+        --node_budget;
+        ++last_parallel_commands_executed_;
+      }
+    };
+
+    if (node->kind == "set_move_route") {
       if (!interp.route_budget_paid) {
-        ++last_commands_executed_;
-        if (interp.parallel) {
-          --command_budget;
-          ++last_parallel_commands_executed_;
-        }
+        pay_node();
         interp.route_budget_paid = true;
       }
+      const Command command = command_from_node(*node);
       const bool done = exec_set_move_route(interp, command, player);
       if (done) {
-        ++frame.index;
+        interp.node_id = successor_or_exit(*graph, node->id);
         interp.route_index = 0;
         interp.route_budget_paid = false;
         continue;
@@ -508,18 +539,28 @@ void EventRuntime::step_interpreter(Interpreter& interp, GameState& state,
       return;
     }
 
-    ++frame.index;
-    ++last_commands_executed_;
-    if (interp.parallel) {
-      --command_budget;
-      ++last_parallel_commands_executed_;
-    }
-
-    // Nested Parallel is not expressible as a command in v1; keep guard for future ops.
-    if (interp.parallel && command.op == CommandOp::Comment && command.text == "__nested_parallel__") {
-      warnings_.push_back("Nested Parallel forbidden; ignored");
+    if (node->kind == "conditional_branch") {
+      pay_node();
+      const bool ok = condition_met(node->branch_condition, state, interp.event_id);
+      if (ok) {
+        interp.node_id = graph_then_target(*graph, node->id).value_or(std::string(kGraphExit));
+      } else if (const std::optional<std::string> else_to = graph_else_target(*graph, node->id)) {
+        interp.node_id = *else_to;
+      } else {
+        interp.node_id = successor_or_exit(*graph, node->id);
+      }
       continue;
     }
+
+    pay_node();
+    if (interp.parallel && node->kind == "comment" && node->text == "__nested_parallel__") {
+      warnings_.push_back("Nested Parallel forbidden; ignored");
+      interp.node_id = successor_or_exit(*graph, node->id);
+      continue;
+    }
+
+    const Command command = command_from_node(*node);
+    interp.node_id = successor_or_exit(*graph, node->id);
 
     const bool continue_now = exec_command(interp, state, command);
     if (!continue_now) {
@@ -529,8 +570,6 @@ void EventRuntime::step_interpreter(Interpreter& interp, GameState& state,
       return;
     }
   }
-
-  interp.finished = true;
 }
 
 void EventRuntime::update(GameState& state, const PlayerBody& player, bool interact_pressed,
@@ -558,7 +597,7 @@ void EventRuntime::update(GameState& state, const PlayerBody& player, bool inter
   int budget = kMaxParallelCommandsPerFrame;
   for (Interpreter& interp : parallels_) {
     if (budget <= 0) {
-      warnings_.push_back("Parallel command budget exhausted (32/frame)");
+      warnings_.push_back("Parallel node budget exhausted (32/frame)");
       break;
     }
     step_interpreter(interp, state, player, budget);
@@ -620,6 +659,41 @@ const EventDef* EventRuntime::find_event(std::string_view event_id) const {
     }
   }
   return nullptr;
+}
+
+EventPage* EventRuntime::mutable_page(std::string_view event_id, int page_index) {
+  if (page_index < 0) {
+    return nullptr;
+  }
+  for (EventDef& event : runtime_map_.data.events) {
+    if (event.id != event_id) {
+      continue;
+    }
+    if (static_cast<std::size_t>(page_index) >= event.pages.size()) {
+      return nullptr;
+    }
+    return &event.pages[static_cast<std::size_t>(page_index)];
+  }
+  return nullptr;
+}
+
+const EventPage* EventRuntime::interpreter_page(const Interpreter& interp) const {
+  const EventDef* event = find_event(interp.event_id);
+  if (event == nullptr || interp.page_index < 0) {
+    return nullptr;
+  }
+  if (static_cast<std::size_t>(interp.page_index) >= event->pages.size()) {
+    return nullptr;
+  }
+  return &event->pages[static_cast<std::size_t>(interp.page_index)];
+}
+
+const EventGraph* EventRuntime::interpreter_graph(const Interpreter& interp) const {
+  const EventPage* page = interpreter_page(interp);
+  if (page == nullptr || !page->graph.has_value()) {
+    return nullptr;
+  }
+  return &*page->graph;
 }
 
 Vec3 EventRuntime::live_event_xz(const EventDef& event) const {
@@ -781,8 +855,14 @@ InterpreterDebug EventRuntime::to_debug(const Interpreter& interp) const {
   InterpreterDebug debug;
   debug.event_id = interp.event_id;
   debug.page_index = interp.page_index;
-  if (!interp.stack.empty()) {
-    debug.command_index = static_cast<int>(interp.stack.back().index);
+  debug.command_index = 0;
+  if (const EventGraph* graph = interpreter_graph(interp)) {
+    for (std::size_t i = 0; i < graph->nodes.size(); ++i) {
+      if (graph->nodes[i].id == interp.node_id) {
+        debug.command_index = static_cast<int>(i);
+        break;
+      }
+    }
   }
   debug.wait_frames = interp.wait_frames;
   debug.route_index = interp.route_index;
