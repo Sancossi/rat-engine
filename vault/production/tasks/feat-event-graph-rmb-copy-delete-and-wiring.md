@@ -1,7 +1,7 @@
 ---
 type: task
 area: Engine
-status: In review
+status: Done
 task_type: Feature
 sprint: Sprint 12
 due:
@@ -21,4 +21,12 @@ Acceptance:
 - Хоткеи при наведении/фокусе canvas (не когда InputText ест клавиши): Delete/Backspace удалить; Ctrl+C copy; Ctrl+V paste; Ctrl+Z undo; Ctrl+Y или Ctrl+Shift+Z redo — через существующий `EditorDocument` undo/redo, не отдельный стек графа.
 - Связи: зажать ЛКМ на out-пине и протянуть на in-пин (wire preview), отпустить — `connect_event_graph_nodes`. Клик-пин-клик можно оставить как запасной.
 
-Depends: [[feat: Event graph in-node widgets]]. Origin: [[Sprint 12 — Graph is Play truth]] (chat 2026-09-04). Related: [[feat: Event graph editor canvas]].
+Depends: [[feat: Event graph in-node widgets]]. Origin: [[Sprint 12 — Graph is Play truth]] (chat 2026-09-04). Related: [[feat: Event graph editor canvas]]. Follow-up: [[Event graph self-pin drag stays armed]].
+
+## Resolution
+
+RMB на canvas: Add по секциям, Copy, Delete. `duplicate_event_graph_node` — новый id, без рёбер. Drag out→in с превью; клик-пин-клик запасной. Delete/Ctrl+C/V и Ctrl+Z/Y при наведении (не в InputText) через `EditorDocument`. Verify: Event Graph — RMB Add, протянуть провод на Exit, Ctrl+Z; `.\build\tests\rat_tests.exe "[graph],[event],[edit]"`. Review: Approved.
+
+## Bugs found
+
+[[Event graph self-pin drag stays armed]]
