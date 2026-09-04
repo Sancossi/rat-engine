@@ -1,7 +1,7 @@
 ---
 type: task
 area: Engine
-status: In review
+status: Done
 task_type: Feature
 sprint: Sprint 12
 due:
@@ -23,4 +23,8 @@ Origin: chat 2026-09-04. Origin: [[Sprint 12 — Graph is Play truth]]. Related:
 
 ## Resolution
 
+ImGui грузит `data/fonts/NotoSans-Regular.ttf` (OFL) с `GetGlyphRangesCyrillic` до `imgui_bgfx::init`. Show Text / Comment и диалог Play рисуют кириллицу. JSON roundtrip UTF-8. Нет файла — Proggy. Verify: набрать «Привет» в ноде, Play; `.\build\tests\rat_tests.exe "[map],[graph],[event]"`. Review: Approved.
+
 ## Bugs found
+
+none.
