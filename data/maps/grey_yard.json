@@ -1,5 +1,5 @@
 {
-  "schema_version": 3,
+  "schema_version": 4,
   "id": "grey_yard",
   "width": 16,
   "height": 16,
@@ -10,9 +10,9 @@
     "width": 16,
     "height": 16,
     "ground_y": [
-      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0,
       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -29,21 +29,30 @@
     ]
   },
   "ramps": [
-    { "tile": { "x": 8, "z": 8 }, "direction": "east", "low_y": 0.0, "high_y": 1.0 }
+    { "tile": { "x": 8, "z": 8 }, "direction": "east", "low_y": 0.0, "high_y": 1.0 },
+    { "tile": { "x": 9, "z": 7 }, "direction": "north", "low_y": 0.0, "high_y": 1.0 }
   ],
   "edge_barriers": [
     { "tile": { "x": 4, "z": 6 }, "direction": "east", "height": 0.45 },
-    { "tile": { "x": 6, "z": 6 }, "direction": "east", "height": 1.6 }
+    { "tile": { "x": 6, "z": 6 }, "direction": "east", "height": 1.6 },
+    { "tile": { "x": 1, "z": -2 }, "direction": "west", "height": 1.6 },
+    { "tile": { "x": 2, "z": -2 }, "direction": "east", "height": 1.6 }
   ],
   "floor_slabs": [
     { "tile": { "x": 0, "z": 4 }, "top_y": 2.0, "thickness": 0.25 },
     { "tile": { "x": 1, "z": 4 }, "top_y": 2.0, "thickness": 0.25 },
     { "tile": { "x": 2, "z": 4 }, "top_y": 2.0, "thickness": 0.25 },
     { "tile": { "x": 0, "z": 5 }, "top_y": 2.0, "thickness": 0.25 },
-    { "tile": { "x": 1, "z": 5 }, "top_y": 2.0, "thickness": 0.25 }
+    { "tile": { "x": 1, "z": 5 }, "top_y": 2.0, "thickness": 0.25 },
+    { "tile": { "x": 6, "z": 5 }, "top_y": 2.0, "thickness": 0.25 },
+    { "tile": { "x": 7, "z": 5 }, "top_y": 2.0, "thickness": 0.25 },
+    { "tile": { "x": 8, "z": 5 }, "top_y": 2.0, "thickness": 0.25 }
   ],
   "ladders": [
     { "tile": { "x": 2, "z": 4 }, "direction": "east", "y_lo": 0.0, "y_hi": 2.0 }
+  ],
+  "indoor_volumes": [
+    { "min_x": 1.2, "min_z": -1.8, "max_x": 2.6, "max_z": -1.2, "y_lo": 0.0, "y_hi": 2.5 }
   ],
   "blockers": [
     { "min_x": 3.0, "min_z": -1.0, "max_x": 5.0, "max_z": 1.0 },

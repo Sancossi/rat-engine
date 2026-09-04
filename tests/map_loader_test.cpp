@@ -1,11 +1,14 @@
 #include <rat/blocker_edit.hpp>
+#include <rat/collision.hpp>
 #include <rat/height_edit.hpp>
+#include <rat/indoor_volume.hpp>
 #include <rat/map_loader.hpp>
 
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
 
 #include <algorithm>
+#include <cmath>
 #include <filesystem>
 #include <fstream>
 #include <limits>
@@ -177,7 +180,7 @@ TEST_CASE("Example grey_yard.json loads without crash", "[unit][map]") {
   const auto result = rat::load_map_from_file(path);
   REQUIRE(result.ok);
   REQUIRE(result.map.id == "grey_yard");
-  REQUIRE(result.map.schema_version == 3);
+  REQUIRE(result.map.schema_version == 4);
   REQUIRE(result.map.height_grid.origin_x == -4);
   REQUIRE(result.map.height_grid.origin_z == -3);
   REQUIRE(result.map.height_grid.width == 16);
@@ -257,7 +260,7 @@ TEST_CASE("Example grey_yard.json loads without crash", "[unit][map]") {
       found_jumpable_blocker = true;
     }
   }
-  REQUIRE(result.map.ramps.size() == 1);
+  REQUIRE(result.map.ramps.size() >= 2);
   REQUIRE(result.map.ramps[0].tile.x == 8);
   REQUIRE(result.map.ramps[0].tile.z == 8);
   REQUIRE(result.map.ramps[0].direction == rat::RampDirection::East);
@@ -329,7 +332,7 @@ TEST_CASE("Example grey_yard.json loads without crash", "[unit][map]") {
   REQUIRE(found_standable_cube);
   REQUIRE(found_mini_fence);
   REQUIRE(found_full_fence);
-  REQUIRE(result.map.floor_slabs.size() == 5);
+  REQUIRE(result.map.floor_slabs.size() >= 8);
   REQUIRE(result.map.floor_slabs[0].top_y == Catch::Approx(2.0f));
   REQUIRE(result.map.ladders.size() == 1);
   REQUIRE(result.map.ladders[0].tile.x == 2);
@@ -340,14 +343,14 @@ TEST_CASE("Example grey_yard.json loads without crash", "[unit][map]") {
   const auto from_string = rat::load_map_from_string(read_file(path));
   REQUIRE(from_string.ok);
   REQUIRE(from_string.map.events.size() == result.map.events.size());
-  REQUIRE(from_string.map.schema_version == 3);
+  REQUIRE(from_string.map.schema_version == 4);
   REQUIRE(from_string.map.height_grid.ground_y == result.map.height_grid.ground_y);
 
   const auto serialized = rat::serialize_map_to_string(result.map);
   REQUIRE(serialized.ok);
   const auto from_serialized = rat::load_map_from_string(serialized.json_text);
   REQUIRE(from_serialized.ok);
-  REQUIRE(from_serialized.map.schema_version == 3);
+  REQUIRE(from_serialized.map.schema_version == 4);
   REQUIRE(from_serialized.map.floor_slabs.size() == result.map.floor_slabs.size());
   REQUIRE(from_serialized.map.ladders.size() == result.map.ladders.size());
   REQUIRE(from_serialized.map.height_grid.origin_x == result.map.height_grid.origin_x);
@@ -394,6 +397,169 @@ TEST_CASE("grey_yard show_text strings are Cyrillic", "[unit][map]") {
     }
   }
   REQUIRE(show_text_count >= 12);
+}
+
+TEST_CASE("grey_yard layout pass has house indoor, two gantry ramps, and a bridge",
+          "[unit][map]") {
+#ifndef RAT_TEST_DATA_DIR
+#error RAT_TEST_DATA_DIR must be defined for map file tests
+#endif
+  const std::string path = std::string(RAT_TEST_DATA_DIR) + "/maps/grey_yard.json";
+  const auto result = rat::load_map_from_file(path);
+  REQUIRE(result.ok);
+  const rat::MapData& map = result.map;
+  REQUIRE(map.schema_version == 4);
+  REQUIRE(map.indoor_volumes.size() >= 1);
+
+  const rat::IndoorVolume& house = map.indoor_volumes[0];
+  REQUIRE(house.xz.max_x - house.xz.min_x >= 1.0f);
+  REQUIRE(house.xz.max_z - house.xz.min_z >= 0.5f);
+  REQUIRE(house.y_hi >= house.y_lo + rat::kPlayerCylinderHeight);
+  // Inset so a facade quad center on the interior tile edge is outside the volume.
+  REQUIRE(house.xz.min_x > std::floor(house.xz.min_x) + 0.1f);
+  REQUIRE(house.xz.max_x < std::ceil(house.xz.max_x) - 0.1f);
+  REQUIRE(house.xz.min_z > std::floor(house.xz.min_z) + 0.1f);
+  REQUIRE(house.xz.max_z < std::ceil(house.xz.max_z) - 0.1f);
+
+  const float indoor_x = 0.5f * (house.xz.min_x + house.xz.max_x);
+  const float indoor_z = 0.5f * (house.xz.min_z + house.xz.max_z);
+  const int indoor_tx = static_cast<int>(std::floor(indoor_x));
+  const int indoor_tz = static_cast<int>(std::floor(indoor_z));
+  const auto indoor_ground = rat::get_tile_ground_y(map.height_grid, indoor_tx, indoor_tz);
+  REQUIRE(indoor_ground.ok);
+  REQUIRE(indoor_ground.value == Catch::Approx(0.0f));
+
+  rat::PlayerBody indoor_player;
+  indoor_player.x = indoor_x;
+  indoor_player.y = 0.0f;
+  indoor_player.z = indoor_z;
+  REQUIRE(rat::player_inside_indoor_volume(map, indoor_player));
+  REQUIRE(rat::point_inside_indoor_volume(map, indoor_x, 0.5f, indoor_z));
+  REQUIRE_FALSE(rat::point_inside_indoor_volume(map, std::floor(house.xz.min_x), 0.5f,
+                                                 indoor_z));
+
+  bool house_has_wall_cube = false;
+  bool house_has_door = false;
+  constexpr int kWallDelta[4][2] = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
+  for (const int* delta : kWallDelta) {
+    const int nx = indoor_tx + delta[0];
+    const int nz = indoor_tz + delta[1];
+    const auto neighbor = rat::get_tile_ground_y(map.height_grid, nx, nz);
+    if (neighbor.ok && neighbor.value == Catch::Approx(rat::kPlaceCubeDeltaY)) {
+      house_has_wall_cube = true;
+    }
+    if (neighbor.ok && neighbor.value == Catch::Approx(0.0f)) {
+      const bool neighbor_inside = rat::point_inside_indoor_volume(
+          map, static_cast<float>(nx) + 0.5f, 0.5f, static_cast<float>(nz) + 0.5f);
+      if (!neighbor_inside) {
+        house_has_door = true;
+      }
+    }
+  }
+  REQUIRE(house_has_wall_cube);
+  REQUIRE(house_has_door);
+
+  const rat::EventDef* spawn = nullptr;
+  const rat::EventDef* scrap = nullptr;
+  const rat::EventDef* loft = nullptr;
+  for (const rat::EventDef& ev : map.events) {
+    if (ev.id == "yard_intro") {
+      spawn = &ev;
+    } else if (ev.id == "scrap_pile") {
+      scrap = &ev;
+    } else if (ev.id == "loft_plank") {
+      loft = &ev;
+    }
+  }
+  REQUIRE(spawn != nullptr);
+  REQUIRE(spawn->tile.has_value());
+  REQUIRE(spawn->tile->x == 0);
+  REQUIRE(spawn->tile->z == 0);
+  REQUIRE(scrap != nullptr);
+  REQUIRE(scrap->tile.has_value());
+  REQUIRE(scrap->tile->x == 6);
+  REQUIRE(scrap->tile->z == 0);
+  REQUIRE(loft != nullptr);
+  REQUIRE(loft->tile.has_value());
+  REQUIRE(loft->tile->x == 0);
+  REQUIRE(loft->tile->z == 4);
+
+  int gantry_approach_ramps = 0;
+  bool east_gantry_ramp = false;
+  bool south_gantry_ramp = false;
+  for (const rat::RampDef& ramp : map.ramps) {
+    if (ramp.low_y != Catch::Approx(0.0f) || ramp.high_y != Catch::Approx(1.0f)) {
+      continue;
+    }
+    int high_x = ramp.tile.x;
+    int high_z = ramp.tile.z;
+    switch (ramp.direction) {
+      case rat::RampDirection::North:
+        ++high_z;
+        break;
+      case rat::RampDirection::East:
+        ++high_x;
+        break;
+      case rat::RampDirection::South:
+        --high_z;
+        break;
+      case rat::RampDirection::West:
+        --high_x;
+        break;
+    }
+    const auto high = rat::get_tile_ground_y(map.height_grid, high_x, high_z);
+    const auto low = rat::get_tile_ground_y(map.height_grid, ramp.tile.x, ramp.tile.z);
+    if (!high.ok || !low.ok || high.value != Catch::Approx(1.0f) ||
+        low.value != Catch::Approx(0.0f)) {
+      continue;
+    }
+    ++gantry_approach_ramps;
+    if (ramp.tile.x == 8 && ramp.tile.z == 8 && ramp.direction == rat::RampDirection::East) {
+      east_gantry_ramp = true;
+    }
+    if (ramp.tile.x == 9 && ramp.tile.z == 7 && ramp.direction == rat::RampDirection::North) {
+      south_gantry_ramp = true;
+    }
+  }
+  REQUIRE(gantry_approach_ramps >= 2);
+  REQUIRE(east_gantry_ramp);
+  REQUIRE(south_gantry_ramp);
+  REQUIRE(map.ramps.size() >= 2);
+
+  bool found_bridge = false;
+  bool loft_on_gantry = false;
+  for (const rat::FloorSlabDef& slab : map.floor_slabs) {
+    const auto ground = rat::get_tile_ground_y(map.height_grid, slab.tile.x, slab.tile.z);
+    REQUIRE(ground.ok);
+    const bool loft_cluster =
+        slab.tile.x >= 0 && slab.tile.x <= 2 && slab.tile.z >= 4 && slab.tile.z <= 5;
+    if (ground.value == Catch::Approx(1.0f) && loft_cluster) {
+      loft_on_gantry = true;
+    }
+    if (loft_cluster) {
+      continue;
+    }
+    const float slab_cx = static_cast<float>(slab.tile.x) + 0.5f;
+    const float slab_cz = static_cast<float>(slab.tile.z) + 0.5f;
+    const bool over_crates = slab_cx >= 3.0f && slab_cx <= 5.0f && slab_cz >= -1.0f &&
+                             slab_cz <= 1.0f;
+    if (!over_crates && ground.value <= rat::kBridgeOpenGroundMaxY &&
+        slab.top_y - slab.thickness > rat::kPlayerCylinderHeight + 0.05f) {
+      found_bridge = true;
+    }
+  }
+  REQUIRE(found_bridge);
+  REQUIRE_FALSE(loft_on_gantry);
+
+  const auto cube_98 = rat::get_tile_ground_y(map.height_grid, 9, 8);
+  const auto cube_108 = rat::get_tile_ground_y(map.height_grid, 10, 8);
+  const auto cube_118 = rat::get_tile_ground_y(map.height_grid, 11, 8);
+  REQUIRE(cube_98.ok);
+  REQUIRE(cube_98.value == Catch::Approx(1.0f));
+  REQUIRE(cube_108.ok);
+  REQUIRE(cube_108.value == Catch::Approx(1.0f));
+  REQUIRE(cube_118.ok);
+  REQUIRE(cube_118.value == Catch::Approx(1.0f));
 }
 
 TEST_CASE("Serialize map roundtrips blockers after edit", "[unit][map]") {
