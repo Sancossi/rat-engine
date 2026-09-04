@@ -233,6 +233,21 @@
               { "from": "n1", "to": "exit" }
             ]
           }
+        },
+        {
+          "trigger": "action",
+          "conditions": [
+            { "type": "switch", "id": 2, "value": true }
+          ],
+          "graph": {
+            "nodes": [
+              { "id": "n1", "kind": "show_text", "params": { "text": "Ученик: Двор уже закрыт. Во дворе пока тихо. Хорошая работа." } }
+            ],
+            "edges": [
+              { "from": "entry", "to": "n1" },
+              { "from": "n1", "to": "exit" }
+            ]
+          }
         }
       ]
     },

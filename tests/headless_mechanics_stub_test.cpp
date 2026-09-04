@@ -105,15 +105,55 @@ TEST_CASE("Headless mechanics: grey_yard apprentice talks without starting the c
 
   runtime.update(state, player, true, 1.0f / 60.0f);
   REQUIRE(runtime.active_message().has_value());
-  // UTF-8 «Ученик» (not a source-charset literal) so MSVC without /utf-8 cannot mangle it.
+  // UTF-8 «Ученик» / «шестерн» (not a source-charset literal) so MSVC without /utf-8 cannot mangle it.
   const std::string uchenik{"\xD0\xA3\xD1\x87\xD0\xB5\xD0\xBD\xD0\xB8\xD0\xBA"};
+  const std::string shestern{"\xD1\x88\xD0\xB5\xD1\x81\xD1\x82\xD0\xB5\xD1\x80\xD0\xBD"};
   CHECK(runtime.active_message()->find(uchenik) != std::string::npos);
+  CHECK(runtime.active_message()->find(shestern) != std::string::npos);
   REQUIRE_FALSE(state.get_switch(1));
   REQUIRE_FALSE(state.get_switch(2));
   REQUIRE_FALSE(state.has_item("rusty_cog"));
 
   drain_messages(runtime, state, player);
   REQUIRE_FALSE(state.get_switch(1));
+}
+
+TEST_CASE("Headless mechanics: grey_yard apprentice after switch 2 does not hunt the cog",
+          "[mechanics][quest]") {
+#ifndef RAT_TEST_DATA_DIR
+#error RAT_TEST_DATA_DIR must be defined
+#endif
+  const auto loaded =
+      rat::load_map_from_file(std::string(RAT_TEST_DATA_DIR) + "/maps/grey_yard.json");
+  REQUIRE(loaded.ok);
+
+  rat::GameState state;
+  rat::EventRuntime runtime;
+  REQUIRE(runtime.load(loaded.map).ok);
+
+  rat::PlayerBody player;
+  player.x = 0.5f;
+  player.z = 0.5f;
+
+  drain_messages(runtime, state, player);
+  REQUIRE(state.get_variable(0) == 1);
+  state.set_switch(2, true);
+
+  player.x = -2.5f;
+  player.z = 1.5f;
+  REQUIRE(runtime.has_action_prompt(player, state));
+
+  runtime.update(state, player, true, 1.0f / 60.0f);
+  REQUIRE(runtime.active_message().has_value());
+  const std::string uchenik{"\xD0\xA3\xD1\x87\xD0\xB5\xD0\xBD\xD0\xB8\xD0\xBA"};
+  const std::string shestern{"\xD1\x88\xD0\xB5\xD1\x81\xD1\x82\xD0\xB5\xD1\x80\xD0\xBD"};
+  const std::string tikho{"\xD1\x82\xD0\xB8\xD1\x85\xD0\xBE"};
+  CHECK(runtime.active_message()->find(uchenik) != std::string::npos);
+  CHECK(runtime.active_message()->find(shestern) == std::string::npos);
+  CHECK(runtime.active_message()->find(tikho) != std::string::npos);
+  REQUIRE(state.get_switch(2));
+  REQUIRE_FALSE(state.get_switch(1));
+  REQUIRE_FALSE(state.has_item("rusty_cog"));
 }
 
 TEST_CASE("Headless mechanics: grey_yard walker leaves spawn on set_move_route",
