@@ -2,26 +2,29 @@
 type: sprint
 status: In progress
 dates: 2026-09-04/2026-09-18
-goal: Grey yard map pass — readable workshop layout, Russian copy, leftover NPC page
+goal: Grey yard map pass — bridges, multi-side ramps, indoor dim, readable yard, Russian copy
 current: true
 tags: [sprint]
 ---
 
 # Sprint 13 — Grey yard map pass
 
-Цель: тем же `grey_yard` сделать двор читаемым как мастерская и проходимым на русском. Движок графа уже Play-truth; здесь только карта и тексты. Не вторая JSON-карта.
+Цель: тем же `grey_yard` сделать двор читаемым как мастерская: мосты над землёй, рампы с разных сторон, затемнение улицы из дома, русские тексты. Не вторая JSON-карта.
 
 DoD:
 
-- Двор читается как три зоны: земля (квест cog), лофт, gantry — без наложения «всё в куче»
-- Все `show_text` на `grey_yard` на русском; кириллица в Play
+- Мост: сверху идти, под ним пройти по земле
+- Рампы ставятся с кликнутой грани; на платформу можно зайти с двух сторон (две рампы)
+- В доме улица/фасады тускнеют
+- Двор читается как зоны: земля (квест cog), лофт, gantry, дом/мост если появятся на карте
+- Все `show_text` на `grey_yard` на русском
 - Apprentice после switch 2 не твердит про недобытый cog
-- Headless cog e2e / `[quest]` зелёные (тайлы можно сдвинуть, тесты обновить)
+- Headless cog e2e / `[quest]` зелёные
 
 Вне скоупа: successor map, field physics, меши, scare-blocker, i18n UI редактора, [[Event graph self-pin drag stays armed]].
 
 Порядок:
 
-- [[feat: Grey yard layout pass]] → [[feat: Grey yard Russian texts]] → [[feat: Apprentice post-quest page]]
+- [[feat: Place ramp from clicked tile edge]] → [[feat: Walkable bridges over open ground]] → [[feat: Indoor volume dims the street]] → [[feat: Grey yard layout pass]] → [[feat: Grey yard Russian texts]] → [[feat: Apprentice post-quest page]]
 
 Roadmap: [[Content vertical slice]]
