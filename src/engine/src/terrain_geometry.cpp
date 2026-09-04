@@ -163,40 +163,26 @@ std::vector<TerrainLineSegment> build_terrain_grid_lines(const TerrainGeometry& 
       geometry.tiles.empty()) {
     return out;
   }
-  const float min_x = static_cast<float>(geometry.origin_x) * geometry.tile_size;
-  const float min_z = static_cast<float>(geometry.origin_z) * geometry.tile_size;
-  const std::size_t horizontal =
-      static_cast<std::size_t>(geometry.height + 1) * static_cast<std::size_t>(geometry.width);
-  const std::size_t vertical =
-      static_cast<std::size_t>(geometry.width + 1) * static_cast<std::size_t>(geometry.height);
-  out.reserve(horizontal + vertical);
-
-  for (int z = 0; z <= geometry.height; ++z) {
-    const float world_z = min_z + static_cast<float>(z) * geometry.tile_size;
-    for (int x = 0; x < geometry.width; ++x) {
-      const float x0 = min_x + static_cast<float>(x) * geometry.tile_size;
-      const float x1 = x0 + geometry.tile_size;
-      const float y0 = sample_terrain_height_clamped(geometry, x0, world_z) + line_offset;
-      const float y1 = sample_terrain_height_clamped(geometry, x1, world_z) + line_offset;
-      out.push_back(TerrainLineSegment{
-          TerrainLineVertex{x0, y0, world_z},
-          TerrainLineVertex{x1, y1, world_z},
-      });
-    }
+  const std::size_t expected =
+      static_cast<std::size_t>(geometry.width) * static_cast<std::size_t>(geometry.height);
+  if (geometry.tiles.size() != expected) {
+    return out;
   }
-
-  for (int x = 0; x <= geometry.width; ++x) {
-    const float world_x = min_x + static_cast<float>(x) * geometry.tile_size;
-    for (int z = 0; z < geometry.height; ++z) {
-      const float z0 = min_z + static_cast<float>(z) * geometry.tile_size;
-      const float z1 = z0 + geometry.tile_size;
-      const float y0 = sample_terrain_height_clamped(geometry, world_x, z0) + line_offset;
-      const float y1 = sample_terrain_height_clamped(geometry, world_x, z1) + line_offset;
-      out.push_back(TerrainLineSegment{
-          TerrainLineVertex{world_x, y0, z0},
-          TerrainLineVertex{world_x, y1, z1},
-      });
-    }
+  // One outline per tile from that tile's own corners. A shared lattice sample at an
+  // exact seam uses floor() of the next cell, so a ramp/cube high edge interpolated
+  // into a lower neighbor and hid the step.
+  out.reserve(expected * 4);
+  auto push_edge = [&](float x0, float y0, float z0, float x1, float y1, float z1) {
+    out.push_back(TerrainLineSegment{
+        TerrainLineVertex{x0, y0 + line_offset, z0},
+        TerrainLineVertex{x1, y1 + line_offset, z1},
+    });
+  };
+  for (const TerrainTileQuad& tile : geometry.tiles) {
+    push_edge(tile.min_x, tile.y_nw, tile.min_z, tile.max_x, tile.y_ne, tile.min_z);
+    push_edge(tile.max_x, tile.y_ne, tile.min_z, tile.max_x, tile.y_se, tile.max_z);
+    push_edge(tile.max_x, tile.y_se, tile.max_z, tile.min_x, tile.y_sw, tile.max_z);
+    push_edge(tile.min_x, tile.y_sw, tile.max_z, tile.min_x, tile.y_nw, tile.min_z);
   }
   return out;
 }

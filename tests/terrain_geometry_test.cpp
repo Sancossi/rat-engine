@@ -1,8 +1,31 @@
 #include <rat/height_edit.hpp>
+#include <rat/map_loader.hpp>
 #include <rat/terrain_geometry.hpp>
 
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
+
+#include <string>
+#include <vector>
+
+namespace {
+
+bool same_grid_point(const rat::TerrainLineVertex& v, float x, float y, float z) {
+  return v.x == Catch::Approx(x) && v.y == Catch::Approx(y) && v.z == Catch::Approx(z);
+}
+
+bool has_grid_segment(const std::vector<rat::TerrainLineSegment>& lines, float x0, float y0,
+                      float z0, float x1, float y1, float z1) {
+  for (const auto& seg : lines) {
+    if ((same_grid_point(seg.a, x0, y0, z0) && same_grid_point(seg.b, x1, y1, z1)) ||
+        (same_grid_point(seg.a, x1, y1, z1) && same_grid_point(seg.b, x0, y0, z0))) {
+      return true;
+    }
+  }
+  return false;
+}
+
+}  // namespace
 
 TEST_CASE("TerrainGeometry builds flat quads from HeightGrid", "[unit][terrain]") {
   rat::HeightGrid grid;
@@ -167,8 +190,8 @@ TEST_CASE("Terrain grid lines keep ramp profile per tile", "[unit][terrain]") {
   const rat::TerrainGeometry geometry = rat::build_terrain_geometry(grid, ramps, 1.0f);
 
   const auto lines = rat::build_terrain_grid_lines(geometry);
-  // 2x1 grid => (h+1)*w + (w+1)*h = 4 + 3 = 7 segments.
-  REQUIRE(lines.size() == 7);
+  // 2 tiles × 4 own-corner edges. Shared lattice sampling hid the peak.
+  REQUIRE(lines.size() == 8);
 
   // Vertex at x=1 (tile seam) must retain peak profile instead of straight endpoint line.
   bool found_seam_peak = false;
@@ -561,4 +584,83 @@ TEST_CASE("Terrain side faces emit an outer east wall down to implied height 0",
     }
   }
   REQUIRE(found_east);
+}
+
+TEST_CASE("Terrain grid lines keep a raised cell's top edges at the high Y", "[unit][terrain]") {
+  // Row z=0: east ramp 0→1 then a flat cube at y=1. Row z=1: floor at y=0.
+  // Global lattice sampling at z=1 / x=1 floor()s into the low neighbor and
+  // interpolates a diagonal that hides the high side.
+  rat::HeightGrid grid;
+  grid.origin_x = 0;
+  grid.origin_z = 0;
+  grid.width = 2;
+  grid.height = 2;
+  grid.ground_y = {0.0f, 1.0f, 0.0f, 0.0f};
+  const std::vector<rat::RampDef> ramps = {
+      rat::RampDef{.tile = rat::TileCoord{0, 0},
+                   .direction = rat::RampDirection::East,
+                   .low_y = 0.0f,
+                   .high_y = 1.0f},
+  };
+
+  const rat::TerrainGeometry geometry = rat::build_terrain_geometry(grid, ramps, 1.0f);
+  REQUIRE(geometry.tiles.size() == 4);
+  const rat::TerrainTileQuad& ramp = geometry.tiles[0];
+  const rat::TerrainTileQuad& raised = geometry.tiles[1];
+  REQUIRE(ramp.y_nw == Catch::Approx(0.0f));
+  REQUIRE(ramp.y_ne == Catch::Approx(1.0f));
+  REQUIRE(ramp.y_se == Catch::Approx(1.0f));
+  REQUIRE(ramp.y_sw == Catch::Approx(0.0f));
+  REQUIRE(raised.y_nw == Catch::Approx(1.0f));
+  REQUIRE(raised.y_ne == Catch::Approx(1.0f));
+  REQUIRE(raised.y_se == Catch::Approx(1.0f));
+  REQUIRE(raised.y_sw == Catch::Approx(1.0f));
+
+  const auto lines = rat::build_terrain_grid_lines(geometry);
+  constexpr float kOff = 0.03f;
+
+  REQUIRE(has_grid_segment(lines, 1.0f, 1.0f + kOff, 0.0f, 1.0f, 1.0f + kOff, 1.0f));
+  REQUIRE(has_grid_segment(lines, 1.0f, 1.0f + kOff, 1.0f, 2.0f, 1.0f + kOff, 1.0f));
+}
+
+TEST_CASE("grey_yard ramp fill stays in uint16 and high cells keep a y=1 grid",
+          "[unit][terrain]") {
+  const rat::MapLoadResult loaded =
+      rat::load_map_from_file(std::string(RAT_TEST_DATA_DIR) + "/maps/grey_yard.json");
+  REQUIRE(loaded.ok);
+  const rat::MapData& map = loaded.map;
+  REQUIRE(rat::choose_terrain_render_policy(map) == rat::TerrainRenderPolicy::HeightTerrain);
+
+  const rat::TerrainGeometry geometry =
+      rat::build_terrain_geometry(map.height_grid, map.ramps, map.tile_size);
+  REQUIRE_FALSE(geometry.tiles.empty());
+
+  const auto side_faces = rat::build_terrain_side_faces(geometry);
+  const auto fence_faces = rat::build_edge_barrier_faces(geometry, map.edge_barriers);
+  constexpr std::size_t kQuadsPerBox = 6;
+  const std::size_t extra_quads =
+      fence_faces.size() + map.floor_slabs.size() * kQuadsPerBox +
+      map.ladders.size() * kQuadsPerBox;
+  REQUIRE(rat::terrain_fill_quad_count_fits_u16(geometry.tiles.size(), side_faces.size(),
+                                                extra_quads));
+
+  const std::size_t ramp_index = static_cast<std::size_t>(8 - geometry.origin_z) *
+                                     static_cast<std::size_t>(geometry.width) +
+                                 static_cast<std::size_t>(8 - geometry.origin_x);
+  REQUIRE(ramp_index < geometry.tiles.size());
+  const rat::TerrainTileQuad& ramp = geometry.tiles[ramp_index];
+  REQUIRE(ramp.on_ramp);
+  REQUIRE(ramp.min_x == Catch::Approx(8.0f));
+  REQUIRE(ramp.min_z == Catch::Approx(8.0f));
+  REQUIRE(ramp.y_nw == Catch::Approx(0.0f));
+  REQUIRE(ramp.y_sw == Catch::Approx(0.0f));
+  REQUIRE(ramp.y_ne == Catch::Approx(1.0f));
+  REQUIRE(ramp.y_se == Catch::Approx(1.0f));
+
+  const auto lines = rat::build_terrain_grid_lines(geometry);
+  constexpr float kOff = 0.03f;
+  REQUIRE(has_grid_segment(lines, 9.0f, 1.0f + kOff, 8.0f, 9.0f, 1.0f + kOff, 9.0f));
+  REQUIRE(has_grid_segment(lines, 9.0f, 1.0f + kOff, 9.0f, 10.0f, 1.0f + kOff, 9.0f));
+  REQUIRE(has_grid_segment(lines, 10.0f, 1.0f + kOff, 9.0f, 11.0f, 1.0f + kOff, 9.0f));
+  REQUIRE(has_grid_segment(lines, 11.0f, 1.0f + kOff, 9.0f, 12.0f, 1.0f + kOff, 9.0f));
 }
