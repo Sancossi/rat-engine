@@ -1,9 +1,9 @@
 ---
 type: bug
 area: Engine
-status: Open
+status: Investigating
 severity: Medium
-sprint:
+sprint: Sprint 12
 tags: [bug]
 ---
 
