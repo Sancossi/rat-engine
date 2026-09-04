@@ -186,9 +186,9 @@ EventGraphApplyResult compile_event_graphs_for_apply(const MapData& map) {
   std::vector<MapIssue> issues;
   bool failed = false;
   for (std::size_t e = 0; e < result.map.events.size(); ++e) {
-    EventDef& event = result.map.events[e];
+    const EventDef& event = result.map.events[e];
     for (std::size_t p = 0; p < event.pages.size(); ++p) {
-      EventPage& page = event.pages[p];
+      const EventPage& page = event.pages[p];
       if (!page.graph.has_value()) {
         continue;
       }
@@ -203,7 +203,6 @@ EventGraphApplyResult compile_event_graphs_for_apply(const MapData& map) {
         failed = true;
         continue;
       }
-      page.commands = compiled.commands;
     }
   }
   result.issues = std::move(issues);

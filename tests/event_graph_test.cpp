@@ -5,7 +5,9 @@
 #include <rat/map_loader.hpp>
 
 #include <catch2/catch_test_macros.hpp>
+#include <nlohmann/json.hpp>
 
+#include <fstream>
 #include <string>
 #include <vector>
 
@@ -316,7 +318,110 @@ TEST_CASE("map JSON graph round-trips through serialize/load", "[unit][event][gr
   REQUIRE(again.map.events[0].pages[0].graph->nodes[0].text == "Hello");
   REQUIRE(again.map.events[0].pages[0].graph->nodes[1].frames == 8);
   REQUIRE(again.map.events[0].pages[0].graph->edges.size() == 3);
-  REQUIRE(again.map.events[0].pages[0].commands[0].text == "Hello");
+  REQUIRE(again.map.events[0].pages[0].commands.empty());
+}
+
+TEST_CASE("dump omits commands when page has a graph", "[unit][event][graph][map]") {
+  constexpr const char* kPage = R"({
+    "trigger": "action",
+    "commands": [
+      { "op": "show_text", "text": "Hello" },
+      { "op": "wait", "frames": 8 }
+    ],
+    "graph": {
+      "nodes": [
+        { "id": "say", "kind": "show_text", "params": { "text": "Hello" } },
+        { "id": "pause", "kind": "wait", "params": { "frames": 8 } }
+      ],
+      "edges": [
+        { "from": "entry", "to": "say" },
+        { "from": "say", "to": "pause" },
+        { "from": "pause", "to": "exit" }
+      ]
+    }
+  })";
+
+  const rat::MapLoadResult loaded = rat::load_map_from_string(map_json_with_page(kPage));
+  REQUIRE(loaded.ok);
+  REQUIRE(loaded.map.events[0].pages[0].commands.size() == 2);
+
+  const rat::MapSerializeResult serialized = rat::serialize_map_to_string(loaded.map);
+  REQUIRE(serialized.ok);
+  const nlohmann::json root = nlohmann::json::parse(serialized.json_text);
+  const nlohmann::json& page = root.at("events").at(0).at("pages").at(0);
+  REQUIRE(page.contains("graph"));
+  REQUIRE_FALSE(page.contains("commands"));
+
+  const rat::MapLoadResult again = rat::load_map_from_string(serialized.json_text);
+  REQUIRE(again.ok);
+  REQUIRE(again.map.events[0].pages[0].graph.has_value());
+  REQUIRE(again.map.events[0].pages[0].graph->nodes.size() == 2);
+  REQUIRE(again.map.events[0].pages[0].commands.empty());
+}
+
+TEST_CASE("dump still writes commands when page has no graph", "[unit][event][graph][map]") {
+  rat::MapData map;
+  map.schema_version = 1;
+  map.id = "legacy";
+  map.width = 2;
+  map.height = 2;
+  rat::EventDef event;
+  event.id = "npc";
+  event.tile = rat::TileCoord{0, 0};
+  rat::EventPage page;
+  page.trigger = rat::TriggerKind::Action;
+  rat::Command text;
+  text.op = rat::CommandOp::ShowText;
+  text.text = "Legacy";
+  page.commands.push_back(std::move(text));
+  event.pages.push_back(std::move(page));
+  map.events.push_back(std::move(event));
+
+  const rat::MapSerializeResult serialized = rat::serialize_map_to_string(map);
+  REQUIRE(serialized.ok);
+  const nlohmann::json root = nlohmann::json::parse(serialized.json_text);
+  const nlohmann::json& dumped = root.at("events").at(0).at("pages").at(0);
+  REQUIRE(dumped.contains("commands"));
+  REQUIRE_FALSE(dumped.contains("graph"));
+  REQUIRE(dumped.at("commands").size() == 1);
+  REQUIRE(dumped.at("commands").at(0).at("text") == "Legacy");
+}
+
+TEST_CASE("grey_yard dump and file pages are graph-only", "[unit][event][graph][map]") {
+#ifndef RAT_TEST_DATA_DIR
+#error RAT_TEST_DATA_DIR must be defined for map file tests
+#endif
+  const std::string path = std::string(RAT_TEST_DATA_DIR) + "/maps/grey_yard.json";
+  std::ifstream in(path, std::ios::binary);
+  REQUIRE(in.good());
+  const nlohmann::json file = nlohmann::json::parse(in);
+  REQUIRE(file.at("id") == "grey_yard");
+  for (const nlohmann::json& event : file.at("events")) {
+    for (const nlohmann::json& page : event.at("pages")) {
+      REQUIRE(page.contains("graph"));
+      REQUIRE_FALSE(page.contains("commands"));
+    }
+  }
+
+  const rat::MapLoadResult loaded = rat::load_map_from_file(path);
+  REQUIRE(loaded.ok);
+  REQUIRE_FALSE(loaded.map.events.empty());
+  for (const rat::EventDef& event : loaded.map.events) {
+    for (const rat::EventPage& page : event.pages) {
+      REQUIRE(page.graph.has_value());
+      REQUIRE(page.commands.empty());
+    }
+  }
+
+  const rat::MapSerializeResult serialized = rat::serialize_map_to_string(loaded.map);
+  REQUIRE(serialized.ok);
+  const nlohmann::json dumped = nlohmann::json::parse(serialized.json_text);
+  for (const nlohmann::json& event : dumped.at("events")) {
+    for (const nlohmann::json& page : event.at("pages")) {
+      REQUIRE(page.contains("graph"));
+      REQUIRE_FALSE(page.contains("commands"));
+    }
+  }
 }
 
 TEST_CASE("page without graph still loads commands", "[unit][event][graph][map]") {

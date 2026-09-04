@@ -90,9 +90,12 @@ TEST_CASE("set_move_route parses nested route and round-trips", "[unit][route]")
 
   const auto again = rat::load_map_from_string(serialized.json_text);
   REQUIRE(again.ok);
-  REQUIRE(again.map.events[0].pages[0].commands[0].op == rat::CommandOp::SetMoveRoute);
-  REQUIRE(again.map.events[0].pages[0].commands[0].route.size() == 4);
-  REQUIRE(again.map.events[0].pages[0].commands[0].route[2].frames == 2);
+  REQUIRE(again.map.events[0].pages[0].commands.empty());
+  REQUIRE(again.map.events[0].pages[0].graph.has_value());
+  REQUIRE(again.map.events[0].pages[0].graph->nodes.size() >= 1);
+  REQUIRE(again.map.events[0].pages[0].graph->nodes[0].kind == "set_move_route");
+  REQUIRE(again.map.events[0].pages[0].graph->nodes[0].route.size() == 4);
+  REQUIRE(again.map.events[0].pages[0].graph->nodes[0].route[2].frames == 2);
   REQUIRE(again.map.schema_version == 1);
 }
 

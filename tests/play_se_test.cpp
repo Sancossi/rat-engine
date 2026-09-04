@@ -81,9 +81,11 @@ TEST_CASE("PlaySE round-trips op and id through serialize", "[unit][events][play
   const auto again = rat::load_map_from_string(serialized.json_text);
   REQUIRE(again.ok);
   REQUIRE(again.map.events.size() == 1);
-  REQUIRE(again.map.events[0].pages[0].commands.size() == 1);
-  REQUIRE(again.map.events[0].pages[0].commands[0].op == rat::CommandOp::PlaySE);
-  REQUIRE(again.map.events[0].pages[0].commands[0].text == "jump");
+  REQUIRE(again.map.events[0].pages[0].commands.empty());
+  REQUIRE(again.map.events[0].pages[0].graph.has_value());
+  REQUIRE(again.map.events[0].pages[0].graph->nodes.size() == 1);
+  REQUIRE(again.map.events[0].pages[0].graph->nodes[0].kind == "play_se");
+  REQUIRE(again.map.events[0].pages[0].graph->nodes[0].text == "jump");
 }
 
 TEST_CASE("PlaySE loader rejects empty id", "[unit][events][playse]") {

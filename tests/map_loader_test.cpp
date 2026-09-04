@@ -176,10 +176,11 @@ TEST_CASE("Example grey_yard.json loads without crash", "[unit][map]") {
       REQUIRE(ev.tile->x == 11);
       REQUIRE(ev.tile->z == 8);
       REQUIRE(ev.pages.size() == 1);
-      REQUIRE(ev.pages[0].commands.size() == 2);
-      REQUIRE(ev.pages[0].commands[1].op == rat::CommandOp::ControlSwitch);
-      REQUIRE(ev.pages[0].commands[1].id == 40);
-      REQUIRE(ev.pages[0].commands[1].bool_value);
+      REQUIRE(ev.pages[0].graph.has_value());
+      REQUIRE(ev.pages[0].graph->nodes.size() == 2);
+      REQUIRE(ev.pages[0].graph->nodes[1].kind == "control_switch");
+      REQUIRE(ev.pages[0].graph->nodes[1].switch_id == 40);
+      REQUIRE(ev.pages[0].graph->nodes[1].bool_value);
       found_elevated_event = true;
     }
     if (ev.id == "loft_plank") {
@@ -190,9 +191,10 @@ TEST_CASE("Example grey_yard.json loads without crash", "[unit][map]") {
       REQUIRE(*ev.y == Catch::Approx(2.0f));
       REQUIRE(ev.pages.size() == 1);
       REQUIRE(ev.pages[0].trigger == rat::TriggerKind::Action);
-      REQUIRE(ev.pages[0].commands.size() == 2);
-      REQUIRE(ev.pages[0].commands[1].op == rat::CommandOp::ControlSwitch);
-      REQUIRE(ev.pages[0].commands[1].id == 43);
+      REQUIRE(ev.pages[0].graph.has_value());
+      REQUIRE(ev.pages[0].graph->nodes.size() == 2);
+      REQUIRE(ev.pages[0].graph->nodes[1].kind == "control_switch");
+      REQUIRE(ev.pages[0].graph->nodes[1].switch_id == 43);
       found_loft_event = true;
     }
     if (ev.id == "crate_notice") {

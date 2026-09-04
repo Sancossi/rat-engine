@@ -888,14 +888,14 @@ json dump_graph(const EventGraph& graph) {
 }
 
 json dump_page(const EventPage& page) {
-  json node{{"trigger", trigger_to_string(page.trigger)},
-            {"conditions", json::array()},
-            {"commands", dump_commands(page.commands)}};
+  json node{{"trigger", trigger_to_string(page.trigger)}, {"conditions", json::array()}};
   for (const Condition& condition : page.conditions) {
     node["conditions"].push_back(dump_condition(condition));
   }
   if (page.graph.has_value()) {
     node["graph"] = dump_graph(*page.graph);
+  } else {
+    node["commands"] = dump_commands(page.commands);
   }
   return node;
 }

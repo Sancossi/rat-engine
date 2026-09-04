@@ -28,29 +28,6 @@ namespace {
   return map;
 }
 
-[[nodiscard]] bool commands_match(const std::vector<rat::Command>& a,
-                                  const std::vector<rat::Command>& b) {
-  if (a.size() != b.size()) {
-    return false;
-  }
-  for (std::size_t i = 0; i < a.size(); ++i) {
-    const rat::Command& left = a[i];
-    const rat::Command& right = b[i];
-    if (left.op != right.op || left.text != right.text || left.id != right.id ||
-        left.bool_value != right.bool_value || left.frames != right.frames ||
-        left.branch_condition.type != right.branch_condition.type ||
-        left.branch_condition.id != right.branch_condition.id ||
-        left.branch_condition.bool_value != right.branch_condition.bool_value) {
-      return false;
-    }
-    if (!commands_match(left.then_commands, right.then_commands) ||
-        !commands_match(left.else_commands, right.else_commands)) {
-      return false;
-    }
-  }
-  return true;
-}
-
 }  // namespace
 
 TEST_CASE("graph place connect delete then apply matches compile_event_graph",
@@ -88,14 +65,14 @@ TEST_CASE("graph place connect delete then apply matches compile_event_graph",
   const rat::EventGraphCompileResult expected = rat::compile_event_graph(graph);
   REQUIRE(expected.ok);
   REQUIRE(expected.commands.size() == 1);
+  REQUIRE(expected.commands[0].op == rat::CommandOp::ShowText);
+  REQUIRE(expected.commands[0].text == "Hello");
 
   const rat::EventGraphApplyResult applied = document.compile_graphs_for_apply();
   REQUIRE(applied.ok);
   REQUIRE(applied.issues.empty());
   REQUIRE(document.data().events[0].pages[0].graph.has_value());
-  REQUIRE(commands_match(document.data().events[0].pages[0].commands, expected.commands));
-  REQUIRE(document.data().events[0].pages[0].commands[0].op == rat::CommandOp::ShowText);
-  REQUIRE(document.data().events[0].pages[0].commands[0].text == "Hello");
+  REQUIRE(document.data().events[0].pages[0].commands.empty());
 }
 
 TEST_CASE("invalid graph fails apply and leaves commands unchanged",

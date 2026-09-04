@@ -10,7 +10,7 @@ tags: [game, events]
 ## Цели
 
 - Авторы описывают квесты/диалоги/загадки событиями, а не C++.
-- Поведение предсказуемо: pages + conditions + commands.
+- Поведение предсказуемо: pages + conditions + **graph** (Play truth). `commands[]` — legacy load-only.
 - Триггеры совместимы с **гибридной картой** (клетка + volume).
 
 ## Сущности

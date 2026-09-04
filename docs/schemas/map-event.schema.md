@@ -151,10 +151,10 @@ At least one of `tile` / `volume` should be present for interactable events.
 |-------|------|----------|-------|
 | `trigger` | string | yes | See triggers |
 | `conditions` | array | no | All must pass (AND) |
-| `commands` | array | no | Ordered RM-like list (Play bytecode) |
-| `graph` | object | no | Authoring node graph; optional. Play does not read it. |
+| `commands` | array | no | **Deprecated.** Legacy load-only. Loader still parses the list and reverse-compiles via `commands_to_graph` when `graph` is missing or empty. Dump/save **omits** this key when `graph` is present. Play does not require it. |
+| `graph` | object | no | **Play body** (nodes + edges). After load, pages have a graph (authored or reverse-compiled from legacy `commands`). |
 
-`graph` is authoring-only. Edit compiles it to `commands[]` on apply/save. Existing maps omit `graph`. Trigger and page `conditions` stay outside the graph.
+`graph` is the Play body. Apply/save validates it but does not compile it into `commands[]`. `commands[]` is deprecated legacy load-only. Trigger and page `conditions` stay outside the graph.
 
 ### Graph (`EventGraph`)
 
@@ -225,6 +225,8 @@ Variable `op`: `==` `!=` `<` `<=` `>` `>=`
 Self-switch `key`: `A` `B` `C` `D`
 
 ### Commands
+
+**Deprecated / legacy load-only.** Discriminated by `op`. New maps omit this array when `graph` is present. The loader still accepts it and reverse-compiles into `graph` when needed.
 
 Discriminated by `op`:
 
