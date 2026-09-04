@@ -1,7 +1,7 @@
 ---
 type: task
 area: Game
-status: In review
+status: Done
 task_type: Feature
 sprint: Sprint 13
 due:
@@ -18,4 +18,10 @@ Depends: [[feat: Cyrillic in texts and comments]]. Origin: [[Sprint 13 — Grey 
 
 ## Resolution
 
+Все 12 `show_text` на `grey_yard` — русский UTF-8 (Мастер / Ученик; шестерня, ящики, лебёдка). Item id `rusty_cog` и switches без изменений. Тест `[unit][map]` на кириллицу; `[quest]` матчит «Ученик». Review: Approved.
+
+Verify: Play — intro и мастер на русском. `.\build\tests\rat_tests.exe "[quest],[smoke],[map]"`.
+
 ## Bugs found
+
+none.
