@@ -70,7 +70,7 @@
           "graph": {
             "nodes": [
               { "id": "n1", "kind": "play_se", "params": { "id": "sfx/beep" } },
-              { "id": "n2", "kind": "show_text", "params": { "text": "Grey Yard — a steampunk workshop lot. Talk to the foreman." } },
+              { "id": "n2", "kind": "show_text", "params": { "text": "Серый двор — стимпанк-мастерская. Поговори с мастером." } },
               { "id": "n3", "kind": "control_variable", "params": { "id": 0, "value": 1 } },
               { "id": "n4", "kind": "wait", "params": { "frames": 1 } }
             ],
@@ -94,7 +94,7 @@
           "conditions": [],
           "graph": {
             "nodes": [
-              { "id": "n1", "kind": "show_text", "params": { "text": "Foreman: We're short a rusty cog for the gate winch. Search the scrap east of the crates." } },
+              { "id": "n1", "kind": "show_text", "params": { "text": "Мастер: Для лебёдки ворот не хватает ржавой шестерни. Поищи в ломе к востоку от ящиков." } },
               { "id": "n2", "kind": "control_switch", "params": { "id": 1, "value": true } }
             ],
             "edges": [
@@ -111,7 +111,7 @@
           ],
           "graph": {
             "nodes": [
-              { "id": "n1", "kind": "show_text", "params": { "text": "Foreman: Still need that rusty cog. Try the scrap pile past the crates." } }
+              { "id": "n1", "kind": "show_text", "params": { "text": "Мастер: Шестерня всё ещё нужна. Глянь в кучу лома за ящиками." } }
             ],
             "edges": [
               { "from": "entry", "to": "n1" },
@@ -126,7 +126,7 @@
           ],
           "graph": {
             "nodes": [
-              { "id": "n1", "kind": "show_text", "params": { "text": "Foreman: Perfect fit. Gate winch is back online — quest complete." } },
+              { "id": "n1", "kind": "show_text", "params": { "text": "Мастер: В самый раз. Лебёдка ворот снова на ходу — задание выполнено." } },
               { "id": "n2", "kind": "change_items", "params": { "id": "rusty_cog", "delta": -1, "key_item": false } },
               { "id": "n3", "kind": "control_switch", "params": { "id": 2, "value": true } }
             ],
@@ -145,7 +145,7 @@
           ],
           "graph": {
             "nodes": [
-              { "id": "n1", "kind": "show_text", "params": { "text": "Foreman: Yard's quiet for now. Good work." } }
+              { "id": "n1", "kind": "show_text", "params": { "text": "Мастер: Во дворе пока тихо. Хорошая работа." } }
             ],
             "edges": [
               { "from": "entry", "to": "n1" },
@@ -164,7 +164,7 @@
           "conditions": [],
           "graph": {
             "nodes": [
-              { "id": "n1", "kind": "show_text", "params": { "text": "A heap of brass scrap. Ask the foreman before digging." } }
+              { "id": "n1", "kind": "show_text", "params": { "text": "Куча латунного лома. Спроси мастера, прежде чем копать." } }
             ],
             "edges": [
               { "from": "entry", "to": "n1" },
@@ -179,7 +179,7 @@
           ],
           "graph": {
             "nodes": [
-              { "id": "n1", "kind": "show_text", "params": { "text": "You dig up a rusty cog." } },
+              { "id": "n1", "kind": "show_text", "params": { "text": "Ты выкапываешь ржавую шестерню." } },
               { "id": "n2", "kind": "change_items", "params": { "id": "rusty_cog", "delta": 1, "key_item": false } },
               { "id": "n3", "kind": "control_self_switch", "params": { "key": "A", "value": true } }
             ],
@@ -198,7 +198,7 @@
           ],
           "graph": {
             "nodes": [
-              { "id": "n1", "kind": "show_text", "params": { "text": "The scrap pile is picked clean." } }
+              { "id": "n1", "kind": "show_text", "params": { "text": "Куча лома уже пуста." } }
             ],
             "edges": [
               { "from": "entry", "to": "n1" },
@@ -217,7 +217,7 @@
           "conditions": [],
           "graph": {
             "nodes": [
-              { "id": "n1", "kind": "show_text", "params": { "text": "Apprentice: Foreman is hunting a rusty cog for the gate winch. Scrap sits east of the crates — wait for his say-so before you dig." } }
+              { "id": "n1", "kind": "show_text", "params": { "text": "Ученик: Мастер ищет ржавую шестерню для лебёдки ворот. Лом лежит к востоку от ящиков — не копай, пока он не даст добро." } }
             ],
             "edges": [
               { "from": "entry", "to": "n1" },
@@ -238,7 +238,7 @@
           ],
           "graph": {
             "nodes": [
-              { "id": "n1", "kind": "show_text", "params": { "text": "Crates block the short path — walk around north or south." } }
+              { "id": "n1", "kind": "show_text", "params": { "text": "Ящики перекрывают короткий путь — обойди с севера или с юга." } }
             ],
             "edges": [
               { "from": "entry", "to": "n1" },
@@ -257,7 +257,7 @@
           "conditions": [],
           "graph": {
             "nodes": [
-              { "id": "n1", "kind": "show_text", "params": { "text": "Service gantry reached. Relay lever unlocked." } },
+              { "id": "n1", "kind": "show_text", "params": { "text": "Добрался до сервисной эстакады. Рычаг реле разблокирован." } },
               { "id": "n2", "kind": "control_switch", "params": { "id": 40, "value": true } }
             ],
             "edges": [
@@ -310,7 +310,7 @@
           "conditions": [],
           "graph": {
             "nodes": [
-              { "id": "n1", "kind": "show_text", "params": { "text": "From the loft you see the yard crates and the east scrap pile." } },
+              { "id": "n1", "kind": "show_text", "params": { "text": "С чердака видны ящики во дворе и куча лома на востоке." } },
               { "id": "n2", "kind": "control_switch", "params": { "id": 43, "value": true } }
             ],
             "edges": [

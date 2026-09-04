@@ -105,7 +105,9 @@ TEST_CASE("Headless mechanics: grey_yard apprentice talks without starting the c
 
   runtime.update(state, player, true, 1.0f / 60.0f);
   REQUIRE(runtime.active_message().has_value());
-  CHECK(runtime.active_message()->find("Apprentice") != std::string::npos);
+  // UTF-8 «Ученик» (not a source-charset literal) so MSVC without /utf-8 cannot mangle it.
+  const std::string uchenik{"\xD0\xA3\xD1\x87\xD0\xB5\xD0\xBD\xD0\xB8\xD0\xBA"};
+  CHECK(runtime.active_message()->find(uchenik) != std::string::npos);
   REQUIRE_FALSE(state.get_switch(1));
   REQUIRE_FALSE(state.get_switch(2));
   REQUIRE_FALSE(state.has_item("rusty_cog"));

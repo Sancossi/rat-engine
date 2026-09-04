@@ -11,6 +11,7 @@
 #include <limits>
 #include <sstream>
 #include <string>
+#include <string_view>
 
 namespace {
 
@@ -20,6 +21,37 @@ std::string read_file(const std::string& path) {
   std::ostringstream oss;
   oss << in.rdbuf();
   return oss.str();
+}
+
+bool utf8_contains_cyrillic(std::string_view text) {
+  for (std::size_t i = 0; i < text.size();) {
+    const unsigned char lead = static_cast<unsigned char>(text[i]);
+    unsigned codepoint = 0;
+    std::size_t width = 1;
+    if (lead < 0x80u) {
+      codepoint = lead;
+    } else if ((lead & 0xE0u) == 0xC0u && i + 1 < text.size()) {
+      width = 2;
+      codepoint = (static_cast<unsigned>(lead & 0x1Fu) << 6) |
+                  (static_cast<unsigned>(static_cast<unsigned char>(text[i + 1])) & 0x3Fu);
+    } else if ((lead & 0xF0u) == 0xE0u && i + 2 < text.size()) {
+      width = 3;
+      codepoint = (static_cast<unsigned>(lead & 0x0Fu) << 12) |
+                  ((static_cast<unsigned>(static_cast<unsigned char>(text[i + 1])) & 0x3Fu) << 6) |
+                  (static_cast<unsigned>(static_cast<unsigned char>(text[i + 2])) & 0x3Fu);
+    } else if ((lead & 0xF8u) == 0xF0u && i + 3 < text.size()) {
+      i += 4;
+      continue;
+    } else {
+      ++i;
+      continue;
+    }
+    i += width;
+    if (codepoint >= 0x0400u && codepoint <= 0x04FFu) {
+      return true;
+    }
+  }
+  return false;
 }
 
 }  // namespace
@@ -338,6 +370,30 @@ TEST_CASE("Example grey_yard.json loads without crash", "[unit][map]") {
   REQUIRE(from_serialized.map.events.back().id == "loft_plank");
   REQUIRE(from_serialized.map.events.back().y.has_value());
   REQUIRE(*from_serialized.map.events.back().y == Catch::Approx(2.0f));
+}
+
+TEST_CASE("grey_yard show_text strings are Cyrillic", "[unit][map]") {
+#ifndef RAT_TEST_DATA_DIR
+#error RAT_TEST_DATA_DIR must be defined for map file tests
+#endif
+  const std::string path = std::string(RAT_TEST_DATA_DIR) + "/maps/grey_yard.json";
+  const auto result = rat::load_map_from_file(path);
+  REQUIRE(result.ok);
+
+  int show_text_count = 0;
+  for (const auto& ev : result.map.events) {
+    for (const auto& page : ev.pages) {
+      REQUIRE(page.graph.has_value());
+      for (const auto& node : page.graph->nodes) {
+        if (node.kind != "show_text") {
+          continue;
+        }
+        ++show_text_count;
+        REQUIRE(utf8_contains_cyrillic(node.text));
+      }
+    }
+  }
+  REQUIRE(show_text_count >= 12);
 }
 
 TEST_CASE("Serialize map roundtrips blockers after edit", "[unit][map]") {
