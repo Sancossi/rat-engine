@@ -43,7 +43,7 @@ transfer has no loader. Sprint 15 will reject both explicitly. Same-map transfer
 | --- | --- | --- | --- |
 | SimulationSession | Core | implemented | Shared fixed tick for editor and headless input sequence |
 | MapDocument / RuntimeMap | Core | implemented | Author content compiles to runtime |
-| Event graph | Authoring / Core | implemented | Graph compiles to event commands; no separate graph VM |
+| Event graph | Authoring / Core | implemented | Play executes graph nodes/edges directly; legacy commands migrate on load; command structs supply node effects |
 | Replay | Core | partial | Recording/playback exists; format and checksum strengthening in Sprint 15 |
 | Game saves | Core / Platform | partial | Existing RATSAVE1; transactional versioned storage in Sprint 15 |
 | GUI automation | Editor | planned | Real input scenarios, captures and package acceptance in Sprint 15 |

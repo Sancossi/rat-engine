@@ -10,7 +10,7 @@ retain their original scope and acceptance evidence.
 | --- | --- | --- |
 | Simulation | Shared SimulationSession fixed-tick player/state/event evolution | Replay completeness/validation in Sprint 15 |
 | Authoring | MapDocument compiles to RuntimeMap; editor document and undo/redo exist | Dirty semantics, no-op history and save safety in Sprint 15 |
-| Events | Graphs compile into the event-command runtime | Cross-map loading and EventTouch unsupported; reject explicitly in Sprint 15 |
+| Events | Play executes graph nodes/edges directly; legacy commands migrate on load; command structs supply node effects | Cross-map loading and EventTouch unsupported; reject explicitly in Sprint 15 |
 | Presentation | RenderWorld/packets and bgfx adapter exist | Independent render-library split planned |
 | Editor | Panels, document and coordinator extracted | Shared scripted input, modal acceptance and DPI checks in Sprint 15 |
 | Assets | Stable AssetId, registry, states and MemoryAssetLoader | Disk mesh/texture import and production GPU loading planned |

@@ -70,7 +70,7 @@ Show Text, Control Switch, Control Variable, Conditional Branch, Set Move Route 
 ## Open questions
 
 - [x] Формат хранения → **JSON**
-- [x] UX команд → **RM-like list** (графический граф — бэклог [[feat-event-node-graph-authoring|feat: Event node graph authoring]])
+- [x] UX: graph authoring is implemented ([[feat-event-node-graph-authoring|Event node graph authoring]]); the remaining self-pin drag-release defect is included in Sprint 15.
 - [x] Лимиты Parallel → **8 / 32 / no nested**
 - [x] Set Move Route (basic) → runtime overlay + `set_move_route.route[]` + тот же interpreter yield (как Wait); не второй VM. См. [[research-set-move-route|research: Set Move Route]]
 
