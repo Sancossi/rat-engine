@@ -21,7 +21,7 @@ Depends: [[s15-geometry]].
 
 ## Resolution
 
-Completed and independently Approved through b78b614 and README correction57726e7. All local acceptance passed: Release707, fresh headless707, full40 real GUI and installed ZIP, clang-tidy45/45, Python10, vault/actionlint and four-map benchmark. See [final evidence index](../../../docs/audits/2026-09-07-stabilization-evidence.md). Parent full Release rebuild passed; final stage-close rebuild follows the status update. Linux/ASan/UBSan/hosted CI and source-absent hosted execution are configured but unobserved. No unresolved local acceptance findings.
+Completed and independently Approved through b78b614 and README correction57726e7. All local acceptance passed: Release707, fresh headless707, full40 real GUI and installed ZIP, clang-tidy45/45, Python10, vault/actionlint and four-map benchmark. See [final evidence index](../../../docs/audits/2026-09-07-stabilization-evidence.md). Parent final stage-close full Release rebuild passed after the status update (exit 0); editor: build/dev-release/apps/editor/rat-editor.exe. Linux/ASan/UBSan/hosted CI and source-absent hosted execution are configured but unobserved. No unresolved local acceptance findings.
 
 ## Implementation and review history
 
