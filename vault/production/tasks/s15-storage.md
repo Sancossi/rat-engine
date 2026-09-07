@@ -1,7 +1,8 @@
 ---
 type: task
 area: Engine
-status: In progress
+status: In review
+review: In review
 task_type: Chore
 sprint: Sprint 15
 tags: [task, stabilization]
@@ -20,7 +21,7 @@ Depends: [[s15-foundation]].
 
 ## Resolution
 
-Pending.
+Implemented in ebe7759. Full Windows verification passed: 656/656 C++ tests, Python checks and vault validation. Independent review pending.
 
 ## Bugs found
 

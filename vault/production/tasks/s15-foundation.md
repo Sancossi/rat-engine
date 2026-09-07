@@ -1,7 +1,7 @@
 ---
 type: task
 area: Engine
-status: In review
+status: Done
 review: Approved
 task_type: Chore
 sprint: Sprint 15
@@ -19,7 +19,7 @@ Acceptance: stage contract met; meaningful tests passed; independent review Appr
 
 ## Resolution
 
-Implemented in c11288b; documentation corrections in 83746e7. Independent reviewer Approved after corrections. Fresh Windows preset configure/build, 643/643 C++ tests, 8/8 Python checks and vault validation passed. Three project skills validated. Parent stage-close rebuild queued at the next safe shared-tree build checkpoint while storage API changes are in progress.
+Implemented in c11288b; documentation corrections in 83746e7. Independent reviewer Approved after corrections. Fresh Windows preset configure/build, 643/643 C++ tests, 8/8 Python checks and vault validation passed. Three project skills validated. Parent stage-close full Release build passed (cmake --build --preset dev-release, exit 0) after storage checkpoint; editor: build/dev-release/apps/editor/rat-editor.exe.
 
 ## Bugs found
 
