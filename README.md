@@ -38,6 +38,44 @@ Launch `build/dev-release/apps/editor/rat-editor.exe` on Windows, or
 `build/dev-release/apps/editor/rat-editor` on Linux. Existing non-preset `build/`
 trees are still supported and are not overwritten by presets.
 
+## Headless, launch paths and packages
+
+`cmake --preset headless-release`, `cmake --build --preset headless-release`, and
+`ctest --preset headless-release` build/test core and editor logic without fetching
+bgfx, GLFW, ImGui or miniaudio. On Windows the same workflow is
+`powershell -ExecutionPolicy Bypass -File scripts/verify.ps1 -Preset headless-release`.
+The configure check rejects a build tree contaminated by prior graphics dependencies.
+`RAT_BUILD_RENDERER=ON` with editor/tests off builds the renderer without window/UI/audio
+libraries. Editor and the GUI-runner option require the renderer.
+
+The ordinary editor accepts:
+
+```sh
+rat-editor --data-root /path/to/data --user-data-dir /path/to/profile --map /path/to/map.json
+```
+
+All three switches are optional. Relative paths resolve against the launch directory
+once. Data defaults to `data/` beside the executable; the initial map is
+`data/maps/grey_yard.json`. Writable saves, logs, snapshots and ImGui settings use
+Windows LocalAppData/rat-engine or Linux XDG_DATA_HOME/rat-engine
+(HOME/.local/share/rat-engine fallback). `RAT_LOG_PATH`, if set, overrides only the
+log path and also resolves once. Paths and Windows process arguments are UTF-8.
+The build copies bundled data beside the editor, so map authoring uses that copy
+unless an explicit `--map` points to another project.
+
+Build Release, then install/package:
+
+```sh
+cmake --install build/dev-release --prefix build/package-stage
+cpack --config build/dev-release/CPackConfig.cmake -B build/packages
+```
+
+The ZIP contains the executable, adjacent data, licence notices and the required
+MSVC runtime libraries on Windows. It needs no repository-relative resource paths.
+`rat_editor_app` is shared with the upcoming real-input GUI runner;
+`RAT_BUILD_GUI_TESTS` reserves its configuration seam and does not yet add GUI scenarios.
+See [launch contract](docs/editor-launch.md) for the app integration interface.
+
 ## Compiled boundaries
 
 | Target | Responsibility / dependencies |
@@ -45,7 +83,8 @@ trees are still supported and are not overwritten by presets.
 | `rat_core` | SimulationSession, event VM, map authoring/compilation, replay, asset/entity scaffolding; nlohmann/json |
 | `rat_engine` | Rendering; core + bgfx/bx/bimg |
 | `rat_editor_logic` | Headless editor document and frame coordination |
-| `rat-editor` | GLFW shell, ImGui panels, rendering/audio composition |
+| `rat_editor_app` | Shared real editor app/panels, GLFW, ImGui, renderer and audio composition |
+| `rat-editor` | Process arguments and the ordinary app entrypoint |
 | `rat_tests` | Catch2 unit, mechanics, regression and grey_yard smoke scenarios |
 
 CMake enforces the core's platform/graphics link isolation; see
@@ -61,10 +100,8 @@ EventTouch is not executable and cross-map transfer has no map loader. Asset IDs
 and an in-memory loader exist; a production mesh/texture importer is still planned.
 
 CI currently builds Windows/Linux and runs headless tests. GUI input automation,
-sanitizers, isolated headless configuration and relocatable packaging are scheduled
-in stabilization; headless tests do not verify the desktop interface. Turning
-`RAT_BUILD_EDITOR=OFF` currently still builds/fetches renderer dependencies.
-Data/user-write path portability is also part of that work.
+sanitizers and packaged desktop acceptance remain in stabilization; headless tests
+do not verify the desktop interface.
 
 ## Project knowledge
 

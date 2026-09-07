@@ -5,7 +5,7 @@ $header = Get-Item -LiteralPath (Join-Path $repoRoot 'apps/editor/editor_documen
 $originalTime = $header.LastWriteTimeUtc
 $objectPaths = @(
     'apps/editor/CMakeFiles/rat_editor_logic.dir/editor_document.cpp.obj',
-    'apps/editor/CMakeFiles/rat-editor.dir/editor_app.cpp.obj',
+    'apps/editor/CMakeFiles/rat_editor_app.dir/editor_app.cpp.obj',
     'tests/CMakeFiles/rat_tests.dir/event_graph_edit_test.cpp.obj'
 )
 $before = @{}

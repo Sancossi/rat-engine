@@ -2,6 +2,7 @@
 
 #include <cstdlib>
 #include <fstream>
+#include <filesystem>
 #include <memory>
 #include <ostream>
 #include <utility>
@@ -62,7 +63,7 @@ void StreamLogSink::write(LogLevel level, std::string_view channel, std::string_
 }
 
 FileLogSink::FileLogSink(std::string path)
-    : path_(std::move(path)), file_(std::make_unique<std::ofstream>(path_, std::ios::out | std::ios::trunc)) {}
+    : path_(std::move(path)), file_(std::make_unique<std::ofstream>(std::filesystem::path(std::u8string(path_.begin(), path_.end())), std::ios::out | std::ios::trunc)) {}
 
 FileLogSink::~FileLogSink() = default;
 

@@ -10,6 +10,7 @@ add_executable(rat_tests
   debug_snapshot_test.cpp
   elevation_mechanics_test.cpp
   edit_history_test.cpp
+  editor_launch_options_test.cpp
   editor_document_test.cpp
   event_edit_test.cpp
   event_graph_edit_test.cpp
@@ -45,6 +46,8 @@ add_executable(rat_tests
   terrain_geometry_test.cpp
   viewport_edit_test.cpp
 )
+
+rat_target_defaults(rat_tests)
 
 target_link_libraries(rat_tests
   PRIVATE

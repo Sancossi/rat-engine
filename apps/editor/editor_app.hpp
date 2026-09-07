@@ -1,6 +1,7 @@
 #pragma once
 
 #include "editor_document.hpp"
+#include "editor_launch_options.hpp"
 #include "editor_action_controller.hpp"
 #include "frame_coordinator.hpp"
 #include "panels/blocker_panel.hpp"
@@ -36,7 +37,7 @@ class EditorApp {
   EditorApp(const EditorApp&) = delete;
   EditorApp& operator=(const EditorApp&) = delete;
 
-  bool init();
+  bool init(const EditorLaunchOptions& options);
   int run();
 
  private:
@@ -69,6 +70,7 @@ class EditorApp {
 
   static void on_host_resize(void* user, int width, int height);
 
+  EditorLaunchOptions launch_options_;
   FileStore* files_ = nullptr;
   NativeWindow host_{};
   FrameCoordinator coordinator_{};

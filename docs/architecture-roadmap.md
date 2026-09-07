@@ -18,7 +18,7 @@ retain their original scope and acceptance evidence.
 | Platform | File/log/input adapters and queued miniaudio playback exist | Portable paths, packages and fault-safe replacement in Sprint 15 |
 | Instrumentation | Timing/debug snapshots and render counters exist | Reproducible performance baseline in Sprint 15 |
 
-Actual targets: `rat_core`, `rat_engine`, `rat_editor_logic`, `rat-editor`, `rat_tests`.
+Actual targets: `rat_core`, `rat_engine`, `rat_editor_logic`, `rat_editor_app`, `rat-editor`, `rat_tests`.
 Runtime, authoring, assets and entity scaffolding share `rat_core`; the following
 graph is future decomposition, not an implemented set of targets.
 

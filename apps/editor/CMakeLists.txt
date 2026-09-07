@@ -1,4 +1,6 @@
 add_library(rat_editor_logic
+  editor_launch_options.cpp
+  editor_launch_options.hpp
   editor_action_controller.cpp
   editor_action_controller.hpp
   editor_document.cpp
@@ -10,6 +12,7 @@ add_library(rat_editor_logic
 )
 
 add_library(rat::editor_logic ALIAS rat_editor_logic)
+rat_target_defaults(rat_editor_logic)
 
 target_include_directories(rat_editor_logic
   PUBLIC
@@ -27,12 +30,13 @@ if(WIN32)
   target_compile_definitions(rat_editor_logic PUBLIC NOMINMAX WIN32_LEAN_AND_MEAN)
 endif()
 
-if(NOT RAT_BUILD_EDITOR)
+if(NOT RAT_BUILD_EDITOR AND NOT RAT_BUILD_GUI_TESTS)
   return()
 endif()
 
-add_executable(rat-editor
-  main.cpp
+add_library(rat_editor_app
+  platform/launch_environment.cpp
+  platform/launch_environment.hpp
   editor_app.cpp
   editor_app.hpp
   imgui_bgfx.cpp
@@ -65,14 +69,18 @@ file(COPY
   DESTINATION "${_rat_imgui_shader_out}"
 )
 
-target_include_directories(rat-editor
+add_library(rat::editor_app ALIAS rat_editor_app)
+rat_target_defaults(rat_editor_app)
+
+target_include_directories(rat_editor_app
+  PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}"
   PRIVATE
     "${_rat_imgui_shader_out}"
 )
 
-target_link_libraries(rat-editor
+target_link_libraries(rat_editor_app
+  PUBLIC rat::editor_logic
   PRIVATE
-    rat::editor_logic
     rat::engine
     imgui
     glfw
@@ -81,18 +89,32 @@ target_link_libraries(rat-editor
     miniaudio
 )
 
-target_compile_definitions(rat-editor
+target_compile_definitions(rat_editor_app
   PRIVATE
     GLFW_INCLUDE_NONE
-    RAT_DATA_DIR="${CMAKE_SOURCE_DIR}/data"
 )
 
 if(WIN32)
-  target_link_libraries(rat-editor PRIVATE gdi32 user32 shell32)
+  target_link_libraries(rat_editor_app PRIVATE gdi32 user32 shell32 ole32)
   # miniaudio.h (WAV decoder) conversion inside the amalgamated header
   set_source_files_properties(platform/miniaudio_sink.cpp PROPERTIES COMPILE_OPTIONS /wd4244)
 endif()
 
-set_target_properties(rat-editor PROPERTIES
-  OUTPUT_NAME "rat-editor"
-)
+# Every frontend links the same app/panels/platform implementation.
+if(RAT_BUILD_EDITOR)
+  add_executable(rat-editor main.cpp)
+  target_link_libraries(rat-editor PRIVATE rat::editor_app)
+  rat_target_defaults(rat-editor)
+  add_custom_target(rat_editor_data ALL
+    COMMAND "${CMAKE_COMMAND}" -E copy_directory "${CMAKE_SOURCE_DIR}/data" "$<TARGET_FILE_DIR:rat-editor>/data"
+    COMMENT "Copy executable-adjacent editor data"
+    VERBATIM)
+  add_dependencies(rat-editor rat_editor_data)
+  install(TARGETS rat-editor RUNTIME DESTINATION .)
+  install(DIRECTORY "${CMAKE_SOURCE_DIR}/data" DESTINATION .)
+  foreach(_dependency IN ITEMS bgfx_cmake glfw imgui miniaudio nlohmann_json)
+    install(DIRECTORY "${${_dependency}_SOURCE_DIR}/"
+      DESTINATION "licenses/${_dependency}"
+      FILES_MATCHING PATTERN "LICENSE*" PATTERN "COPYING*" PATTERN ".git" EXCLUDE)
+  endforeach()
+endif()

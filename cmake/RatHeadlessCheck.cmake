@@ -1,0 +1,16 @@
+function(rat_assert_headless_dependencies)
+  foreach(_target IN ITEMS rat_engine rat_editor_app rat-editor bgfx bx bimg glfw imgui miniaudio)
+    if(TARGET ${_target})
+      message(FATAL_ERROR "Headless configuration unexpectedly defines ${_target}")
+    endif()
+  endforeach()
+  # A fresh build must not fetch these projects. Refuse a contaminated tree too,
+  # so CI cannot pass this check using a previous full-editor cache.
+  foreach(_dependency IN ITEMS bgfx_cmake glfw imgui miniaudio)
+    file(GLOB _paths "${CMAKE_BINARY_DIR}/_deps/${_dependency}-*")
+    if(_paths)
+      message(FATAL_ERROR "Headless build contains graphics/audio FetchContent: ${_paths}; use a fresh build directory")
+    endif()
+  endforeach()
+  message(STATUS "Headless dependency check: no renderer/window/UI/audio targets or fetched sources")
+endfunction()

@@ -44,14 +44,17 @@ namespace rat {
 
 namespace {
 
-constexpr const char* kPlaySaveSlotPath = "saves/slot1.ratsave";
 constexpr float kEventMarkerStemHeight = 1.4f;
 constexpr float kUiFontSizePx = 16.0f;
 
-void try_load_cyrillic_ui_font(ImGuiIO& io, Logger& logger) {
-  const std::string path = std::string(RAT_DATA_DIR) + "/fonts/NotoSans-Regular.ttf";
+std::filesystem::path utf8_path(std::string_view text) {
+  return std::filesystem::path(std::u8string(text.begin(), text.end()));
+}
+
+void try_load_cyrillic_ui_font(ImGuiIO& io, Logger& logger, const std::string& data_root) {
+  const std::string path = data_root + "/fonts/NotoSans-Regular.ttf";
   std::error_code ec;
-  if (!std::filesystem::is_regular_file(path, ec)) {
+  if (!std::filesystem::is_regular_file(utf8_path(path), ec)) {
     log(logger, LogLevel::Error, "editor",
         std::string("UI font missing, using default: ") + path);
     return;
@@ -371,7 +374,7 @@ bool EditorApp::save_map_path(const std::string& path) {
 
 void EditorApp::save_play_slot() {
   std::error_code ec;
-  std::filesystem::create_directories("saves", ec);
+  std::filesystem::create_directories(utf8_path(launch_options_.save_slot_path).parent_path(), ec);
   if (ec) {
     last_save_status_ = "failed to create saves directory: " + ec.message();
     if (logger_ != nullptr) {
@@ -379,7 +382,7 @@ void EditorApp::save_play_slot() {
     }
     return;
   }
-  const GameFileResult result = save_game(*files_, kPlaySaveSlotPath, session_.state());
+  const GameFileResult result = save_game(*files_, launch_options_.save_slot_path, session_.state());
   if (!result.ok) {
     last_save_status_ = result.error.empty() ? "Save failed" : result.error;
     if (logger_ != nullptr) {
@@ -387,14 +390,14 @@ void EditorApp::save_play_slot() {
     }
     return;
   }
-  last_save_status_ = std::string("Saved ") + kPlaySaveSlotPath;
+  last_save_status_ = std::string("Saved ") + launch_options_.save_slot_path;
   if (logger_ != nullptr) {
     log(*logger_, LogLevel::Info, "save", last_save_status_);
   }
 }
 
 void EditorApp::load_play_slot(bool backup) {
-  const std::string path = std::string(kPlaySaveSlotPath) + (backup ? ".bak" : "");
+  const std::string path = std::string(launch_options_.save_slot_path) + (backup ? ".bak" : "");
   GameState loaded;
   const GameFileResult result = load_game(*files_, path, loaded);
   if (!result.ok) {
@@ -484,13 +487,27 @@ void EditorApp::bind_session_assets() {
   overlay.id = beep;
   overlay.kind = AssetKind::AudioClip;
   overlay.debug_name = "beep";
-  overlay.path.compiled = std::string(RAT_DATA_DIR) + "/audio/beep.wav";
+  overlay.path.compiled = launch_options_.data_root + "/audio/beep.wav";
   asset_registry_->register_asset(std::move(overlay));
   asset_registry_->request_load(beep);
   asset_registry_->pump_loads();
 }
 
-bool EditorApp::init() {
+bool EditorApp::init(const EditorLaunchOptions& options) {
+  launch_options_ = options;
+  for (const auto* path : {&options.data_root, &options.user_data_dir, &options.map_path,
+                           &options.save_slot_path, &options.log_path, &options.debug_snapshot_path,
+                           &options.imgui_ini_path}) {
+    if (!utf8_path(*path).is_absolute()) {
+      std::cerr << "Editor launch paths must be resolved before initialization\n";
+      return false;
+    }
+  }
+  for (const auto* path : {&options.save_slot_path, &options.log_path, &options.debug_snapshot_path, &options.imgui_ini_path}) {
+    std::error_code ec;
+    std::filesystem::create_directories(utf8_path(*path).parent_path(), ec);
+    if (ec) { std::cerr << "Failed to create user data directory: " << ec.message() << '\n'; return false; }
+  }
   actions_.settle = [this] { return settle_authoring(); };
   actions_.dirty = [this] { return document_.dirty(); };
   actions_.save = [this] { const bool ok = save_map_path(map_path_); return EditorActionResult{ok, last_apply_error_}; };
@@ -502,7 +519,7 @@ bool EditorApp::init() {
       : hot_apply_map_path(action.path, action.preserve_player);
     return EditorActionResult{ok, last_apply_error_};
   };
-  file_log_ = std::make_unique<FileLogSink>(default_log_path());
+  file_log_ = std::make_unique<FileLogSink>(launch_options_.log_path);
   stderr_log_ = std::make_unique<StreamLogSink>(std::cerr);
   tee_log_ = std::make_unique<TeeLogSink>(*file_log_, *stderr_log_);
   logger_ = std::make_unique<Logger>(*tee_log_);
@@ -530,6 +547,8 @@ bool EditorApp::init() {
         std::string("could not open log file ") + file_log_->path());
   }
   log(*logger_, LogLevel::Info, "editor", "starting rat-editor");
+  log(*logger_, LogLevel::Info, "editor", "data root " + launch_options_.data_root);
+  log(*logger_, LogLevel::Info, "editor", "user data root " + launch_options_.user_data_dir);
 
   if (!host_.create(width_, height_, "rat-editor")) {
     log(*logger_, LogLevel::Error, "editor", "NativeWindow::create failed");
@@ -555,10 +574,7 @@ bool EditorApp::init() {
   }
   engine_->set_debug_banner("rat-engine");
 
-#ifndef RAT_DATA_DIR
-#error RAT_DATA_DIR must be defined
-#endif
-  const std::string map_path = std::string(RAT_DATA_DIR) + "/maps/grey_yard.json";
+  const std::string map_path = launch_options_.map_path;
   if (!hot_apply_map_path(map_path, false)) {
     log(*logger_, LogLevel::Error, "editor",
         std::string("Failed to load map ") + map_path + ": " + last_apply_error_);
@@ -575,10 +591,11 @@ bool EditorApp::init() {
   IMGUI_CHECKVERSION();
   ImGui::CreateContext();
   ImGuiIO& io = ImGui::GetIO();
+  io.IniFilename = launch_options_.imgui_ini_path.c_str();
   io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
   io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
   ImGui::StyleColorsDark();
-  try_load_cyrillic_ui_font(io, *logger_);
+  try_load_cyrillic_ui_font(io, *logger_, launch_options_.data_root);
 
   if (!ImGui_ImplGlfw_InitForOther(host_.glfw_window(), true)) {
     log(*logger_, LogLevel::Error, "editor", "ImGui_ImplGlfw_InitForOther failed");
@@ -637,8 +654,9 @@ void EditorApp::shutdown() {
   running_ = false;
 
   imgui_bgfx::shutdown();
-  ImGui_ImplGlfw_Shutdown();
   if (ImGui::GetCurrentContext() != nullptr) {
+    // A missing map or failed renderer can abort before the platform backend exists.
+    if (ImGui::GetIO().BackendPlatformUserData != nullptr) ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
   }
 
@@ -994,7 +1012,7 @@ void EditorApp::simulate(float dt) {
         make_debug_snapshot(session_.tick_id(), app_mode_, session_.player(), session_.jump(),
                             session_.events(), session_.state(), input.interact_pressed, selected_id,
                             input, runtime_checksum(session_, 0), collect_frame_metrics(sources));
-    const std::string path = default_debug_snapshot_path();
+    const std::string path = launch_options_.debug_snapshot_path;
     if (write_debug_snapshot(path, snapshot)) {
       if (logger_ != nullptr) {
         log(*logger_, LogLevel::Info, "debug", std::string("wrote snapshot ") + path);
@@ -1088,7 +1106,7 @@ void EditorApp::draw_ui() {
   ImGui::TextUnformatted(
       "WASD move | Space jump | E interact | Esc pause | C camera | F2 Play/Edit | F3 snapshot | F5 hot-apply");
   if (app_mode_ == AppMode::Play) {
-    ImGui::TextUnformatted("Escape pause | Save/Load slot saves/slot1.ratsave");
+    ImGui::TextUnformatted("Escape pause | Save/Load game slot");
     ImGui::TextUnformatted("I inventory");
   }
   if (app_mode_ == AppMode::Edit) {
@@ -1315,7 +1333,7 @@ void EditorApp::draw_ui() {
     ImGui::SetNextWindowBgAlpha(0.94f);
     ImGui::Begin("Pause", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
     ImGui::TextUnformatted("Paused");
-    ImGui::TextWrapped("Slot: %s", kPlaySaveSlotPath);
+    ImGui::TextWrapped("Slot: %s", launch_options_.save_slot_path.c_str());
     if (ImGui::Button("Save")) {
       save_play_slot();
     }

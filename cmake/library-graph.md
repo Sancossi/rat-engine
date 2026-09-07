@@ -9,8 +9,9 @@ nlohmann_json
      ^    ^             no GLFW, ImGui, bgfx, Win32 (user32/gdi32)
 rat_engine  rat_editor_logic
      ^    ^             engine: bgfx + bx + bimg
-      rat-editor        logic: EditorDocument + FrameCoordinator
-                        editor: glfw + imgui (+ Win32 user32/gdi32/shell32)
+      rat_editor_app    logic: EditorDocument + FrameCoordinator + launch resolution
+          ^             app: glfw + imgui + miniaudio (+ Win32 platform libs)
+       rat-editor       ordinary process entrypoint
 ```
 
 | Target | Links |
@@ -18,6 +19,11 @@ rat_engine  rat_editor_logic
 | `rat_core` | `nlohmann_json` |
 | `rat_engine` | `rat_core` + bgfx + bx + bimg |
 | `rat_editor_logic` | `rat_core` |
-| `rat-editor` | `rat_editor_logic` + `rat_engine` + glfw + imgui |
+| `rat_editor_app` | `rat_editor_logic` + `rat_engine` + glfw + imgui + miniaudio |
+| `rat-editor` | `rat_editor_app` |
 
 `rat_tests` links `rat_core` + `rat_editor_logic` + Catch2 (headless, no GLFW/ImGui).
+
+`RAT_BUILD_RENDERER` gates rat_engine/bgfx. Editor or GUI enables app/GLFW/ImGui/audio.
+The headless preset disables all three; its configure check verifies no graphics/audio
+targets or FetchContent directories exist. Editor logic and tests remain independent.

@@ -1,5 +1,6 @@
 include(FetchContent)
 
+if(RAT_BUILD_RENDERER)
 set(BGFX_BUILD_TOOLS OFF CACHE BOOL "Build bgfx tools" FORCE)
 set(BGFX_BUILD_EXAMPLES OFF CACHE BOOL "Build bgfx examples" FORCE)
 set(BGFX_CUSTOM_TARGETS OFF CACHE BOOL "bgfx custom targets" FORCE)
@@ -14,6 +15,12 @@ FetchContent_Declare(
 )
 
 FetchContent_MakeAvailable(bgfx_cmake)
+# Embedded shaders ship with bgfx examples; no shader compiler needed.
+set(RAT_BGFX_IMGUI_SHADER_DIR "${bgfx_cmake_SOURCE_DIR}/bgfx/examples/common/imgui" CACHE INTERNAL "bgfx imgui shader headers")
+set(RAT_BGFX_DEBUGDRAW_SHADER_DIR "${bgfx_cmake_SOURCE_DIR}/bgfx/examples/common/debugdraw" CACHE INTERNAL "bgfx debugdraw shader headers")
+endif()
+
+if(RAT_BUILD_EDITOR OR RAT_BUILD_GUI_TESTS)
 
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
@@ -59,11 +66,7 @@ if(NOT TARGET imgui)
   target_compile_definitions(imgui PUBLIC IMGUI_DEFINE_MATH_OPERATORS)
 endif()
 
-# Embedded imgui shaders shipped with bgfx examples (for imgui_bgfx).
-set(RAT_BGFX_IMGUI_SHADER_DIR "${bgfx_cmake_SOURCE_DIR}/bgfx/examples/common/imgui"
-    CACHE INTERNAL "bgfx imgui shader headers")
-set(RAT_BGFX_DEBUGDRAW_SHADER_DIR "${bgfx_cmake_SOURCE_DIR}/bgfx/examples/common/debugdraw"
-    CACHE INTERNAL "bgfx debugdraw shader headers")
+endif()
 
 FetchContent_Declare(
   nlohmann_json
@@ -73,7 +76,7 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(nlohmann_json)
 
-if(RAT_BUILD_EDITOR)
+if(RAT_BUILD_EDITOR OR RAT_BUILD_GUI_TESTS)
   # Header-only; the miniaudio repo has no CMakeLists. Pin a release tag.
   # Full-args Populate is the CMake 3.30+ form (name-only Populate is CMP0169).
   FetchContent_Populate(

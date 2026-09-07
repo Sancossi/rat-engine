@@ -1,5 +1,5 @@
 param(
-    [ValidateSet('dev-release', 'dev-debug')][string]$Preset = 'dev-release',
+    [ValidateSet('dev-release', 'dev-debug', 'headless-release')][string]$Preset = 'dev-release',
     [string]$Python,
     [switch]$ConfigureOnly,
     [switch]$CheckHeaderDependencies
@@ -46,13 +46,13 @@ try {
     Invoke-Checked 'cmake' @('--preset', $Preset)
     if (-not $ConfigureOnly) {
         Invoke-Checked 'cmake' @('--build', '--preset', $Preset)
-        if ($CheckHeaderDependencies) {
+        if ($CheckHeaderDependencies -and $Preset -ne 'headless-release') {
             & (Join-Path $PSScriptRoot 'check_msvc_dependencies.ps1') -BuildDirectory (Join-Path $repoRoot "build/$Preset")
         }
         Invoke-Checked 'ctest' @('--preset', $Preset)
     }
     Write-Output "Build directory: $(Join-Path $repoRoot "build/$Preset")"
-    if (-not $ConfigureOnly) { Write-Output "Editor: $(Join-Path $repoRoot "build/$Preset/apps/editor/rat-editor.exe")" }
+    if (-not $ConfigureOnly -and $Preset -ne 'headless-release') { Write-Output "Editor: $(Join-Path $repoRoot "build/$Preset/apps/editor/rat-editor.exe")" }
 } finally {
     Pop-Location
 }
