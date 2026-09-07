@@ -29,4 +29,4 @@ Launch review caught default-directory lookup before explicit argument handling;
 Included regression: [[gui-input-and-framebuffer-scale-diverge]].
 
 
-Stage 6a implemented in 3c4ce34: full and fresh headless Windows builds each passed 703/703 tests; renderer-only rat_engine built, no GLFW/ImGui/audio dependencies. Header dependency proof passed after shared app extraction. Parent full Release build passed. Install and ZIP built with data/licences/runtime; installed --help passed from unrelated temporary cwd. Independent review pending; GUI/package resources are not yet verified.
+Stage 6a implemented in 3c4ce34: full and fresh headless Windows builds each passed 703/703 tests; renderer-only rat_engine built, no GLFW/ImGui/audio dependencies. Header dependency proof passed after shared app extraction. Parent full Release build passed. Install and ZIP built with data/licences/runtime; installed --help passed from unrelated temporary cwd. Independent review Approved: 5 launch tests / 39 assertions passed. GUI/package resources are not yet verified; stage 6b is active.
