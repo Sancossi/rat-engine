@@ -17,6 +17,11 @@ else()
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
+option(RAT_ENABLE_SANITIZERS "Instrument own targets with ASan and UBSan (Linux GCC/Clang)" OFF)
+if(RAT_ENABLE_SANITIZERS AND (NOT CMAKE_SYSTEM_NAME STREQUAL "Linux" OR NOT CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang"))
+  message(FATAL_ERROR "RAT_ENABLE_SANITIZERS requires Linux GCC or Clang")
+endif()
+
 option(RAT_BUILD_RENDERER "Build bgfx renderer library" ON)
 option(RAT_BUILD_GUI_TESTS "Build real-editor GUI acceptance runner" OFF)
 option(RAT_BUILD_EDITOR "Build GLFW + ImGui rat-editor application" ON)
@@ -29,6 +34,10 @@ endif()
 
 # Apply execution/source UTF-8 only to our targets, not dependency projects.
 function(rat_target_defaults target)
+  if(RAT_ENABLE_SANITIZERS)
+    target_compile_options(${target} PRIVATE -fsanitize=address,undefined -fno-omit-frame-pointer -fno-sanitize-recover=all)
+    target_link_options(${target} PRIVATE -fsanitize=address,undefined -fno-sanitize-recover=all)
+  endif()
   if(MSVC)
     target_compile_options(${target} PRIVATE /utf-8)
   endif()

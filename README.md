@@ -72,9 +72,24 @@ cpack --config build/dev-release/CPackConfig.cmake -B build/packages
 
 The ZIP contains the executable, adjacent data, licence notices and the required
 MSVC runtime libraries on Windows. It needs no repository-relative resource paths.
-`rat_editor_app` is shared with the upcoming real-input GUI runner;
-`RAT_BUILD_GUI_TESTS` reserves its configuration seam and does not yet add GUI scenarios.
+`rat_editor_app` is shared with `rat-editor-gui-tests`. The `gui-release` preset
+builds the full 40-scenario suite; Windows uses verified WARP, Linux uses Xvfb/Mesa.
+See [GUI automation](docs/gui-automation.md) for installed-package acceptance.
 See [launch contract](docs/editor-launch.md) for the app integration interface.
+
+## Acceptance and diagnostics
+
+On Windows run `powershell -ExecutionPolicy Bypass -File scripts/verify.ps1 -Preset gui-release`
+for the editor, ordinary tests and full GUI suite. `dev-release` explicitly keeps GUI off.
+On Linux run the `gui-release` configure/build presets, then
+`LIBGL_ALWAYS_SOFTWARE=1 GALLIUM_DRIVER=llvmpipe xvfb-run -a ctest --preset gui-release`.
+The Linux-only `headless-sanitizers` preset enables Debug ASan/UBSan on our targets.
+
+`-Benchmarks` on the Windows wrapper (or `-DRAT_BUILD_BENCHMARKS=ON` at configure)
+adds the headless baseline executable. See [benchmark methodology and results](docs/benchmark.md)
+and [CI/static-analysis contract](docs/continuous-integration.md). Hosted Linux,
+sanitizer and source-absent package results require an observed workflow run;
+local Windows checks alone do not establish those outcomes.
 
 ## Compiled boundaries
 
@@ -85,6 +100,8 @@ See [launch contract](docs/editor-launch.md) for the app integration interface.
 | `rat_editor_logic` | Headless editor document and frame coordination |
 | `rat_editor_app` | Shared real editor app/panels, GLFW, ImGui, renderer and audio composition |
 | `rat-editor` | Process arguments and the ordinary app entrypoint |
+| `rat-editor-gui-tests` | Real app/input/panels automation, captures and read-only observations |
+| `rat-benchmark` | Optional headless tick/bake/apply/history-memory baseline |
 | `rat_tests` | Catch2 unit, mechanics, regression and grey_yard smoke scenarios |
 
 CMake enforces the core's platform/graphics link isolation; see

@@ -16,7 +16,8 @@
         "RAT_BUILD_EDITOR": "ON",
         "RAT_BUILD_TESTS": "ON",
         "RAT_BUILD_RENDERER": "ON",
-        "RAT_BUILD_GUI_TESTS": "OFF"
+        "RAT_BUILD_GUI_TESTS": "OFF",
+        "RAT_ENABLE_SANITIZERS": "OFF"
       }
     },
     {
@@ -37,6 +38,30 @@
         "RAT_BUILD_EDITOR": "OFF",
         "RAT_BUILD_GUI_TESTS": "OFF"
       }
+    },
+    {
+      "name": "gui-release",
+      "inherits": "dev-release",
+      "displayName": "Release with full real-editor GUI acceptance",
+      "binaryDir": "${sourceDir}/build/gui-release",
+      "cacheVariables": {
+        "RAT_BUILD_GUI_TESTS": "ON"
+      }
+    },
+    {
+      "name": "headless-sanitizers",
+      "inherits": "headless-release",
+      "displayName": "Linux Debug headless ASan and UBSan",
+      "binaryDir": "${sourceDir}/build/headless-sanitizers",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      },
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "RAT_ENABLE_SANITIZERS": "ON"
+      }
     }
   ],
   "buildPresets": [
@@ -51,6 +76,14 @@
     {
       "name": "headless-release",
       "configurePreset": "headless-release"
+    },
+    {
+      "name": "gui-release",
+      "configurePreset": "gui-release"
+    },
+    {
+      "name": "headless-sanitizers",
+      "configurePreset": "headless-sanitizers"
     }
   ],
   "testPresets": [
@@ -85,6 +118,32 @@
       "execution": {
         "timeout": 120,
         "noTestsAction": "error"
+      }
+    },
+    {
+      "name": "gui-release",
+      "configurePreset": "gui-release",
+      "output": {
+        "outputOnFailure": true
+      },
+      "execution": {
+        "timeout": 120,
+        "noTestsAction": "error"
+      }
+    },
+    {
+      "name": "headless-sanitizers",
+      "configurePreset": "headless-sanitizers",
+      "output": {
+        "outputOnFailure": true
+      },
+      "execution": {
+        "timeout": 120,
+        "noTestsAction": "error"
+      },
+      "environment": {
+        "ASAN_OPTIONS": "detect_leaks=1:halt_on_error=1",
+        "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
       }
     }
   ]

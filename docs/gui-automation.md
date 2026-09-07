@@ -59,8 +59,9 @@ that package files and the unrelated working directory remain unchanged. It writ
 a `gui-acceptance-report.json` beneath a fresh `gui-run-*` artifact directory and
 returns nonzero on any failure. An explicit `--scenario` subset is marked incomplete.
 
-After configuring with `-DRAT_BUILD_GUI_TESTS=ON`, run `ctest --test-dir build/dev-release
--L gui --output-on-failure`. The full test has label `gui` and timeout 300 seconds;
+Configure/build with the `gui-release` preset, then run `ctest --preset gui-release -L gui`
+(on Linux, under Xvfb with `LIBGL_ALWAYS_SOFTWARE=1 GALLIUM_DRIVER=llvmpipe`).
+Windows can run the full workflow using `scripts/verify.ps1 -Preset gui-release`. The full test has label `gui` and timeout 300 seconds;
 ordinary headless verification keeps GUI tests disabled. A GUI-only build still
 copies/installs resources, but full acceptance requires the production editor too.
 

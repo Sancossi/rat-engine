@@ -65,4 +65,4 @@ target_compile_definitions(rat_tests
 
 list(APPEND CMAKE_MODULE_PATH "${Catch2_SOURCE_DIR}/extras")
 include(Catch)
-catch_discover_tests(rat_tests)
+catch_discover_tests(rat_tests PROPERTIES TIMEOUT 120)

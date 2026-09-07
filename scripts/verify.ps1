@@ -1,8 +1,9 @@
 param(
-    [ValidateSet('dev-release', 'dev-debug', 'headless-release')][string]$Preset = 'dev-release',
+    [ValidateSet('dev-release', 'dev-debug', 'headless-release', 'gui-release')][string]$Preset = 'dev-release',
     [string]$Python,
     [switch]$ConfigureOnly,
-    [switch]$CheckHeaderDependencies
+    [switch]$CheckHeaderDependencies,
+    [switch]$Benchmarks
 )
 $ErrorActionPreference = 'Stop'
 $repoRoot = Split-Path $PSScriptRoot -Parent
@@ -43,7 +44,9 @@ Push-Location $repoRoot
 try {
     Invoke-Checked $Python @('scripts/check_vault.py')
     Invoke-Checked $Python @('-m', 'unittest', 'discover', '-s', 'scripts/tests')
-    Invoke-Checked 'cmake' @('--preset', $Preset)
+    $configureArgs = @('--preset', $Preset)
+    if ($Benchmarks) { $configureArgs += '-DRAT_BUILD_BENCHMARKS=ON' }
+    Invoke-Checked 'cmake' $configureArgs
     if (-not $ConfigureOnly) {
         Invoke-Checked 'cmake' @('--build', '--preset', $Preset)
         if ($CheckHeaderDependencies -and $Preset -ne 'headless-release') {

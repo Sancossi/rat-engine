@@ -187,4 +187,5 @@ function(rat_add_core_isolation_ctest)
       "-DRAT_LINK_MANIFEST=${RAT_CORE_LINK_MANIFEST}"
       -P "${RAT_CORE_LINK_CHECK_FILE}"
   )
+  set_tests_properties(rat_core_no_platform_graphics PROPERTIES TIMEOUT 120)
 endfunction()
