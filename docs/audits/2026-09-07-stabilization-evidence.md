@@ -6,15 +6,15 @@ This index distinguishes completed implementation from pending desktop/delivery 
 
 | Audit | Implementation and regression evidence | Independent review / remaining acceptance |
 | --- | --- | --- |
-| A01 | `160a376`: shared destructive-action controller, transactional Save/Discard/Cancel; `tests/editor_document_test.cpp` | Authoring approved; complete real GUI guard matrix pending |
-| A02 | `ebe7759`, `c90638f`: checked atomic replacement, one backup, failure injection; `tests/file_store_test.cpp` | Storage approved; GUI explicit restore cases pending |
+| A01 | `160a376`: shared destructive-action controller, transactional Save/Discard/Cancel; `tests/editor_document_test.cpp` | Authoring and all twelve real GUI guard combinations approved; Play-mode pause proof pending |
+| A02 | `ebe7759`, `c90638f`: checked atomic replacement, one backup, failure injection; `tests/file_store_test.cpp` | Storage and real GUI map/slot backup restore cases approved |
 | A03 | Strict save v2 and valid legacy reader; `tests/game_state_test.cpp`, `tests/simulation_session_test.cpp`; [format ADR](../adr-storage-v2.md) | Storage approved |
 | A04 | Checked map numbers and derived geometry; `tests/map_loader_test.cpp`, `tests/map_document_test.cpp` | Storage approved after malformed-parameter and overflow corrections |
-| A05 | Common unique allocator, transactional duplicate rename; `tests/event_edit_test.cpp`, `tests/editor_document_test.cpp` | Authoring approved; GUI creation paths and two-process restart pending |
+| A05 | Common unique allocator, transactional duplicate rename; `tests/event_edit_test.cpp`, `tests/editor_document_test.cpp` | Authoring and real GUI creation/duplicate-ID/two-process restart cases approved |
 | A06 | `eed6158`: unsupported cross-map transfer rejected before apply and defended in runtime; map/session/event tests | Runtime approved; GUI repair scenario pending |
 | A07 | Complete canonical authoritative replay checksum; `tests/replay_test.cpp`; [replay ADR](../adr-replay-v2.md) | Runtime approved |
 | A08 | Strict replay v2 header/ticks, freshness and semantic map identity; `4eaeaf6` preserves linear recording cost | Runtime approved; replay tests and append scaling measured |
-| A09 | Canonical authored clean snapshot, changed/no-op distinction, graph layout history; editor document/history tests | Authoring approved; full GUI undo/layout cases pending |
+| A09 | Canonical authored clean snapshot, changed/no-op distinction, graph layout history; editor document/history tests | Authoring and real GUI no-op/undo/redo/stroke cases approved; graph layout case pending |
 | A10 | EventTouch rejected with repairable authored document and disabled UI choice; map/runtime tests | Runtime approved; real GUI repair/disabled-choice scenario pending |
 | A11 | `c11288b`: filename-based vault links and `scripts/check_vault.py` | Foundation approved; vault checks pass |
 | A12 | Explicit zero/one current sprint, board validation and Sprint 15 queue | Foundation approved; final sprint closure awaits acceptance |
@@ -47,3 +47,9 @@ alone does not prove packaged graphical resources. Preliminary Clang Analyzer
 passed 43 own core/editor-logic translation units; final analysis is pending.
 Linux, sanitizers and remote GitHub Actions have not been executed locally or
 observed remotely. They must not be reported as passed from workflow definitions.
+
+GUI workflow slice `554fe02` independently passed all 21 new scenarios, including
+the 4-by-3 guard matrix and two distinct restart processes. Artifacts:
+`build/stabilization/review-guards-sh5ixh8v/`. The production editor separately
+returned exit 1 without crashing on malformed startup. Ctrl+Z after button
+navigation focus was fixed; active text input retains shortcut ownership.
