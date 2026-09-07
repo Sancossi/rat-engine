@@ -1,8 +1,8 @@
 ---
 type: task
 area: Production
-status: In progress
-review: Pending
+status: In review
+review: In review
 task_type: Chore
 sprint: Sprint 15
 tags: [task, audit]
