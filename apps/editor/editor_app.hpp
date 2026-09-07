@@ -96,6 +96,8 @@ class EditorApp {
 
   EditorInitialState initial_;
   EditorFrameInput frame_input_;
+  EditorFrameInput processed_input_;
+  EditorFrameInput previous_raw_input_;
   std::array<bool, 512> imgui_keys_{};
   float frame_dt_ = 1.0f / 60.0f;
   bool scripted_frame_ = false;

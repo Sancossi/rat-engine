@@ -30,6 +30,7 @@
 
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
+#include <imgui_internal.h>
 #include <GLFW/glfw3.h>
 
 ImGuiKey ImGui_ImplGlfw_KeyToImGuiKey(int keycode, int scancode);
@@ -266,11 +267,11 @@ EditorActionResult EditorApp::settle_authoring() {
 void EditorApp::reset_authoring_input() {
   session_.clear_pending_input();
   fixed_accumulator_ = 0.0f;
-  previous_buttons_ = frame_input_.buttons(host_.input_bindings());
-  mouse_left_was_down_ = frame_input_.mouse_buttons[0];
-  mouse_right_was_down_ = frame_input_.mouse_buttons[1];
-  escape_was_down_ = frame_input_.keys[GLFW_KEY_ESCAPE];
-  i_was_down_ = frame_input_.keys[GLFW_KEY_I];
+  previous_buttons_ = processed_input_.buttons(host_.input_bindings());
+  mouse_left_was_down_ = processed_input_.mouse_buttons[0];
+  mouse_right_was_down_ = processed_input_.mouse_buttons[1];
+  escape_was_down_ = processed_input_.keys[GLFW_KEY_ESCAPE];
+  i_was_down_ = processed_input_.keys[GLFW_KEY_I];
   drag_active_ = brush_active_ = false;
   event_context_open_ = false;
   finish_event_graph_wire_release(event_panel_.canvas, false);
@@ -475,7 +476,7 @@ bool EditorApp::apply_edited_map(bool preserve_player) {
   bind_session_assets();
   session_.set_app_mode(app_mode_);
   session_.clear_pending_input();
-  previous_buttons_ = frame_input_.buttons(host_.input_bindings());
+  previous_buttons_ = processed_input_.buttons(host_.input_bindings());
   fixed_accumulator_ = 0.0f;
   snap_player_to_ground_clear_jump();
   return true;
@@ -623,6 +624,21 @@ bool EditorApp::init(const EditorLaunchOptions& options, const EditorInitialStat
     auto native = host_.sample_frame_input();
     if (!scripted_frame_) frame_input_ = std::move(native);
     else frame_input_.close_requested = native.close_requested;
+    auto timeline = previous_raw_input_;
+    bool reload_pressed = false;
+    for (const auto& event : frame_input_.events) {
+      if (event.kind != EditorInputEvent::Kind::Key || event.code < 0 || event.code >= 512) continue;
+      const bool before = timeline.buttons(host_.input_bindings()).hot_apply;
+      timeline.keys[static_cast<std::size_t>(event.code)] = event.down;
+      reload_pressed |= timeline.buttons(host_.input_bindings()).hot_apply && !before;
+    }
+    reload_pressed |= frame_input_.buttons(host_.input_bindings()).hot_apply &&
+                      !previous_raw_input_.buttons(host_.input_bindings()).hot_apply;
+    previous_raw_input_ = frame_input_;
+    if (!actions_.pending()) {
+      deferred_close_ |= frame_input_.close_requested;
+      deferred_reload_ |= reload_pressed && !map_path_.empty();
+    }
     if (frame_input_.framebuffer_width > 0 && frame_input_.framebuffer_height > 0 &&
         (width_ != frame_input_.framebuffer_width || height_ != frame_input_.framebuffer_height))
       on_framebuffer_resize(frame_input_.framebuffer_width, frame_input_.framebuffer_height);
@@ -767,11 +783,11 @@ void EditorApp::handle_edit_mouse_input(const ImGuiIO& io) {
     return;
   }
 
-  const bool left_down = frame_input_.mouse_buttons[0];
-  const bool right_down = frame_input_.mouse_buttons[1];
+  const bool left_down = processed_input_.mouse_buttons[0];
+  const bool right_down = processed_input_.mouse_buttons[1];
   const bool right_pressed = right_down && !mouse_right_was_down_;
   const bool aborting_brush = (brush_active_ || document_.in_stroke()) &&
-                              (right_down || frame_input_.keys[GLFW_KEY_ESCAPE]);
+                              (right_down || processed_input_.keys[GLFW_KEY_ESCAPE]);
   if (aborting_brush) {
     finish_cell_brush(true);
   }
@@ -954,9 +970,7 @@ void EditorApp::simulate(float dt) {
     return;
   }
 
-  deferred_close_ = frame_input_.close_requested;
-  const auto current_buttons = frame_input_.buttons(host_.input_bindings());
-  deferred_reload_ = current_buttons.hot_apply && !previous_buttons_.hot_apply && !map_path_.empty();
+  const auto current_buttons = processed_input_.buttons(host_.input_bindings());
   // Pause immediately, but render the active field once before settling its preview.
   // Characters queued with Close/F5 belong to that field, before the modal opens.
   if (deferred_close_ || deferred_reload_) {
@@ -966,7 +980,7 @@ void EditorApp::simulate(float dt) {
   if (actions_.pending()) { session_.clear_pending_input(); fixed_accumulator_ = 0.0f; return; }
   const ImGuiIO& io = ImGui::GetIO();
 
-  const InputButtons buttons = frame_input_.buttons(host_.input_bindings());
+  const InputButtons buttons = processed_input_.buttons(host_.input_bindings());
   InputGating gating;
   gating.player_control = player_control_enabled(app_mode_);
   gating.keyboard_captured = io.WantCaptureKeyboard;
@@ -995,7 +1009,7 @@ void EditorApp::simulate(float dt) {
       map_input_frame(buttons, previous_buttons_, gating, input_eye, input_focus);
   previous_buttons_ = buttons;
 
-  const bool escape_down = frame_input_.keys[GLFW_KEY_ESCAPE];
+  const bool escape_down = processed_input_.keys[GLFW_KEY_ESCAPE];
   if (app_mode_ == AppMode::Play && escape_down && !escape_was_down_) {
     play_paused_ = !play_paused_;
     if (play_paused_) {
@@ -1006,7 +1020,7 @@ void EditorApp::simulate(float dt) {
   }
   escape_was_down_ = escape_down;
 
-  const bool i_down = frame_input_.keys[GLFW_KEY_I];
+  const bool i_down = processed_input_.keys[GLFW_KEY_I];
   if (app_mode_ == AppMode::Play && i_down && !i_was_down_ && !play_paused_) {
     inventory_open_ = !inventory_open_;
     if (inventory_open_) {
@@ -1140,6 +1154,16 @@ void EditorApp::begin_ui() {
   for (const auto codepoint : frame_input_.characters) io.AddInputCharacter(codepoint);
   begin_gui_observation();
   imgui_bgfx::begin_frame();
+  // ImGui trickles multiple transitions over frames. All application handlers
+  // consume that same processed state, so a native press/release between polls
+  // cannot disappear or activate gameplay before UI capture has been evaluated.
+  processed_input_ = frame_input_;
+  for (int key = GLFW_KEY_SPACE; key <= GLFW_KEY_LAST; ++key) {
+    const auto mapped = ImGui_ImplGlfw_KeyToImGuiKey(key, 0);
+    processed_input_.keys[static_cast<std::size_t>(key)] = mapped != ImGuiKey_None && ImGui::IsKeyDown(mapped);
+  }
+  for (int button = 0; button < 5; ++button)
+    processed_input_.mouse_buttons[static_cast<std::size_t>(button)] = io.MouseDown[button];
 }
 
 void EditorApp::present() {
@@ -1296,9 +1320,9 @@ void EditorApp::draw_ui() {
       if (!viewport_tool_allowed(edit_submode_, tool)) {
         return;
       }
-      if (!first_tool) {
+      const float needed = ImGui::CalcTextSize(label).x + ImGui::GetFrameHeight() + ImGui::GetStyle().ItemInnerSpacing.x;
+      if (!first_tool && ImGui::GetItemRectMax().x - ImGui::GetWindowPos().x + ImGui::GetStyle().ItemSpacing.x + needed < ImGui::GetWindowContentRegionMax().x)
         ImGui::SameLine();
-      }
       first_tool = false;
       if (ImGui::RadioButton((std::string(label) + "##viewport_tool").c_str(), viewport_tool_ == tool)) {
         viewport_tool_ = tool;
@@ -1506,9 +1530,13 @@ void EditorApp::draw_ui() {
 
   ImGui::EndDisabled();
   ImGui::End();
-  if (deferred_close_) (void)actions_.request({EditorActionKind::Close});
-  else if (deferred_reload_) request_map_action(EditorActionKind::LoadMap, map_path_, true);
-  deferred_close_ = deferred_reload_ = false;
+  // NewFrame may retain a suffix of interleaved key/text events. Keep the
+  // intent latched and simulation paused while the active field consumes it.
+  if (ImGui::GetCurrentContext()->InputEventsQueue.empty()) {
+    if (deferred_close_) (void)actions_.request({EditorActionKind::Close});
+    else if (deferred_reload_) request_map_action(EditorActionKind::LoadMap, map_path_, true);
+    deferred_close_ = deferred_reload_ = false;
+  }
   actions_.pump();
   draw_unsaved_modal();
   host_.set_title(std::string("rat-engine [") + app_mode_name(app_mode_) + "] " +

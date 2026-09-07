@@ -33,7 +33,12 @@ void ImGuiTestEngineHook_ItemAdd(ImGuiContext* ctx, ImGuiID id, const ImRect& bb
   auto& entry = item(ctx, id);
   entry.min_x = bb.Min.x; entry.min_y = bb.Min.y;
   entry.max_x = bb.Max.x; entry.max_y = bb.Max.y;
-  entry.visible = ctx->CurrentWindow && bb.Overlaps(ctx->CurrentWindow->ClipRect);
+  if (ctx->CurrentWindow) {
+    const auto& clip = ctx->CurrentWindow->ClipRect;
+    entry.clip_min_x = clip.Min.x; entry.clip_min_y = clip.Min.y;
+    entry.clip_max_x = clip.Max.x; entry.clip_max_y = clip.Max.y;
+  }
+  entry.visible = ctx->CurrentWindow && !ctx->CurrentWindow->Hidden && bb.Overlaps(ctx->CurrentWindow->ClipRect);
   entry.enabled = !((data ? data->ItemFlags : ctx->CurrentItemFlags) & ImGuiItemFlags_Disabled);
 }
 void ImGuiTestEngineHook_ItemInfo(ImGuiContext* ctx, ImGuiID id, const char* label,

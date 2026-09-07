@@ -7,8 +7,10 @@ viewport handlers, ImGui and bgfx rendering. The runner requires explicit
 data. Renderer selection is `--renderer software-d3d11` (Windows WARP) or
 `--renderer software-opengl` (Linux Mesa with `LIBGL_ALWAYS_SOFTWARE=1`).
 
-The current infrastructure checkpoint exercises a real mode button and an ordered
-quick Backspace tap, and captures the first Edit frame. The complete acceptance
+The infrastructure scenarios (`--scenario infrastructure`, `input-order`, and
+`authoring-text`) exercise real mode buttons, quick keyboard/viewport taps,
+Unicode fields, and multi-key text batches queued with Close/F5. They capture the
+first Edit frame and the unsaved modal. The complete acceptance
 scenario suite is being added in the following slice; this checkpoint alone is
 not stage acceptance.
 
@@ -16,8 +18,11 @@ not stage acceptance.
 focus events. Native GLFW callbacks and scripted input use this same stream;
 the GLFW ImGui backend does not install a competing callback stream or run its
 polling NewFrame implementation. FrameCoordinator orders input, ImGui NewFrame,
-simulation, audio, UI drawing and presentation. Close/F5 pause immediately and
-settle authored previews after the active widget consumes the frame's text.
+simulation, audio, UI drawing and presentation. Viewport and gameplay consume
+the same processed input state as ImGui, including transitions trickled across
+frames. Close/F5 pause immediately and remain latched until ImGui's pre-action
+event queue is drained and the active widget has consumed its text. Trickling
+remains enabled so multiple transitions cannot disappear.
 
 Input positions and ImGui rectangles are logical pixels; camera picking uses
 framebuffer pixels. Renderer view rectangles and scissors use framebuffer pixels.

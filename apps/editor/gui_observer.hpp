@@ -11,6 +11,7 @@ struct GuiItemObservation {
   std::string window;
   std::string label;
   float min_x = 0, min_y = 0, max_x = 0, max_y = 0;
+  float clip_min_x = 0, clip_min_y = 0, clip_max_x = 0, clip_max_y = 0;
   bool visible = false;
   bool enabled = false;
 };
