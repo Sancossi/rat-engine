@@ -23,7 +23,7 @@ Depends: [[s15-storage]].
 
 Included follow-up: [[chore-edit-voxel-review-polish]].
 
-Implemented in 160a376. Full Windows verification: 670/670 C++ tests, 8 Python checks and vault passed. Final independent review pending; actual desktop acceptance follows in stage 6.
+Implemented in 160a376. Full Windows verification: 672/672 C++ tests, 8 Python checks and vault passed. Parent full Release build passed (exit 0); editor: build/dev-release/apps/editor/rat-editor.exe. Final independent review pending; actual desktop acceptance follows in stage 6.
 
 ## Bugs found
 
