@@ -1,8 +1,8 @@
 ---
 type: task
 area: Engine
-status: In review
-review: In review
+status: Done
+review: Approved
 task_type: Chore
 sprint: Sprint 15
 due:
@@ -19,6 +19,10 @@ Origin: [[feat-edit-place-3d-terrain-voxels|feat: Edit place 3D terrain voxels]]
 
 ## Resolution
 
+Fixed in 160a376: removing an absent occupancy cell succeeds without changing the map, history or redo. Independent review Approved; full verification 672/672 C++ tests passed.
+
 ## Bugs found
+
+None.
 
 Scheduling: carried from Sprint 14 into [[Sprint 15 — Stabilization]]; original Origin retained.

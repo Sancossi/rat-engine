@@ -1,8 +1,8 @@
 ---
 type: bug
 area: Engine
-status: Investigating
-review: In review
+status: Fixed
+review: Approved
 severity: High
 sprint: Sprint 15
 tags: [bug, audit]
@@ -20,3 +20,12 @@ Edit → изменить карту → F5/Reload/закрытие. По код
 ## Expected / acceptance
 
 Единый Save/Discard/Cancel на reload и закрытие, отмена при ошибке записи.
+
+
+## Resolution
+
+Implemented in 160a376, independent review Approved. Full verification 672/672 C++ tests passed; reviewer focused run 20 tests/214 assertions. See [[s15-authoring]]. Real desktop interaction acceptance scheduled in [[s15-acceptance]].
+
+## Bugs found
+
+No unresolved implementation findings; build dependency followup resolved in [[msvc-localized-include-dependencies-missed]].

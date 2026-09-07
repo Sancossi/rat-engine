@@ -1,8 +1,8 @@
 ---
 type: bug
 area: Engine
-status: Investigating
-review: In review
+status: Fixed
+review: Approved
 severity: Low
 sprint: Sprint 15
 tags: [bug, audit]
@@ -20,3 +20,12 @@ Probe: undo к сохранённому состоянию оставляет di
 ## Expected / acceptance
 
 Dirty соответствует clean checkpoint; компиляция производных данных не считается правкой.
+
+
+## Resolution
+
+Implemented in 160a376, independent review Approved. Full verification 672/672 C++ tests passed; reviewer focused run 20 tests/214 assertions. See [[s15-authoring]]. Real desktop interaction acceptance scheduled in [[s15-acceptance]].
+
+## Bugs found
+
+No unresolved implementation findings; build dependency followup resolved in [[msvc-localized-include-dependencies-missed]].
