@@ -2,7 +2,7 @@
 type: bug
 area: Engine
 status: Investigating
-review: Needs fixes
+review: In review
 severity: Medium
 sprint: Sprint 15
 tags: [bug, stabilization]
@@ -25,3 +25,6 @@ Infrastructure review 22eb27d: ordered events reached ImGui but final held-state
 
 
 Re-review d5ae2f4: original edge/text-queue fixes pass real GUI checks. Remaining cursor timeline mismatch: queued clicks at A must not use later raw cursor B. Unicode fixture encoding and actual software-device verification also require correction in the same acceptance stage.
+
+
+Correction 68187f4 is in independent review: processed cursor positions follow ImGui event timing; native cursor events are ordered; Unicode assertions use explicit escapes. Three real GUI scenarios passed with an explicitly created WARP device verified as Microsoft Basic Render Driver with DXGI_ADAPTER_FLAG_SOFTWARE. Evidence: build/stabilization/verified-warp/{infrastructure,input-order,authoring-text}/artifacts. Parent inspected cyrillic-field.png and full Release rebuild passed. Full GUI scenario and scale acceptance remains in progress.

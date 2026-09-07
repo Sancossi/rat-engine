@@ -2,7 +2,7 @@
 type: task
 area: Engine
 status: In progress
-review: Needs fixes
+review: In review
 task_type: Chore
 sprint: Sprint 15
 tags: [task, stabilization]
@@ -40,3 +40,6 @@ GUI input corrections committed in d5ae2f4. Actual WARP input-order and authorin
 
 
 Evidence correction: early GUI runs proved real rendering/input, but their WARP label recorded requested mode, not verified device. Pinned bgfx can fall back to adapter 0; actual software-device proof is withdrawn until explicit WARP context and DXGI software-adapter verification are implemented and tests rerun. Independent d5ae2f4 review confirms original input fixes, but queued clicks still combine processed buttons with raw cursor coordinates. A Unicode regression was accidentally ASCII question marks due shell encoding. Both regressions are being corrected before infrastructure approval.
+
+
+Correction 68187f4 is in independent review: processed cursor positions follow ImGui event timing; native cursor events are ordered; Unicode assertions use explicit escapes. Three real GUI scenarios passed with an explicitly created WARP device verified as Microsoft Basic Render Driver with DXGI_ADAPTER_FLAG_SOFTWARE. Evidence: build/stabilization/verified-warp/{infrastructure,input-order,authoring-text}/artifacts. Parent inspected cyrillic-field.png and full Release rebuild passed. Full GUI scenario and scale acceptance remains in progress.
