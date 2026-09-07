@@ -24,3 +24,6 @@ Implemented in c11288b; documentation corrections in 83746e7. Independent review
 ## Bugs found
 
 Review caught inaccurate graph-runtime wording; corrected before approval. No unresolved foundation findings.
+
+
+Follow-up found during header-change verification: [[msvc-localized-include-dependencies-missed]].

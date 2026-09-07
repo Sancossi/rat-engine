@@ -27,3 +27,6 @@ Pending.
 ## Bugs found
 
 Pending.
+
+
+Follow-up found during header-change verification: [[msvc-localized-include-dependencies-missed]].
