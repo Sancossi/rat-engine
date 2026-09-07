@@ -123,3 +123,20 @@ TEST_CASE("Pathological partial rectangles cannot multiply the visual fill witho
     top_tiles.insert(static_cast<int>(vertex.z));
   CHECK(top_tiles.size()==501);
 }
+
+TEST_CASE("Long flat strips process contour endpoints once instead of scanning every segment", "[unit][surface-visual]") {
+  for(int tiles:{500,10000}) {
+    rat::MapData map;map.schema_version=5;map.width=1;map.height=tiles;map.tile_size=1;
+    map.height_grid={0,0,1,tiles,std::vector<float>(static_cast<std::size_t>(tiles),0)};
+    const auto raw=rat::build_greybox_fill_mesh(map,{},false);
+    REQUIRE(raw.vertices.size()==static_cast<std::size_t>(tiles)*4);
+    const auto mesh=rat::build_surface_visual_mesh(raw);
+    CHECK(mesh.contour_endpoint_events==static_cast<std::size_t>(tiles)*8);
+    CHECK(mesh.contour_normal_checks<=static_cast<std::size_t>(tiles)*4);
+    CHECK(mesh.contours.size()==static_cast<std::size_t>(tiles)*2+2);
+    CHECK(contour_length(mesh)==Catch::Approx(2.0*(tiles+1)));
+    for(const auto& edge:mesh.contours) {
+      if(edge.a.z==edge.b.z) CHECK((edge.a.z==0 || edge.a.z==tiles));
+    }
+  }
+}

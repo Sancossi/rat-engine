@@ -2,6 +2,7 @@
 
 #include "rat/indoor_volume.hpp"
 #include "rat/camera.hpp"
+#include <cstddef>
 
 namespace rat {
 
@@ -17,6 +18,9 @@ struct SurfaceVisualMesh {
   std::vector<SurfaceVertex> vertices;
   std::vector<std::uint32_t> indices;
   std::vector<SurfaceContour> contours;
+  // Read-only preparation diagnostics, independent of machine timing.
+  std::size_t contour_endpoint_events = 0;
+  std::size_t contour_normal_checks = 0;
 };
 
 // Render-only preparation. Cancels touching opposed rectangles (including

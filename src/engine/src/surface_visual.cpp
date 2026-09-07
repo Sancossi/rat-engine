@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <iterator>
 #include <map>
 #include <set>
 #include <utility>
@@ -147,18 +148,41 @@ SurfaceVisualMesh build_surface_visual_mesh(const GreyboxFillMesh& fill, float t
   }
   for (const auto& [key,segments]:lines) {
     const auto axis=static_cast<int>(key[0]);
-    std::set<double> cuts;
-    for (const auto& s:segments) { cuts.insert(s.lo);cuts.insert(s.hi); }
-    const std::vector<double> endpoints(cuts.begin(),cuts.end());
-    for (std::size_t i=1;i<endpoints.size();++i) {
-      const double lo=endpoints[i-1],hi=endpoints[i];
-      const Segment* first=nullptr; std::size_t count=0; bool crease=false;
-      for (const auto& s:segments) if (s.lo<=lo && s.hi>=hi) {
-        if (!first) first=&s;
-        else if (std::abs(dot(first->n,s.n))<0.99999) crease=true;
-        ++count;
+    struct Event { std::size_t segment; bool starts; };
+    std::map<double,std::vector<Event>> events;
+    for(std::size_t i=0;i<segments.size();++i) {
+      events[segments[i].lo].push_back({i,true});
+      events[segments[i].hi].push_back({i,false});
+    }
+    std::set<std::size_t> active;
+    std::map<Point,std::size_t> normals;
+    for(auto at=events.begin();at!=events.end();++at) {
+      // Sweep endpoints once. Never rescan all line segments for every interval.
+      for(const auto event:at->second) {
+        ++out.contour_endpoint_events;
+        const auto& n=segments[event.segment].n;
+        if(event.starts) { active.insert(event.segment);++normals[n]; }
+        else {
+          active.erase(event.segment);
+          const auto found=normals.find(n);
+          if(--found->second==0) normals.erase(found);
+        }
       }
-      if (!first || (count>1 && !crease)) continue;
+      const auto next=std::next(at);
+      if(next==events.end() || active.empty()) continue;
+      const double lo=at->first,hi=next->first;
+      const Segment* first=&segments[*active.begin()];
+      bool crease=false,uncertain=false;
+      std::size_t checks=0;
+      for(const auto& [n,count]:normals) {
+        (void)count;
+        // A pathological non-manifold edge may carry arbitrarily many distinct
+        // normals. Bound classification too; omit an uncertain contour, not fill.
+        if(checks==32) { uncertain=true;break; }
+        ++checks;++out.contour_normal_checks;
+        if(std::abs(dot(first->n,n))<0.99999) { crease=true;break; }
+      }
+      if(uncertain || (active.size()>1 && !crease)) continue;
       auto position=[&](double t) {
         Point p{}; const double blend=(t-first->lo)/(first->hi-first->lo);
         for (int j=0;j<3;++j) p[j]=first->a[j]+(first->b[j]-first->a[j])*blend;

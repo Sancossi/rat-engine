@@ -26,6 +26,13 @@ contributions are omitted. This avoids multiplying an otherwise valid map into
 an unbounded visual mesh. Ordinary adjacent/stacked voxels and partial contacts
 use the exact partition path, covered by regressions.
 
+Each contour line uses an endpoint sweep with active segment and normal counts,
+rather than scanning all segments at every interval. Each endpoint is processed
+once, with ordered-container costs. Classification examines at most 32 distinct
+active normals per interval; an unresolved pathological non-manifold contour is
+omitted while its fill remains. Preparation diagnostics and a 10,000-tile flat
+strip regression enforce bounded work without relying on machine timing.
+
 Contours are depth-tested strips expanded by a vertex shader to 1.5 framebuffer
 pixels, with a small depth bias. Their thickness is independent of camera zoom
 and logical UI scale. The ground grid is quieter and remains separate from dark
