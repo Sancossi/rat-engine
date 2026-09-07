@@ -20,8 +20,8 @@ This index distinguishes completed implementation from pending desktop/delivery 
 | A12 | Explicit zero/one current sprint, board validation and Sprint 15 queue | Foundation approved; final sprint closure awaits acceptance |
 | A13 | `83746e7`: actual architecture and feature boundaries documented | Foundation approved; delivery docs will reflect final acceptance |
 | A14 | Root AGENTS, shared project skills, Cursor references, build wrapper | Foundation approved; three project skills validated |
-| A15 | Negative regression suite; real GUI infrastructure `68187f4` on verified WARP | Infrastructure approved; full GUI suite, CI/sanitizers and final static analysis pending |
-| A16 | `3c4ce34`: independent headless/renderer gates, launch roots, install/ZIP; launch tests | Launch foundations approved; packaged GUI and final delivery acceptance pending |
+| A15 | Negative regression suite; real GUI infrastructure `68187f4` on verified WARP | Full local40GUI suite approved; CI/sanitizers and final static analysis pending |
+| A16 | `3c4ce34`: independent headless/renderer gates, launch roots, install/ZIP; launch tests | Launch and local packaged40GUI acceptance approved; final CI/delivery checks pending |
 
 Included Sprint 14 follow-ups: empty voxel no-op is covered by the authoring
 changes; `2a44876` covers all-yaw side placement and wedge faces, occupancy
@@ -60,3 +60,14 @@ advancing-Play modal pause, and unsupported EventTouch/cross-map repair. Evidenc
 `build/stabilization/review-geometry-363j5x85/`. Graph origin movement during
 connection and duplicate undo handling were found and fixed. Scale and packaged
 GUI acceptance remain pending.
+
+Full local stage6b approved at `4efcb52`: independent40/40 WARP aggregate exit0
+in60.10s, `build/stabilization/review-final-artifacts/gui-run-1_fw67v0/`.
+100/150/200 UI-scale captures at scripted1.25 framebuffer ratio match
+1700x975/2500x1425/3300x1875. Input/scale bug closed. Installed Unicode/spaced
+package full40 passed with actual glyphs/audio and unchanged package/cwd; report
+`build/stabilization/gui-package-artifacts/gui-run-b5l5mdrj/`. That installed run
+precedes only the final read-only camera debug addition, included in the final
+CTest run. GUI-only install smoke also passed. This supersedes earlier pending
+local GUI/package statements. Stage6c benchmark/CI/static checks are active;
+Linux and remote execution are still unobserved.
