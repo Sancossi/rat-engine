@@ -2,7 +2,7 @@
 type: task
 area: Engine
 status: In progress
-review: Pending
+review: In review
 task_type: Chore
 sprint: Sprint 15
 tags: [task, stabilization]
@@ -64,3 +64,6 @@ Final local GUI slice 4efcb52 is in independent review. All 40 manifest entries 
 
 
 Stage6b independently Approved 4efcb52: reviewer reran full40 exit0 in60.10s, inspected 200% Cyrillic/modal capture and verified dimensions1700x975/2500x1425/3300x1875. Report build/stabilization/review-final-artifacts/gui-run-1_fw67v0/gui-acceptance-report.json. Package/cwd unchanged, all local GUI requirements approved. Stage6c now in progress: benchmark/retained memory, CI/sanitizers/final static checks and delivery verification.
+
+
+Stage6c memory/benchmark slice6694640 is in independent review. Full Release and headless verification each passed707 C++ tests; parent full Release rebuild passed. Deep retained-memory accounting and grey_yard/synthetic benchmark workload implemented; baseline is generated after this code commit. CI/presets/final static and delivery checks continue.
