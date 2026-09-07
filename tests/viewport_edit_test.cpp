@@ -936,3 +936,31 @@ TEST_CASE("unproject y=0 misses east ramp tile under three-quarter", "[unit][vie
   const rat::TileCoord tile = rat::world_to_tile_xz(*hit, map.tile_size);
   REQUIRE_FALSE((tile.x == 2 && tile.z == 2));
 }
+
+TEST_CASE("Each elevated voxel side places a ramp rising onto its neighbor", "[unit][viewport][ramp][player]") {
+  const rat::Vec3 hits[] = {{3,1.5f,3.5f},{4,1.5f,3.5f},{3.5f,1.5f,3},{3.5f,1.5f,4}};
+  const rat::RampDirection yaws[] = {rat::RampDirection::East,rat::RampDirection::West,rat::RampDirection::South,rat::RampDirection::North};
+  const rat::MoveInput moves[] = {{1,0},{-1,0},{0,1},{0,-1}};
+  for (int side=0;side<4;++side) {
+    INFO(side);
+    rat::MapData map; map.id="side_ramp"; map.schema_version=5; map.width=7;map.height=7;
+    map.height_grid={0,0,7,7,std::vector<float>(49,1.0f)};
+    map.occupancy.push_back({3,1,3});
+    const auto action=rat::resolve_viewport_click(map,rat::ViewportTool::PlaceVoxelRamp,hits[side],rat::EditSubmode::Terrain,0);
+    REQUIRE(action.kind==rat::ViewportClickActionKind::PlaceVoxelRamp);
+    REQUIRE(action.edge==yaws[side]); REQUIRE(action.voxel_y==1);
+    REQUIRE(rat::place_map_occupancy_ramp(map,action.tile.x,action.voxel_y,action.tile.z,action.edge).ok);
+    rat::PlayerBody player; player.half_extent=0.2f;player.speed=2.0f;
+    player.x=action.tile.x+0.5f-moves[side].axis_x*0.45f;
+    player.z=action.tile.z+0.5f-moves[side].axis_z*0.45f;player.y=1;
+    rat::JumpState jump=rat::make_grounded_jump_state();rat::PlayerFrameInput input;input.move=moves[side];
+    const rat::SurfaceQuery query(map);
+    for(int frame=0;frame<180;++frame) {
+      const auto r=rat::integrate_player_frame_surface(player,jump,input,1.0f/120.0f,{},query,{},0.35f,{},&map);
+      player=r.body;jump=r.jump;
+      if(player.x>3.2f&&player.x<3.8f&&player.z>3.2f&&player.z<3.8f)break;
+    }
+    CHECK(player.x>3.2f);CHECK(player.x<3.8f);CHECK(player.z>3.2f);CHECK(player.z<3.8f);
+    CHECK(player.y==Approx(2.0f).margin(0.03f));CHECK(jump.grounded);
+  }
+}

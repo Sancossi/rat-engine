@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstdint>
 #include <optional>
 
 namespace rat {
@@ -90,17 +91,24 @@ void append_slab_side_fences(CollisionWorld& world, const WalkableBox& box,
     world.fences.push_back(solid);
   };
   const float ts = tile_size > 0.0f ? tile_size : 1.0f;
-  const int layer = static_cast<int>(std::lround(static_cast<double>(slab.top_y / ts))) - 1;
-  if (!occupancy_ramp_high_at(occupancy, slab.tile.x - 1, layer, slab.tile.z, RampDirection::East)) {
+  const auto aligned_high_face = [&](std::int64_t x, std::int64_t z, RampDirection yaw) {
+    for (const auto& cell : occupancy) {
+      if (cell.x != x || cell.z != z || cell.kind != OccupancyKind::Ramp || cell.yaw != yaw) continue;
+      const float high = static_cast<float>(static_cast<double>(cell.y) + 1.0) * ts;
+      if (std::abs(high - slab.top_y) <= kFenceFeetClearanceEpsilon) return true;
+    }
+    return false;
+  };
+  if (!aligned_high_face(static_cast<std::int64_t>(slab.tile.x) - 1, slab.tile.z, RampDirection::East)) {
     add_edge(box.min_x, box.min_z, box.min_x, box.max_z);
   }
-  if (!occupancy_ramp_high_at(occupancy, slab.tile.x + 1, layer, slab.tile.z, RampDirection::West)) {
+  if (!aligned_high_face(static_cast<std::int64_t>(slab.tile.x) + 1, slab.tile.z, RampDirection::West)) {
     add_edge(box.max_x, box.min_z, box.max_x, box.max_z);
   }
-  if (!occupancy_ramp_high_at(occupancy, slab.tile.x, layer, slab.tile.z - 1, RampDirection::South)) {
+  if (!aligned_high_face(slab.tile.x, static_cast<std::int64_t>(slab.tile.z) - 1, RampDirection::South)) {
     add_edge(box.min_x, box.min_z, box.max_x, box.min_z);
   }
-  if (!occupancy_ramp_high_at(occupancy, slab.tile.x, layer, slab.tile.z + 1, RampDirection::North)) {
+  if (!aligned_high_face(slab.tile.x, static_cast<std::int64_t>(slab.tile.z) + 1, RampDirection::North)) {
     add_edge(box.min_x, box.max_z, box.max_x, box.max_z);
   }
 }

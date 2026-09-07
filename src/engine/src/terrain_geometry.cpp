@@ -1,5 +1,6 @@
 #include "rat/terrain_geometry.hpp"
 
+#include <numeric>
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
@@ -449,6 +450,45 @@ std::vector<TerrainFillQuad> build_occupancy_ramp_fill_quads(const OccupancyCell
       out.push_back({min_x, y_hi, min_z, max_x, y_lo, min_z, max_x, y_lo, min_z, min_x, y_lo, min_z});
       out.push_back({min_x, y_lo, max_z, max_x, y_lo, max_z, max_x, y_lo, max_z, min_x, y_hi, max_z});
       break;
+  }
+  // The renderer emits triangles (0,2,1) and (0,3,2). Split triangular
+  // wedge sides at the midpoint of BC so both triangles have positive area.
+  const Vec3 high_normal = cell.yaw == RampDirection::North ? Vec3{0, 0, -1}
+    : cell.yaw == RampDirection::East ? Vec3{1, 0, 0}
+    : cell.yaw == RampDirection::South ? Vec3{0, 0, 1} : Vec3{-1, 0, 0};
+  const bool side_x = cell.yaw == RampDirection::North || cell.yaw == RampDirection::South;
+  const Vec3 normals[] = {{0, 1, 0}, {0, -1, 0}, high_normal,
+    side_x ? Vec3{-1, 0, 0} : Vec3{0, 0, -1},
+    side_x ? Vec3{1, 0, 0} : Vec3{0, 0, 1}};
+  for (std::size_t i = 0; i < out.size(); ++i) {
+    auto& q = out[i];
+    std::vector<Vec3> unique;
+    for (const Vec3 v : {Vec3{q.x0,q.y0,q.z0}, Vec3{q.x1,q.y1,q.z1},
+                         Vec3{q.x2,q.y2,q.z2}, Vec3{q.x3,q.y3,q.z3}}) {
+      bool duplicate = false;
+      for (const auto& u : unique) if (v.x == u.x && v.y == u.y && v.z == u.z) duplicate = true;
+      if (!duplicate) unique.push_back(v);
+    }
+    if (unique.size() < 3) continue; // Collapsed external geometry must not index missing corners.
+    Vec3 v[4];
+    if (unique.size() == 3) {
+      v[0] = unique[0]; v[1] = unique[1]; v[3] = unique[2];
+      v[2] = {std::midpoint(v[1].x, v[3].x), std::midpoint(v[1].y, v[3].y),
+              std::midpoint(v[1].z, v[3].z)};
+    } else {
+      for (int n = 0; n < 4; ++n) v[n] = unique[static_cast<std::size_t>(n)];
+    }
+    const double ax = static_cast<double>(v[2].x)-v[0].x;
+    const double ay = static_cast<double>(v[2].y)-v[0].y;
+    const double az = static_cast<double>(v[2].z)-v[0].z;
+    const double bx = static_cast<double>(v[1].x)-v[0].x;
+    const double by = static_cast<double>(v[1].y)-v[0].y;
+    const double bz = static_cast<double>(v[1].z)-v[0].z;
+    const double nx = ay*bz-az*by, ny = az*bx-ax*bz, nz = ax*by-ay*bx;
+    if (nx*normals[i].x + ny*normals[i].y + nz*normals[i].z < 0)
+      std::swap(v[1], v[3]);
+    q = {v[0].x,v[0].y,v[0].z,v[1].x,v[1].y,v[1].z,
+         v[2].x,v[2].y,v[2].z,v[3].x,v[3].y,v[3].z};
   }
   return out;
 }

@@ -609,3 +609,51 @@ TEST_CASE("East ladder bake blocks a ground cylinder at the face", "[collision]"
   clear.x = 1.6f;
   REQUIRE_FALSE(rat::cylinder_hits_walls(clear, world, 0.35f));
 }
+
+TEST_CASE("Only an aligned adjacent ramp high face removes a solid or slab fence", "[collision][ramp]") {
+  for (int yaw = 0; yaw < 4; ++yaw) for (int variant = 0; variant < 5; ++variant) for (bool slab : {false,true}) {
+    INFO("yaw=" << yaw << " variant=" << variant << " slab=" << slab);
+    const int dx[] = {0,-1,0,1}, dz[] = {1,0,-1,0};
+    rat::OccupancyCell ramp{2+dx[yaw],1,2+dz[yaw],rat::OccupancyKind::Ramp,static_cast<rat::RampDirection>(yaw)};
+    if (variant == 1) ramp.yaw = static_cast<rat::RampDirection>((yaw+2)%4);
+    if (variant == 2) ramp.y = 0;
+    if (variant == 3) { ramp.x += dx[yaw]; ramp.z += dz[yaw]; }
+    if (variant == 4) ramp.kind = rat::OccupancyKind::Solid;
+    rat::CollisionWorld world;
+    const rat::OccupancyCell solid{2,1,2};
+    if (slab) {
+      const rat::FloorSlabDef deck{{2,2},2.0f,0.25f};
+      rat::append_floor_slabs(world,std::span(&deck,1),1.0f,std::span(&ramp,1));
+    } else {
+      std::vector<rat::OccupancyCell> cells{solid,ramp}; rat::append_occupancy(world,cells,1.0f);
+    }
+    int sides[4] = {};
+    for (const auto& f : world.fences) {
+      const float lo = slab ? 1.75f : 1.0f;
+      if (std::abs(f.y_lo-lo)>0.001f || std::abs(f.y_hi-2.0f)>0.001f) continue;
+      if (f.az==2 && f.bz==2 && std::min(f.ax,f.bx)==2 && std::max(f.ax,f.bx)==3) ++sides[0];
+      if (f.ax==3 && f.bx==3 && std::min(f.az,f.bz)==2 && std::max(f.az,f.bz)==3) ++sides[1];
+      if (f.az==3 && f.bz==3 && std::min(f.ax,f.bx)==2 && std::max(f.ax,f.bx)==3) ++sides[2];
+      if (f.ax==2 && f.bx==2 && std::min(f.az,f.bz)==2 && std::max(f.az,f.bz)==3) ++sides[3];
+    }
+    // Neighbor geometry can contribute its own fence on the shared boundary.
+    // The three nonshared boundaries must never disappear.
+    const int shared = (yaw+2)%4;
+    for (int side = 0; side < 4; ++side) {
+      if (side != shared) CHECK(sides[side] == 1);
+      else if (variant == 0) CHECK(sides[side] == 0);
+      else CHECK(sides[side] == (!slab && variant == 4 ? 2 : 1));
+    }
+  }
+}
+
+TEST_CASE("Slab height mismatch retains the fence despite rounded occupancy layer", "[collision][ramp]") {
+  const rat::OccupancyCell ramp{0,1,0,rat::OccupancyKind::Ramp,rat::RampDirection::East};
+  for (float top : {2.0f,2.2f,1.8f,1e20f}) {
+    rat::CollisionWorld world; const rat::FloorSlabDef slab{{1,0},top,0.25f};
+    rat::append_floor_slabs(world,std::span(&slab,1),1.0f,std::span(&ramp,1));
+    int west=0; for(const auto& f:world.fences) if(f.ax==1&&f.bx==1) ++west;
+    CHECK(west == (top==2.0f ? 0 : 1));
+    CHECK(world.fences.size() == (top==2.0f ? 3 : 4));
+  }
+}

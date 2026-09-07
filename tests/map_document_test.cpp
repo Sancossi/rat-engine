@@ -4,6 +4,7 @@
 #include <rat/game_state.hpp>
 #include <rat/map_document.hpp>
 #include <rat/map_loader.hpp>
+#include <rat/event_graph.hpp>
 #include <rat/player.hpp>
 #include <rat/simulation_session.hpp>
 
@@ -305,6 +306,7 @@ TEST_CASE("MapDocument save/load round-trip is semantically identical", "[unit][
   blocker.bounds = {2.0f, 2.0f, 3.0f, 3.0f};
   map.blockers.push_back(blocker);
 
+  rat::ensure_page_graph_from_commands(map.events[0].pages[0]);
   rat::MapDocument document(std::move(map));
   REQUIRE(rat::compile_map_document(document).ok);
   const rat::MapSerializeResult serialized = rat::serialize_map_to_string(document.data());
@@ -316,12 +318,7 @@ TEST_CASE("MapDocument save/load round-trip is semantically identical", "[unit][
   const rat::MapSerializeResult again = rat::serialize_map_to_string(reloaded.document.data());
   REQUIRE(again.ok);
 
-  const rat::MapDocumentLoadResult reloaded_twice =
-      rat::load_map_document_from_string(again.json_text);
-  REQUIRE(reloaded_twice.ok);
-  const rat::MapSerializeResult third = rat::serialize_map_to_string(reloaded_twice.document.data());
-  REQUIRE(third.ok);
-  REQUIRE(third.json_text == again.json_text);
+  REQUIRE(again.json_text == serialized.json_text);
 }
 
 TEST_CASE("schema 1 missing height grid still compiles after v1 fallback", "[unit][mapdoc]") {
@@ -591,5 +588,38 @@ TEST_CASE("Finite authored operands cannot overflow derived terrain geometry", "
     CHECK_FALSE(rat::save_map_to_file(map, "main", files).ok);
     CHECK(files.read("main").bytes.as_text() == "previous main");
     CHECK(files.read("main.bak").bytes.as_text() == "previous backup");
+  }
+}
+
+TEST_CASE("Legacy commands materialize a graph before canonical save identity", "[unit][mapdoc]") {
+  auto map=make_flat_document_map();map.events.push_back(rat::make_stub_event("legacy",0,0));
+  const auto legacy=rat::serialize_map_to_string(map);REQUIRE(legacy.ok);
+  REQUIRE_FALSE(map.events[0].pages[0].graph);
+  const auto loaded=rat::load_map_document_from_string(legacy.json_text);REQUIRE(loaded.ok);
+  REQUIRE(loaded.document.data().events[0].pages[0].graph);
+  const auto saved=rat::serialize_map_to_string(loaded.document.data());REQUIRE(saved.ok);
+  CHECK(saved.json_text!=legacy.json_text);
+  const auto again=rat::load_map_document_from_string(saved.json_text);REQUIRE(again.ok);
+  CHECK(rat::serialize_map_to_string(again.document.data()).json_text==saved.json_text);
+}
+
+TEST_CASE("Occupancy grid boundaries honor nonzero origins and exact issue paths", "[unit][mapdoc][occupancy]") {
+  auto map=make_flat_document_map();map.schema_version=5;
+  map.height_grid={-2,3,4,4,std::vector<float>(16,0)};
+  const auto base=nlohmann::json::parse(rat::serialize_map_to_string(map).json_text);
+  for(const rat::TileCoord tile : {rat::TileCoord{-3,3},{2,3},{-2,2},{-2,7}}) {
+    map.occupancy={{tile.x,0,tile.z}};
+    const auto compiled=rat::compile_map_data(map);CHECK_FALSE(compiled.ok);
+    CHECK(has_error_at(compiled.issues,"/occupancy/0"));
+    auto text=base;text["occupancy"]={{{"x",tile.x},{"y",0},{"z",tile.z},{"kind","solid"}}};
+    const auto raw=rat::load_map_from_string(text.dump());CHECK_FALSE(raw.ok);
+    CHECK(raw.error.find("/occupancy/0")!=std::string::npos);
+    const auto doc=rat::load_map_document_from_string(text.dump());CHECK_FALSE(doc.ok);
+    CHECK(has_error_at(doc.issues,"/occupancy/0"));
+  }
+  for(const rat::TileCoord tile : {rat::TileCoord{-2,3},{1,3},{-2,6},{1,6}}) {
+    map.occupancy={{tile.x,0,tile.z}};CHECK(rat::compile_map_data(map).ok);
+    const auto saved=rat::serialize_map_to_string(map);REQUIRE(saved.ok);
+    CHECK(rat::load_map_from_string(saved.json_text).ok);
   }
 }

@@ -266,10 +266,7 @@ void EditorApp::reset_authoring_input() {
   i_was_down_ = host_.key_i_down();
   drag_active_ = brush_active_ = false;
   event_context_open_ = false;
-  event_panel_.canvas.dragging_wire = false;
-  event_panel_.canvas.drag_wire_from.clear();
-  event_panel_.canvas.pending_from.clear();
-  event_panel_.canvas.pending_branch.reset();
+  finish_event_graph_wire_release(event_panel_.canvas, false);
 }
 
 void EditorApp::request_map_action(EditorActionKind kind, const std::string& path, bool preserve_player) {

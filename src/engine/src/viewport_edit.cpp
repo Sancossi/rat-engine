@@ -511,7 +511,17 @@ ViewportClickAction resolve_viewport_click(const MapData& map, ViewportTool tool
     }
     case ViewportTool::PlaceVoxelRamp: {
       const VoxelCoord cell = voxel_cell_for_place(map, world_hit, voxel_layer);
-      return {ViewportClickActionKind::PlaceVoxelRamp, 0, TileCoord{cell.x, cell.z}, edge, cell.y};
+      RampDirection yaw = edge;
+      if (const auto face = pick_occupancy_face_at(map.occupancy, world_hit, map.tile_size)) {
+        switch (face->face) {
+          case VoxelFace::NegX: yaw = RampDirection::East; break;
+          case VoxelFace::PosX: yaw = RampDirection::West; break;
+          case VoxelFace::NegZ: yaw = RampDirection::South; break;
+          case VoxelFace::PosZ: yaw = RampDirection::North; break;
+          default: break;
+        }
+      }
+      return {ViewportClickActionKind::PlaceVoxelRamp, 0, TileCoord{cell.x, cell.z}, yaw, cell.y};
     }
     case ViewportTool::RemoveVoxel: {
       const VoxelCoord cell = voxel_cell_for_remove(map, world_hit, voxel_layer);

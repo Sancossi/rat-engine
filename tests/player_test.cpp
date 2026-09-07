@@ -1,4 +1,5 @@
 #include <rat/player.hpp>
+#include <rat/collision.hpp>
 #include <rat/map_data.hpp>
 #include <rat/surface_query.hpp>
 
@@ -765,14 +766,18 @@ TEST_CASE("Player climbs occupancy ramps onto a thin floor slab", "[unit][player
   REQUIRE(player.x < 3.0f);
   REQUIRE(player.y == Approx(2.0f).margin(0.06f));
   REQUIRE(jump.grounded);
-  bool stood_on_occupancy_solid = false;
-  for (const rat::OccupancyCell& cell : map.occupancy) {
-    if (cell.kind == rat::OccupancyKind::Solid && player.x >= static_cast<float>(cell.x) &&
-        player.x < static_cast<float>(cell.x + 1)) {
-      stood_on_occupancy_solid = true;
-    }
-  }
-  REQUIRE_FALSE(stood_on_occupancy_solid);
+  const auto has_thin_support = [&](const rat::MapData& candidate) {
+    const auto world=rat::bake_collision_world(candidate,rat::SurfaceQuery(candidate));
+    const auto support=rat::query_solid_support(world,player.x,player.z,player.half_extent,player.y,0.01f);
+    if(!support || support->on_ramp || std::abs(support->y-player.y)>0.01f) return false;
+    for(const auto& box:world.boxes)
+      if(player.x>=box.min_x&&player.x<box.max_x&&player.z>=box.min_z&&player.z<box.max_z&&
+         std::abs(box.y_hi-player.y)<0.01f&&std::abs(box.y_lo-1.75f)<0.01f&&std::abs(box.y_hi-box.y_lo-0.25f)<0.01f) return true;
+    return false;
+  };
+  REQUIRE(has_thin_support(map));
+  auto filled=map;filled.floor_slabs.clear();filled.occupancy.push_back({2,0,0});filled.occupancy.push_back({2,1,0});
+  REQUIRE_FALSE(has_thin_support(filled));
 }
 
 TEST_CASE("Player walks under a high slab over open ground", "[unit][player][surface]") {
@@ -801,4 +806,25 @@ TEST_CASE("Player walks under a high slab over open ground", "[unit][player][sur
   REQUIRE(was_under_span);
   REQUIRE(player.x > 1.0f);
   REQUIRE(player.y == Approx(0.0f).margin(1e-3f));
+}
+
+TEST_CASE("Replacing a thin bridge with filled voxels blocks the same underpass walk", "[unit][player][surface][bridge]") {
+  for(bool filled:{false,true}) {
+    auto map=make_surface_map(4,1,{0,0,0,0});map.schema_version=5;
+    if(filled) {map.occupancy.push_back({1,0,0});map.occupancy.push_back({1,1,0});}
+    else map.floor_slabs.push_back({{1,0},2.0f,0.25f});
+    const rat::SurfaceQuery query(map);const auto world=rat::bake_collision_world(map,query);
+    rat::PlayerBody player;player.x=0.5f;player.z=0.5f;player.y=0;player.speed=4;
+    REQUIRE_FALSE(rat::cylinder_hits_fences(rat::collision_body_from_player(player),world));
+    auto jump=rat::make_grounded_jump_state();rat::PlayerFrameInput input;input.move={1,0};
+    bool crossed=false;
+    for(int i=0;i<40;++i) {
+      const auto r=rat::integrate_player_frame_surface(player,jump,input,1.0f/60.0f,{},query,{},0.35f,{},&map);
+      player=r.body;jump=r.jump;
+      if(player.x>1.2f&&player.x<1.8f)crossed=true;
+      CHECK(player.y==Approx(0).margin(0.01f));CHECK(jump.grounded);
+    }
+    if(filled){CHECK_FALSE(crossed);CHECK(player.x<0.7f);}
+    else{CHECK(crossed);CHECK(player.x>2.0f);}
+  }
 }

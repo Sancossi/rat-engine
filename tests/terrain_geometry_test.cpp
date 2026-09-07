@@ -1,11 +1,13 @@
 #include <rat/height_edit.hpp>
 #include <rat/map_loader.hpp>
+#include <rat/map_document.hpp>
 #include <rat/terrain_geometry.hpp>
 
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
 
 #include <string>
+#include <cmath>
 #include <vector>
 
 namespace {
@@ -753,3 +755,60 @@ TEST_CASE("Occupancy ramp fill quads are a wedge spanning one metre of Y, not a 
   REQUIRE_FALSE(has_flat_cube_top);
 }
 
+
+TEST_CASE("Every yaw wedge has five outward faces with nondegenerate renderer triangles", "[unit][terrain][ramp]") {
+  const auto sub = [](rat::Vec3 a, rat::Vec3 b) { return rat::Vec3{a.x-b.x,a.y-b.y,a.z-b.z}; };
+  const auto cross = [](rat::Vec3 a, rat::Vec3 b) { return rat::Vec3{a.y*b.z-a.z*b.y,a.z*b.x-a.x*b.z,a.x*b.y-a.y*b.x}; };
+  const auto dot = [](rat::Vec3 a, rat::Vec3 b) { return a.x*b.x+a.y*b.y+a.z*b.z; };
+  constexpr float ts = 1.5f;
+  for (int yaw = 0; yaw < 4; ++yaw) {
+    INFO(yaw);
+    rat::OccupancyCell cell{2,3,-2,rat::OccupancyKind::Ramp,static_cast<rat::RampDirection>(yaw)};
+    const auto quads = rat::build_occupancy_ramp_fill_quads(cell, ts);
+    REQUIRE(quads.size() == 5);
+    const rat::Vec3 interior{3.75f, 5.0f, -2.25f};
+    float total = 0;
+    for (std::size_t face = 0; face < quads.size(); ++face) {
+      const auto& q = quads[face];
+      const rat::Vec3 v[] = {{q.x0,q.y0,q.z0},{q.x1,q.y1,q.z1},{q.x2,q.y2,q.z2},{q.x3,q.y3,q.z3}};
+      for (int a = 0; a < 4; ++a) for (int b = a+1; b < 4; ++b) CHECK(dot(sub(v[a],v[b]),sub(v[a],v[b])) > 0.0f);
+      float area = 0;
+      for (const auto indices : {std::pair{2,1}, std::pair{3,2}}) {
+        const auto n = cross(sub(v[indices.first],v[0]),sub(v[indices.second],v[0]));
+        const float length = std::sqrt(dot(n,n));
+        REQUIRE(length > 0.001f);
+        CHECK(dot(n,sub(v[0],interior)) > 0.0f);
+        CHECK(dot(n,sub(v[3],v[0])) == Catch::Approx(0).margin(0.0001f));
+        area += length * 0.5f;
+      }
+      const float expected = face == 0 ? std::sqrt(2.0f)*ts*ts : face < 3 ? ts*ts : ts*ts*0.5f;
+      CHECK(area == Catch::Approx(expected)); total += area;
+      if (face == 0) for (auto point : v) {
+        const float t = yaw == 0 ? (-1.5f-point.z)/ts : yaw == 1 ? (point.x-3.0f)/ts
+                      : yaw == 2 ? (point.z+3.0f)/ts : (4.5f-point.x)/ts;
+        CHECK(point.y == Catch::Approx(4.5f+t*ts));
+      }
+    }
+    CHECK(total == Catch::Approx((3.0f+std::sqrt(2.0f))*ts*ts));
+  }
+}
+
+TEST_CASE("Large accepted ramp vertices stay finite and winding arithmetic does not overflow", "[unit][terrain][ramp]") {
+  for(float scale:{1e30f,3e38f}) for(int yaw=0;yaw<4;++yaw) {
+    rat::MapData map;map.id="large_ramp";map.schema_version=5;map.width=map.height=1;map.tile_size=scale;
+    map.height_grid={0,0,1,1,{0}};
+    map.occupancy.push_back({0,0,0,rat::OccupancyKind::Ramp,static_cast<rat::RampDirection>(yaw)});
+    REQUIRE(rat::compile_map_data(map).ok);
+    const auto quads=rat::build_occupancy_ramp_fill_quads(map.occupancy[0],scale);REQUIRE(quads.size()==5);
+    for(const auto& q:quads) {
+      const double v[4][3]={{q.x0,q.y0,q.z0},{q.x1,q.y1,q.z1},{q.x2,q.y2,q.z2},{q.x3,q.y3,q.z3}};
+      for(const auto& p:v) for(double coord:p) CHECK(std::isfinite(coord));
+      for(const auto pair:{std::pair{2,1},std::pair{3,2}}) {
+        double a[3],b[3];for(int i=0;i<3;++i){a[i]=v[pair.first][i]-v[0][i];b[i]=v[pair.second][i]-v[0][i];}
+        const double n[]={a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]};
+        const double outward=n[0]*(v[0][0]-static_cast<double>(scale)*0.5)+n[1]*(v[0][1]-static_cast<double>(scale)/3.0)+n[2]*(v[0][2]-static_cast<double>(scale)*0.5);
+        CHECK(std::isfinite(outward));CHECK(outward>0.0);
+      }
+    }
+  }
+}

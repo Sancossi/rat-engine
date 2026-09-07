@@ -47,6 +47,17 @@ namespace {
 
 }  // namespace
 
+void finish_event_graph_wire_release(EventGraphWireState& state, bool source_click) {
+  state.dragging_wire = false;
+  state.drag_wire_from.clear();
+  state.drag_wire_branch.reset();
+  state.wire_moved = false;
+  if (!source_click) {
+    state.pending_from.clear();
+    state.pending_branch.reset();
+  }
+}
+
 bool is_mvp_event_graph_kind(std::string_view kind) {
   return kind == "show_text" || kind == "control_switch" || kind == "control_variable" ||
          kind == "control_self_switch" || kind == "conditional_branch" || kind == "wait" ||

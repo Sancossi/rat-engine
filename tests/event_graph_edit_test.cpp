@@ -284,3 +284,24 @@ TEST_CASE("event_graph_canvas_history_action maps Ctrl+Z/Y chords",
   REQUIRE(rat::event_graph_canvas_history_action(true, true, false, false) ==
           EventGraphCanvasHistoryAction::None);
 }
+
+TEST_CASE("Completed graph wire gestures clear rejected and empty connections", "[unit][event][edit][graph]") {
+  for (const std::string target : {"n", "missing", ""}) {
+    rat::EventGraph graph; (void)rat::add_event_graph_node(graph,"show_text");
+    graph.nodes[0].id="n";
+    rat::EventGraphWireState wire;wire.pending_from="n";wire.pending_branch="then";
+    wire.dragging_wire=true;wire.drag_wire_from="n";wire.drag_wire_branch="then";wire.wire_moved=true;
+    const auto source=wire.drag_wire_from;const auto branch=wire.drag_wire_branch;
+    rat::finish_event_graph_wire_release(wire,false);
+    CHECK_FALSE(wire.dragging_wire);CHECK(wire.drag_wire_from.empty());CHECK_FALSE(wire.drag_wire_branch);
+    CHECK(wire.pending_from.empty());CHECK_FALSE(wire.pending_branch);
+    if(!target.empty()) CHECK_FALSE(rat::connect_event_graph_nodes(graph,source,target,branch));
+    CHECK(graph.edges.empty());
+  }
+  rat::EventGraphWireState click;click.pending_from="n";click.dragging_wire=true;click.drag_wire_from="n";
+  rat::finish_event_graph_wire_release(click,true);
+  CHECK_FALSE(click.dragging_wire);CHECK(click.pending_from=="n");
+  rat::EventGraph graph;auto node=rat::add_event_graph_node(graph,"comment");
+  CHECK(rat::connect_event_graph_nodes(graph,node,rat::kEventGraphExitId));
+  rat::finish_event_graph_wire_release(click,false);CHECK(click.pending_from.empty());
+}

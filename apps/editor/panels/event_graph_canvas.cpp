@@ -153,11 +153,7 @@ void clear_graph_selection(EventGraphCanvasState& canvas) {
 }
 
 void cancel_pending_connect(EventGraphCanvasState& canvas) {
-  canvas.pending_from.clear();
-  canvas.pending_branch.reset();
-  canvas.dragging_wire = false;
-  canvas.drag_wire_from.clear();
-  canvas.drag_wire_branch.reset();
+  finish_event_graph_wire_release(canvas, false);
 }
 
 void add_kind_node(EditorDocument& document, EventDef& event, EventGraphCanvasState& canvas,
@@ -474,6 +470,7 @@ void draw_event_graph_canvas(EditorDocument& document, EventGraphCanvasState& ca
     const bool clicked = pin_hit(ui_id, center, pin_r);
     if (ImGui::IsItemActivated() && ImGui::IsMouseDown(ImGuiMouseButton_Left) && !io.KeyAlt) {
       canvas.dragging_wire = true;
+      canvas.wire_moved = false;
       canvas.drag_wire_from = id;
       canvas.drag_wire_branch = branch;
       canvas.pending_from = id;
@@ -722,16 +719,10 @@ void draw_event_graph_canvas(EditorDocument& document, EventGraphCanvasState& ca
     ImGui::EndPopup();
   }
 
+  if (canvas.dragging_wire && ImGui::IsMouseDragging(ImGuiMouseButton_Left)) canvas.wire_moved = true;
   if (canvas.dragging_wire && ImGui::IsMouseReleased(ImGuiMouseButton_Left)) {
-    if (!do_connect) {
-      if (!released_on_source_pin) {
-        cancel_pending_connect(canvas);
-      } else {
-        canvas.dragging_wire = false;
-        canvas.drag_wire_from.clear();
-        canvas.drag_wire_branch.reset();
-      }
-    }
+    const bool source_click = released_on_source_pin && !canvas.wire_moved && !do_connect;
+    finish_event_graph_wire_release(canvas, source_click);
   }
 
   if (canvas_hovered && ImGui::IsKeyPressed(ImGuiKey_Escape)) {
@@ -812,6 +803,7 @@ void draw_event_graph_canvas(EditorDocument& document, EventGraphCanvasState& ca
   ImGui::EndChild();
 
   if (do_connect) {
+    cancel_pending_connect(canvas); // Endpoints were copied before clearing even for rejected connections.
     EventPage& page_connect = event.pages[static_cast<std::size_t>(document.selected_page())];
     if (page_connect.graph.has_value() &&
         connect_event_graph_nodes(*page_connect.graph, connect_from, connect_to, connect_branch)) {

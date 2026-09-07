@@ -320,14 +320,6 @@ TEST_CASE("grey_yard cylinder walks from dirt onto bridge slab top_y 2.0",
   const rat::MapData& map = loaded.map;
   REQUIRE(map.schema_version == 5);
 
-  bool stood_on_bridge_slab = false;
-  for (const rat::FloorSlabDef& slab : map.floor_slabs) {
-    if (slab.tile.x == 6 && slab.tile.z == 5 && slab.top_y == Approx(2.0f)) {
-      stood_on_bridge_slab = true;
-    }
-  }
-  REQUIRE(stood_on_bridge_slab);
-
   rat::SurfaceQuery query(map);
   rat::PlayerBody player;
   player.x = 3.5f;
@@ -352,6 +344,14 @@ TEST_CASE("grey_yard cylinder walks from dirt onto bridge slab top_y 2.0",
   REQUIRE(player.y == Approx(2.0f).margin(0.08f));
   REQUIRE(jump.grounded);
   REQUIRE(player.z == Approx(5.5f).margin(0.15f));
+  const auto world=rat::bake_collision_world(map,query);
+  const auto support=rat::query_solid_support(world,player.x,player.z,player.half_extent,player.y,0.01f);
+  REQUIRE(support);CHECK_FALSE(support->on_ramp);CHECK(support->y==Approx(2));
+  bool thin=false;
+  for(const auto& box:world.boxes)
+    if(player.x>=box.min_x&&player.x<box.max_x&&player.z>=box.min_z&&player.z<box.max_z&&
+       box.y_hi==Approx(2)&&box.y_lo==Approx(1.75f)) thin=true;
+  REQUIRE(thin);
 }
 
 TEST_CASE("grey_yard cylinder still walks under the bridge span",

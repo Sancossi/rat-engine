@@ -14,6 +14,17 @@ namespace rat {
 inline constexpr const char* kEventGraphEntryId = "entry";
 inline constexpr const char* kEventGraphExitId = "exit";
 
+struct EventGraphWireState {
+  std::string pending_from;
+  std::optional<std::string> pending_branch;
+  bool dragging_wire = false;
+  std::string drag_wire_from;
+  std::optional<std::string> drag_wire_branch;
+  bool wire_moved = false;
+};
+// A plain click on the source arms two-click connection; every completed drag cancels it.
+void finish_event_graph_wire_release(EventGraphWireState& state, bool source_click);
+
 struct EventGraphApplyResult {
   bool ok = false;
   MapData map;

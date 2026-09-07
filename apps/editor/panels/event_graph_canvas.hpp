@@ -11,12 +11,10 @@
 
 namespace rat {
 
-struct EventGraphCanvasState {
+struct EventGraphCanvasState : EventGraphWireState {
   int bound_event = -1;
   int bound_page = -1;
   std::string selected_id;
-  std::string pending_from;
-  std::optional<std::string> pending_branch;
   std::string selected_edge_from;
   std::string selected_edge_to;
   std::optional<std::string> selected_edge_branch;
@@ -30,9 +28,6 @@ struct EventGraphCanvasState {
   std::optional<EventGraphNodeLayout> node_drag_initial_layout;
   float node_drag_initial_x = 0.0f;
   float node_drag_initial_y = 0.0f;
-  bool dragging_wire = false;
-  std::string drag_wire_from;
-  std::optional<std::string> drag_wire_branch;
   float context_x = 180.0f;
   float context_y = 24.0f;
 };
