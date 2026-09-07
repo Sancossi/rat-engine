@@ -1,5 +1,12 @@
 #include "editor_app.hpp"
 #include "gui_observer.hpp"
+#include <rat/map_loader.hpp>
+#include <rat/save_game.hpp>
+#include <rat/authoring_snapshot.hpp>
+#if defined(_WIN32)
+#include <windows.h>
+#include <shellapi.h>
+#endif
 
 #include <nlohmann/json.hpp>
 #include <GLFW/glfw3.h>
@@ -16,7 +23,39 @@ namespace {
 std::string utf8(const fs::path& path) {
   auto bytes = path.u8string(); return {bytes.begin(), bytes.end()};
 }
+std::u32string decode_utf8(std::string_view bytes) {
+  std::u32string out;
+  for (std::size_t i = 0; i < bytes.size();) {
+    const auto first = static_cast<unsigned char>(bytes[i++]);
+    char32_t code = first; int remaining = 0;
+    if (first >= 0xf0) { code = first & 7; remaining = 3; }
+    else if (first >= 0xe0) { code = first & 15; remaining = 2; }
+    else if (first >= 0xc0) { code = first & 31; remaining = 1; }
+    while (remaining-- > 0) {
+      if (i == bytes.size()) throw std::runtime_error("Invalid UTF-8 fixture");
+      code = (code << 6) | (static_cast<unsigned char>(bytes[i++]) & 63);
+    }
+    out.push_back(code);
+  }
+  return out;
+}
+Json read_json(const fs::path& path) { std::ifstream stream(path); return Json::parse(stream); }
+struct FailingMapStore final : rat::FileStore {
+  std::string target;
+  bool fail_once = false;
+  int attempts = 0;
+  rat::FileReadResult read(std::string_view path) const override { return rat::os_files().read(path); }
+  rat::FileWriteResult write(std::string_view path, std::string_view bytes) override { return rat::os_files().write(path,bytes); }
+  rat::FileWriteResult write_atomic(std::string_view path, std::string_view bytes) override {
+    if (path == target) {
+      ++attempts;
+      if (fail_once) { fail_once = false; return {false,"Injected named-target save failure"}; }
+    }
+    return rat::os_files().write_atomic(path,bytes);
+  }
+};
 struct Driver {
+  explicit Driver(rat::FileStore& files = rat::os_files()) : app(files) {}
   rat::EditorApp app;
   rat::EditorFrameInput input;
   fs::path artifacts;
@@ -85,6 +124,17 @@ struct Driver {
   void enter_edit() {
     if (app.observed_mode() != rat::AppMode::Edit) click("Inspector","Enter Edit (F2)");
   }
+  void open_path(const fs::path& path) {
+    text("Inspector","Map to open",decode_utf8(utf8(path)));
+    click("Inspector","Open map");
+  }
+  void action(const std::string& kind, const fs::path& alternative) {
+    if (kind == "close") { input.close_requested = true; frame(4); }
+    else if (kind == "f5") key(GLFW_KEY_F5);
+    else if (kind == "reload") click("Inspector","Reload map (reset player)");
+    else if (kind == "open") open_path(alternative);
+    else throw std::runtime_error("Unknown guard action");
+  }
   void add_event() {
     enter_edit(); click("Inspector","Events"); click("Inspector","Add stub event");
   }
@@ -113,13 +163,30 @@ struct Driver {
 }
 
 int main(int argc, char** argv) {
-  fs::path data = fs::absolute(fs::path(argv[0])).parent_path() / "data";
+  std::vector<std::string> arguments;
+  fs::path executable;
+#if defined(_WIN32)
+  (void)argc; (void)argv;
+  int argument_count = 0;
+  auto** wide_arguments = CommandLineToArgvW(GetCommandLineW(), &argument_count);
+  if (!wide_arguments) return 2;
+  for (int i = 0; i < argument_count; ++i) arguments.push_back(utf8(fs::path(wide_arguments[i])));
+  LocalFree(wide_arguments);
+  std::wstring module(32768, L'\0');
+  const auto length = GetModuleFileNameW(nullptr,module.data(),static_cast<DWORD>(module.size()));
+  if (!length || length == module.size()) return 2;
+  module.resize(length); executable = module;
+#else
+  for (int i = 0; i < argc; ++i) arguments.emplace_back(argv[i]);
+  executable = fs::read_symlink("/proc/self/exe");
+#endif
+  fs::path data = executable.parent_path() / "data";
   fs::path user, artifacts;
   std::string scenario = "infrastructure";
   rat::RendererMode renderer = rat::RendererMode::SoftwareD3D11;
-  for (int i = 1; i < argc; i += 2) {
-    if (i + 1 >= argc) { std::cerr << "Missing argument value\n"; return 2; }
-    const std::string key = argv[i], value = argv[i + 1];
+  for (std::size_t i = 1; i < arguments.size(); i += 2) {
+    if (i + 1 >= arguments.size()) { std::cerr << "Missing argument value\n"; return 2; }
+    const std::string key = arguments[i], value = arguments[i + 1];
     if (key == "--data-root") data = fs::path(std::u8string(value.begin(), value.end()));
     else if (key == "--user-data-dir") user = fs::path(std::u8string(value.begin(), value.end()));
     else if (key == "--artifact-dir") artifacts = fs::path(std::u8string(value.begin(), value.end()));
@@ -133,7 +200,9 @@ int main(int argc, char** argv) {
   if (user.empty() || artifacts.empty()) { std::cerr << "Explicit --user-data-dir and --artifact-dir required\n"; return 2; }
   user = fs::absolute(user); artifacts = fs::absolute(artifacts); data = fs::absolute(data);
   fs::create_directories(user); fs::create_directories(artifacts);
-  Driver driver; driver.artifacts = artifacts;
+  FailingMapStore files;
+  files.target = utf8(user/"gui-map.json"); files.fail_once = scenario == "failed-save";
+  Driver driver(files); driver.artifacts = artifacts;
   Json report{{"scenarios",Json::array()}};
   try {
     const auto map = user / "gui-map.json";
@@ -143,13 +212,35 @@ int main(int argc, char** argv) {
       Json fixture{{"schema_version",5},{"id","gui_fixture"},{"width",16},{"height",16},{"tile_size",1.0},
         {"height_grid",{{"origin_x",-4},{"origin_z",-4},{"width",16},{"height",16},{"ground_y",std::vector<float>(256,0)}}},
         {"occupancy",Json::array()},{"events",Json::array()}};
-      std::ofstream(map) << fixture.dump(2);
+      if (scenario != "restart-add") std::ofstream(map) << fixture.dump(2);
+      fixture["id"] = "alternative_fixture";
+      std::ofstream(user/"alternative.json") << fixture.dump(2);
+      fixture["id"] = "backup_fixture";
+      std::ofstream(user/"gui-map.json.bak") << fixture.dump(2);
+      std::ofstream(user/"malformed.json") << "{invalid";
+      if (scenario == "malformed-start") std::ofstream(map) << "{invalid";
+      if (scenario == "slot-backup") {
+        rat::GameState slot; slot.set_map_id("gui_fixture"); slot.set_player_position(-1.5f,0,1.5f);
+        std::string bytes; if (!slot.save_to_memory(bytes)) throw std::runtime_error("Slot fixture serialization failed");
+        std::ofstream(user/"save.json") << bytes;
+        slot.set_player_position(-2.5f,0,0.5f); slot.set_variable(7,42);
+        if (!slot.save_to_memory(bytes)) throw std::runtime_error("Backup fixture serialization failed");
+        std::ofstream(user/"save.json.bak") << bytes;
+      }
     }
     rat::EditorLaunchOptions options{utf8(data),utf8(user),utf8(map),utf8(user/"save.json"),
         utf8(artifacts/"editor.log"),utf8(artifacts/"snapshot.json"),utf8(user/"imgui.ini")};
     rat::EditorInitialState initial;
     initial.renderer = renderer; initial.automation_layout = true; initial.hidden_window = true;
-    if (!driver.app.init(options, initial)) throw std::runtime_error("Real editor initialization failed");
+    const bool initialized = driver.app.init(options, initial);
+    if (scenario == "malformed-start") {
+      driver.require(!initialized, "Malformed startup unexpectedly initialized");
+      report["status"] = "passed";
+      report["scenarios"].push_back({{"name",scenario},{"status","passed"}});
+      std::ofstream(artifacts/"scenario-report.json") << report.dump(2);
+      return 0;
+    }
+    if (!initialized) throw std::runtime_error("Real editor initialization failed");
     driver.frame(5);
     if (scenario == "infrastructure") {
     driver.click("Inspector", "Enter Edit (F2)");
@@ -248,6 +339,113 @@ int main(int argc, char** argv) {
       driver.click("Unsaved changes","Cancel");
       driver.capture("authoring-text"); driver.debug("authoring-text");
       report["scenarios"].push_back({{"name",scenario},{"status","passed"}});
+    } else if (scenario.starts_with("guard-")) {
+      const auto separator = scenario.find('-',6);
+      const auto action = scenario.substr(6,separator-6), choice = scenario.substr(separator+1);
+      driver.add_event();
+      driver.action(action,user/"alternative.json");
+      driver.require(driver.app.observed_modal(), "Dirty action did not open modal");
+      const auto tick = driver.app.observed_session().tick_id();
+      driver.capture("guard-modal"); driver.frame(5);
+      driver.require(driver.app.observed_session().tick_id() == tick, "Modal did not pause simulation");
+      driver.click("Unsaved changes",choice);
+      driver.require(!driver.app.observed_modal(), "Choice did not resolve modal");
+      if (choice == "Cancel") {
+        driver.require(driver.app.observed_running() && driver.app.observed_document().dirty() &&
+          driver.app.observed_document().data().events.size() == 1, "Cancel lost authored state");
+      } else if (action == "close") driver.require(!driver.app.observed_running(), "Approved native close did not exit");
+      else {
+        driver.require(driver.app.observed_running() && !driver.app.observed_document().dirty(), "Reload/Open did not install clean document");
+        const auto& loaded = driver.app.observed_document().data();
+        driver.require(action == "open" ? loaded.id == "alternative_fixture" : loaded.events.size() == (choice == "Save" ? 1u : 0u), "Wrong document after action");
+      }
+      driver.require(read_json(map)["events"].size() == (choice == "Save" ? 1u : 0u), "Guard changed wrong saved bytes");
+      driver.debug(scenario);
+      report["scenarios"].push_back({{"name",scenario},{"status","passed"}});
+    } else if (scenario == "failed-save") {
+      driver.add_event(); driver.action("close",{});
+      driver.click("Unsaved changes","Save");
+      driver.require(driver.app.observed_running() && driver.app.observed_modal() && driver.app.observed_document().dirty(), "Failed Save lost modal/action");
+      driver.require(driver.app.observed_error().find("Injected") != std::string::npos && files.attempts == 1, "Save failure not surfaced exactly once");
+      driver.require(read_json(map)["events"].empty(), "Failed save changed main");
+      driver.capture("failed-save-modal"); driver.debug(scenario);
+      driver.click("Unsaved changes","Save");
+      driver.require(!driver.app.observed_running() && files.attempts == 2 && read_json(map)["events"].size() == 1, "Save retry did not finish retained Close once");
+      report["scenarios"].push_back({{"name",scenario},{"status","passed"}});
+    } else if (scenario == "map-backup") {
+      driver.add_event(); driver.click("Inspector","Restore map backup");
+      driver.require(driver.app.observed_modal(), "Dirty backup restore bypassed guard");
+      driver.click("Unsaved changes","Save");
+      driver.require(driver.app.observed_document().data().id == "backup_fixture" && driver.app.observed_document().dirty(), "Restore lost pinned backup or clean baseline");
+      driver.require(read_json(map)["id"] == "gui_fixture" && read_json(map)["events"].size() == 1 &&
+        read_json(user/"gui-map.json.bak")["id"] == "gui_fixture", "Guard Save did not rotate backup as expected");
+      driver.capture("restored-dirty"); driver.click("Inspector","Save current map JSON");
+      driver.require(read_json(map)["id"] == "backup_fixture" && !driver.app.observed_document().dirty(), "Restore did not retain primary save path");
+      driver.debug(scenario); report["scenarios"].push_back({{"name",scenario},{"status","passed"}});
+    } else if (scenario == "slot-backup") {
+      const auto main = read_json(user/"save.json");
+      driver.key(GLFW_KEY_ESCAPE); driver.click("Pause","Restore save slot backup");
+      driver.require(driver.app.observed_session().state().get_variable(7) == 42 &&
+        driver.app.observed_session().player().x == -2.5f, "Actual pause backup button did not restore slot");
+      driver.require(read_json(user/"save.json") == main, "Slot restore rewrote primary slot");
+      driver.capture(scenario); driver.debug(scenario); report["scenarios"].push_back({{"name",scenario},{"status","passed"}});
+    } else if (scenario == "malformed-load") {
+      driver.enter_edit(); const auto original = rat::authoring_snapshot(driver.app.observed_document().data());
+      driver.open_path(user/"malformed.json");
+      driver.require(rat::authoring_snapshot(driver.app.observed_document().data()) == original &&
+        !driver.app.observed_document().dirty() && !driver.app.observed_document().can_undo(), "Malformed load changed existing document/history");
+      driver.require(!driver.app.observed_error().empty(), "Malformed load error invisible");
+      driver.capture(scenario); driver.debug(scenario); report["scenarios"].push_back({{"name",scenario},{"status","passed"}});
+    } else if (scenario == "restart-create" || scenario == "restart-add") {
+      const auto before = driver.app.observed_document().data().events;
+      driver.require(before.size() == (scenario == "restart-create" ? 0u : 1u), "Restart fixture did not preserve prior process save");
+      driver.add_event(); const auto& events = driver.app.observed_document().data().events;
+      driver.require(events.size() == before.size()+1 && (before.empty() || events.back().id != before[0].id), "ID allocator collided after real process restart");
+      driver.click("Inspector","Save current map JSON"); driver.capture(scenario); driver.debug(scenario);
+      report["event_ids"] = Json::array(); for (const auto& event : events) report["event_ids"].push_back(event.id);
+      driver.action("close",{}); driver.require(!driver.app.observed_running(), "Clean native close failed");
+      report["scenarios"].push_back({{"name",scenario},{"status","passed"}});
+    } else if (scenario == "creation-and-duplicate") {
+      driver.add_event();
+      driver.click("Inspector","Place event##viewport_tool"); driver.world_click({-3.5f,0,0.5f});
+      driver.world_click({-2.5f,0,-0.5f},1); driver.click("","Create");
+      const auto original = driver.app.observed_document().data().events;
+      driver.require(original.size() == 3 && original[0].id != original[1].id && original[1].id != original[2].id && original[0].id != original[2].id,
+                     "Three actual creation paths did not allocate unique IDs");
+      driver.text("Inspector","Event ID",decode_utf8(original[0].id));
+      driver.require(driver.app.observed_document().data().events[2].id == original[2].id &&
+        driver.app.observed_document().last_error().find("unique") != std::string::npos, "Duplicate ID rename did not fail visibly and transactionally");
+      (void)driver.find("Inspector","Edit error");
+      driver.capture(scenario); driver.debug(scenario); report["scenarios"].push_back({{"name",scenario},{"status","passed"}});
+    } else if (scenario == "history-voxel") {
+      driver.add_event(); const auto id = driver.app.observed_document().data().events[0].id;
+      driver.click("Inspector","Ev +X"); driver.key(GLFW_KEY_Z,true);
+      driver.require(driver.app.observed_document().can_redo(), "Undo did not retain redo");
+      driver.text("Inspector","Event ID",decode_utf8(id));
+      driver.require(driver.app.observed_document().can_redo(), "No-op field edit lost redo");
+      driver.key(GLFW_KEY_Y,true); driver.key(GLFW_KEY_Z,true); driver.key(GLFW_KEY_Z,true);
+      driver.require(driver.app.observed_document().data().events.empty() && !driver.app.observed_document().dirty(), "Undo to baseline did not clear dirty");
+      driver.click("Inspector","Terrain"); driver.click("Inspector","Remove voxel##viewport_tool");
+      driver.world_click({-3.5f,0,0.5f});
+      driver.require(driver.app.observed_document().can_redo() && !driver.app.observed_document().dirty(), "Empty voxel no-op lost redo or dirtied map");
+      driver.click("Inspector","Place voxel##viewport_tool");
+      const auto point = driver.app.project_world({-3.5f,0,0.5f});
+      driver.input.cursor_x = point->x; driver.input.cursor_y = point->y; driver.frame(2);
+      driver.input.mouse_buttons[0] = true; driver.frame(2);
+      driver.require(!driver.app.observed_document().data().occupancy.empty(), "Viewport voxel stroke did not place");
+      driver.input.mouse_buttons[1] = true; driver.frame(2);
+      driver.input.mouse_buttons[0] = driver.input.mouse_buttons[1] = false; driver.frame(3);
+      driver.require(driver.app.observed_document().data().occupancy.empty() && driver.app.observed_document().can_redo() &&
+        !driver.app.observed_document().dirty(), "Aborted voxel stroke lost prior redo");
+      driver.world_click({-3.5f,0,0.5f});
+      driver.require(driver.app.observed_document().data().occupancy.size() == 1, "Real voxel place failed");
+      driver.click("Inspector","Remove voxel##viewport_tool"); driver.world_click({-3.5f,1.0f,0.5f});
+      driver.require(driver.app.observed_document().data().occupancy.empty(), "Real voxel remove failed");
+      driver.key(GLFW_KEY_Z,true);
+      driver.require(driver.app.observed_document().data().occupancy.size() == 1, "Voxel removal undo failed");
+      driver.key(GLFW_KEY_Y,true);
+      driver.require(driver.app.observed_document().data().occupancy.empty(), "Voxel removal redo failed");
+      driver.capture(scenario); driver.debug(scenario); report["scenarios"].push_back({{"name",scenario},{"status","passed"}});
     } else throw std::runtime_error("Unknown scenario " + scenario);
     report["renderer"] = driver.app.renderer_name();
     report["status"] = "passed";

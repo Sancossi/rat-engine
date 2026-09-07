@@ -26,6 +26,13 @@ void begin_gui_observation() {
   ImGui::GetCurrentContext()->TestEngineHookItems = true;
 }
 const std::vector<GuiItemObservation>& gui_items() { return items; }
+void observe_gui_item(const char* semantic_label) {
+  auto* ctx = ImGui::GetCurrentContext();
+  if (!ctx->TestEngineHookItems) return;
+  const auto id = ImGui::GetID(semantic_label);
+  ImGuiTestEngineHook_ItemAdd(ctx,id,ctx->LastItemData.Rect,&ctx->LastItemData);
+  ImGuiTestEngineHook_ItemInfo(ctx,id,semantic_label,ctx->LastItemData.StatusFlags);
+}
 }
 
 void ImGuiTestEngineHook_ItemAdd(ImGuiContext* ctx, ImGuiID id, const ImRect& bb,

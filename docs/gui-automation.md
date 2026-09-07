@@ -21,6 +21,21 @@ first Edit frame and the unsaved modal. The complete acceptance
 scenario suite is being added in the following slice; this checkpoint alone is
 not stage acceptance.
 
+Additional implemented scenario arguments:
+
+- `guard-{close,f5,reload,open}-{Save,Discard,Cancel}`: all twelve unsaved branches.
+- `failed-save`: a named-target FileStore failure retains the modal and Close for retry.
+- `map-backup`: the validated candidate survives the guard's Save rotating `.bak`.
+- `slot-backup`: the real pause-menu restore applies the backup without rewriting main.
+- `malformed-start`, `malformed-load`: clean initialization failure and transactional loading.
+- `restart-create`, `restart-add`: run as two processes with the same user root, in that order.
+- `creation-and-duplicate`: panel, viewport and context-menu creation plus rejected duplicate ID.
+- `history-voxel`: no-op field/removal, undo-to-clean, aborted stroke preserving redo,
+  real viewport voxel placement/removal and undo/redo.
+
+The remaining graph, all-yaw ramp, bridge, scaling and package acceptance groups
+are still pending; passing the scenarios above is not the complete GUI suite.
+
 `EditorFrameInput` carries held state and ordered key, character, mouse, wheel and
 focus events. Native GLFW callbacks and scripted input use this same stream;
 the GLFW ImGui backend does not install a competing callback stream or run its

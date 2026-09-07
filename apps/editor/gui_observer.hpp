@@ -19,5 +19,6 @@ struct GuiItemObservation {
 // Instrumentation reads ImGui's actual submitted items. It never activates them.
 void begin_gui_observation();
 const std::vector<GuiItemObservation>& gui_items();
+void observe_gui_item(const char* semantic_label);
 
 }  // namespace rat

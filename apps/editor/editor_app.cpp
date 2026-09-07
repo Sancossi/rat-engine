@@ -1007,8 +1007,17 @@ void EditorApp::simulate(float dt) {
     input_focus = climb_pose.focus;
   }
 
-  const InputFrame input =
+  InputFrame input =
       map_input_frame(buttons, previous_buttons_, gating, input_eye, input_focus);
+  if (app_mode_ == AppMode::Edit) {
+    // Navigation focus on a button is not a text editor. Global undo remains
+    // available after clicking authoring controls; active text fields keep it.
+    auto editor_gating = gating;
+    editor_gating.keyboard_captured = io.WantTextInput;
+    const auto editor_input = map_input_frame(buttons, previous_buttons_, editor_gating, input_eye, input_focus);
+    input.undo_pressed = editor_input.undo_pressed;
+    input.redo_pressed = editor_input.redo_pressed;
+  }
   previous_buttons_ = buttons;
 
   const bool escape_down = processed_input_.keys[GLFW_KEY_ESCAPE];
@@ -1271,8 +1280,10 @@ void EditorApp::draw_ui() {
   if (!map_path_.empty() && ImGui::Button("Restore map backup")) {
     request_map_action(EditorActionKind::RestoreMapBackup, map_path_, true);
   }
-  if (!document_.last_error().empty())
+  if (!document_.last_error().empty()) {
     ImGui::TextWrapped("Edit error: %s", document_.last_error().c_str());
+    observe_gui_item("Edit error");
+  }
   if (!last_apply_error_.empty()) {
     ImGui::TextColored(ImVec4(1.0f, 0.35f, 0.35f, 1.0f), "Map I/O error: %s",
                        last_apply_error_.c_str());
