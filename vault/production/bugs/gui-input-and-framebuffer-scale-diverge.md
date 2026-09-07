@@ -2,7 +2,7 @@
 type: bug
 area: Engine
 status: Investigating
-review: In review
+review: Pending
 severity: Medium
 sprint: Sprint 15
 tags: [bug, stabilization]
@@ -28,3 +28,6 @@ Re-review d5ae2f4: original edge/text-queue fixes pass real GUI checks. Remainin
 
 
 Correction 68187f4 is in independent review: processed cursor positions follow ImGui event timing; native cursor events are ordered; Unicode assertions use explicit escapes. Three real GUI scenarios passed with an explicitly created WARP device verified as Microsoft Basic Render Driver with DXGI_ADAPTER_FLAG_SOFTWARE. Evidence: build/stabilization/verified-warp/{infrastructure,input-order,authoring-text}/artifacts. Parent inspected cyrillic-field.png and full Release rebuild passed. Full GUI scenario and scale acceptance remains in progress.
+
+
+Infrastructure correction 68187f4 independently Approved: all three scenarios passed on verified WARP; reviewer checked cursor ordering, Unicode capture and device ownership through shutdown. Independent artifacts: build/stabilization/review-warp-ch6tjfh6/. Full scenario/scale coverage is now being implemented and its review remains pending.
