@@ -1,7 +1,7 @@
 ---
 type: bug
 area: Engine
-status: Open
+status: Investigating
 review: Pending
 severity: Medium
 sprint: Sprint 15

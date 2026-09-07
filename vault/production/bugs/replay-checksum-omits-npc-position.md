@@ -1,8 +1,8 @@
 ---
 type: bug
 area: Engine
-status: Investigating
-review: In review
+status: Fixed
+review: Approved
 severity: Medium
 sprint: Sprint 15
 tags: [bug, audit]
@@ -20,3 +20,12 @@ Probe: карты с тем же ID и маршрутами east/west дают �
 ## Expected / acceptance
 
 Checksum включает overlay и продвижение VM/route; политика fingerprint карты определена.
+
+
+## Resolution
+
+Fixed in eed6158 with reviewed append correction 4eaeaf6. Independent review Approved; full verification 689/689 C++ tests passed and reviewer focused run 19 tests/346 assertions passed. See [[s15-runtime]]. Real UI acceptance remains [[s15-acceptance]].
+
+## Bugs found
+
+No unresolved stage-4 findings.
