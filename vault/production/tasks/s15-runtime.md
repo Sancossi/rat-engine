@@ -1,7 +1,8 @@
 ---
 type: task
 area: Engine
-status: In progress
+status: In review
+review: In review
 task_type: Chore
 sprint: Sprint 15
 tags: [task, stabilization]
@@ -22,7 +23,7 @@ Depends: [[s15-authoring]].
 
 Follow-up: [[explicit-empty-graph-revives-legacy-commands]].
 
-Pending.
+Implemented in eed6158. Full Windows verification passed: 687/687 C++ tests, 8 Python checks and vault. Independent review pending. Runtime/replay contract documented in docs/adr-replay-v2.md.
 
 ## Bugs found
 
