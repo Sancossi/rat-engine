@@ -6,16 +6,16 @@ This index distinguishes completed implementation from pending desktop/delivery 
 
 | Audit | Implementation and regression evidence | Independent review / remaining acceptance |
 | --- | --- | --- |
-| A01 | `160a376`: shared destructive-action controller, transactional Save/Discard/Cancel; `tests/editor_document_test.cpp` | Authoring and all twelve real GUI guard combinations approved; Play-mode pause proof pending |
+| A01 | `160a376`: shared destructive-action controller, transactional Save/Discard/Cancel; `tests/editor_document_test.cpp` | Authoring, twelve real GUI guard combinations and advancing-Play modal pause approved |
 | A02 | `ebe7759`, `c90638f`: checked atomic replacement, one backup, failure injection; `tests/file_store_test.cpp` | Storage and real GUI map/slot backup restore cases approved |
 | A03 | Strict save v2 and valid legacy reader; `tests/game_state_test.cpp`, `tests/simulation_session_test.cpp`; [format ADR](../adr-storage-v2.md) | Storage approved |
 | A04 | Checked map numbers and derived geometry; `tests/map_loader_test.cpp`, `tests/map_document_test.cpp` | Storage approved after malformed-parameter and overflow corrections |
 | A05 | Common unique allocator, transactional duplicate rename; `tests/event_edit_test.cpp`, `tests/editor_document_test.cpp` | Authoring and real GUI creation/duplicate-ID/two-process restart cases approved |
-| A06 | `eed6158`: unsupported cross-map transfer rejected before apply and defended in runtime; map/session/event tests | Runtime approved; GUI repair scenario pending |
+| A06 | `eed6158`: unsupported cross-map transfer rejected before apply and defended in runtime; map/session/event tests | Runtime and real GUI cross-map repair/Apply/Play gates approved |
 | A07 | Complete canonical authoritative replay checksum; `tests/replay_test.cpp`; [replay ADR](../adr-replay-v2.md) | Runtime approved |
 | A08 | Strict replay v2 header/ticks, freshness and semantic map identity; `4eaeaf6` preserves linear recording cost | Runtime approved; replay tests and append scaling measured |
-| A09 | Canonical authored clean snapshot, changed/no-op distinction, graph layout history; editor document/history tests | Authoring and real GUI no-op/undo/redo/stroke cases approved; graph layout case pending |
-| A10 | EventTouch rejected with repairable authored document and disabled UI choice; map/runtime tests | Runtime approved; real GUI repair/disabled-choice scenario pending |
+| A09 | Canonical authored clean snapshot, changed/no-op distinction, graph layout history; editor document/history tests | Authoring and real GUI no-op/undo/redo/stroke/layout persistence approved |
+| A10 | EventTouch rejected with repairable authored document and disabled UI choice; map/runtime tests | Runtime and real GUI repair/disabled-choice scenario approved |
 | A11 | `c11288b`: filename-based vault links and `scripts/check_vault.py` | Foundation approved; vault checks pass |
 | A12 | Explicit zero/one current sprint, board validation and Sprint 15 queue | Foundation approved; final sprint closure awaits acceptance |
 | A13 | `83746e7`: actual architecture and feature boundaries documented | Foundation approved; delivery docs will reflect final acceptance |
@@ -27,8 +27,7 @@ Included Sprint 14 follow-ups: empty voxel no-op is covered by the authoring
 changes; `2a44876` covers all-yaw side placement and wedge faces, occupancy
 round-trip/boundary validation, thin bridge support and a filled-solid negative,
 and graph wire-release cancellation. Independent geometry review passed six
-focused tests with 1,314 assertions. Desktop gesture coverage remains part of
-stage 6. Review also found and fixed slab/ramp height mismatch and numeric
+focused tests with 1,314 assertions. Desktop gesture coverage was independently approved in `ddc8d9c`. Review also found and fixed slab/ramp height mismatch and numeric
 overflow. `2d83e7a` fixes localized MSVC header dependency discovery, verified by
 touching a header and observing recompilation.
 
@@ -53,3 +52,11 @@ the 4-by-3 guard matrix and two distinct restart processes. Artifacts:
 `build/stabilization/review-guards-sh5ixh8v/`. The production editor separately
 returned exit 1 without crashing on malformed startup. Ctrl+Z after button
 navigation focus was fixed; active text input retains shortcut ownership.
+
+GUI geometry/graph/repair slice `ddc8d9c` independently passed eleven scenarios:
+all four side-ramp yaw placements, thin bridge above/under plus filled-solid
+negative, graph release/connections/delete/layout history and persistence,
+advancing-Play modal pause, and unsupported EventTouch/cross-map repair. Evidence:
+`build/stabilization/review-geometry-363j5x85/`. Graph origin movement during
+connection and duplicate undo handling were found and fixed. Scale and packaged
+GUI acceptance remain pending.
