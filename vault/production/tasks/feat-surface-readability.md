@@ -1,8 +1,8 @@
 ---
 type: task
 area: Engine
-status: In progress
-review: Needs fixes
+status: In review
+review: In review
 task_type: Feature
 sprint:
 due:
@@ -34,3 +34,6 @@ Lighting exposed inward legacy slab/solid and inconsistent terrain-wall normals;
 
 
 Review 72c51d7 Needs fixes: contour interval extraction scans all segments per interval, allowing quadratic work on a long flat strip despite rectangle partition caps. Correcting with bounded contour processing and an adversarial strip regression. Independent six focused tests/1120 assertions passed; shader/visual results remain valid.
+
+
+Correction 4eeb457 replaces quadratic interval scanning with an endpoint sweep and bounded normal classification. Long-strip500/10000 regression checks linear operation counts and exact perimeter. Full Release714/714, Python10 and vault passed; post-fix WARP three surface scenarios passed: build/surface-readability/sweep-artifacts/gui-run-8qx09y3f/. Independent re-review pending. Prior full43GUI and installed4 evidence belongs to72c51d7.
