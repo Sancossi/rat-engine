@@ -2,7 +2,7 @@
 type: bug
 area: Engine
 status: Investigating
-review: In review
+review: Needs fixes
 severity: High
 sprint: Sprint 15
 tags: [bug, audit]
@@ -20,3 +20,6 @@ Probe: MapData.tile_size=NaN проходит compile и serialize; reload со�
 ## Expected / acceptance
 
 Все геометрические значения проверены; допустимые карты проходят serialize/load.
+
+
+Review: derived ramp differences and occupancy Y multiplication can overflow; malformed present graph parameters bypass conversion. These are in-scope validation corrections; see [[s15-storage]].

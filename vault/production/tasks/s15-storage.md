@@ -1,8 +1,8 @@
 ---
 type: task
 area: Engine
-status: In review
-review: In review
+status: In progress
+review: Needs fixes
 task_type: Chore
 sprint: Sprint 15
 tags: [task, stabilization]
@@ -21,7 +21,7 @@ Depends: [[s15-foundation]].
 
 ## Resolution
 
-Implemented in ebe7759. Full Windows verification passed: 656/656 C++ tests, Python checks and vault validation. Independent review pending.
+Implemented in ebe7759. Full Windows verification passed: 656/656 C++ tests, Python checks and vault validation. Independent review Needs fixes: malformed graph params silently default; derived ramp/voxel heights can overflow despite finite inputs. Isolated reproductions: build/stabilization/review-storage/probe.cpp. Corrections and re-review pending.
 
 ## Bugs found
 
