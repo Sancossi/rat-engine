@@ -1,8 +1,8 @@
 ---
 type: task
 area: Engine
-status: In review
-review: In review
+status: In progress
+review: Needs fixes
 task_type: Feature
 sprint:
 due:
@@ -31,3 +31,6 @@ Implemented in 72c51d7; baseline fixture/captures in 612d517. Independent review
 ## Bugs found
 
 Lighting exposed inward legacy slab/solid and inconsistent terrain-wall normals; corrected with render-only outward hints, preserving geometry/collision. Pathological overlapping face partitioning is bounded, retaining original fill and omitting uncertain contours. See docs/surface-readability.md.
+
+
+Review 72c51d7 Needs fixes: contour interval extraction scans all segments per interval, allowing quadratic work on a long flat strip despite rectangle partition caps. Correcting with bounded contour processing and an adversarial strip regression. Independent six focused tests/1120 assertions passed; shader/visual results remain valid.
