@@ -22,6 +22,7 @@ struct EventGraphCanvasState : EventGraphWireState {
   float pan_x = 0.0f;
   float pan_y = 0.0f;
   float zoom = 1.0f;
+  float display_scale = 1.0f;  // Transient UI scale; authored positions stay in graph units.
   std::optional<EventGraphNode> clipboard;
   float clipboard_x = 0.0f;
   float clipboard_y = 0.0f;

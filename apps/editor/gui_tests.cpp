@@ -169,9 +169,45 @@ struct Driver {
     for (const auto& item : rat::gui_items()) items.push_back({{"window",item.window},{"label",item.label},
       {"visible",item.visible},{"enabled",item.enabled},{"rect",{item.min_x,item.min_y,item.max_x,item.max_y}}});
     const auto& doc = app.observed_document();
+    const auto& session = app.observed_session();
+    const auto& canvas = app.observed_canvas();
+    const auto camera = app.observed_camera_pose();
+    Json events = Json::array(), occupancy = Json::array();
+    for (const auto& event : doc.data().events) {
+      Json pages = Json::array();
+      for (const auto& page : event.pages) {
+        Json nodes = Json::array(), edges = Json::array();
+        if (page.graph) {
+          for (const auto& node : page.graph->nodes) {
+            Json item{{"id",node.id},{"kind",node.kind},{"text",node.text},{"map_id",node.map_id}};
+            if (node.layout) item["layout"] = {node.layout->x,node.layout->y};
+            nodes.push_back(item);
+          }
+          for (const auto& edge : page.graph->edges) edges.push_back({{"from",edge.from},{"to",edge.to}});
+        }
+        pages.push_back({{"trigger",static_cast<int>(page.trigger)},{"nodes",nodes},{"edges",edges}});
+      }
+      Json item{{"id",event.id},{"pages",pages}};
+      if (event.tile) item["tile"] = {event.tile->x,event.tile->z};
+      events.push_back(item);
+    }
+    for (const auto& cell : doc.data().occupancy)
+      occupancy.push_back({{"cell",{cell.x,cell.y,cell.z}},{"kind",static_cast<int>(cell.kind)},{"yaw",static_cast<int>(cell.yaw)}});
     Json snapshot{{"frames",frames},{"dirty",doc.dirty()},{"can_undo",doc.can_undo()},
       {"can_redo",doc.can_redo()},{"modal",app.observed_modal()},{"error",app.observed_error()},
-      {"renderer",app.renderer_name()},{"items",items},{"trace",trace}};
+      {"renderer",app.renderer_name()},{"items",items},{"trace",trace},
+      {"map_id",doc.data().id},{"events",events},{"occupancy",occupancy},
+      {"runtime_valid",app.observed_runtime_valid()},{"mode",static_cast<int>(app.observed_mode())},
+      {"selected_event",doc.selected_event()},{"tick",session.tick_id()},
+      {"player",{session.player().x,session.player().y,session.player().z}},
+      {"jump",{{"grounded",session.jump().grounded},{"offset",session.jump().jump_offset},
+        {"vertical_speed",session.jump().vertical_speed},{"climbing",session.jump().climbing}}},
+      {"canvas",{{"wire_drag",canvas.dragging_wire},{"pending_from",canvas.pending_from},
+        {"pan",{canvas.pan_x,canvas.pan_y}},{"zoom",canvas.zoom},{"display_scale",canvas.display_scale}}},
+      {"logical_size",{input.logical_width,input.logical_height}},
+      {"framebuffer_size",{input.framebuffer_width,input.framebuffer_height}}};
+    snapshot["camera"] = {{"eye",{camera.eye.x,camera.eye.y,camera.eye.z}},
+                          {"focus",{camera.focus.x,camera.focus.y,camera.focus.z}}};
     std::ofstream(artifacts / (name + ".json")) << snapshot.dump(2);
   }
 };
@@ -227,7 +263,7 @@ int main(int argc, char** argv) {
       Json fixture{{"schema_version",5},{"id","gui_fixture"},{"width",16},{"height",16},{"tile_size",1.0},
         {"height_grid",{{"origin_x",-4},{"origin_z",-4},{"width",16},{"height",16},{"ground_y",std::vector<float>(256,0)}}},
         {"occupancy",Json::array()},{"events",Json::array()}};
-      if (scenario == "graph" || scenario == "unsupported-touch" || scenario == "unsupported-transfer") {
+      if (scenario.starts_with("graph") || scenario.starts_with("scale-") || scenario == "unsupported-touch" || scenario == "unsupported-transfer") {
         Json graph{{"nodes",{{{"id","text"},{"kind","show_text"},{"params",{{"text","Original"}}},{"layout",{{"x",180},{"y",24}}}}}},
                    {"edges",{{{"from","entry"},{"to","text"}},{{"from","text"},{"to","exit"}}}}};
         Json event{{"id","graph_event"},{"tile",{{"x",-3},{"z",0}}},
@@ -272,6 +308,13 @@ int main(int argc, char** argv) {
         utf8(artifacts/"editor.log"),utf8(artifacts/"snapshot.json"),utf8(user/"imgui.ini")};
     rat::EditorInitialState initial;
     initial.renderer = renderer; initial.automation_layout = true; initial.hidden_window = true;
+    if (scenario.starts_with("scale-")) {
+      initial.ui_scale = std::stof(scenario.substr(6)) / 100.0f;
+      driver.input.logical_width = static_cast<int>(1280 * initial.ui_scale);
+      driver.input.logical_height = static_cast<int>(720 * initial.ui_scale);
+      driver.input.framebuffer_width = driver.input.logical_width;
+      driver.input.framebuffer_height = driver.input.logical_height;
+    }
     if (scenario.starts_with("ramp-")) {
       const auto yaw = scenario.substr(5);
       rat::ClimbCameraPose camera;
@@ -297,6 +340,11 @@ int main(int argc, char** argv) {
     }
     if (!initialized) throw std::runtime_error("Real editor initialization failed");
     driver.frame(5);
+    const auto* assets = driver.app.observed_assets();
+    driver.require(assets && assets->state(rat::make_asset_id("sfx/beep")) == rat::AssetState::Ready,
+      "Executable-adjacent audio resource did not load");
+    driver.require(driver.app.observed_cyrillic_font(), "Loaded UI font lacks actual Cyrillic glyphs");
+    report["resources"] = {{"data_root",utf8(data)},{"audio",assets->compiled_path(rat::make_asset_id("sfx/beep"))},{"cyrillic_glyphs_loaded",true}};
     if (scenario == "infrastructure") {
     driver.click("Inspector", "Enter Edit (F2)");
     if (driver.app.observed_mode() != rat::AppMode::Edit) throw std::runtime_error("Real mode button did not enter Edit");
@@ -544,6 +592,20 @@ int main(int argc, char** argv) {
       else if (scenario == "bridge-under") driver.require(crossed && driver.app.observed_session().player().x > 2.0f, "Player did not progress through underpass");
       else driver.require(!crossed && driver.app.observed_session().player().x < 0.7f, "Filled-ground-to-deck negative fixture did not block identical input");
       driver.capture(scenario); driver.debug(scenario); report["scenarios"].push_back({{"name",scenario},{"status","passed"}});
+    } else if (scenario == "graph-active-close") {
+      driver.enter_edit(); driver.click("Inspector","Events"); driver.click("Inspector","graph_event  tile(-3,0)"); driver.click("Inspector","Open Event Graph");
+      const auto original = *driver.app.observed_document().data().events[0].pages[0].graph->nodes[0].layout;
+      const auto header = driver.find("Event Graph","##drag_text");
+      driver.input.cursor_x = (header.min_x+header.max_x)*0.5; driver.input.cursor_y = (header.min_y+header.max_y)*0.5;
+      driver.frame(2); driver.input.mouse_buttons[0] = true; driver.frame();
+      driver.input.cursor_x += 45; driver.input.cursor_y += 30; driver.frame(2);
+      driver.input.close_requested = true; driver.frame(4);
+      driver.require(driver.app.observed_modal() && driver.app.observed_document().dirty(), "Close failed to settle active layout preview before guard");
+      driver.input.mouse_buttons[0] = false; driver.frame(2); driver.capture(scenario);
+      driver.click("Unsaved changes","Cancel"); driver.key(GLFW_KEY_Z,true);
+      driver.require(driver.app.observed_document().data().events[0].pages[0].graph->nodes[0].layout->x == original.x &&
+        !driver.app.observed_document().dirty() && !driver.app.observed_document().can_undo(), "Guard-settled drag was not one undo entry");
+      driver.debug(scenario); report["scenarios"].push_back({{"name",scenario},{"status","passed"}});
     } else if (scenario == "graph") {
       driver.enter_edit(); driver.click("Inspector","Events"); driver.click("Inspector","graph_event  tile(-3,0)"); driver.click("Inspector","Open Event Graph");
       const auto baseline = rat::authoring_snapshot(driver.app.observed_document().data());
@@ -585,6 +647,39 @@ int main(int argc, char** argv) {
       driver.key(GLFW_KEY_F5);
       driver.require(driver.app.observed_document().data().events[0].pages[0].graph->nodes[0].layout->x == moved.x, "Authored node layout did not survive UI save/reload");
       driver.capture(scenario); driver.debug(scenario); report["scenarios"].push_back({{"name",scenario},{"status","passed"}});
+    } else if (scenario.starts_with("scale-")) {
+      driver.enter_edit(); driver.click("Inspector","Events");
+      driver.input.framebuffer_width = driver.input.logical_width * 5 / 4;
+      driver.input.framebuffer_height = driver.input.logical_height * 5 / 4;
+      driver.frame(5); driver.click("Inspector","Place event##viewport_tool");
+      driver.world_click({-3.5f,0,0.5f});
+      driver.require(driver.app.observed_document().data().events.size() == 2 && driver.app.observed_document().data().events.back().tile && driver.app.observed_document().data().events.back().tile->x == -4, "Scaled framebuffer viewport picking missed world tile");
+      driver.input.framebuffer_width = driver.input.logical_width;
+      driver.input.framebuffer_height = driver.input.logical_height;
+      driver.frame(5); driver.click("Inspector","graph_event  tile(-3,0)");
+      driver.text("Inspector","Event ID",U"\u0442\u0435\u0441\u0442_\u0401");
+      driver.require(driver.app.observed_document().data().events[0].id == utf8(fs::path(u8"\u0442\u0435\u0441\u0442_\u0401")), "Scaled Unicode input missed field");
+      driver.click("Inspector","Open Event Graph"); driver.connect("text","exit");
+      driver.require(driver.app.observed_canvas().pending_from.empty() && !driver.app.observed_canvas().dragging_wire, "Scaled pin gesture missed target");
+      const auto header = driver.find("Event Graph","##drag_text");
+      const auto original = *driver.app.observed_document().data().events[0].pages[0].graph->nodes[0].layout;
+      driver.drag(header,(header.min_x+header.max_x)*0.5f+20*initial.ui_scale,(header.min_y+header.max_y)*0.5f+10*initial.ui_scale);
+      const auto moved = *driver.app.observed_document().data().events[0].pages[0].graph->nodes[0].layout;
+      driver.require(std::abs(moved.x-original.x-20)<0.1f && std::abs(moved.y-original.y-10)<0.1f, "UI scale contaminated authored layout units");
+      driver.capture(scenario+"-base");
+      driver.input.logical_width += 80; driver.input.logical_height += 60;
+      driver.input.framebuffer_width = driver.input.logical_width * 5 / 4;
+      driver.input.framebuffer_height = driver.input.logical_height * 5 / 4;
+      driver.frame(5); driver.connect("text","exit");
+      driver.require(driver.app.observed_canvas().pending_from.empty() && !driver.app.observed_canvas().dragging_wire, "Resized framebuffer ratio broke pin hit");
+      driver.text("Event Graph","##text",U"\u041c\u0430\u0441\u0448\u0442\u0430\u0431");
+      driver.click("Event Graph","##drag_text");
+      driver.require(driver.app.observed_document().data().events[0].pages[0].graph->nodes[0].text == utf8(fs::path(u8"\u041c\u0430\u0441\u0448\u0442\u0430\u0431")), "Resized scaled graph text input failed");
+      driver.input.close_requested = true; driver.frame(4);
+      driver.require(driver.app.observed_modal(), "Scaled close did not show modal");
+      driver.capture(scenario+"-ratio-modal"); driver.click("Unsaved changes","Cancel");
+      driver.require(!driver.app.observed_modal() && driver.app.observed_running(), "Scaled modal click missed Cancel");
+      driver.debug(scenario); report["scenarios"].push_back({{"name",scenario},{"status","passed"}});
     } else if (scenario.starts_with("unsupported-")) {
       driver.enter_edit(); driver.open_path(user/"unsupported.json");
       driver.require(driver.app.observed_mode() == rat::AppMode::Edit && !driver.app.observed_runtime_valid(), "Unsupported draft did not open for repair");

@@ -38,19 +38,19 @@ void set_stored_pos(EventGraphCanvasState& canvas, const std::string& id, ImVec2
 
 [[nodiscard]] ImVec2 graph_to_screen(const ImVec2& origin, const EventGraphCanvasState& canvas,
                                      ImVec2 stored) {
-  return ImVec2(origin.x + (stored.x + canvas.pan_x) * canvas.zoom,
-                origin.y + (stored.y + canvas.pan_y) * canvas.zoom);
+  return ImVec2(origin.x + (stored.x + canvas.pan_x) * canvas.zoom * canvas.display_scale,
+                origin.y + (stored.y + canvas.pan_y) * canvas.zoom * canvas.display_scale);
 }
 
 [[nodiscard]] ImVec2 screen_to_graph(const ImVec2& origin, const EventGraphCanvasState& canvas,
                                      ImVec2 screen) {
-  const float zoom = canvas.zoom <= 0.0f ? 1.0f : canvas.zoom;
+  const float zoom = (canvas.zoom <= 0.0f ? 1.0f : canvas.zoom) * canvas.display_scale;
   return ImVec2((screen.x - origin.x) / zoom - canvas.pan_x,
                 (screen.y - origin.y) / zoom - canvas.pan_y);
 }
 
 [[nodiscard]] float canvas_zoom(const EventGraphCanvasState& canvas) {
-  return canvas.zoom <= 0.0f ? 1.0f : canvas.zoom;
+  return (canvas.zoom <= 0.0f ? 1.0f : canvas.zoom) * canvas.display_scale;
 }
 
 [[nodiscard]] ImU32 kind_color(std::string_view kind) {
@@ -382,6 +382,7 @@ void draw_event_graph_canvas(EditorDocument& document, EventGraphCanvasState& ca
   ImDrawList* dl = ImGui::GetWindowDrawList();
   const ImVec2 origin = ImGui::GetCursorScreenPos();
   ImGui::Dummy(ImVec2(ImGui::GetContentRegionAvail().x, canvas_h - 16.0f));
+  canvas.display_scale = ImGui::GetFontSize() / 16.0f;
   const float zoom = canvas_zoom(canvas);
   const float pin_r = kPinR * zoom;
   const float rounding = 6.0f * zoom;
@@ -537,7 +538,7 @@ void draw_event_graph_canvas(EditorDocument& document, EventGraphCanvasState& ca
     ImGui::BeginChild(body_id.c_str(), ImVec2(node_w, node_h), true,
                       ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse |
                           ImGuiWindowFlags_NoMove);
-    ImGui::SetWindowFontScale(zoom);
+    ImGui::SetWindowFontScale(canvas.zoom);
     ImGui::SetCursorPos(ImVec2(8.0f * zoom, 4.0f * zoom));
     ImGui::TextUnformatted(kind.c_str());
     ImGui::SetCursorScreenPos(pos);
@@ -776,11 +777,11 @@ void draw_event_graph_canvas(EditorDocument& document, EventGraphCanvasState& ca
     if (io.MouseWheel != 0.0f) {
       const float old_zoom = zoom;
       float new_zoom = old_zoom * (io.MouseWheel > 0.0f ? 1.1f : 1.0f / 1.1f);
-      new_zoom = std::clamp(new_zoom, 0.25f, 3.0f);
+      new_zoom = std::clamp(new_zoom, 0.25f * canvas.display_scale, 3.0f * canvas.display_scale);
       const ImVec2 local(io.MousePos.x - origin.x, io.MousePos.y - origin.y);
       canvas.pan_x += local.x / new_zoom - local.x / old_zoom;
       canvas.pan_y += local.y / new_zoom - local.y / old_zoom;
-      canvas.zoom = new_zoom;
+      canvas.zoom = new_zoom / canvas.display_scale;
     }
     const bool pan_mmb =
         ImGui::IsMouseDragging(ImGuiMouseButton_Middle) && !canvas.dragging_wire;

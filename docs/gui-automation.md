@@ -17,9 +17,7 @@ unavailable.
 The infrastructure scenarios (`--scenario infrastructure`, `input-order`, and
 `authoring-text`) exercise real mode buttons, quick keyboard/viewport taps,
 Unicode fields, and multi-key text batches queued with Close/F5. They capture the
-first Edit frame and the unsaved modal. The complete acceptance
-scenario suite is being added in the following slice; this checkpoint alone is
-not stage acceptance.
+first Edit frame and the unsaved modal.
 
 Additional implemented scenario arguments:
 
@@ -35,6 +33,8 @@ Additional implemented scenario arguments:
 
 - `graph`: actual pin gestures (self, source, empty release and two-click connection),
   add/connect/delete, one-gesture layout undo/redo, no-op redo preservation and persistence.
+- `graph-active-close`: native Close settles a held node drag before checking dirty;
+  Cancel followed by undo restores the original layout as one history entry.
 - `ramp-{north,east,south,west}`: elevated solid side placement through the actual
   projection and picking pipeline; immutable camera poses expose the four faces.
 - `bridge-{above,under,filled}`: real held movement onto queried thin support,
@@ -45,8 +45,33 @@ Additional implemented scenario arguments:
   reject Apply/Play, repair through real widgets and successfully Apply/Play.
   EventTouch remains a visible disabled choice.
 
-Scaling and installed-package acceptance groups are still pending; passing the
-scenarios above is not the complete GUI suite.
+- `scale-{100,150,200}`: Unicode, viewport picking, pins, layout units and modals
+  with immutable UI scale, scripted native window resize and a 1.25 framebuffer ratio.
+  This exercises shared input/render dimensions; it does not change the OS DPI setting.
+- `production-malformed-start` is orchestrated as the actual production executable,
+  and must exit 1 cleanly. The C++ runner's negative initialization scenario is separate.
+
+`scripts/gui_scenarios.json` maps all 40 scenarios to requirements. The installed
+`run_gui_acceptance.py` runs fresh processes from an unrelated working directory,
+including two restart phases sharing one project. It omits `--data-root` to exercise
+executable-adjacent resources, verifies loaded audio and PNG dimensions, and checks
+that package files and the unrelated working directory remain unchanged. It writes
+a `gui-acceptance-report.json` beneath a fresh `gui-run-*` artifact directory and
+returns nonzero on any failure. An explicit `--scenario` subset is marked incomplete.
+
+After configuring with `-DRAT_BUILD_GUI_TESTS=ON`, run `ctest --test-dir build/dev-release
+-L gui --output-on-failure`. The full test has label `gui` and timeout 300 seconds;
+ordinary headless verification keeps GUI tests disabled. A GUI-only build still
+copies/installs resources, but full acceptance requires the production editor too.
+
+From an installed package and any working directory:
+
+```text
+python /absolute/package/run_gui_acceptance.py --user-data-dir /temporary/users --artifact-dir /temporary/artifacts --renderer software-d3d11
+```
+
+Linux CI uses `LIBGL_ALWAYS_SOFTWARE=1 xvfb-run -a python ... --renderer software-opengl`.
+That Linux command is provided for CI and has not been verified locally on Windows.
 
 `EditorFrameInput` carries held state and ordered key, character, mouse, wheel and
 focus events. Native GLFW callbacks and scripted input use this same stream;

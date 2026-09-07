@@ -108,18 +108,7 @@ if(RAT_BUILD_EDITOR)
   add_executable(rat-editor main.cpp)
   target_link_libraries(rat-editor PRIVATE rat::editor_app)
   rat_target_defaults(rat-editor)
-  add_custom_target(rat_editor_data ALL
-    COMMAND "${CMAKE_COMMAND}" -E copy_directory "${CMAKE_SOURCE_DIR}/data" "$<TARGET_FILE_DIR:rat-editor>/data"
-    COMMENT "Copy executable-adjacent editor data"
-    VERBATIM)
-  add_dependencies(rat-editor rat_editor_data)
   install(TARGETS rat-editor RUNTIME DESTINATION .)
-  install(DIRECTORY "${CMAKE_SOURCE_DIR}/data" DESTINATION .)
-  foreach(_dependency IN ITEMS bgfx_cmake glfw imgui miniaudio nlohmann_json)
-    install(DIRECTORY "${${_dependency}_SOURCE_DIR}/"
-      DESTINATION "licenses/${_dependency}"
-      FILES_MATCHING PATTERN "LICENSE*" PATTERN "COPYING*" PATTERN ".git" EXCLUDE)
-  endforeach()
 endif()
 
 if(RAT_BUILD_GUI_TESTS)
@@ -128,4 +117,44 @@ if(RAT_BUILD_GUI_TESTS)
   target_compile_definitions(rat-editor-gui-tests PRIVATE GLFW_INCLUDE_NONE)
   rat_target_defaults(rat-editor-gui-tests)
   install(TARGETS rat-editor-gui-tests RUNTIME DESTINATION .)
+  install(FILES "${CMAKE_SOURCE_DIR}/scripts/run_gui_acceptance.py"
+    "${CMAKE_SOURCE_DIR}/scripts/gui_scenarios.json" DESTINATION .)
+  find_package(Python3 REQUIRED COMPONENTS Interpreter)
+  if(WIN32)
+    set(_rat_gui_renderer software-d3d11)
+  else()
+    set(_rat_gui_renderer software-opengl)
+  endif()
+  if(RAT_BUILD_EDITOR)
+    add_test(NAME rat_gui_acceptance
+      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_SOURCE_DIR}/scripts/run_gui_acceptance.py"
+        --binary-dir "$<TARGET_FILE_DIR:rat-editor-gui-tests>"
+        --user-data-dir "${CMAKE_BINARY_DIR}/gui-users"
+        --artifact-dir "${CMAKE_BINARY_DIR}/gui-artifacts"
+        --renderer "${_rat_gui_renderer}")
+    set_tests_properties(rat_gui_acceptance PROPERTIES TIMEOUT 300 LABELS gui)
+  else()
+    message(STATUS "GUI runner built without production editor; full acceptance requires RAT_BUILD_EDITOR=ON")
+  endif()
 endif()
+
+# Both frontends resolve the same executable-adjacent runtime assets.
+if(RAT_BUILD_EDITOR)
+  set(_rat_data_frontend rat-editor)
+else()
+  set(_rat_data_frontend rat-editor-gui-tests)
+endif()
+add_custom_target(rat_editor_data ALL
+  COMMAND "${CMAKE_COMMAND}" -E copy_directory "${CMAKE_SOURCE_DIR}/data" "$<TARGET_FILE_DIR:${_rat_data_frontend}>/data"
+  COMMENT "Copy executable-adjacent editor data"
+  VERBATIM)
+add_dependencies(${_rat_data_frontend} rat_editor_data)
+if(RAT_BUILD_EDITOR AND RAT_BUILD_GUI_TESTS)
+  add_dependencies(rat-editor-gui-tests rat_editor_data)
+endif()
+install(DIRECTORY "${CMAKE_SOURCE_DIR}/data" DESTINATION .)
+foreach(_dependency IN ITEMS bgfx_cmake glfw imgui miniaudio nlohmann_json)
+  install(DIRECTORY "${${_dependency}_SOURCE_DIR}/"
+    DESTINATION "licenses/${_dependency}"
+    FILES_MATCHING PATTERN "LICENSE*" PATTERN "COPYING*" PATTERN ".git" EXCLUDE)
+endforeach()

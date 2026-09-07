@@ -66,6 +66,9 @@ class EditorApp {
   void request_capture(const std::string& path);
   [[nodiscard]] CaptureResult capture_result() const;
   [[nodiscard]] std::string renderer_name() const;
+  [[nodiscard]] const AssetRegistry* observed_assets() const { return asset_registry_.get(); }
+  [[nodiscard]] bool observed_cyrillic_font() const;
+  [[nodiscard]] ClimbCameraPose observed_camera_pose() const;
 
  private:
   void shutdown();

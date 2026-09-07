@@ -37,6 +37,8 @@ ImGuiKey ImGui_ImplGlfw_KeyToImGuiKey(int keycode, int scancode);
 
 #include <cstdint>
 #include <cstdio>
+#include <cstring>
+#include <limits>
 #include <filesystem>
 #include <iostream>
 #include <string>
@@ -64,7 +66,16 @@ void try_load_cyrillic_ui_font(ImGuiIO& io, Logger& logger, const std::string& d
         std::string("UI font missing, using default: ") + path);
     return;
   }
-  ImFont* font = io.Fonts->AddFontFromFileTTF(path.c_str(), kUiFontSizePx * scale, nullptr,
+  // ImGui's narrow fopen cannot open a Unicode Windows package path. The file
+  // store performs UTF-8 path conversion; transfer a copy to the atlas allocator.
+  const auto bytes = os_files().read(path);
+  if (!bytes.ok || bytes.bytes.data.empty() || bytes.bytes.data.size() > static_cast<std::size_t>((std::numeric_limits<int>::max)())) {
+    log(logger, LogLevel::Error, "editor", "Failed to read UI font: " + path);
+    return;
+  }
+  void* memory = IM_ALLOC(bytes.bytes.data.size());
+  std::memcpy(memory, bytes.bytes.data.data(), bytes.bytes.data.size());
+  ImFont* font = io.Fonts->AddFontFromMemoryTTF(memory, static_cast<int>(bytes.bytes.data.size()), kUiFontSizePx * scale, nullptr,
                                               io.Fonts->GetGlyphRangesCyrillic());
   if (font == nullptr) {
     log(logger, LogLevel::Error, "editor",
@@ -700,6 +711,14 @@ bool EditorApp::observed_capture_mouse() const { return ImGui::GetCurrentContext
 void EditorApp::request_capture(const std::string& path) { if (engine_) engine_->request_capture(path); }
 CaptureResult EditorApp::capture_result() const { return engine_ ? engine_->capture_result() : CaptureResult{}; }
 std::string EditorApp::renderer_name() const { return engine_ ? engine_->backend_name() : "uninitialized"; }
+bool EditorApp::observed_cyrillic_font() const {
+  if (!ImGui::GetCurrentContext() || ImGui::GetIO().Fonts->Fonts.empty()) return false;
+  auto* font = ImGui::GetIO().Fonts->Fonts.front();
+  return font->FindGlyphNoFallback(0x0401) && font->FindGlyphNoFallback(0x0442);
+}
+ClimbCameraPose EditorApp::observed_camera_pose() const {
+  return engine_ ? ClimbCameraPose{engine_->greybox().camera().eye, engine_->greybox().camera_focus()} : ClimbCameraPose{};
+}
 std::optional<PixelPos> EditorApp::project_world(Vec3 world) const {
   if (!engine_) return std::nullopt;
   auto pixel = project_world_to_pixels(engine_->greybox().camera(), world,
@@ -1222,8 +1241,8 @@ void EditorApp::draw_ui() {
   ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_PassthruCentralNode);
 
   if (initial_.automation_layout) {
-    ImGui::SetNextWindowPos(ImVec2(0, 24), ImGuiCond_FirstUseEver);
-    ImGui::SetNextWindowSize(ImVec2(300, 150), ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowPos(ImVec2(0, 24 * initial_.ui_scale), ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowSize(ImVec2(300 * initial_.ui_scale, 150 * initial_.ui_scale), ImGuiCond_FirstUseEver);
   }
   ImGui::Begin("Hierarchy");
   ImGui::Text("Mode: %s  (F2)", app_mode_name(app_mode_));
@@ -1235,8 +1254,8 @@ void EditorApp::draw_ui() {
   ImGui::End();
 
   if (initial_.automation_layout) {
-    ImGui::SetNextWindowPos(ImVec2(0, 180), ImGuiCond_FirstUseEver);
-    ImGui::SetNextWindowSize(ImVec2(560, 530), ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowPos(ImVec2(0, 180 * initial_.ui_scale), ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowSize(ImVec2(560 * initial_.ui_scale, 530 * initial_.ui_scale), ImGuiCond_FirstUseEver);
   }
   ImGui::Begin("Inspector");
   ImGui::Text("App mode: %s", app_mode_name(app_mode_));
@@ -1469,8 +1488,8 @@ void EditorApp::draw_ui() {
     const auto& events = document_.visible_data().events;
     if (selected >= 0 && selected < static_cast<int>(events.size())) {
       if (initial_.automation_layout) {
-        ImGui::SetNextWindowPos(ImVec2(565, 24), ImGuiCond_FirstUseEver);
-        ImGui::SetNextWindowSize(ImVec2(710, 680), ImGuiCond_FirstUseEver);
+        ImGui::SetNextWindowPos(ImVec2(565 * initial_.ui_scale, 24 * initial_.ui_scale), ImGuiCond_FirstUseEver);
+        ImGui::SetNextWindowSize(ImVec2(710 * initial_.ui_scale, 680 * initial_.ui_scale), ImGuiCond_FirstUseEver);
       }
       draw_event_graph_window(document_, event_panel_, &event_graph_open_);
     }
