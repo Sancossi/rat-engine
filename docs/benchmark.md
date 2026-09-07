@@ -40,3 +40,7 @@ retained bytes, not an allocator census. JSON snapshot strings already owned by
 the document/history count as real buffers; freshly serializing a map is never
 used as a substitute for measuring its memory. `clear()` can retain container
 and snapshot capacity; instrumentation deliberately preserves this behavior.
+
+The committed [Windows Release baseline](benchmarks/2026-09-07-windows-release.json)
+was measured from implementation commit `6694640`. Its measured-source change list
+is empty; the general tracked-change flag includes the preserved user vault edit.

@@ -36,6 +36,10 @@ def main():
                          "processor": cpu_model(), "logical_cpus": os.cpu_count()}
     report["source"] = {
         "commit": subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=source, text=True).strip(),
+        "measured_source_changed_paths": subprocess.check_output(
+            ["git", "diff", "--name-only", "HEAD", "--", "src", "apps/editor",
+             "benchmarks", "CMakeLists.txt", "cmake"], cwd=source, text=True,
+            stderr=subprocess.PIPE).splitlines(),
         "tracked_changes_present": bool(subprocess.check_output(
             ["git", "diff", "--name-only", "HEAD"], cwd=source, text=True, stderr=subprocess.PIPE).strip()),
     }

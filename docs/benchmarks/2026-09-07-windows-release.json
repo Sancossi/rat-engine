@@ -1,0 +1,801 @@
+{
+  "bake_apply_samples": 100,
+  "bake_apply_warmup": 10,
+  "build_type": "Release",
+  "clock": "std::chrono::steady_clock",
+  "compiler": "MSVC-19.51.36246.0",
+  "dt_seconds": 0.008333333767950535,
+  "maps": [
+    {
+      "blockers": 2,
+      "collision_bake": {
+        "p50": 5.1,
+        "p95": 5.6,
+        "p99": 6.2,
+        "samples": 100,
+        "unit": "microseconds"
+      },
+      "edit_memory": [
+        {
+          "combined_total": 32117,
+          "document_other": {
+            "clean_snapshot": 13529,
+            "error": 0,
+            "map_dynamic": 17708,
+            "object": 736,
+            "preview_dynamic": 0
+          },
+          "history": {
+            "object": 144,
+            "queue_capacity": 0,
+            "redo_commands": 0,
+            "stroke_buffers": 0,
+            "stroke_commands": 0,
+            "total": 144,
+            "undo_commands": 0
+          },
+          "phase": "loaded",
+          "unit": "estimated_retained_bytes"
+        },
+        {
+          "combined_total": 341245,
+          "document_other": {
+            "clean_snapshot": 13529,
+            "error": 0,
+            "map_dynamic": 17708,
+            "object": 736,
+            "preview_dynamic": 0
+          },
+          "history": {
+            "object": 144,
+            "queue_capacity": 1128,
+            "redo_commands": 0,
+            "stroke_buffers": 0,
+            "stroke_commands": 0,
+            "total": 309272,
+            "undo_commands": 308000
+          },
+          "phase": "100_terrain_edits",
+          "unit": "estimated_retained_bytes"
+        },
+        {
+          "combined_total": 512733,
+          "document_other": {
+            "clean_snapshot": 13529,
+            "error": 0,
+            "map_dynamic": 18532,
+            "object": 736,
+            "preview_dynamic": 0
+          },
+          "history": {
+            "object": 144,
+            "queue_capacity": 1688,
+            "redo_commands": 0,
+            "stroke_buffers": 0,
+            "stroke_commands": 0,
+            "total": 479936,
+            "undo_commands": 478104
+          },
+          "phase": "100_graph_edits_plus_event",
+          "unit": "estimated_retained_bytes"
+        },
+        {
+          "combined_total": 513237,
+          "document_other": {
+            "clean_snapshot": 13529,
+            "error": 0,
+            "map_dynamic": 18532,
+            "object": 736,
+            "preview_dynamic": 0
+          },
+          "history": {
+            "object": 144,
+            "queue_capacity": 2192,
+            "redo_commands": 85200,
+            "stroke_buffers": 0,
+            "stroke_commands": 0,
+            "total": 480440,
+            "undo_commands": 392904
+          },
+          "phase": "undo_50",
+          "unit": "estimated_retained_bytes"
+        },
+        {
+          "combined_total": 513237,
+          "document_other": {
+            "clean_snapshot": 13529,
+            "error": 0,
+            "map_dynamic": 18532,
+            "object": 736,
+            "preview_dynamic": 0
+          },
+          "history": {
+            "object": 144,
+            "queue_capacity": 2192,
+            "redo_commands": 42600,
+            "stroke_buffers": 0,
+            "stroke_commands": 0,
+            "total": 480440,
+            "undo_commands": 435504
+          },
+          "phase": "redo_25",
+          "unit": "estimated_retained_bytes"
+        },
+        {
+          "combined_total": 541039,
+          "document_other": {
+            "clean_snapshot": 13529,
+            "error": 0,
+            "map_dynamic": 18532,
+            "object": 736,
+            "preview_dynamic": 0
+          },
+          "history": {
+            "object": 144,
+            "queue_capacity": 2296,
+            "redo_commands": 42600,
+            "stroke_buffers": 27058,
+            "stroke_commands": 640,
+            "total": 508242,
+            "undo_commands": 435504
+          },
+          "phase": "active_stroke_10",
+          "unit": "estimated_retained_bytes"
+        },
+        {
+          "combined_total": 498615,
+          "document_other": {
+            "clean_snapshot": 13529,
+            "error": 0,
+            "map_dynamic": 18532,
+            "object": 736,
+            "preview_dynamic": 0
+          },
+          "history": {
+            "object": 144,
+            "queue_capacity": 2296,
+            "redo_commands": 0,
+            "stroke_buffers": 27058,
+            "stroke_commands": 0,
+            "total": 465818,
+            "undo_commands": 436320
+          },
+          "phase": "committed_stroke",
+          "unit": "estimated_retained_bytes"
+        }
+      ],
+      "events": 8,
+      "height": 16,
+      "hot_apply_fresh_targets": {
+        "p50": 173.6,
+        "p95": 186.7,
+        "p99": 194.9,
+        "samples": 100,
+        "unit": "microseconds"
+      },
+      "map": "grey_yard",
+      "occupancy": 2,
+      "session_load_fresh": {
+        "p50": 146.6,
+        "p95": 153.1,
+        "p99": 170.2,
+        "samples": 100,
+        "unit": "microseconds"
+      },
+      "terrain_bake": {
+        "p50": 1.1,
+        "p95": 1.1,
+        "p99": 1.1,
+        "samples": 100,
+        "unit": "microseconds"
+      },
+      "tick": {
+        "p50": 10.5,
+        "p95": 10.7,
+        "p99": 12.8,
+        "samples": 10000,
+        "unit": "microseconds"
+      },
+      "width": 16
+    },
+    {
+      "blockers": 8,
+      "collision_bake": {
+        "p50": 3.9,
+        "p95": 4.0,
+        "p99": 4.0,
+        "samples": 100,
+        "unit": "microseconds"
+      },
+      "edit_memory": [
+        {
+          "combined_total": 16582,
+          "document_other": {
+            "clean_snapshot": 6014,
+            "error": 0,
+            "map_dynamic": 9688,
+            "object": 736,
+            "preview_dynamic": 0
+          },
+          "history": {
+            "object": 144,
+            "queue_capacity": 0,
+            "redo_commands": 0,
+            "stroke_buffers": 0,
+            "stroke_commands": 0,
+            "total": 144,
+            "undo_commands": 0
+          },
+          "phase": "loaded",
+          "unit": "estimated_retained_bytes"
+        },
+        {
+          "combined_total": 291310,
+          "document_other": {
+            "clean_snapshot": 6014,
+            "error": 0,
+            "map_dynamic": 9688,
+            "object": 736,
+            "preview_dynamic": 0
+          },
+          "history": {
+            "object": 144,
+            "queue_capacity": 1128,
+            "redo_commands": 0,
+            "stroke_buffers": 0,
+            "stroke_commands": 0,
+            "total": 274872,
+            "undo_commands": 273600
+          },
+          "phase": "100_terrain_edits",
+          "unit": "estimated_retained_bytes"
+        },
+        {
+          "combined_total": 462798,
+          "document_other": {
+            "clean_snapshot": 6014,
+            "error": 0,
+            "map_dynamic": 10512,
+            "object": 736,
+            "preview_dynamic": 0
+          },
+          "history": {
+            "object": 144,
+            "queue_capacity": 1688,
+            "redo_commands": 0,
+            "stroke_buffers": 0,
+            "stroke_commands": 0,
+            "total": 445536,
+            "undo_commands": 443704
+          },
+          "phase": "100_graph_edits_plus_event",
+          "unit": "estimated_retained_bytes"
+        },
+        {
+          "combined_total": 463302,
+          "document_other": {
+            "clean_snapshot": 6014,
+            "error": 0,
+            "map_dynamic": 10512,
+            "object": 736,
+            "preview_dynamic": 0
+          },
+          "history": {
+            "object": 144,
+            "queue_capacity": 2192,
+            "redo_commands": 85200,
+            "stroke_buffers": 0,
+            "stroke_commands": 0,
+            "total": 446040,
+            "undo_commands": 358504
+          },
+          "phase": "undo_50",
+          "unit": "estimated_retained_bytes"
+        },
+        {
+          "combined_total": 463302,
+          "document_other": {
+            "clean_snapshot": 6014,
+            "error": 0,
+            "map_dynamic": 10512,
+            "object": 736,
+            "preview_dynamic": 0
+          },
+          "history": {
+            "object": 144,
+            "queue_capacity": 2192,
+            "redo_commands": 42600,
+            "stroke_buffers": 0,
+            "stroke_commands": 0,
+            "total": 446040,
+            "undo_commands": 401104
+          },
+          "phase": "redo_25",
+          "unit": "estimated_retained_bytes"
+        },
+        {
+          "combined_total": 482086,
+          "document_other": {
+            "clean_snapshot": 6014,
+            "error": 0,
+            "map_dynamic": 10512,
+            "object": 736,
+            "preview_dynamic": 0
+          },
+          "history": {
+            "object": 144,
+            "queue_capacity": 2296,
+            "redo_commands": 42600,
+            "stroke_buffers": 18040,
+            "stroke_commands": 640,
+            "total": 464824,
+            "undo_commands": 401104
+          },
+          "phase": "active_stroke_10",
+          "unit": "estimated_retained_bytes"
+        },
+        {
+          "combined_total": 439662,
+          "document_other": {
+            "clean_snapshot": 6014,
+            "error": 0,
+            "map_dynamic": 10512,
+            "object": 736,
+            "preview_dynamic": 0
+          },
+          "history": {
+            "object": 144,
+            "queue_capacity": 2296,
+            "redo_commands": 0,
+            "stroke_buffers": 18040,
+            "stroke_commands": 0,
+            "total": 422400,
+            "undo_commands": 401920
+          },
+          "phase": "committed_stroke",
+          "unit": "estimated_retained_bytes"
+        }
+      ],
+      "events": 8,
+      "height": 16,
+      "hot_apply_fresh_targets": {
+        "p50": 83.7,
+        "p95": 85.9,
+        "p99": 89.5,
+        "samples": 100,
+        "unit": "microseconds"
+      },
+      "map": "synthetic_small",
+      "occupancy": 6,
+      "session_load_fresh": {
+        "p50": 81.8,
+        "p95": 82.9,
+        "p99": 86.8,
+        "samples": 100,
+        "unit": "microseconds"
+      },
+      "terrain_bake": {
+        "p50": 1.1,
+        "p95": 1.2,
+        "p99": 1.2,
+        "samples": 100,
+        "unit": "microseconds"
+      },
+      "tick": {
+        "p50": 15.2,
+        "p95": 15.4,
+        "p99": 17.4,
+        "samples": 10000,
+        "unit": "microseconds"
+      },
+      "width": 16
+    },
+    {
+      "blockers": 32,
+      "collision_bake": {
+        "p50": 16.9,
+        "p95": 17.1,
+        "p99": 17.5,
+        "samples": 100,
+        "unit": "microseconds"
+      },
+      "edit_memory": [
+        {
+          "combined_total": 69903,
+          "document_other": {
+            "clean_snapshot": 30439,
+            "error": 0,
+            "map_dynamic": 38584,
+            "object": 736,
+            "preview_dynamic": 0
+          },
+          "history": {
+            "object": 144,
+            "queue_capacity": 0,
+            "redo_commands": 0,
+            "stroke_buffers": 0,
+            "stroke_commands": 0,
+            "total": 144,
+            "undo_commands": 0
+          },
+          "phase": "loaded",
+          "unit": "estimated_retained_bytes"
+        },
+        {
+          "combined_total": 991031,
+          "document_other": {
+            "clean_snapshot": 30439,
+            "error": 0,
+            "map_dynamic": 38584,
+            "object": 736,
+            "preview_dynamic": 0
+          },
+          "history": {
+            "object": 144,
+            "queue_capacity": 1128,
+            "redo_commands": 0,
+            "stroke_buffers": 0,
+            "stroke_commands": 0,
+            "total": 921272,
+            "undo_commands": 920000
+          },
+          "phase": "100_terrain_edits",
+          "unit": "estimated_retained_bytes"
+        },
+        {
+          "combined_total": 1162519,
+          "document_other": {
+            "clean_snapshot": 30439,
+            "error": 0,
+            "map_dynamic": 39408,
+            "object": 736,
+            "preview_dynamic": 0
+          },
+          "history": {
+            "object": 144,
+            "queue_capacity": 1688,
+            "redo_commands": 0,
+            "stroke_buffers": 0,
+            "stroke_commands": 0,
+            "total": 1091936,
+            "undo_commands": 1090104
+          },
+          "phase": "100_graph_edits_plus_event",
+          "unit": "estimated_retained_bytes"
+        },
+        {
+          "combined_total": 1163023,
+          "document_other": {
+            "clean_snapshot": 30439,
+            "error": 0,
+            "map_dynamic": 39408,
+            "object": 736,
+            "preview_dynamic": 0
+          },
+          "history": {
+            "object": 144,
+            "queue_capacity": 2192,
+            "redo_commands": 85200,
+            "stroke_buffers": 0,
+            "stroke_commands": 0,
+            "total": 1092440,
+            "undo_commands": 1004904
+          },
+          "phase": "undo_50",
+          "unit": "estimated_retained_bytes"
+        },
+        {
+          "combined_total": 1163023,
+          "document_other": {
+            "clean_snapshot": 30439,
+            "error": 0,
+            "map_dynamic": 39408,
+            "object": 736,
+            "preview_dynamic": 0
+          },
+          "history": {
+            "object": 144,
+            "queue_capacity": 2192,
+            "redo_commands": 42600,
+            "stroke_buffers": 0,
+            "stroke_commands": 0,
+            "total": 1092440,
+            "undo_commands": 1047504
+          },
+          "phase": "redo_25",
+          "unit": "estimated_retained_bytes"
+        },
+        {
+          "combined_total": 1224645,
+          "document_other": {
+            "clean_snapshot": 30439,
+            "error": 0,
+            "map_dynamic": 39408,
+            "object": 736,
+            "preview_dynamic": 0
+          },
+          "history": {
+            "object": 144,
+            "queue_capacity": 2296,
+            "redo_commands": 42600,
+            "stroke_buffers": 60878,
+            "stroke_commands": 640,
+            "total": 1154062,
+            "undo_commands": 1047504
+          },
+          "phase": "active_stroke_10",
+          "unit": "estimated_retained_bytes"
+        },
+        {
+          "combined_total": 1182221,
+          "document_other": {
+            "clean_snapshot": 30439,
+            "error": 0,
+            "map_dynamic": 39408,
+            "object": 736,
+            "preview_dynamic": 0
+          },
+          "history": {
+            "object": 144,
+            "queue_capacity": 2296,
+            "redo_commands": 0,
+            "stroke_buffers": 60878,
+            "stroke_commands": 0,
+            "total": 1111638,
+            "undo_commands": 1048320
+          },
+          "phase": "committed_stroke",
+          "unit": "estimated_retained_bytes"
+        }
+      ],
+      "events": 32,
+      "height": 32,
+      "hot_apply_fresh_targets": {
+        "p50": 327.3,
+        "p95": 336.9,
+        "p99": 383.6,
+        "samples": 100,
+        "unit": "microseconds"
+      },
+      "map": "synthetic_medium",
+      "occupancy": 14,
+      "session_load_fresh": {
+        "p50": 311.3,
+        "p95": 315.7,
+        "p99": 321.7,
+        "samples": 100,
+        "unit": "microseconds"
+      },
+      "terrain_bake": {
+        "p50": 4.0,
+        "p95": 4.1,
+        "p99": 4.3,
+        "samples": 100,
+        "unit": "microseconds"
+      },
+      "tick": {
+        "p50": 118.6,
+        "p95": 123.6,
+        "p99": 156.5,
+        "samples": 10000,
+        "unit": "microseconds"
+      },
+      "width": 32
+    },
+    {
+      "blockers": 128,
+      "collision_bake": {
+        "p50": 112.8,
+        "p95": 168.0,
+        "p99": 174.7,
+        "samples": 100,
+        "unit": "microseconds"
+      },
+      "edit_memory": [
+        {
+          "combined_total": 257296,
+          "document_other": {
+            "clean_snapshot": 102728,
+            "error": 0,
+            "map_dynamic": 153688,
+            "object": 736,
+            "preview_dynamic": 0
+          },
+          "history": {
+            "object": 144,
+            "queue_capacity": 0,
+            "redo_commands": 0,
+            "stroke_buffers": 0,
+            "stroke_commands": 0,
+            "total": 144,
+            "undo_commands": 0
+          },
+          "phase": "loaded",
+          "unit": "estimated_retained_bytes"
+        },
+        {
+          "combined_total": 3700024,
+          "document_other": {
+            "clean_snapshot": 102728,
+            "error": 0,
+            "map_dynamic": 153688,
+            "object": 736,
+            "preview_dynamic": 0
+          },
+          "history": {
+            "object": 144,
+            "queue_capacity": 1128,
+            "redo_commands": 0,
+            "stroke_buffers": 0,
+            "stroke_commands": 0,
+            "total": 3442872,
+            "undo_commands": 3441600
+          },
+          "phase": "100_terrain_edits",
+          "unit": "estimated_retained_bytes"
+        },
+        {
+          "combined_total": 3871512,
+          "document_other": {
+            "clean_snapshot": 102728,
+            "error": 0,
+            "map_dynamic": 154512,
+            "object": 736,
+            "preview_dynamic": 0
+          },
+          "history": {
+            "object": 144,
+            "queue_capacity": 1688,
+            "redo_commands": 0,
+            "stroke_buffers": 0,
+            "stroke_commands": 0,
+            "total": 3613536,
+            "undo_commands": 3611704
+          },
+          "phase": "100_graph_edits_plus_event",
+          "unit": "estimated_retained_bytes"
+        },
+        {
+          "combined_total": 3872016,
+          "document_other": {
+            "clean_snapshot": 102728,
+            "error": 0,
+            "map_dynamic": 154512,
+            "object": 736,
+            "preview_dynamic": 0
+          },
+          "history": {
+            "object": 144,
+            "queue_capacity": 2192,
+            "redo_commands": 85200,
+            "stroke_buffers": 0,
+            "stroke_commands": 0,
+            "total": 3614040,
+            "undo_commands": 3526504
+          },
+          "phase": "undo_50",
+          "unit": "estimated_retained_bytes"
+        },
+        {
+          "combined_total": 3872016,
+          "document_other": {
+            "clean_snapshot": 102728,
+            "error": 0,
+            "map_dynamic": 154512,
+            "object": 736,
+            "preview_dynamic": 0
+          },
+          "history": {
+            "object": 144,
+            "queue_capacity": 2192,
+            "redo_commands": 42600,
+            "stroke_buffers": 0,
+            "stroke_commands": 0,
+            "total": 3614040,
+            "undo_commands": 3569104
+          },
+          "phase": "redo_25",
+          "unit": "estimated_retained_bytes"
+        },
+        {
+          "combined_total": 4078216,
+          "document_other": {
+            "clean_snapshot": 102728,
+            "error": 0,
+            "map_dynamic": 154512,
+            "object": 736,
+            "preview_dynamic": 0
+          },
+          "history": {
+            "object": 144,
+            "queue_capacity": 2296,
+            "redo_commands": 42600,
+            "stroke_buffers": 205456,
+            "stroke_commands": 640,
+            "total": 3820240,
+            "undo_commands": 3569104
+          },
+          "phase": "active_stroke_10",
+          "unit": "estimated_retained_bytes"
+        },
+        {
+          "combined_total": 4035792,
+          "document_other": {
+            "clean_snapshot": 102728,
+            "error": 0,
+            "map_dynamic": 154512,
+            "object": 736,
+            "preview_dynamic": 0
+          },
+          "history": {
+            "object": 144,
+            "queue_capacity": 2296,
+            "redo_commands": 0,
+            "stroke_buffers": 205456,
+            "stroke_commands": 0,
+            "total": 3777816,
+            "undo_commands": 3569920
+          },
+          "phase": "committed_stroke",
+          "unit": "estimated_retained_bytes"
+        }
+      ],
+      "events": 128,
+      "height": 64,
+      "hot_apply_fresh_targets": {
+        "p50": 1407.1,
+        "p95": 2243.8,
+        "p99": 2334.2,
+        "samples": 100,
+        "unit": "microseconds"
+      },
+      "map": "synthetic_large",
+      "occupancy": 30,
+      "session_load_fresh": {
+        "p50": 1346.6,
+        "p95": 2137.1,
+        "p99": 2204.6,
+        "samples": 100,
+        "unit": "microseconds"
+      },
+      "terrain_bake": {
+        "p50": 15.9,
+        "p95": 19.3,
+        "p99": 21.4,
+        "samples": 100,
+        "unit": "microseconds"
+      },
+      "tick": {
+        "p50": 1523.1,
+        "p95": 2525.7,
+        "p99": 2712.4,
+        "samples": 10000,
+        "unit": "microseconds"
+      },
+      "width": 64
+    }
+  ],
+  "memory_exclusions": [
+    "allocator overhead",
+    "opaque std::function target storage",
+    "temporary work allocations",
+    "unowned services"
+  ],
+  "observed_result_sum": 243333640,
+  "quantile": "nearest-rank ceil(p*N)-1",
+  "schema_version": 1,
+  "tick_samples": 10000,
+  "tick_warmup": 1000,
+  "machine": {
+    "os": "Windows-11-10.0.26200-SP0",
+    "architecture": "AMD64",
+    "processor": "AMD Ryzen 9 9950X3D 16-Core Processor",
+    "logical_cpus": 32
+  },
+  "source": {
+    "commit": "66946408925458a7d5590c581a4827e9b77043e7",
+    "tracked_changes_present": true,
+    "measured_source_changed_paths": []
+  },
+  "captured_utc": "2026-09-07T11:27:41.682745+00:00"
+}
