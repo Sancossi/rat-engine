@@ -2,7 +2,7 @@
 type: bug
 area: Engine
 status: Investigating
-review: Pending
+review: In review
 severity: High
 sprint: Sprint 15
 tags: [bug, stabilization]
@@ -26,7 +26,7 @@ CMake/Ninja include-prefix encoding differs from compiler output despite VSLANG=
 
 ## Resolution
 
-Pending. Acceptance includes a controlled header-change dependency rebuild and full verification, plus independent review.
+Implemented in 2d83e7a. verify.ps1 -CheckHeaderDependencies passed: header timestamp change rebuilt 11 dependent translation units and checked three object timestamps. Full verification with current authoring slice: 663/663 C++ tests, 8 Python checks, vault passed. Parent unchanged full Release build returned no work, exit 0. Independent review pending.
 
 ## Bugs found
 
