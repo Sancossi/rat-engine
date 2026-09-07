@@ -1,8 +1,8 @@
 ---
 type: task
 area: Engine
-status: In progress
-review: Pending
+status: In review
+review: In review
 task_type: Feature
 sprint:
 due:
@@ -26,8 +26,8 @@ Acceptance:
 
 ## Resolution
 
-In progress. Standalone feature; no new sprint or unrelated queue activated.
+Implemented in 72c51d7; baseline fixture/captures in 612d517. Independent review in progress. Release and headless each passed 713 tests; Python 10 and vault passed. Full 43 GUI scenarios passed on WARP; installed package subset of infrastructure plus three surface scenarios passed with package/cwd unchanged. Parent inspected matching top/tilted before/after captures and confirmed readable shapes. Evidence: build/surface-readability/final-artifacts/gui-run-qvjzd_at/; build/dev-release/gui-artifacts/gui-run-3gu0jmti/; build/surface-readability/package-artifacts/gui-run-_s2kvmih/. Standalone feature; no new sprint activated.
 
 ## Bugs found
 
-None yet.
+Lighting exposed inward legacy slab/solid and inconsistent terrain-wall normals; corrected with render-only outward hints, preserving geometry/collision. Pathological overlapping face partitioning is bounded, retaining original fill and omitting uncertain contours. See docs/surface-readability.md.
