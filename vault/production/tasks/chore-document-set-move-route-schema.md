@@ -14,7 +14,7 @@ Intent: `docs/schemas/map-event.schema.md` enumerates commands (`play_se` is the
 
 Acceptance: одна строка в таблице Commands: `op`, `through`, `route[]` (`move`/`wait`/`turn`). Не второй research.
 
-Origin: [[feat: Set Move Route (basic)]] (review Minor).
+Origin: [[feat-set-move-route-basic|feat: Set Move Route (basic)]] (review Minor).
 
 ## Resolution
 

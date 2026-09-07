@@ -21,7 +21,7 @@ DoD:
 
 Порядок:
 
-- [[feat: Mouse viewport map edit]] → [[feat: Undo height-grid and edge edits]] → [[edge-walls-hang-in-the-air]] → [[feat: Mouse viewport terrain edit]] → [[edge-walls-passable-from-adjacent-side]] → [[feat: Bake height-grid and ramps to collision solids]]
+- [[feat-mouse-viewport-map-edit|feat: Mouse viewport map edit]] → [[feat-undo-height-and-edge-edits|feat: Undo height-grid and edge edits]] → [[edge-walls-hang-in-the-air]] → [[feat-mouse-viewport-terrain-edit|feat: Mouse viewport terrain edit]] → [[edge-walls-passable-from-adjacent-side]] → [[feat-bake-height-grid-and-ramps-to-collision-solids|feat: Bake height-grid and ramps to collision solids]]
 
 ## Итог
 
@@ -29,4 +29,4 @@ DoD выполнен 2026-09-01. Мышь: select/drag/place, `WantCaptureMouse`
 
 ## Bugs found
 
-none новых на закрытии. Follow-up collision: [[edge-walls-passable-from-adjacent-side]], [[feat: Bake height-grid and ramps to collision solids]] — Fixed/Done в этом спринте.
+none новых на закрытии. Follow-up collision: [[edge-walls-passable-from-adjacent-side]], [[feat-bake-height-grid-and-ramps-to-collision-solids|feat: Bake height-grid and ramps to collision solids]] — Fixed/Done в этом спринте.

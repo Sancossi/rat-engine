@@ -1,115 +1,74 @@
 # rat-engine
 
-Game engine bootstrap: **bgfx** renderer + **GLFW** window + **Dear ImGui** mini-editor.
+C++20 game engine and in-process map editor using **bgfx**, **GLFW**, and **Dear ImGui**.
+The editor supports Play/Edit, JSON maps, event graphs, undo/redo, voxel terrain,
+rotating ramps, slabs and ladder traversal. Headless tests use the same simulation
+entrypoint as the editor.
 
-CI (GitHub Actions) builds `rat_core`, `rat-editor`, and Catch2 on **Windows** and **Linux**. Tests are headless; the editor GUI is not launched.
+## Build and verify
 
-## Layout
+Requirements: CMake 3.24+, Ninja, a C++20 compiler, Python 3 for repository checks,
+and network access for the first FetchContent configure.
 
-| Path | Role |
-|------|------|
-| `src/engine` | `rat_core` (logic) + `rat_engine` (bgfx present) |
-| `apps/editor` | `rat-editor` — GLFW shell, ImGui docks, bgfx present |
-| `data/maps` | JSON maps / events (schema in `docs/schemas/`) |
-| `docs/sprint1-acceptance.md` | Sprint 1 playthrough checklist |
-| `tests` | Catch2 unit + headless mechanics tests |
-| `cmake/Dependencies.cmake` | FetchContent: bgfx.cmake, GLFW, ImGui, Catch2, nlohmann/json |
-| `cmake/library-graph.md` | Library graph: `rat_core` → json; `rat_engine` → core + bgfx; editor → engine + glfw + imgui |
-| `docs/superpowers/specs/` | Design notes |
-| `vault/` | Obsidian hub: wiki, GDD, tasks, bugs, ADR (open this folder as a vault) |
-
-## Library graph
-
-| Target | Links |
-|--------|--------|
-| `rat_core` | `nlohmann_json` only (no GLFW, ImGui, bgfx, Win32) |
-| `rat_engine` | `rat_core` + bgfx + bx + bimg |
-| `rat-editor` | `rat_engine` + glfw + imgui (`apps/editor`) |
-
-CMake writes the `rat_core` link closure and fails configure / `rat_core_link_check` / ctest `rat_core_no_platform_graphics` if a forbidden library appears. See `cmake/library-graph.md`.
-
-## Prerequisites
-
-**Windows**
-
-1. Visual Studio 2022/2025 Build Tools with C++ workload
-2. CMake 3.24+ and Ninja
-3. Network on first configure (FetchContent)
-
-No Qt install required.
-
-**Linux**
-
-1. g++ (C++20), CMake 3.24+, Ninja
-2. X11 / OpenGL headers so GLFW and bgfx can **compile** (Ubuntu: `ninja-build pkg-config xorg-dev libgl1-mesa-dev libglu1-mesa-dev`)
-3. Network on first configure (FetchContent)
-
-`rat-editor` on Linux uses GLFW **X11** native window/display handles (`nwh` / `ndt`). CI installs those headers on `ubuntu-latest` and does not run the editor (no display / no xvfb). A Wayland-only environment is not required.
-
-## Build
-
-Same configure line on Windows and Linux. On Windows, use an **x64 Native Tools** / VS developer prompt:
+On Windows install Visual Studio C++ Build Tools, then from any PowerShell prompt:
 
 ```powershell
-cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
-cmake --build build --config Release
+powershell -ExecutionPolicy Bypass -File scripts/verify.ps1
 ```
 
-Engine-only:
+The wrapper discovers Visual Studio through `vswhere` and imports its x64 environment.
+Pass `-Python <python-executable>` to override Python detection, and `-Preset dev-debug`
+for Debug. `-ConfigureOnly` validates docs/scripts and configures without building.
+Release outputs are under `build/dev-release`.
 
-```powershell
-cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DRAT_BUILD_EDITOR=OFF
-cmake --build build --target rat_engine
+Linux needs GCC/Clang with C++20 plus X11/OpenGL development headers. On Ubuntu
+install `ninja-build pkg-config xorg-dev libgl1-mesa-dev libglu1-mesa-dev`.
+In a compiler-ready shell on either platform:
+
+```sh
+cmake --preset dev-release
+cmake --build --preset dev-release
+ctest --preset dev-release
+python3 scripts/check_vault.py
+python3 -m unittest discover -s scripts/tests
 ```
 
-Run (Windows):
+On Windows use `python` or its explicit path in place of `python3`.
+Launch `build/dev-release/apps/editor/rat-editor.exe` on Windows, or
+`build/dev-release/apps/editor/rat-editor` on Linux. Existing non-preset `build/`
+trees are still supported and are not overwritten by presets.
 
-```powershell
-.\build\apps\editor\rat-editor.exe
-```
+## Compiled boundaries
 
-Run (Linux):
+| Target | Responsibility / dependencies |
+| --- | --- |
+| `rat_core` | SimulationSession, event VM, map authoring/compilation, replay, asset/entity scaffolding; nlohmann/json |
+| `rat_engine` | Rendering; core + bgfx/bx/bimg |
+| `rat_editor_logic` | Headless editor document and frame coordination |
+| `rat-editor` | GLFW shell, ImGui panels, rendering/audio composition |
+| `rat_tests` | Catch2 unit, mechanics, regression and grey_yard smoke scenarios |
 
-```bash
-./build/apps/editor/rat-editor
-```
+CMake enforces the core's platform/graphics link isolation; see
+[library graph](cmake/library-graph.md). Proposed separate runtime, authoring and
+asset libraries remain future work; see [architecture roadmap](docs/architecture-roadmap.md).
 
-You should see ImGui Hierarchy/Inspector docks and a dark-blue clear with `rat-engine` debug text.
+## Current limits
 
-## Tests
+Sprint 15 implements the [approved stabilization plan](docs/superpowers/plans/2026-09-07-stabilization.md).
+Existing replay, save and editor authoring paths have recorded correctness gaps;
+the [audit](docs/audits/2026-09-07-project-review.md) describes initial findings.
+EventTouch is not executable and cross-map transfer has no map loader. Asset IDs
+and an in-memory loader exist; a production mesh/texture importer is still planned.
 
-```powershell
-cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DRAT_BUILD_TESTS=ON
-cmake --build build --target rat_tests
-ctest --test-dir build --output-on-failure
-```
+CI currently builds Windows/Linux and runs headless tests. GUI input automation,
+sanitizers, isolated headless configuration and relocatable packaging are scheduled
+in stabilization; headless tests do not verify the desktop interface. Turning
+`RAT_BUILD_EDITOR=OFF` currently still builds/fetches renderer dependencies.
+Data/user-write path portability is also part of that work.
 
-Headless grey_yard smoke (no GLFW/bgfx):
+## Project knowledge
 
-```powershell
-.\build\tests\rat_tests.exe "[smoke]"
-```
-
-```bash
-./build/tests/rat_tests "[smoke]"
-```
-
-- **Unit:** `GameState` and future pure logic (no GLFW/bgfx).
-- **Mechanics:** headless event/quest scenarios (stub ready; fill with Event runtime v1).
-- **Smoke:** `[smoke]` loads `data/maps/grey_yard.json` without a window.
-- Disable with `-DRAT_BUILD_TESTS=OFF`.
-
-## Knowledge vault (Obsidian)
-
-Product wiki, GDD, sprints, tasks, bugs, and ADRs live in **`vault/`** (git). Engineering schemas and implementation specs stay in `docs/`.
-
-In Obsidian: **File → Open folder as vault** and choose the `vault` directory (not the repo root). Optional community plugin: Dataview (listed in `vault/.obsidian/community-plugins.json`; install from Obsidian if you want table views). The agent reads/writes markdown + YAML and does not need the app.
-
-Do not treat Notion as the source of truth for this project.
-
-## Notes
-
-- GLFW window uses `GLFW_NO_API`. Windows passes HWND to bgfx (D3D11); Linux passes X11 `Display*` / `Window` (`ndt` / `nwh`).
-- ImGui is rendered through a small `imgui_bgfx` bridge (bgfx embedded shaders).
-- `rat_core` has no GLFW/ImGui/bgfx; `rat_editor_logic` is also headless (`EditorDocument` / `FrameCoordinator`); `rat_engine` adds rendering. Graph: `cmake/library-graph.md`. CMake fails configure/ctest if `rat_core` grows a GLFW/ImGui/bgfx/Win32 link (`rat_core_link_check`, ctest `rat_core_no_platform_graphics`).
-- GitHub Actions (`.github/workflows/ci.yml`) builds and runs Catch2 on `windows-latest` and `ubuntu-latest`.
+Open `vault/` as an Obsidian vault for product decisions, tasks, bugs, sprints and ADRs.
+Engineering schemas/specifications live in `docs/`, maps in `data/maps`, source in
+`src/engine` and `apps/editor`. Follow [AGENTS.md](AGENTS.md) for work/review rules.
+Project build, vault and reproduction skills live in `.agents/skills/`.

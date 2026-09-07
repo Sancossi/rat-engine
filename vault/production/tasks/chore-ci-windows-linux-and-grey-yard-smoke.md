@@ -14,7 +14,7 @@ Intent: чистый checkout собирается без ручных шаго�
 
 Acceptance: GitHub Actions (Windows + Linux) собирают `rat_core`, editor и Catch2; все headless-тесты зелёные; отдельный smoke грузит `grey_yard` без окна. Verify: PR check + `ctest`.
 
-Depends: none. Next: [[chore: rat_core isolation from platform graphics]].
+Depends: none. Next: [[chore-rat-core-isolation-from-platform-graphics|chore: rat_core isolation from platform graphics]].
 
 Origin: merged `docs/architecture-roadmap.md` (2026-09-01).
 

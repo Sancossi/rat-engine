@@ -14,7 +14,7 @@ Intent: NPC по `set_move_route` телепортируется с клетки
 
 Acceptance: за один кадр `EventOverlay.tile` не прыгает; live xz движется к центру dest с `PlayerBody.speed`; по прибытии snap + `tile = dest`. Markers / Action AABB без volume следуют live xz. Не `integrate_player`, не JSON speed, не трогать `yard_walker` JSON.
 
-Origin: playtest после [[feat: Grey yard move route]]; [[feat: Set Move Route (basic)]].
+Origin: playtest после [[feat-grey-yard-move-route|feat: Grey yard move route]]; [[feat-set-move-route-basic|feat: Set Move Route (basic)]].
 
 ## Resolution
 

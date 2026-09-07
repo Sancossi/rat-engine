@@ -24,9 +24,9 @@ Any of N/E/S/W from the clicked edge (or an explicit opposite). Viewport click c
 
 Viewport Fence/Ladder use `edge_direction_index` (default North). Ramp is ImGui-only (`ramp_direction_index`, default North). There is no pick-the-clicked-edge; opposite side means select the neighbor or hunt the combo.
 
-Proper Sims-like edge paint: [[feat: Edit paint clicked edge]] (epic [[feat: Sims-like edit brush and edge paint]]).
+Proper Sims-like edge paint: [[feat-edit-paint-clicked-edge|feat: Edit paint clicked edge]] (epic [[feat-sims-like-edit-brush-and-edge-paint|feat: Sims-like edit brush and edge paint]]).
 
-Related: [[feat: Mouse viewport terrain edit]], [[feat: Edit and greybox edge walls]].
+Related: [[feat-mouse-viewport-terrain-edit|feat: Mouse viewport terrain edit]], [[feat-edit-greybox-edge-walls|feat: Edit and greybox edge walls]].
 
 ## Resolution
 

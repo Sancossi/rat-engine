@@ -29,8 +29,8 @@ DoD:
 
 Порядок:
 
-- Агент: [[Logging and assert helpers]] → [[feat: Input action mapping]] → [[feat: Debug snapshot JSON]] → [[feat: Event why-not-fired]] → [[feat: Headless input sequence probe]] → [[research: Rat debug loopback MCP]]
-- GPP: [[feat: Input action mapping]] → [[feat: Audio play-queue stub]] → [[feat: PlaySE event command]] / [[feat: Gameplay notify observer]]; параллельно [[feat: Edit undo/redo command stack]] и [[feat: Player locomotion FSM]]
+- Агент: [[logging-and-assert-helpers|Logging and assert helpers]] → [[feat-input-action-mapping|feat: Input action mapping]] → [[feat-debug-snapshot-json|feat: Debug snapshot JSON]] → [[feat-event-why-not-fired|feat: Event why-not-fired]] → [[feat-headless-input-sequence-probe|feat: Headless input sequence probe]] → [[research-rat-debug-loopback-mcp|research: Rat debug loopback MCP]]
+- GPP: [[feat-input-action-mapping|feat: Input action mapping]] → [[feat-audio-play-queue-stub|feat: Audio play-queue stub]] → [[feat-play-se-event-command|feat: PlaySE event command]] / [[feat-gameplay-notify-observer|feat: Gameplay notify observer]]; параллельно [[feat-edit-undo-redo|feat: Edit undo/redo command stack]] и [[feat-player-locomotion-fsm|feat: Player locomotion FSM]]
 
 ## Итог
 

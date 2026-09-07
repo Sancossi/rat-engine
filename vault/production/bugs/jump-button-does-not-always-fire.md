@@ -9,7 +9,7 @@ tags: [bug]
 
 # Jump button does not always fire
 
-Origin: chat 2026-09-01 (play). Tick path: [[feat: SimulationSession unified tick]].
+Origin: chat 2026-09-01 (play). Tick path: [[feat-simulation-session-unified-tick|feat: SimulationSession unified tick]].
 
 ## Repro
 
@@ -28,7 +28,7 @@ Jump sometimes does nothing.
 
 Suspect leftover from unified tick: `WantCaptureKeyboard` / `clear_pending_input` vs `jump_buffer_left`, or catch-up consuming `jump_pressed` only on the first drain tick. Headless `[sim]` stayed green.
 
-Follow-up from: [[feat: SimulationSession unified tick]]
+Follow-up from: [[feat-simulation-session-unified-tick|feat: SimulationSession unified tick]]
 
 ## Resolution
 

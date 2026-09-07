@@ -18,7 +18,7 @@ Acceptance:
 - Play: цилиндр 1.6 идёт по верху; по земле под мостом проходит, не упирается в «потолок», если `top_y - thickness` выше головы (~> 1.65).
 - Greybox: виден верх и низ пролёта. Не воксели, не field physics, не новый renderer.
 
-Origin: chat 2026-09-04 (Sprint 13, мосты «пройти под терейном»). Related: [[feat: Stacked surfaces caves and basements]], [[feat: Grey yard layout pass]]. Origin: [[Sprint 13 — Grey yard map pass]].
+Origin: chat 2026-09-04 (Sprint 13, мосты «пройти под терейном»). Related: [[feat-stacked-surfaces-caves-and-basements|feat: Stacked surfaces caves and basements]], [[feat-grey-yard-layout-pass|feat: Grey yard layout pass]]. Origin: [[Sprint 13 — Grey yard map pass]].
 
 ## Resolution
 
@@ -28,4 +28,4 @@ Verify: Edit → Terrain → Place bridge над dirt; Play — пройти с�
 
 ## Bugs found
 
-Playtest: [[Cannot climb onto grey_yard bridge]] (на пролёт нет подхода). Follow-up: [[feat: Voxel 3D terrain and rotating ramps]].
+Playtest: [[cannot-climb-onto-grey-yard-bridge|Cannot climb onto grey_yard bridge]] (на пролёт нет подхода). Follow-up: [[feat-voxel-3d-terrain-and-rotating-ramps|feat: Voxel 3D terrain and rotating ramps]].

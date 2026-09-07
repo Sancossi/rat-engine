@@ -16,7 +16,7 @@ Intent: зафиксировать пять референс-игр (движе�
 
 Acceptance: по каждой игре pillar + берём + не берём + wikilinks на ADR/feat. Опечатки сида исправлены (Chrono Cross, Disco Elysium). The Sims — не в пятёрке. Scope сессии — следующая карточка.
 
-Origin: user seed (чат). Взято в [[Sprint 9 — First playable loop]]. Related: [[research: Sims build-mode edit analog]], [[Art Direction]], [[GDD]], [[Event System]].
+Origin: user seed (чат). Взято в [[Sprint 9 — First playable loop]]. Related: [[research-sims-build-mode|research: Sims build-mode edit analog]], [[Art Direction]], [[GDD]], [[Event System]].
 
 ## Locked five
 
@@ -26,9 +26,9 @@ Origin: user seed (чат). Взято в [[Sprint 9 — First playable loop]]. 
 | Art | **Final Fantasy 6**, **Chrono Cross** |
 | Dialog | **Disco Elysium**, **Divinity: Original Sin** (серия: Original Sin / Original Sin 2) |
 
-The Sims уже разобран для Edit ([[research: Sims build-mode edit analog]]) — **не** одна из пяти. Zelda в [[Art Direction]] остаётся optional look-ref, **не** замена FF6 / Chrono Cross.
+The Sims уже разобран для Edit ([[research-sims-build-mode|research: Sims build-mode edit analog]]) — **не** одна из пяти. Zelda в [[Art Direction]] остаётся optional look-ref, **не** замена FF6 / Chrono Cross.
 
-Vertical slice **использует эти референсы**; конкретный scope сессии — следующая карточка [[Define vertical slice scope]] (сюда не пишем).
+Vertical slice **использует эти референсы**; конкретный scope сессии — следующая карточка [[define-vertical-slice-scope|Define vertical slice scope]] (сюда не пишем).
 
 ## Findings — Metal Gear Solid 3 (movement)
 
@@ -36,15 +36,15 @@ Vertical slice **использует эти референсы**; конкре�
 
 **Берём:**
 
-- **Отдельный Climb-рельс, не «идти в лестницу».** Interact лицом к объёму → mount; проход мимо не цепляет. Пока Climb: камера сзади, лестница вверх экрана, вперёд = вверх. Уже в движке: [[feat: MGS3 ladder climb]] (заменил feel [[feat: Ladder toward-climb, jump grab, jump off]]).
-- **Свободная ходьба на поле, не tile-step.** Игрок ходит analog/hybrid; авторы снапит к сетке — [[ADR-004 Hybrid map movement and events]]. WASD относительно камеры: [[feat: Camera-aligned walk]].
-- **Именованные режимы локомоции** (walk vs climb vs jump), а не один analog-суп — [[feat: Player locomotion FSM]]. Прыжок остаётся своим слайсом ([[feat: Responsive Mario-like jump]]), не CQC MGS.
-- **Контекстный Action** на объект (лестница, NPC, дверь) — тот же interact, что у событий ([[Event System]] trigger Action; [[S1: Dialog UI + interact prompt]]).
+- **Отдельный Climb-рельс, не «идти в лестницу».** Interact лицом к объёму → mount; проход мимо не цепляет. Пока Climb: камера сзади, лестница вверх экрана, вперёд = вверх. Уже в движке: [[feat-mgs3-ladder-climb|feat: MGS3 ladder climb]] (заменил feel [[feat-ladder-toward-climb-jump-grab|feat: Ladder toward-climb, jump grab, jump off]]).
+- **Свободная ходьба на поле, не tile-step.** Игрок ходит analog/hybrid; авторы снапит к сетке — [[ADR-004 Hybrid map movement and events]]. WASD относительно камеры: [[feat-camera-aligned-walk|feat: Camera-aligned walk]].
+- **Именованные режимы локомоции** (walk vs climb vs jump), а не один analog-суп — [[feat-player-locomotion-fsm|feat: Player locomotion FSM]]. Прыжок остаётся своим слайсом ([[feat-responsive-mario-like-jump|feat: Responsive Mario-like jump]]), не CQC MGS.
+- **Контекстный Action** на объект (лестница, NPC, дверь) — тот же interact, что у событий ([[Event System]] trigger Action; [[s1-dialog-ui-interact-prompt|S1: Dialog UI + interact prompt]]).
 
 **Не берём:**
 
 - Стелс как система (камуфляж, фазы тревоги, конусы зрения, CQC).
-- Over-the-shoulder / first-person / орбита камеры — ломает [[ADR-003 Ortho pixel-stable camera]] и ortho 3/4 ([[Feat: switchable ortho camera (top-down + 3/4)]]).
+- Over-the-shoulder / first-person / орбита камеры — ломает [[ADR-003 Ortho pixel-stable camera]] и ortho 3/4 ([[feat-switchable-ortho-camera-top-down-3-4|Feat: switchable ortho camera (top-down + 3/4)]]).
 - Ползучий prone, плавание, джунгли-traversal, survival-метры (голод, выносливость, раны).
 - Спрыгивание с лестницы Jump как основной сход — у нас сход `y_hi`/`y_lo` по рельсу.
 
@@ -94,7 +94,7 @@ Vertical slice **использует эти референсы**; конкре�
 - **Разговор = основной квестовый глагол first playable:** Show Text + Conditional Branch + switches/variables, не скриптовый роман. Уже в модели: [[Event System]] (commands v1, pages + conditions).
 - **Выбор, который остаётся флагом** (switch / self-switch / variable), а не «текст и забыл».
 - **Разные голоса** (NPC vs «внутренняя реплика») как отдельные строки/страницы, не как OS из 24 навыков.
-- Interact prompt + окно текста: [[S1: Dialog UI + interact prompt]]; предметы как ключи к репликам — RM-like список ([[GDD]], [[feat: Inventory list UI]]), Has item в conditions.
+- Interact prompt + окно текста: [[s1-dialog-ui-interact-prompt|S1: Dialog UI + interact prompt]]; предметы как ключи к репликам — RM-like список ([[GDD]], [[feat-inventory-list-ui|feat: Inventory list UI]]), Has item в conditions.
 
 **Не берём:**
 
@@ -123,8 +123,8 @@ Vertical slice **использует эти референсы**; конкре�
 
 ## Follow-up
 
-- [[Define vertical slice scope]] — vertical slice опирается на эти пять; scope сессии на той карточке, не здесь.
-- [[Art direction moodboard pass]] — визуальный lock палитр FF6 / Chrono Cross (уже backlog; не трогаем в этом слайсе).
+- [[define-vertical-slice-scope|Define vertical slice scope]] — vertical slice опирается на эти пять; scope сессии на той карточке, не здесь.
+- [[art-direction-moodboard-pass|Art direction moodboard pass]] — визуальный lock палитр FF6 / Chrono Cross (уже backlog; не трогаем в этом слайсе).
 - [[Art Direction]] — чекбокс конкретных референсов обновлён под эту пятёрку.
 
 ## Resolution

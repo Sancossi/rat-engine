@@ -14,4 +14,4 @@ Intent: moodboard lock уже есть (7 hex + take/don't take). Intent кар�
 
 Acceptance: 3–5 one-liners в [[Art Direction]] (Moodboard): конкретные stills (например Figaro courtyard, opera house, Termina dock). Не второй Collect 5, не новая палитра.
 
-Origin: [[Art direction moodboard pass]] (review Minor).
+Origin: [[art-direction-moodboard-pass|Art direction moodboard pass]] (review Minor).

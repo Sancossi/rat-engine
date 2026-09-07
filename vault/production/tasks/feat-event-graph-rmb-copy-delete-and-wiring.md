@@ -21,7 +21,7 @@ Acceptance:
 - Хоткеи при наведении/фокусе canvas (не когда InputText ест клавиши): Delete/Backspace удалить; Ctrl+C copy; Ctrl+V paste; Ctrl+Z undo; Ctrl+Y или Ctrl+Shift+Z redo — через существующий `EditorDocument` undo/redo, не отдельный стек графа.
 - Связи: зажать ЛКМ на out-пине и протянуть на in-пин (wire preview), отпустить — `connect_event_graph_nodes`. Клик-пин-клик можно оставить как запасной.
 
-Depends: [[feat: Event graph in-node widgets]]. Origin: [[Sprint 12 — Graph is Play truth]] (chat 2026-09-04). Related: [[feat: Event graph editor canvas]]. Follow-up: [[Event graph self-pin drag stays armed]].
+Depends: [[feat-event-graph-in-node-widgets|feat: Event graph in-node widgets]]. Origin: [[Sprint 12 — Graph is Play truth]] (chat 2026-09-04). Related: [[feat-event-graph-editor-canvas|feat: Event graph editor canvas]]. Follow-up: [[event-graph-self-pin-drag-stays-armed|Event graph self-pin drag stays armed]].
 
 ## Resolution
 
@@ -29,4 +29,4 @@ RMB на canvas: Add по секциям, Copy, Delete. `duplicate_event_graph_n
 
 ## Bugs found
 
-[[Event graph self-pin drag stays armed]]
+[[event-graph-self-pin-drag-stays-armed|Event graph self-pin drag stays armed]]

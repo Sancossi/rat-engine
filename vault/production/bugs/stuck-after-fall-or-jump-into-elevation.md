@@ -9,7 +9,7 @@ tags: [bug]
 
 # Stuck after falling from elevation or jumping into a ledge
 
-Origin: chat 2026-09-01 (play). After [[cannot-fall-off-ramp]]. Solids: [[feat: Bake height-grid and ramps to collision solids]].
+Origin: chat 2026-09-01 (play). After [[cannot-fall-off-ramp]]. Solids: [[feat-bake-height-grid-and-ramps-to-collision-solids|feat: Bake height-grid and ramps to collision solids]].
 
 ## Repro
 

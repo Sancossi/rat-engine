@@ -14,7 +14,7 @@ Intent: в Edit ставить и снимать терейн-воксель н�
 
 Acceptance: Terrain tool Place voxel / Remove; клик по грани или слой в панели задаёт Y; greybox показывает куб; undo. Не imgui-node-editor. Не вращаемые рампы (следующая карточка).
 
-Depends: [[feat: Voxel occupancy schema and bake]]. Origin: [[Sprint 14 — Voxel 3D terrain]]. Follow-up: [[chore: Edit voxel review polish]].
+Depends: [[feat-voxel-occupancy-schema-and-bake|feat: Voxel occupancy schema and bake]]. Origin: [[Sprint 14 — Voxel 3D terrain]]. Follow-up: [[chore-edit-voxel-review-polish|chore: Edit voxel review polish]].
 
 ## Resolution
 

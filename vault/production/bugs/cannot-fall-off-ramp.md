@@ -9,7 +9,7 @@ tags: [bug]
 
 # Cannot fall off ramp
 
-Origin: chat 2026-09-01 (play). After [[ramp-climb-does-not-work]]. Solids: [[feat: Bake height-grid and ramps to collision solids]].
+Origin: chat 2026-09-01 (play). After [[ramp-climb-does-not-work]]. Solids: [[feat-bake-height-grid-and-ramps-to-collision-solids|feat: Bake height-grid and ramps to collision solids]].
 
 ## Repro
 

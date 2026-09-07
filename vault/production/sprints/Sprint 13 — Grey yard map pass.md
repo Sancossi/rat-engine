@@ -21,13 +21,13 @@ DoD:
 - Apprentice после switch 2 не твердит про недобытый cog
 - Headless cog e2e / `[quest]` зелёные
 
-Вне скоупа: successor map, field physics, меши, scare-blocker, i18n UI редактора, [[Event graph self-pin drag stays armed]].
+Вне скоупа: successor map, field physics, меши, scare-blocker, i18n UI редактора, [[event-graph-self-pin-drag-stays-armed|Event graph self-pin drag stays armed]].
 
 Порядок:
 
-- [[feat: Place ramp from clicked tile edge]] → [[feat: Walkable bridges over open ground]] → [[feat: Indoor volume dims the street]] → [[feat: Grey yard layout pass]] → [[feat: Grey yard Russian texts]] → [[feat: Apprentice post-quest page]]
+- [[feat-place-ramp-from-clicked-tile-edge|feat: Place ramp from clicked tile edge]] → [[feat-walkable-bridges-over-open-ground|feat: Walkable bridges over open ground]] → [[feat-indoor-volume-dims-the-street|feat: Indoor volume dims the street]] → [[feat-grey-yard-layout-pass|feat: Grey yard layout pass]] → [[feat-grey-yard-russian-texts|feat: Grey yard Russian texts]] → [[feat-apprentice-post-quest-page|feat: Apprentice post-quest page]]
 
-Roadmap: [[Content vertical slice]]
+Roadmap: [[content-vertical-slice|Content vertical slice]]
 
 ## Итог
 
@@ -35,4 +35,4 @@ DoD выполнен 2026-09-04. Place ramp с кликнутой грани; м
 
 ## Bugs found
 
-на закрытии / плейтест: [[Cannot climb onto grey_yard bridge]]. Follow-up: [[feat: Voxel 3D terrain and rotating ramps]]. Южный обход ящиков чинили в [[feat: Grey yard layout pass]] до Done. [[Event graph self-pin drag stays armed]] остаётся в бэклоге.
+на закрытии / плейтест: [[cannot-climb-onto-grey-yard-bridge|Cannot climb onto grey_yard bridge]]. Follow-up: [[feat-voxel-3d-terrain-and-rotating-ramps|feat: Voxel 3D terrain and rotating ramps]]. Южный обход ящиков чинили в [[feat-grey-yard-layout-pass|feat: Grey yard layout pass]] до Done. [[event-graph-self-pin-drag-stays-armed|Event graph self-pin drag stays armed]] остаётся в бэклоге.

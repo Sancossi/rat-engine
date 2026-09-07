@@ -20,6 +20,8 @@ Depends: [[s15-authoring]].
 
 ## Resolution
 
+Follow-up: [[explicit-empty-graph-revives-legacy-commands]].
+
 Pending.
 
 ## Bugs found

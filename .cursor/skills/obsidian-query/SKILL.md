@@ -13,7 +13,7 @@ All queries are filesystem search under `vault/`. Do not use Notion MCP.
 ## Current sprint
 
 1. Glob `vault/production/sprints/*.md`
-2. Grep `current: true` — exactly one file should match
+2. Grep `current: true` — one match during execution, zero allowed between stages; more than one is an error (see `AGENTS.md`).
 3. Read that note for Goal / DoD
 4. Grep `sprint: Sprint N` in `vault/production/tasks/` using the short label from the sprint heading (`Sprint 3` for `Sprint 3 — Height-grid traversal`)
 

@@ -3,13 +3,13 @@ type: bug
 area: Engine
 status: Open
 severity: Low
-sprint:
+sprint: Sprint 15
 tags: [bug]
 ---
 
 # Event graph self-pin drag stays armed
 
-Origin: [[feat: Event graph RMB add copy delete and wiring]] (review of `bffb449`).
+Origin: [[feat-event-graph-rmb-copy-delete-and-wiring|feat: Event graph RMB add copy delete and wiring]] (review of `bffb449`).
 
 ## Repro
 

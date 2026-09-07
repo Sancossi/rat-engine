@@ -9,13 +9,13 @@ tags: [bug]
 
 # Walk off slab teleports to the ground
 
-Origin: chat 2026-09-02 playtest. `grey_yard` loft slabs `top_y` 2.0; hole at `(2, 5)`. Related: [[feat: Stacked surfaces caves and basements]] (acceptance: дыра ведёт вниз). Взято в [[Sprint 8 — Play feel and authoring]].
+Origin: chat 2026-09-02 playtest. `grey_yard` loft slabs `top_y` 2.0; hole at `(2, 5)`. Related: [[feat-stacked-surfaces-caves-and-basements|feat: Stacked surfaces caves and basements]] (acceptance: дыра ведёт вниз). Взято в [[Sprint 8 — Play feel and authoring]].
 
 Playtest 2026-09-02 evening (after keep-Y in `follow_standing_sample` + full Release rebuild): **still snaps**. Reopened.
 
 Follow-up: [[walk-through-ladder]]
 
-Follow-up from: [[feat: Stacked surfaces caves and basements]]
+Follow-up from: [[feat-stacked-surfaces-caves-and-basements|feat: Stacked surfaces caves and basements]]
 
 ## Repro
 

@@ -9,6 +9,9 @@ tags: [bug]
 
 Агент: Grep `type: bug` и `status: Open`.
 
+Проверка отдельным полем `review`: Pending / In review / Approved / Needs fixes.
+При ревью баг остаётся Investigating; после Approved становится Fixed.
+
 ```dataview
 TABLE area, severity, status
 FROM "production/bugs"

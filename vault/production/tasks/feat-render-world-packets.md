@@ -14,7 +14,7 @@ Intent: `SimulationSession` → `RenderWorld` → `RenderPackets` → passes →
 
 Acceptance: renderer не принимает `GameState` / `EventRuntime` / editor-типы; snapshot строится без вызова bgfx; основные passes видны в profiler/capture.
 
-Depends: [[research: Entity model ECS vs scene vs hybrid]]. Next: [[chore: NativeWindow platform adapters]].
+Depends: [[research-entity-model-ecs-vs-scene|research: Entity model ECS vs scene vs hybrid]]. Next: [[chore-native-window-platform-adapters|chore: NativeWindow platform adapters]].
 
 Origin: merged `docs/architecture-roadmap.md` (2026-09-01).
 

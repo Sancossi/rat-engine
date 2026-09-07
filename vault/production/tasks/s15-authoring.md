@@ -20,6 +20,8 @@ Depends: [[s15-storage]].
 
 ## Resolution
 
+Included follow-up: [[chore-edit-voxel-review-polish]].
+
 Pending.
 
 ## Bugs found

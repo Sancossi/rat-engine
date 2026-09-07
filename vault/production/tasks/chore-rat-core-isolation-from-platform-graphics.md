@@ -14,7 +14,7 @@ Intent: зафиксировать граф зависимостей. Gameplay/`
 
 Acceptance: CMake/CI падает, если `rat_core` тянет GLFW/ImGui/bgfx; в README или `cmake/` виден граф библиотек. Editor остаётся в `apps/editor` + `rat_engine`.
 
-Depends: [[chore: CI Windows/Linux and grey_yard smoke]]. Next: [[feat: SimulationSession unified tick]].
+Depends: [[chore-ci-windows-linux-and-grey-yard-smoke|chore: CI Windows/Linux and grey_yard smoke]]. Next: [[feat-simulation-session-unified-tick|feat: SimulationSession unified tick]].
 
 Origin: merged `docs/architecture-roadmap.md` (2026-09-01).
 

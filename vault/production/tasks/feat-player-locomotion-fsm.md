@@ -18,7 +18,7 @@ Acceptance: переходы детерминированы и покрыты he
 
 `locomotion_from` / `locomotion_state_name` in `rat_core` (`rat/locomotion.hpp`): pure classify Idle/Walk/Jump/Fall from `JumpState` + `MoveInput`. Names `"Idle"` `"Walk"` `"Jump"` `"Fall"` are the animation contract. Jump gravity/coyote/buffer stay in `JumpState` / `integrate_player_frame_surface`. Verify: `.\build\tests\rat_tests.exe "[loco]"`.
 
-Follow-up: [[chore: locomotion classify review polish]], [[feat: Drive player physics from locomotion FSM]]
+Follow-up: [[chore-locomotion-classify-review-polish|chore: locomotion classify review polish]], [[feat-drive-player-physics-from-locomotion-fsm|feat: Drive player physics from locomotion FSM]]
 
 ## Bugs found
 

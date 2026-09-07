@@ -9,7 +9,7 @@ tags: [bug]
 
 # Cannot climb onto grey_yard bridge
 
-Origin: playtest 2026-09-04 after [[Sprint 13 — Grey yard map pass]] / [[feat: Grey yard layout pass]]. Related: [[feat: Walkable bridges over open ground]]. Follow-up: [[feat: Voxel 3D terrain and rotating ramps]]. Depends: [[feat: Rotating ramp voxels]]. Origin: [[Sprint 14 — Voxel 3D terrain]]. Follow-up: [[chore: Bridge climb review test polish]].
+Origin: playtest 2026-09-04 after [[Sprint 13 — Grey yard map pass]] / [[feat-grey-yard-layout-pass|feat: Grey yard layout pass]]. Related: [[feat-walkable-bridges-over-open-ground|feat: Walkable bridges over open ground]]. Follow-up: [[feat-voxel-3d-terrain-and-rotating-ramps|feat: Voxel 3D terrain and rotating ramps]]. Depends: [[feat-rotating-ramp-voxels|feat: Rotating ramp voxels]]. Origin: [[Sprint 14 — Voxel 3D terrain]]. Follow-up: [[chore-bridge-climb-review-test-polish|chore: Bridge climb review test polish]].
 
 Occupancy-ramp high side omit’ит fence у occupancy solid и у abutting `floor_slab` (иначе crest на плиту не выходит).
 

@@ -14,7 +14,7 @@ Intent: рампа — клин в 3D-клетке с **поворотом** (о
 
 Acceptance: Place ramp voxel; yaw по кликнутой грани (как сейчас N/E/S/W) минимум; если ADR разрешил pitch — отдельный override в панели. Play: цилиндр поднимается по клину на верх соседа. Combo/panel может остаться override. Не Minecraft-sculpt.
 
-Depends: [[feat: Edit place 3D terrain voxels]]. Origin: [[Sprint 14 — Voxel 3D terrain]]. Related: [[feat: Place ramp from clicked tile edge]]. Follow-up: [[chore: Ramp voxel review polish]]. Follow-up: [[Cannot climb onto grey_yard bridge]] — omit `floor_slab` side fence на high-side occupancy-ramp (как у occupancy solid), иначе crest на плиту моста упрётся в забор.
+Depends: [[feat-edit-place-3d-terrain-voxels|feat: Edit place 3D terrain voxels]]. Origin: [[Sprint 14 — Voxel 3D terrain]]. Related: [[feat-place-ramp-from-clicked-tile-edge|feat: Place ramp from clicked tile edge]]. Follow-up: [[chore-ramp-voxel-review-polish|chore: Ramp voxel review polish]]. Follow-up: [[cannot-climb-onto-grey-yard-bridge|Cannot climb onto grey_yard bridge]] — omit `floor_slab` side fence на high-side occupancy-ramp (как у occupancy solid), иначе crest на плиту моста упрётся в забор.
 
 ## Resolution
 

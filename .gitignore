@@ -9,6 +9,8 @@ compile_commands.json
 *.suo
 *.VC.db
 .DS_Store
+__pycache__/
+*.pyc
 
 aqtinstall.log
 rat.log

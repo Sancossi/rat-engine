@@ -13,27 +13,27 @@ tags: [sprint]
 
 DoD:
 
-- ADR: воксели вместо «не воксельный мир» из [[feat: Stacked surfaces caves and basements]]
+- ADR: воксели вместо «не воксельный мир» из [[feat-stacked-surfaces-caves-and-basements|feat: Stacked surfaces caves and basements]]
 - Схема + parse/dump occupancy (несколько этажей в одной XZ)
 - Edit: поставить/снять воксель на Y слоя
 - Рампа-клин с поворотом; заход на соседний воксель другого Y
 - Play: верх / под пролётом / на мост по рампе; `[collision],[player],[map]` зелёные
-- [[Cannot climb onto grey_yard bridge]] Fixed
+- [[cannot-climb-onto-grey-yard-bridge|Cannot climb onto grey_yard bridge]] Fixed
 
 Вне скоупа: Minecraft-sculpt как продукт, новый renderer, field physics, меши-обязаловка, successor map filename.
 
 Порядок:
 
-- [[research: Voxel 3D terrain ADR]] → [[feat: Voxel occupancy schema and bake]] → [[feat: Edit place 3D terrain voxels]] → [[feat: Rotating ramp voxels]] → [[Cannot climb onto grey_yard bridge]]
+- [[research-voxel-3d-terrain-adr|research: Voxel 3D terrain ADR]] → [[feat-voxel-occupancy-schema-and-bake|feat: Voxel occupancy schema and bake]] → [[feat-edit-place-3d-terrain-voxels|feat: Edit place 3D terrain voxels]] → [[feat-rotating-ramp-voxels|feat: Rotating ramp voxels]] → [[cannot-climb-onto-grey-yard-bridge|Cannot climb onto grey_yard bridge]]
 
-Epic: [[feat: Voxel 3D terrain and rotating ramps]]
+Epic: [[feat-voxel-3d-terrain-and-rotating-ramps|feat: Voxel 3D terrain and rotating ramps]]
 
-Roadmap: [[Content vertical slice]]
+Roadmap: [[content-vertical-slice|Content vertical slice]]
 
 ## Итог
 
-DoD выполнен 2026-09-04. [[ADR-015 Voxel 3D terrain]] Accepted (sparse occupancy 1 м, yaw-клинья, dual-read). Schema 5 `occupancy[]` + bake union. Edit: Place/Remove voxel, Place ramp voxel. [[Cannot climb onto grey_yard bridge]] Fixed: две рампы с запада на плиты, проход снизу сохранён.
+DoD выполнен 2026-09-04. [[ADR-015 Voxel 3D terrain]] Accepted (sparse occupancy 1 м, yaw-клинья, dual-read). Schema 5 `occupancy[]` + bake union. Edit: Place/Remove voxel, Place ramp voxel. [[cannot-climb-onto-grey-yard-bridge|Cannot climb onto grey_yard bridge]] Fixed: две рампы с запада на плиты, проход снизу сохранён.
 
 ## Bugs found
 
-на закрытии: none. Polish вне порядка: [[chore: Occupancy review test polish]], [[chore: Edit voxel review polish]], [[chore: Ramp voxel review polish]], [[chore: Bridge climb review test polish]].
+на закрытии: none. Polish вне порядка: [[chore-occupancy-review-test-polish|chore: Occupancy review test polish]], [[chore-edit-voxel-review-polish|chore: Edit voxel review polish]], [[chore-ramp-voxel-review-polish|chore: Ramp voxel review polish]], [[chore-bridge-climb-review-test-polish|chore: Bridge climb review test polish]].

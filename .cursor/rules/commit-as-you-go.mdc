@@ -1,15 +1,7 @@
 ---
-description: Commit green work without waiting for the user to ask
+description: Follow the shared rat-engine project workflow
 alwaysApply: true
 ---
 
-# Commit as you go
-
-In this repo, **commits are required**. Do not wait for "закоммить".
-
-- After a task or coherent slice is green (tests/build as applicable), commit on the feature branch.
-- Prefer small commits with a 1–2 sentence **why**.
-- Subagent implementers commit **only their files** so the parent can review `BASE..HEAD`.
-- Still forbidden unless the user explicitly asks: force-push, hard reset, `--no-verify`, amending a pushed commit.
-
-Do not stage: `imgui.ini`, secrets, unrelated dirty vault/index/template noise, or files another agent owns.
+Read and follow [AGENTS.md](../../AGENTS.md). It is the authoritative workflow,
+including capture, sprint routing, status transitions, delegation, review and commits.

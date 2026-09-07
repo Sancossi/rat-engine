@@ -35,7 +35,7 @@ tags: [game]
 
 ### Look-refs (FF6 / Chrono Cross)
 
-Take / don't take целиком — [[Collect 5 reference games]]. Сюда только то, что красится на `grey_yard`:
+Take / don't take целиком — [[collect-5-reference-games|Collect 5 reference games]]. Сюда только то, что красится на `grey_yard`:
 
 - **FF6 — берём:** читаемый силуэт пропа/NPC на ограниченной сценной палитре; один интерьер = один lock (урок замка/оперы, не сеттинг).
 - **Chrono Cross — берём:** живописный pixel albedo на 3D-формах (у нас 3D-двор + pixel textures); региональный тон + мягкий fog, без PBR.
@@ -86,6 +86,13 @@ Take / don't take целиком — [[Collect 5 reference games]]. Сюда т�
 - [x] 16px vs 32px base → **32**
 - [x] Персонажи → **mesh + procedural anim**
 - [x] Иерархия тела → **RE-like segments** (голова / грудь / живот / руки сегментами / ноги сегментами)
-- [ ] Нужна ли ночь/день и как не сломать палитру — нет
-- [x] Конкретные референсы → движение **Metal Gear Solid 3**; арт **Final Fantasy 6** + **Chrono Cross**; диалоги **Disco Elysium** + **Divinity: Original Sin** (серия). Zelda — optional look-ref, не замена FF6/CC. Детали: [[Collect 5 reference games]].
-- [ ] Точный набор костей/сегментов (нужен ли отдельный neck/hips) — да
+- [x] Нужна ли ночь/день и как не сломать палитру — нет
+- [x] Конкретные референсы → движение **Metal Gear Solid 3**; арт **Final Fantasy 6** + **Chrono Cross**; диалоги **Disco Elysium** + **Divinity: Original Sin** (серия). Zelda — optional look-ref, не замена FF6/CC. Детали: [[collect-5-reference-games|Collect 5 reference games]].
+- [x] Точный набор костей/сегментов (нужен ли отдельный neck/hips) — да
+
+## Implementation status (2026-09-07)
+
+The direction above records accepted product choices, not a shipped importer.
+AssetRegistry and MemoryAssetLoader exist; mesh/texture import, pixel-stable textured
+scene acceptance and the segmented procedural character remain planned.
+The accepted neck/hips answer and no day/night choice are retained.

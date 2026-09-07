@@ -14,7 +14,7 @@ Intent: предметы уже в `GameState` и `change_items` (квест `ru
 
 Acceptance: открыть инвентарь в Play; видны id / quantity / key item; закрыть той же клавишей. Не экип, не drag-drop. Headless не обязателен для ImGui; состояние читается из `GameState`.
 
-Origin: [[GDD]] inventory. Взято в [[Sprint 9 — First playable loop]]. Related: [[S1: GameState switches/vars/inventory/position]].
+Origin: [[GDD]] inventory. Взято в [[Sprint 9 — First playable loop]]. Related: [[s1-gamestate-switches-vars-inventory-position|S1: GameState switches/vars/inventory/position]].
 
 ## Resolution
 

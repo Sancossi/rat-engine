@@ -14,9 +14,9 @@ Intent: в Edit у выбранного event/page — холст нод (trigge
 
 Acceptance: place/connect/delete nodes; compile on apply; inspector list остаётся fallback. MVP без полного MZ-набора. Не Ruby/JS VM.
 
-Origin: [[feat: Event node graph authoring]]. Depends: [[feat: Event graph model and compile]]. Related: [[s2-event-inspector-pages-stub]]. Взято в [[Sprint 8 — Play feel and authoring]].
+Origin: [[feat-event-node-graph-authoring|feat: Event node graph authoring]]. Depends: [[feat-event-graph-model-and-compile|feat: Event graph model and compile]]. Related: [[s2-event-inspector-pages-stub]]. Взято в [[Sprint 8 — Play feel and authoring]].
 
-Follow-up: [[chore: Event graph join golden and branch edges]]
+Follow-up: [[chore-event-graph-join-golden-and-branch-edges|chore: Event graph join golden and branch edges]]
 
 ## Resolution
 

@@ -26,7 +26,7 @@ tags: [game, events]
 | --- | --- |
 | Action | Игрок нажал interact, глядя/стоя у события |
 | Player touch | Игрок вошёл в tile/volume |
-| Event touch | Событие коснулось игрока (для подвижных) |
+| Event touch | Planned: событие коснулось игрока; исполняемый путь отсутствует |
 | Autorun | Старт page при выполнении conditions (блокирует до конца) |
 | Parallel | Фоновый процесс (ограничить бюджет) |
 
@@ -70,6 +70,13 @@ Show Text, Control Switch, Control Variable, Conditional Branch, Set Move Route 
 ## Open questions
 
 - [x] Формат хранения → **JSON**
-- [x] UX команд → **RM-like list** (графический граф — бэклог [[feat: Event node graph authoring]])
+- [x] UX команд → **RM-like list** (графический граф — бэклог [[feat-event-node-graph-authoring|feat: Event node graph authoring]])
 - [x] Лимиты Parallel → **8 / 32 / no nested**
-- [x] Set Move Route (basic) → runtime overlay + `set_move_route.route[]` + тот же interpreter yield (как Wait); не второй VM. См. [[research: Set Move Route]]
+- [x] Set Move Route (basic) → runtime overlay + `set_move_route.route[]` + тот же interpreter yield (как Wait); не второй VM. См. [[research-set-move-route|research: Set Move Route]]
+
+## Runtime limitations (2026-09-07)
+
+Same-map Transfer Player uses the current runtime map. Cross-map transfer has no
+map loader; changing map_id alone does not load geometry or events. Sprint 15 will
+reject cross-map transfer and Event touch explicitly in compiler/UI/runtime while
+allowing unsupported authored maps to open for repair. These are not playable features.

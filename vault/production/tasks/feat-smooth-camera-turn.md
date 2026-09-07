@@ -15,7 +15,7 @@ Intent: камера не телепортируется к целевому р�
 Acceptance: mount/dismount Climb: eye и look-at доезжают до `climb_camera_pose` / выбранного ortho за ~0.2–0.4 с, без рывка. WASD на climb по-прежнему от **целевого** climb shot (не от полуповернутого кадра), иначе «вперёд = вверх» поедет. `C` в Play тоже крутит плавно. Не свободный orbit мышкой (отдельная тема).
 
 Depends: [[climb-camera-locks-on-far-side]] (сначала правильная сторона, потом lerp).
-Origin: chat 2026-09-02 (упд: хочу плавный поворот). Related: [[feat: MGS3 ladder climb]], [[feat: Camera-aligned walk]]. Взято в [[Sprint 8 — Play feel and authoring]].
+Origin: chat 2026-09-02 (упд: хочу плавный поворот). Related: [[feat-mgs3-ladder-climb|feat: MGS3 ladder climb]], [[feat-camera-aligned-walk|feat: Camera-aligned walk]]. Взято в [[Sprint 8 — Play feel and authoring]].
 
 ## Resolution
 

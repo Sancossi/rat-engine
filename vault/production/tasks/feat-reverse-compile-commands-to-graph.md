@@ -14,7 +14,7 @@ Intent: карты без `graph` (grey_yard) должны получить гр
 
 Acceptance: `commands_to_graph` в `rat_core`; round-trip `compile_event_graph(commands_to_graph(cmds))` совпадает с cmds для linear, nested branch, wait, set_move_route. Loader: если graph нет — заполняет из commands. JSON файлы карт не обязательно переписывать. Не менять EventRuntime stepper в этом срезе.
 
-Origin: [[Sprint 12 — Graph is Play truth]]. Related: [[ADR-014 Play executes event graphs]]. Follow-up: [[feat: Play walks event graph]].
+Origin: [[Sprint 12 — Graph is Play truth]]. Related: [[ADR-014 Play executes event graphs]]. Follow-up: [[feat-play-walks-event-graph|feat: Play walks event graph]].
 
 ## Resolution
 

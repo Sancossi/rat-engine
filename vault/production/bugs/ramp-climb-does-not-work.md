@@ -9,7 +9,7 @@ tags: [bug]
 
 # Ramp climb does not work
 
-Origin: chat 2026-09-01 (play). Tick path: [[feat: SimulationSession unified tick]]. Related (side entry, Fixed): [[ramp-allows-entry-from-side]]. Solids: [[feat: Bake height-grid and ramps to collision solids]].
+Origin: chat 2026-09-01 (play). Tick path: [[feat-simulation-session-unified-tick|feat: SimulationSession unified tick]]. Related (side entry, Fixed): [[ramp-allows-entry-from-side]]. Solids: [[feat-bake-height-grid-and-ramps-to-collision-solids|feat: Bake height-grid and ramps to collision solids]].
 
 ## Repro
 
@@ -28,7 +28,7 @@ Ascent does not work (stuck, slide, or treated as a wall).
 
 Not a clone of [[ramp-allows-entry-from-side]] (that was side-entry lift). This is intended climb failing after the Sprint 7 tick/map split.
 
-Follow-up from: [[feat: SimulationSession unified tick]]
+Follow-up from: [[feat-simulation-session-unified-tick|feat: SimulationSession unified tick]]
 
 ## Resolution
 

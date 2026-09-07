@@ -18,14 +18,14 @@ tags: [engine]
 
 ## Уже не это
 
-Визуальный profiler, RenderDoc, ECS, мышь в Edit — другие карточки. Логирование как примитив — [[Logging and assert helpers]] (Sprint 4; дописать, не клонировать).
+Визуальный profiler, RenderDoc, ECS, мышь в Edit — другие карточки. Логирование как примитив — [[logging-and-assert-helpers|Logging and assert helpers]] (Sprint 4; дописать, не клонировать).
 
 ## Sprint 4
 
-1. Наполнить [[Logging and assert helpers]] (файл + уровни, без синглтона).
-2. [[feat: Debug snapshot JSON]]
-3. [[feat: Event why-not-fired]]
-4. [[feat: Headless input sequence probe]]
+1. Наполнить [[logging-and-assert-helpers|Logging and assert helpers]] (файл + уровни, без синглтона).
+2. [[feat-debug-snapshot-json|feat: Debug snapshot JSON]]
+3. [[feat-event-why-not-fired|feat: Event why-not-fired]]
+4. [[feat-headless-input-sequence-probe|feat: Headless input sequence probe]]
 
 ## MCP и внешние тулзы
 

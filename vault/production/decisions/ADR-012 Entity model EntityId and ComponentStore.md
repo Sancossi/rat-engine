@@ -12,7 +12,7 @@ tags: [adr]
 
 Карта MVP — POD-события, один `PlayerBody` и blockers. Несколько динамических тел (герой, ящики, двери) могут жить как массив `CollisionBody` без ECS. Open question в [[Architecture]] (GPP Component): ECS vs scene-graph vs гибрид.
 
-Триггер переписывания — **не** коллизии и не [[feat: Field physics puzzles]]. Имеет смысл менять модель, когда разнородных акторов с разными наборами компонент станет много, или когда сцена-граф начнёт дублировать Transform/Renderable/Collider в трёх местах.
+Триггер переписывания — **не** коллизии и не [[feat-field-physics-puzzles|feat: Field physics puzzles]]. Имеет смысл менять модель, когда разнородных акторов с разными наборами компонент станет много, или когда сцена-граф начнёт дублировать Transform/Renderable/Collider в трёх местах.
 
 Сравнение (этап 6 [architecture roadmap](../../../docs/architecture-roadmap.md)):
 
@@ -27,7 +27,7 @@ tags: [adr]
 
 **Гибридный минимум:** `EntityId` (index + generation) и `ComponentStore<T>` для `Transform` / `Renderable` / `Collider` в `rat_core`. Итерация явная, без archetype, query compiler и job system.
 
-`PlayerBody`, event runtime и `SimulationSession` **не** мигрируют на stores в этом решении. Следующий потребитель — [[feat: RenderWorld packets and instrumentation]].
+`PlayerBody`, event runtime и `SimulationSession` **не** мигрируют на stores в этом решении. Следующий потребитель — [[feat-render-world-packets|feat: RenderWorld packets and instrumentation]].
 
 Переписывать / расширять:
 

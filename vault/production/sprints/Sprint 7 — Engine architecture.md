@@ -20,11 +20,11 @@ DoD:
 - карты ссылаются на `AssetId`; принят entity-model ADR; renderer ест `RenderPackets`, не `GameState`
 - platform/input/audio за адаптерами; есть метрики tick / draw calls / queue depth
 
-Вне скоупа: archetype ECS, универсальный RHI, job system, networking. [[feat: Spatial partition broadphase]] и [[feat: Object pool for short-lived FX]] — бэклог до подтверждённого bottleneck (этап 9 roadmap).
+Вне скоупа: archetype ECS, универсальный RHI, job system, networking. [[feat-spatial-partition-broadphase|feat: Spatial partition broadphase]] и [[feat-object-pool-fx|feat: Object pool for short-lived FX]] — бэклог до подтверждённого bottleneck (этап 9 roadmap).
 
 Порядок:
 
-- [[chore: CI Windows/Linux and grey_yard smoke]] → [[chore: rat_core isolation from platform graphics]] → [[feat: SimulationSession unified tick]] → [[feat: Replay recording and checksum]] → [[feat: MapDocument and RuntimeMap compile]] → [[jump-button-does-not-always-fire]] → [[ramp-climb-does-not-work]] → [[chore: Decompose EditorApp]] → [[feat: Asset registry and first load vertical]] → [[interact-button-does-not-always-fire]] → [[cannot-fall-off-ramp]] → [[research: Entity model ECS vs scene vs hybrid]] → [[feat: RenderWorld packets and instrumentation]] → [[chore: NativeWindow platform adapters]] → [[feat: Input rebind and gamepad]] → [[research: Audio backend ADR]] → [[feat: Audio backend implementation]] → [[chore: Engine frame metrics]]
+- [[chore-ci-windows-linux-and-grey-yard-smoke|chore: CI Windows/Linux and grey_yard smoke]] → [[chore-rat-core-isolation-from-platform-graphics|chore: rat_core isolation from platform graphics]] → [[feat-simulation-session-unified-tick|feat: SimulationSession unified tick]] → [[feat-replay-recording-and-checksum|feat: Replay recording and checksum]] → [[feat-map-document-and-runtime-map|feat: MapDocument and RuntimeMap compile]] → [[jump-button-does-not-always-fire]] → [[ramp-climb-does-not-work]] → [[chore-decompose-editor-app|chore: Decompose EditorApp]] → [[define-asset-folder-load-stub|feat: Asset registry and first load vertical]] → [[interact-button-does-not-always-fire]] → [[cannot-fall-off-ramp]] → [[research-entity-model-ecs-vs-scene|research: Entity model ECS vs scene vs hybrid]] → [[feat-render-world-packets|feat: RenderWorld packets and instrumentation]] → [[chore-native-window-platform-adapters|chore: NativeWindow platform adapters]] → [[feat-input-rebind-gamepad|feat: Input rebind and gamepad]] → [[research-audio-backend-adr|research: Audio backend ADR]] → [[feat-audio-backend-implementation|feat: Audio backend implementation]] → [[chore-engine-frame-metrics|chore: Engine frame metrics]]
 
 ## Итог
 

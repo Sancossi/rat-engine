@@ -9,7 +9,7 @@ tags: [bug]
 
 # Event on ramp is not mouse-clickable in Edit
 
-Origin: chat 2026-09-04 (edit). Pick: [[feat: Mouse viewport map edit]] / `unproject_to_ground_plane(..., ground_y = 0)`. Related: [[Ramp greybox fill breaks cells and hides the high side]].
+Origin: chat 2026-09-04 (edit). Pick: [[feat-mouse-viewport-map-edit|feat: Mouse viewport map edit]] / `unproject_to_ground_plane(..., ground_y = 0)`. Related: [[ramp-greybox-fill-breaks-cells|Ramp greybox fill breaks cells and hides the high side]].
 
 ## Repro
 

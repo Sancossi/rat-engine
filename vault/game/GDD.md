@@ -46,7 +46,7 @@ tags: [game, gdd]
 ### Secondary / support
 
 - Field action: столкновения, простые скиллы/интеракты на карте (без battle scene MVP)
-- Позже (не MVP): «физические» загадки — толкаемые ящики, напольные панели по массе, проваливающиеся полы, двери с разбегу — [[feat: Field physics puzzles]]
+- Позже (не MVP): «физические» загадки — толкаемые ящики, напольные панели по массе, проваливающиеся полы, двери с разбегу — [[feat-field-physics-puzzles|feat: Field physics puzzles]]
 - **Инвентарь:** модель ближе к **RPG Maker** (список предметов, stack/qty, key items; без сложных сетки-слотов как в Diablo)
 - Save / load состояния switches/variables + позиция + инвентарь
 
@@ -103,7 +103,7 @@ tags: [game, gdd]
 
 - HUD: минимум (interact prompt)
 - Диалоговое окно (RM-like)
-- Edit overlay: гизмо/сетка/inspector события (ImGui) — мышь во вьюпорте: [[feat: Mouse viewport map edit]]
+- Edit overlay: гизмо/сетка/inspector события (ImGui) — мышь во вьюпорте: [[feat-mouse-viewport-map-edit|feat: Mouse viewport map edit]]
 - Pause / save
 
 ## Риски
@@ -128,5 +128,5 @@ tags: [game, gdd]
 - [x] Формат хранения events → **JSON** ([[ADR-007 Events and maps stored as JSON]])
 - [x] Parallel limits → **8 active / 32 cmds/frame / no nested** ([[ADR-008 Parallel and Autorun runtime limits]])
 - [ ] Ночь/день — нужна ли в MVP
-- [x] Конкретные арт-референсы → арт **Final Fantasy 6** + **Chrono Cross**; палитра двора `grey_yard` в [[Art Direction]]; take/don't take — [[Collect 5 reference games]]
-- [ ] Field physics puzzles (ящики / панели / провалы / двери с разбегу) — backlog [[feat: Field physics puzzles]]
+- [x] Конкретные арт-референсы → арт **Final Fantasy 6** + **Chrono Cross**; палитра двора `grey_yard` в [[Art Direction]]; take/don't take — [[collect-5-reference-games|Collect 5 reference games]]
+- [ ] Field physics puzzles (ящики / панели / провалы / двери с разбегу) — backlog [[feat-field-physics-puzzles|feat: Field physics puzzles]]

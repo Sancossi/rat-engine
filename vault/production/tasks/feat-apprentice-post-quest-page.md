@@ -14,7 +14,7 @@ Intent: apprentice на `grey_yard` всегда говорит, что foreman 
 
 Acceptance: вторая Action-page при switch 2 (echo «Yard's quiet» / двор уже закрыт); до turn-in первая page без изменений. Не трогать switches 1–2 и `rusty_cog`.
 
-Origin: [[feat: Grey yard apprentice NPC]] (review Minor). Origin: [[Sprint 13 — Grey yard map pass]].
+Origin: [[feat-grey-yard-apprentice-npc|feat: Grey yard apprentice NPC]] (review Minor). Origin: [[Sprint 13 — Grey yard map pass]].
 
 ## Resolution
 

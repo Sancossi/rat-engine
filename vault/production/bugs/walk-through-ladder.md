@@ -11,7 +11,7 @@ tags: [bug]
 
 Origin: chat playtest 2026-09-02 evening (same pass as [[walk-off-slab-teleports-to-ground]]). Ladder bake is overlap-only (`LadderVolume`); MGS3 spec allowed walking through the volume without climbing. Playtest: that feels wrong — the face should be a **wall**.
 
-Взято в [[Sprint 8 — Play feel and authoring]]. Related: [[feat: MGS3 ladder climb]], [[edge-walls-passable-from-adjacent-side]].
+Взято в [[Sprint 8 — Play feel and authoring]]. Related: [[feat-mgs3-ladder-climb|feat: MGS3 ladder climb]], [[edge-walls-passable-from-adjacent-side]].
 
 ## Repro
 

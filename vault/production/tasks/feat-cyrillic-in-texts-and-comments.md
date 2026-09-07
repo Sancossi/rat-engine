@@ -19,7 +19,7 @@ Acceptance:
 - Save/load: `serialize_map_to_string` ↔ parse сохраняет `"Привет"` в `node.text` (не ломает JSON). Dump читаемый UTF-8, не обязательно `\uXXXX`.
 - Не переводить grey_yard. Не i18n UI редактора.
 
-Origin: chat 2026-09-04. Origin: [[Sprint 12 — Graph is Play truth]]. Related: [[feat: Event graph in-node widgets]].
+Origin: chat 2026-09-04. Origin: [[Sprint 12 — Graph is Play truth]]. Related: [[feat-event-graph-in-node-widgets|feat: Event graph in-node widgets]].
 
 ## Resolution
 

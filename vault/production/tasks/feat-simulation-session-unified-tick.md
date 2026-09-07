@@ -14,7 +14,7 @@ Intent: одна fixed-step симуляция вместо логики, раз
 
 Acceptance: editor и headless зовут одну реализацию tick; результат не зависит от display FPS; существующие механик-тесты зелёные; API не принимает platform/render типы.
 
-Depends: [[chore: rat_core isolation from platform graphics]]. Next: [[feat: Replay recording and checksum]].
+Depends: [[chore-rat-core-isolation-from-platform-graphics|chore: rat_core isolation from platform graphics]]. Next: [[feat-replay-recording-and-checksum|feat: Replay recording and checksum]].
 
 Origin: merged `docs/architecture-roadmap.md` (2026-09-01).
 

@@ -12,7 +12,7 @@ tags: [adr]
 
 Playtest `grey_yard`: мост `(6–8, 5)` — airborne `floor_slabs` (`top_y` 2.0). Сверху ходить можно, снизу пройти можно, **забраться нельзя**. 2.5D-модель даёт либо куб `height_grid` до Y=0 в той же клетке, либо плиту без терейн-подхода. Авторы хотят **многоуровневую карту самим терейном** и **вращаемые рампы** (ориентация клина, не spinning prop).
 
-Это снимает «не воксельный мир» из [[feat: Stacked surfaces caves and basements]]. Продукт не Minecraft-sculpt, не новый renderer, не [[feat: Field physics puzzles]]. Карты остаются JSON ([[ADR-007 Events and maps stored as JSON]]). Клетка мира по-прежнему `tile_size` (1 м).
+Это снимает «не воксельный мир» из [[feat-stacked-surfaces-caves-and-basements|feat: Stacked surfaces caves and basements]]. Продукт не Minecraft-sculpt, не новый renderer, не [[feat-field-physics-puzzles|feat: Field physics puzzles]]. Карты остаются JSON ([[ADR-007 Events and maps stored as JSON]]). Клетка мира по-прежнему `tile_size` (1 м).
 
 Представление — отдельный выбор. Пользователь уже зафиксировал **воксели + поворот рампы**; ниже — как хранить.
 
@@ -55,10 +55,10 @@ occupancy[]: { x, y, z, kind: "solid" | "ramp", yaw?: "north"|"east"|"south"|"we
 
 ## Consequences
 
-- [[feat: Voxel occupancy schema and bake]] — schema bump, parse/dump, unit bake двух вокселей в одной XZ без fill-to-Y=0. Кода в этом ADR нет.
+- [[feat-voxel-occupancy-schema-and-bake|feat: Voxel occupancy schema and bake]] — schema bump, parse/dump, unit bake двух вокселей в одной XZ без fill-to-Y=0. Кода в этом ADR нет.
 - Edit (следующие карточки): Place/Remove voxel по грани или слою Y; Place ramp с yaw от кликнутой грани. Undo через `EditHistory`.
 - Greybox: рисовать occupancy теми же кубами/клиньями, что height-grid/рампы; legacy поля — как сейчас.
 - `grey_yard`: заход на мост = ramp-воксель к существующим плитам (или к solid на нужном Y), не замена пролёта метровым кубом, пока нужен проход цилиндра 1.6 снизу на `top_y` 2.0.
 - Позже: опциональный `kind: "slab"` или импорт MagicaVoxel **в** occupancy. Не field physics, не смена камеры [[ADR-003 Ortho pixel-stable camera]].
 
-Origin: [[research: Voxel 3D terrain ADR]]. Related: [[feat: Voxel 3D terrain and rotating ramps]], [[feat: Stacked surfaces caves and basements]], [[Cannot climb onto grey_yard bridge]], [[Sprint 14 — Voxel 3D terrain]].
+Origin: [[research-voxel-3d-terrain-adr|research: Voxel 3D terrain ADR]]. Related: [[feat-voxel-3d-terrain-and-rotating-ramps|feat: Voxel 3D terrain and rotating ramps]], [[feat-stacked-surfaces-caves-and-basements|feat: Stacked surfaces caves and basements]], [[cannot-climb-onto-grey-yard-bridge|Cannot climb onto grey_yard bridge]], [[Sprint 14 — Voxel 3D terrain]].

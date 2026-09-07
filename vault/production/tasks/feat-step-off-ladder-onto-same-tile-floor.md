@@ -14,9 +14,9 @@ Intent: на верхе лестницы (`y_hi`) движение away долж
 
 Acceptance: East ladder + slab on the same tile; climb to `top_y`; away → stand on the slab without walking off the tile. Leave-without-support still falls.
 
-Origin: [[feat: Stacked surfaces caves and basements]] (Task 5 review: face-normal XZ is zeroed while overlapping, so the center cannot stay on the owner tile when leaving). Related: [[feat: Ladder toward-climb, jump grab, jump off]], [[feat: MGS3 ladder climb]].
+Origin: [[feat-stacked-surfaces-caves-and-basements|feat: Stacked surfaces caves and basements]] (Task 5 review: face-normal XZ is zeroed while overlapping, so the center cannot stay on the owner tile when leaving). Related: [[feat-ladder-toward-climb-jump-grab|feat: Ladder toward-climb, jump grab, jump off]], [[feat-mgs3-ladder-climb|feat: MGS3 ladder climb]].
 
-Absorbed by [[feat: MGS3 ladder climb]]. Top + up onto same-tile slab shipped there.
+Absorbed by [[feat-mgs3-ladder-climb|feat: MGS3 ladder climb]]. Top + up onto same-tile slab shipped there.
 
 ## Resolution
 

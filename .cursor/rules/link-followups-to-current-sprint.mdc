@@ -1,34 +1,7 @@
 ---
-description: Routes discovered follow-up work into the current sprint and links it to its origin
+description: Follow the shared rat-engine project workflow
 alwaysApply: true
 ---
 
-# Link follow-up work to its origin
-
-When **implementation or testing** (also review/acceptance) exposes extra work,
-file it in the vault **before it stays only in chat**. This includes bugs,
-regressions, polish, chores, research, and newly discovered requirements.
-
-| Discovery | Destination |
-| --- | --- |
-| Broken behavior / regression | `vault/production/bugs/` (`type: bug`, `status: Open`) |
-| New/changed requirement or extra feature | `vault/production/tasks/` (`type: task`, `status: Not started`) |
-
-Then:
-
-1. Find the sprint note with `current: true`.
-2. Set the item's `sprint` frontmatter to that sprint's short label (`Sprint N`).
-3. Add `Origin: [[source task or bug]]` to the new item's body.
-4. Add `Follow-up: [[new item]]` to the source item's body so navigation is
-   bidirectional.
-5. If there is no source item, link `Origin` to the current sprint note and
-   briefly identify the review, test, acceptance pass, or chat request.
-6. Deduplicate before creating; update existing links instead of cloning notes.
-7. On the **source card**, add `Bugs found:` / `Follow-up:` and a **Resolution** section when that card is closed.
-
-Examples: height-mismatch test reveals a second event never fires → bug.
-Snapshot work needs a `why_not` field the card did not include → follow-up task.
-
-Do not pull unrelated backlog ideas into the current sprint. Skip only tiny
-edits inside the same open card ("rename this var") or an explicit
-"не заводи задачу".
+Read and follow [AGENTS.md](../../AGENTS.md). It is the authoritative workflow,
+including capture, sprint routing, status transitions, delegation, review and commits.

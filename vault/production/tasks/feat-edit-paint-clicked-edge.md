@@ -14,7 +14,7 @@ Intent: рамка/забор/лестница на **той грани**, по 
 
 Acceptance: click near an edge upserts that facing; opposite side of the same cell works without selecting the neighbor. Hold-drag along a wall line is one undo group. Ramp opposite facing: same pick (or explicit flip) if still ImGui-only.
 
-Origin: [[feat: Sims-like edit brush and edge paint]]. Related: [[feat: Edit hold-drag brush]], [[research: Sims build-mode edit analog]]. Взято в [[Sprint 8 — Play feel and authoring]].
+Origin: [[feat-sims-like-edit-brush-and-edge-paint|feat: Sims-like edit brush and edge paint]]. Related: [[feat-edit-hold-drag-brush|feat: Edit hold-drag brush]], [[research-sims-build-mode|research: Sims build-mode edit analog]]. Взято в [[Sprint 8 — Play feel and authoring]].
 
 ## Resolution
 

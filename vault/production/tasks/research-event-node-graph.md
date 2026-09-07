@@ -14,7 +14,7 @@ Intent: как хранить граф и как **компилировать** 
 
 Acceptance: 1 страница в vault: формат, round-trip, что остаётся RM-списком, MVP-ноды (Show Text, Switch, Branch, Wait). Без редактора.
 
-Origin: [[feat: Event node graph authoring]]. Related: [[Event System]], [[ADR-007 Events and maps stored as JSON]]. Взято в [[Sprint 8 — Play feel and authoring]].
+Origin: [[feat-event-node-graph-authoring|feat: Event node graph authoring]]. Related: [[Event System]], [[ADR-007 Events and maps stored as JSON]]. Взято в [[Sprint 8 — Play feel and authoring]].
 
 ---
 
@@ -22,7 +22,7 @@ Origin: [[feat: Event node graph authoring]]. Related: [[Event System]], [[ADR-0
 
 **Граф — только authoring в Edit; Play исполняет существующий линейный список `commands`.** Опциональное поле `graph` на `EventPage` в map JSON; при save/apply Edit **компилирует** граф в `commands[]` и записывает оба поля. `EventRuntime` и loader **не читают** `graph` — источник истины для Play после compile.
 
-Альтернатива **отклонена**: интерпретировать граф в Play (отдельный graph-walker рядом с command-stepper). Два runtime-пути, дублирование лимитов [[ADR-008 Parallel and Autorun runtime limits]], сложнее hot-apply и headless-тесты. Граф = sugar над уже работающим bytecode-like списком ([[Event System]], [[roadmap/grey-box-event-runtime-v1]]).
+Альтернатива **отклонена**: интерпретировать граф в Play (отдельный graph-walker рядом с command-stepper). Два runtime-пути, дублирование лимитов [[ADR-008 Parallel and Autorun runtime limits]], сложнее hot-apply и headless-тесты. Граф = sugar над уже работающим bytecode-like списком ([[Event System]], [[production/roadmap/grey-box-event-runtime-v1|Grey-box event runtime v1]]).
 
 ## Где живёт граф
 
@@ -74,7 +74,7 @@ Compile — **детерминированный** обход от `entry` по 
 
 - Page **trigger** и **conditions** (AND на входе page).
 - **Command list** в JSON и в Play — канонический serialized bytecode.
-- Inspector **command list** как fallback ([[feat: Event graph editor canvas]] acceptance).
+- Inspector **command list** как fallback ([[feat-event-graph-editor-canvas|feat: Event graph editor canvas]] acceptance).
 - Все команды вне MVP graph-nodes по-прежнему только через list (Transfer Player, PlaySE, …) до расширения palette.
 
 ## MVP-ноды (не полный MZ)
@@ -100,10 +100,10 @@ Compile — **детерминированный** обход от `entry` по 
 
 ## Follow-up
 
-1. [[feat: Event graph model and compile]] — типы `graph`, serialize/load, compile, golden round-trip, validation errors.
-2. [[feat: Event graph editor canvas]] — ImGui/node canvas, compile on apply, inspector fallback.
+1. [[feat-event-graph-model-and-compile|feat: Event graph model and compile]] — типы `graph`, serialize/load, compile, golden round-trip, validation errors.
+2. [[feat-event-graph-editor-canvas|feat: Event graph editor canvas]] — ImGui/node canvas, compile on apply, inspector fallback.
 
-Epic: [[feat: Event node graph authoring]]. Schema doc update: `docs/schemas/map-event.schema.md` (поле `graph` + node kinds) — в scope compile task, не здесь.
+Epic: [[feat-event-node-graph-authoring|feat: Event node graph authoring]]. Schema doc update: `docs/schemas/map-event.schema.md` (поле `graph` + node kinds) — в scope compile task, не здесь.
 
 ## Resolution
 

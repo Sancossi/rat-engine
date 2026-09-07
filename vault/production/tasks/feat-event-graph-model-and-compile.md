@@ -14,9 +14,9 @@ Intent: модель графа (ноды + рёбра) и compile → суще�
 
 Acceptance: serialize/load graph; compile matches today’s linear list for a golden page; invalid graph = structured error, карта не стартует. Нет ImGui canvas.
 
-Origin: [[feat: Event node graph authoring]]. Depends: [[research: Event node graph vs bytecode]]. Взято в [[Sprint 8 — Play feel and authoring]].
+Origin: [[feat-event-node-graph-authoring|feat: Event node graph authoring]]. Depends: [[research-event-node-graph|research: Event node graph vs bytecode]]. Взято в [[Sprint 8 — Play feel and authoring]].
 
-Follow-up: [[feat: Event graph editor canvas]] — compile-on-apply; join-after-branch golden; sequence edges on `conditional_branch` should error.
+Follow-up: [[feat-event-graph-editor-canvas|feat: Event graph editor canvas]] — compile-on-apply; join-after-branch golden; sequence edges on `conditional_branch` should error.
 
 ## Resolution
 

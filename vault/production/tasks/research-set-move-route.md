@@ -12,9 +12,9 @@ tags: [task]
 
 Intent: GDD / [[Event System]] v1 ещё держит Set Move Route (basic). Нужно решить, как ходить NPC по сетке без physics-ящиков: формат команды, кто тикает (Parallel vs interpreter), коллизия с игроком. Не писать runtime в этом слайсе.
 
-Acceptance: заметка take / don't take на этой карточке (как [[research: Sims build-mode edit analog]]). Следующий спринт сможет нарезать impl. Не Event touch, не party follow.
+Acceptance: заметка take / don't take на этой карточке (как [[research-sims-build-mode|research: Sims build-mode edit analog]]). Следующий спринт сможет нарезать impl. Не Event touch, не party follow.
 
-Origin: [[Define vertical slice scope]] Out; [[Event System]] commands v1. Взято в [[Sprint 10 — Grey yard content]].
+Origin: [[define-vertical-slice-scope|Define vertical slice scope]] Out; [[Event System]] commands v1. Взято в [[Sprint 10 — Grey yard content]].
 
 ## Findings — Set Move Route → rat-engine
 
@@ -48,14 +48,14 @@ Origin: [[Define vertical slice scope]] Out; [[Event System]] commands v1. Вз�
 - Jump / climb / ramp-as-route; диагонали.
 - Set Move Route как второй interpreter или nested Parallel из Action.
 - Repeat-флаг на команде (патруль = Parallel page loop).
-- Graph-нода Move Route в MVP canvas ([[research: Event node graph vs bytecode]]).
+- Graph-нода Move Route в MVP canvas ([[research-event-node-graph|research: Event node graph vs bytecode]]).
 - Event↔event коллизия (два NPC на одной клетке).
 
-**Follow-up:** [[feat: Set Move Route (basic)]] — следующий спринт, не Sprint 10. `CommandOp::SetMoveRoute` + parse/serialize `route[]` + overlay + yield + probe коллизии + markers из overlay. Карту `grey_yard` и Art Direction не трогать в том слайсе без отдельной content-карточки.
+**Follow-up:** [[feat-set-move-route-basic|feat: Set Move Route (basic)]] — следующий спринт, не Sprint 10. `CommandOp::SetMoveRoute` + parse/serialize `route[]` + overlay + yield + probe коллизии + markers из overlay. Карту `grey_yard` и Art Direction не трогать в том слайсе без отдельной content-карточки.
 
 ## Resolution
 
-NPC ходит по runtime overlay (`event_id → {tile, facing}`), не по authored `EventDef`. Команда — один `set_move_route` с вложенным `route[]`; тик — тот же interpreter, yield как Wait. Foreground: занятость игрока = through; PlayerTouch только от шага игрока; tile+volume сдвигается как `translate_event_on_grid`. Runtime — [[feat: Set Move Route (basic)]], не этот слайс. Verify: читать Findings на этой карточке. Review: Approved.
+NPC ходит по runtime overlay (`event_id → {tile, facing}`), не по authored `EventDef`. Команда — один `set_move_route` с вложенным `route[]`; тик — тот же interpreter, yield как Wait. Foreground: занятость игрока = through; PlayerTouch только от шага игрока; tile+volume сдвигается как `translate_event_on_grid`. Runtime — [[feat-set-move-route-basic|feat: Set Move Route (basic)]], не этот слайс. Verify: читать Findings на этой карточке. Review: Approved.
 
 ## Bugs found
 

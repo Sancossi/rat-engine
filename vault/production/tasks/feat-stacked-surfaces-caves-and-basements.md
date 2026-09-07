@@ -16,11 +16,11 @@ Chat 2026-09-02 (play/author): полноценная многоуровнева
 
 Acceptance (позже): два пола в одной XZ; цилиндр стоит на опоре в диапазоне Y; потолок — solid; дыра в верхнем полу ведёт вниз; можно поставить airborne tile. Рампы и земля тоже пекутся в walkable солиды (верх/клин), не только боковые грани. По лестнице можно подняться и спуститься.
 
-Origin: chat (collider design) + chat 2026-09-02 (многоэтажный дом). Depends: [[edge-walls-passable-from-adjacent-side]], [[feat: Bake height-grid and ramps to collision solids]]. Related: [[feat: Field physics puzzles]], [[S3: Height-grid map schema and ground query]], [[feat: Grid edge barriers]].
+Origin: chat (collider design) + chat 2026-09-02 (многоэтажный дом). Depends: [[edge-walls-passable-from-adjacent-side]], [[feat-bake-height-grid-and-ramps-to-collision-solids|feat: Bake height-grid and ramps to collision solids]]. Related: [[feat-field-physics-puzzles|feat: Field physics puzzles]], [[s3-height-grid-map-schema-and-ground-query|S3: Height-grid map schema and ground query]], [[feat-grid-edge-barriers|feat: Grid edge barriers]].
 
 Spec: `docs/superpowers/specs/2026-09-02-stacked-floors-colliders-design.md`
 Plan: `docs/superpowers/plans/2026-09-02-stacked-floors-colliders.md`
-Follow-up: [[feat: Step off ladder onto same-tile floor]], [[feat: Ladder toward-climb, jump grab, jump off]], [[events-match-ground-while-on-slab]], [[walk-off-slab-teleports-to-ground]], [[feat: Voxel 3D terrain and rotating ramps]] (пересмотр «не воксельный мир»).
+Follow-up: [[feat-step-off-ladder-onto-same-tile-floor|feat: Step off ladder onto same-tile floor]], [[feat-ladder-toward-climb-jump-grab|feat: Ladder toward-climb, jump grab, jump off]], [[events-match-ground-while-on-slab]], [[walk-off-slab-teleports-to-ground]], [[feat-voxel-3d-terrain-and-rotating-ramps|feat: Voxel 3D terrain and rotating ramps]] (пересмотр «не воксельный мир»).
 
 ## Resolution
 
@@ -29,6 +29,6 @@ Schema v3: `floor_slabs` и `ladders`. Play при `map != nullptr` стоит/�
 ## Bugs found
 
 - [[events-match-ground-while-on-slab]]
-- [[feat: Step off ladder onto same-tile floor]]
+- [[feat-step-off-ladder-onto-same-tile-floor|feat: Step off ladder onto same-tile floor]]
 - [[walk-off-slab-teleports-to-ground]] — playtest 2026-09-02, сход со 2 этажа телепорт на 1, нет падения.
 

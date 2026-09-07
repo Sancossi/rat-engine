@@ -16,9 +16,9 @@ Acceptance: очередь `PlaySfx` / `PlayMusic` / `Stop`; null/log sink; drai
 
 ## Resolution
 
-`QueuedAudio` + `AudioSink` (null / log / recording) in `rat_core`. `play_*` / `stop` only enqueue; `drain()` applies FIFO then clears. `EditorApp` owns `LogAudioSink` wrapping `Logger` and drains once per display frame (after `update_simulation`). Verify: `.\build\tests\rat_tests.exe "[audio]"`. PlaySE: [[feat: PlaySE event command]].
+`QueuedAudio` + `AudioSink` (null / log / recording) in `rat_core`. `play_*` / `stop` only enqueue; `drain()` applies FIFO then clears. `EditorApp` owns `LogAudioSink` wrapping `Logger` and drains once per display frame (after `update_simulation`). Verify: `.\build\tests\rat_tests.exe "[audio]"`. PlaySE: [[feat-play-se-event-command|feat: PlaySE event command]].
 
-Follow-up: [[chore: audio queue drain snapshot and header include]]
+Follow-up: [[chore-audio-queue-drain-snapshot-and-header|chore: audio queue drain snapshot and header include]]
 
 ## Bugs found
 

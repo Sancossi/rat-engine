@@ -10,11 +10,11 @@ tags: [task]
 
 # chore: Engine frame metrics
 
-Intent: этап 9 roadmap — сначала измерения. Метрики: длительность simulation tick, event commands/tick, draw calls, transient allocations, asset uploads, audio queue depth, collision candidates. Spatial partition, object pool, SoA, dirty flags, jobs — не в этой карточке ([[feat: Spatial partition broadphase]], [[feat: Object pool for short-lived FX]] остаются в бэклоге). Взято в [[Sprint 7 — Engine architecture]].
+Intent: этап 9 roadmap — сначала измерения. Метрики: длительность simulation tick, event commands/tick, draw calls, transient allocations, asset uploads, audio queue depth, collision candidates. Spatial partition, object pool, SoA, dirty flags, jobs — не в этой карточке ([[feat-spatial-partition-broadphase|feat: Spatial partition broadphase]], [[feat-object-pool-fx|feat: Object pool for short-lived FX]] остаются в бэклоге). Взято в [[Sprint 7 — Engine architecture]].
 
 Acceptance: цифры доступны в debug snapshot или логе без скриншота; порог «берём оптимизацию» записан в карточке follow-up, не в догадке.
 
-Depends: [[feat: Audio backend implementation]]. Next: none (конец очереди Sprint 7).
+Depends: [[feat-audio-backend-implementation|feat: Audio backend implementation]]. Next: none (конец очереди Sprint 7).
 
 Origin: merged `docs/architecture-roadmap.md` (2026-09-01).
 

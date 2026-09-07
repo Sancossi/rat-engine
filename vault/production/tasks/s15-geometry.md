@@ -20,6 +20,10 @@ Depends: [[s15-runtime]].
 
 ## Resolution
 
+Included follow-ups: [[chore-ramp-voxel-review-polish]],
+[[chore-occupancy-review-test-polish]], [[chore-bridge-climb-review-test-polish]],
+[[event-graph-self-pin-drag-stays-armed]].
+
 Pending.
 
 ## Bugs found

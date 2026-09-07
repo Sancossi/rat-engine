@@ -18,8 +18,8 @@ Acceptance: undo/redo для place/move/delete blocker и event; стек сбр
 
 `EditHistory` + `EditCommand` in `rat_core`. Place/delete/grid-move of blockers and events go through `execute`; blocker mutations do not call `set_events` (autorun/dialog survive Edit). Ctrl+Z/Y in Edit; `clear()` on successful hot-apply. Verify: `.\build\tests\rat_tests.exe "[edit]"`.
 
-Follow-up: [[feat: undo grow/shrink and field edits]]
-Follow-up: [[chore: undo set_events contract test polish]]
+Follow-up: [[feat-undo-grow-shrink-and-field-edits|feat: undo grow/shrink and field edits]]
+Follow-up: [[chore-undo-set-events-contract-test-polish|chore: undo set_events contract test polish]]
 
 ## Bugs found
 

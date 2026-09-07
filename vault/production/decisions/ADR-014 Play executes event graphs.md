@@ -10,7 +10,7 @@ tags: [adr]
 
 ## Context
 
-[[research: Event node graph vs bytecode]] (Sprint 8) хранил граф только как authoring: Play исполнял `commands[]`, Edit компилировал graph → list. Canvas вырос до всех `CommandOp`, но ноды — подписи, а карты (grey_yard) по-прежнему пишутся списком команд.
+[[research-event-node-graph|research: Event node graph vs bytecode]] (Sprint 8) хранил граф только как authoring: Play исполнял `commands[]`, Edit компилировал graph → list. Canvas вырос до всех `CommandOp`, но ноды — подписи, а карты (grey_yard) по-прежнему пишутся списком команд.
 
 Авторы хотят UX как у визуального event editor (поля **внутри** ноды) и **полный** отказ от command-list: и Edit, и Play живут на графе.
 
@@ -33,4 +33,4 @@ Trigger и page `conditions` остаются вне графа (вкладки 
 - Compile `graph → commands` уходит из apply/save.
 - UX: виджеты на ноде, не отдельный command list.
 
-Origin: chat 2026-09-04. Related: [[research: Event node graph vs bytecode]], [[Event System]], [[feat: Play walks event graph]].
+Origin: chat 2026-09-04. Related: [[research-event-node-graph|research: Event node graph vs bytecode]], [[Event System]], [[feat-play-walks-event-graph|feat: Play walks event graph]].

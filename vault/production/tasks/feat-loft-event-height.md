@@ -16,7 +16,7 @@ Acceptance: author an event on a slab cell that fires only when the player stand
 
 Origin: [[events-match-ground-while-on-slab]] (review: tile events cannot sit on loft without a field). Взято в [[Sprint 10 — Grey yard content]].
 
-Follow-up: [[feat: Event marker uses bind Y]]
+Follow-up: [[feat-event-marker-uses-bind-y|feat: Event marker uses bind Y]]
 
 ## Resolution
 

@@ -14,7 +14,7 @@ Intent: спрятать Win32 за минимальным `NativeWindow`; ок�
 
 Acceptance: `rat_core` / `SimulationSession` не видят HWND/Win32; editor host на Linux собирается (хотя бы окно + ввод); файловые операции не размазаны по gameplay.
 
-Depends: [[feat: RenderWorld packets and instrumentation]]. Next: [[feat: Input rebind and gamepad]].
+Depends: [[feat-render-world-packets|feat: RenderWorld packets and instrumentation]]. Next: [[feat-input-rebind-gamepad|feat: Input rebind and gamepad]].
 
 Origin: merged `docs/architecture-roadmap.md` (2026-09-01).
 

@@ -9,7 +9,7 @@ tags: [bug]
 
 # Interact button does not always fire
 
-Origin: chat 2026-09-01 (play). Tick path: [[feat: SimulationSession unified tick]]. Sibling: [[jump-button-does-not-always-fire]].
+Origin: chat 2026-09-01 (play). Tick path: [[feat-simulation-session-unified-tick|feat: SimulationSession unified tick]]. Sibling: [[jump-button-does-not-always-fire]].
 
 ## Repro
 
@@ -28,7 +28,7 @@ Interact sometimes does nothing.
 
 Jump already latches a display-frame edge when catch-up runs 0 sim-ticks (`note_jump_pressed`). Interact is still a one-frame `interact_pressed` edge: `drain_simulation_catch_up` clears it after the first tick and does not latch it when `to_run == 0`. Headless `[sim]` can stay green.
 
-Follow-up from: [[feat: SimulationSession unified tick]]
+Follow-up from: [[feat-simulation-session-unified-tick|feat: SimulationSession unified tick]]
 
 ## Resolution
 

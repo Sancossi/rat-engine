@@ -31,7 +31,7 @@ tags: [adr]
 - Контракт не меняется: геймплей постит `PlaySfx` / `PlayMusic` / `Stop` в `QueuedAudio`; sink применяет FIFO на `drain()`.
 - Composition root (`EditorApp`) владеет конкретным sink и `QueuedAudio`. Не Service Locator, не синглтон.
 - **Подмена в тестах:** `QueuedAudio` принимает `AudioSink&`. `[audio]` / `[playse]` продолжают инжектить `RecordingAudioSink` / `NullAudioSink` / `LogAudioSink`. `rat_tests` не линкует miniaudio и не открывает устройство.
-- **Клипы:** runtime identity — `AssetId` (catalog key). `AudioCommand::id` — этот ключ, не путь. JSON `play_se.id` остаётся строкой catalog key; привязка строки → `AssetRegistry` — в [[feat: Audio backend implementation]].
+- **Клипы:** runtime identity — `AssetId` (catalog key). `AudioCommand::id` — этот ключ, не путь. JSON `play_se.id` остаётся строкой catalog key; привязка строки → `AssetRegistry` — в [[feat-audio-backend-implementation|feat: Audio backend implementation]].
 - Device-код живёт вне `rat_core` (editor или `rat_engine`), рядом с другими platform-адаптерами. `rat_core` остаётся без WASAPI/miniaudio.
 - Windows: WASAPI через miniaudio. Linux editor: Pulse/ALSA тем же API. Headless CI — recording/null, без device.
 - Инициализация устройства падает → fallback на `LogAudioSink` (editor слышит лог, тесты не затронуты).
@@ -41,7 +41,7 @@ tags: [adr]
 
 ## Consequences
 
-- Open question «miniaudio vs OpenAL» закрыт. Реализация: [[feat: Audio backend implementation]].
+- Open question «miniaudio vs OpenAL» закрыт. Реализация: [[feat-audio-backend-implementation|feat: Audio backend implementation]].
 - Тестовый контракт (`RecordingAudioSink` / `NullAudioSink`) стабилен; audible path не обязан быть в `rat_tests`.
-- Очередь, overflow-метрика и смена PlaySE string → `AssetId` поле — scope следующей карточки / [[chore: Engine frame metrics]], не смена backend.
+- Очередь, overflow-метрика и смена PlaySE string → `AssetId` поле — scope следующей карточки / [[chore-engine-frame-metrics|chore: Engine frame metrics]], не смена backend.
 - Смена на OpenAL Soft или middleware = новый ADR + миграция sink; очередь и AssetId остаются.

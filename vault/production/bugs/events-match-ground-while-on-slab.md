@@ -23,9 +23,9 @@ The ground-level event does not fire: player height does not match the event sur
 
 `EventRuntime::event_height_matches_player` still compares `SurfaceQuery.sample` (ground/ramp), not `player.y` / baked solids. Standing on the slab still matches the ground event.
 
-Origin: [[feat: Stacked surfaces caves and basements]] (final slice review). Взято в [[Sprint 9 — First playable loop]].
+Origin: [[feat-stacked-surfaces-caves-and-basements|feat: Stacked surfaces caves and basements]] (final slice review). Взято в [[Sprint 9 — First playable loop]].
 
-Follow-up: [[feat: Loft event height]] (Sprint 10).
+Follow-up: [[feat-loft-event-height|feat: Loft event height]] (Sprint 10).
 
 ## Resolution
 

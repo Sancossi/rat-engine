@@ -16,7 +16,7 @@ Intent: этап 5 architecture roadmap (бывший Sprint 0 stub «asset fold
 
 Acceptance: карты и gameplay ссылаются на стабильные `AssetId`; битый asset не роняет процесс; headless подменяет registry без GPU и файловой системы.
 
-Depends: [[chore: Decompose EditorApp]]. Next: [[research: Entity model ECS vs scene vs hybrid]].
+Depends: [[chore-decompose-editor-app|chore: Decompose EditorApp]]. Next: [[research-entity-model-ecs-vs-scene|research: Entity model ECS vs scene vs hybrid]].
 
 Origin: Sprint 0 stub + merged `docs/architecture-roadmap.md` (2026-09-01).
 

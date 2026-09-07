@@ -18,7 +18,7 @@ Acceptance:
 - Play/Edit greybox: если цилиндр игрока пересекает volume — dim outdoor terrain/slabs/blockers **снаружи** объёма; внутри объёма яркость не падает (или отдельный indoor tint). Вышел на улицу — как сейчас.
 - Unit: «игрок в AABB → indoor true». Не PBR, не stencil portal, не вторая карта.
 
-Origin: chat 2026-09-04 (Sprint 13, затенение улицы и домов изнутри дома). Origin: [[Sprint 13 — Grey yard map pass]]. Related: [[feat: Grey yard layout pass]], [[ADR-003 Ortho pixel-stable camera]]. Follow-up: [[feat: Grey yard layout pass]] — inset indoor AABB к внутренним тайлам (центр квада на грани volume остаётся ярким).
+Origin: chat 2026-09-04 (Sprint 13, затенение улицы и домов изнутри дома). Origin: [[Sprint 13 — Grey yard map pass]]. Related: [[feat-grey-yard-layout-pass|feat: Grey yard layout pass]], [[ADR-003 Ortho pixel-stable camera]]. Follow-up: [[feat-grey-yard-layout-pass|feat: Grey yard layout pass]] — inset indoor AABB к внутренним тайлам (центр квада на грани volume остаётся ярким).
 
 ## Resolution
 

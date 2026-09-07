@@ -20,11 +20,11 @@ DoD:
 
 Вне скоупа: свободный orbit мышкой, Ruby/JS VM, полный набор MZ-команд, каталог объектов Sims, новый спринт архитектуры.
 
-Эпики (не в очереди pickup): [[feat: Sims-like edit brush and edge paint]], [[feat: Event node graph authoring]]. Баг [[edit-edges-only-one-facing]] закрывается слайсом paint-clicked-edge.
+Эпики (не в очереди pickup): [[feat-sims-like-edit-brush-and-edge-paint|feat: Sims-like edit brush and edge paint]], [[feat-event-node-graph-authoring|feat: Event node graph authoring]]. Баг [[edit-edges-only-one-facing]] закрывается слайсом paint-clicked-edge.
 
 Порядок:
 
-- [[climb-camera-locks-on-far-side]] → [[feat: Smooth camera turn]] → [[walk-off-slab-teleports-to-ground]] → [[research: Sims build-mode edit analog]] → [[feat: Edit hold-drag brush]] → [[feat: Edit paint clicked edge]] → [[research: Event node graph vs bytecode]] → [[walk-through-ladder]] → [[feat: Event graph model and compile]] → [[feat: Event graph editor canvas]] → [[chore: Event graph join golden and branch edges]]
+- [[climb-camera-locks-on-far-side]] → [[feat-smooth-camera-turn|feat: Smooth camera turn]] → [[walk-off-slab-teleports-to-ground]] → [[research-sims-build-mode|research: Sims build-mode edit analog]] → [[feat-edit-hold-drag-brush|feat: Edit hold-drag brush]] → [[feat-edit-paint-clicked-edge|feat: Edit paint clicked edge]] → [[research-event-node-graph|research: Event node graph vs bytecode]] → [[walk-through-ladder]] → [[feat-event-graph-model-and-compile|feat: Event graph model and compile]] → [[feat-event-graph-editor-canvas|feat: Event graph editor canvas]] → [[chore-event-graph-join-golden-and-branch-edges|chore: Event graph join golden and branch edges]]
 
 ## Итог
 

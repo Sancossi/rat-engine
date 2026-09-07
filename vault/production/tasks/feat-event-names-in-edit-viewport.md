@@ -14,7 +14,7 @@ Intent: в Edit над маркерами ивентов нет имён — в 
 
 Acceptance: `project_world_to_pixels` + ImGui overlay над столбиком маркера (~1.4). Только `AppMode::Edit` + Events submode. Play без подписей. Не текстовые меши в greybox. Unit-тест проекции.
 
-Origin: [[feat: Edit submodes terrain objects events]]. Chat 2026-09-03.
+Origin: [[feat-edit-submodes-terrain-objects-events|feat: Edit submodes terrain objects events]]. Chat 2026-09-03.
 
 ## Resolution
 

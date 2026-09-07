@@ -14,7 +14,7 @@ Intent: `EditorApp` только создаёт зависимости. `GlfwHos
 
 Acceptance: в `EditorApp` нет игровой физики; панели не зовут mutation `EventRuntime`; Play/Edit не уничтожает authoring state; операции документа тестируются без окна и ImGui.
 
-Depends: [[feat: MapDocument and RuntimeMap compile]]. Next: [[feat: Asset registry and first load vertical]].
+Depends: [[feat-map-document-and-runtime-map|feat: MapDocument and RuntimeMap compile]]. Next: [[define-asset-folder-load-stub|feat: Asset registry and first load vertical]].
 
 Origin: merged `docs/architecture-roadmap.md` (2026-09-01).
 

@@ -14,7 +14,7 @@ Intent: F3/`make_debug_snapshot` пишет `event_why_not_reason` для **вы
 
 Acceptance: `make_debug_snapshot` принимает optional `selected_event_id`; editor передаёт selection; тест на фикстуре с двумя events.
 
-Origin: [[feat: Event why-not-fired]]
+Origin: [[feat-event-why-not-fired|feat: Event why-not-fired]]
 
 ## Resolution
 

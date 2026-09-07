@@ -14,9 +14,9 @@ Intent: на `grey_yard` третий голос (кроме foreman и loft bea
 
 Acceptance: Play — поговорить с apprentice; pages не ломают cog-квест (switches 1–2). JSON + headless/quest tests if the intro path needs an extra ack. Не scare-blocker.
 
-Origin: [[Define vertical slice scope]] (GDD 2–3 NPC). Взято в [[Sprint 10 — Grey yard content]]. Depends: loft beat может идти раньше, но эта карточка не требует [[feat: Loft event height]].
+Origin: [[define-vertical-slice-scope|Define vertical slice scope]] (GDD 2–3 NPC). Взято в [[Sprint 10 — Grey yard content]]. Depends: loft beat может идти раньше, но эта карточка не требует [[feat-loft-event-height|feat: Loft event height]].
 
-Follow-up: [[feat: Apprentice post-quest page]]
+Follow-up: [[feat-apprentice-post-quest-page|feat: Apprentice post-quest page]]
 
 ## Resolution
 
@@ -24,4 +24,4 @@ Follow-up: [[feat: Apprentice post-quest page]]
 
 ## Bugs found
 
-none. Review Minor (flavor after turn-in) → [[feat: Apprentice post-quest page]]. HUD Play по-прежнему называет только cyan foreman — pre-existing copy, не дефект этой карточки.
+none. Review Minor (flavor after turn-in) → [[feat-apprentice-post-quest-page|feat: Apprentice post-quest page]]. HUD Play по-прежнему называет только cyan foreman — pre-existing copy, не дефект этой карточки.

@@ -1,10 +1,14 @@
 filters:
   and:
-    - file.inFolder("production/tasks")
+    - or:
+        - file.inFolder("production/tasks")
+        - file.inFolder("production/bugs")
     - file.ext == "md"
-    - type == "task"
+    - or:
+        - type == "task"
+        - type == "bug"
 formulas:
-  board_column: if(status == "Not started", "1 · Not started", if(status == "In progress", "2 · In progress", if(status == "In review", "3 · In review", if(status == "Blocked", "4 · Blocked", if(status == "Done", "5 · Done", status)))))
+  board_column: if(status == "Open", "1 - Not started", if(status == "Investigating", if(review == "In review", "3 - In review", "2 - In progress"), if(status == "Fixed" || status == "Wont Fix", "5 - Done", if(status == "Not started", "1 - Not started", if(status == "In progress", "2 - In progress", if(status == "In review", "3 - In review", if(status == "Blocked", "4 - Blocked", if(status == "Done", "5 - Done", status))))))))
   sprint_column: if(sprint, sprint, "Backlog")
 properties:
   area:
@@ -26,7 +30,7 @@ views:
     name: Current sprint
     filters:
       and:
-        - sprint == "Sprint 14"
+        - sprint == "Sprint 15"
         - status != "Archived"
     groupBy:
       property: formula.board_column
@@ -40,6 +44,7 @@ views:
     name: In progress
     filters:
       or:
+        - status == "Investigating"
         - status == "In progress"
         - status == "In review"
         - status == "Blocked"

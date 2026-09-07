@@ -15,8 +15,8 @@ Intent: для event id вернуть причину, почему page не с
 Acceptance: функция в `rat_core` + строка в snapshot/inspector; тесты на height mismatch и failed switch.
 
 Origin: [[Sprint 4 — Refactoring and AI workflow]]
-Follow-up: [[feat: Debug snapshot why-not for selected event]]
-Follow-up: [[feat: why-not ok should match start locks]]
+Follow-up: [[feat-debug-snapshot-why-not-for-selected-event|feat: Debug snapshot why-not for selected event]]
+Follow-up: [[feat-why-not-ok-matches-start-locks|feat: why-not ok should match start locks]]
 
 ## Resolution
 
@@ -24,5 +24,5 @@ Follow-up: [[feat: why-not ok should match start locks]]
 
 ## Bugs found
 
-- Primary snapshot reason ≠ selection → [[feat: Debug snapshot why-not for selected event]]
-- `ok` не совпадает с `try_start_*` (autorun_lock, touch already inside, parallel cap) → [[feat: why-not ok should match start locks]]
+- Primary snapshot reason ≠ selection → [[feat-debug-snapshot-why-not-for-selected-event|feat: Debug snapshot why-not for selected event]]
+- `ok` не совпадает с `try_start_*` (autorun_lock, touch already inside, parallel cap) → [[feat-why-not-ok-matches-start-locks|feat: why-not ok should match start locks]]

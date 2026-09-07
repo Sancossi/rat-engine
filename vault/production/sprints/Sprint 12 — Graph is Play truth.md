@@ -24,7 +24,7 @@ DoD:
 
 Порядок:
 
-- [[feat: Reverse-compile commands to graph]] → [[feat: Play walks event graph]] → [[chore: Drop event page commands]] → [[feat: Event graph in-node widgets]] → [[feat: Event graph RMB add copy delete and wiring]] → [[feat: Cyrillic in texts and comments]] → [[Ramp greybox fill breaks cells and hides the high side]] → [[Event on ramp is not mouse-clickable in Edit]]
+- [[feat-reverse-compile-commands-to-graph|feat: Reverse-compile commands to graph]] → [[feat-play-walks-event-graph|feat: Play walks event graph]] → [[chore-drop-event-page-commands|chore: Drop event page commands]] → [[feat-event-graph-in-node-widgets|feat: Event graph in-node widgets]] → [[feat-event-graph-rmb-copy-delete-and-wiring|feat: Event graph RMB add copy delete and wiring]] → [[feat-cyrillic-in-texts-and-comments|feat: Cyrillic in texts and comments]] → [[ramp-greybox-fill-breaks-cells|Ramp greybox fill breaks cells and hides the high side]] → [[event-on-ramp-not-clickable-in-edit|Event on ramp is not mouse-clickable in Edit]]
 
 Spec: `docs/superpowers/specs/2026-09-04-play-walks-event-graph-design.md`
 
@@ -36,4 +36,4 @@ DoD выполнен 2026-09-04. Play ходит по `page.graph`; save без 
 
 ## Bugs found
 
-на закрытии: [[Event graph self-pin drag stays armed]] (Low, в бэклог). Playtest-фиксы в этом спринте: [[Ramp greybox fill breaks cells and hides the high side]], [[Event on ramp is not mouse-clickable in Edit]] — Fixed.
+на закрытии: [[event-graph-self-pin-drag-stays-armed|Event graph self-pin drag stays armed]] (Low, в бэклог). Playtest-фиксы в этом спринте: [[ramp-greybox-fill-breaks-cells|Ramp greybox fill breaks cells and hides the high side]], [[event-on-ramp-not-clickable-in-edit|Event on ramp is not mouse-clickable in Edit]] — Fixed.

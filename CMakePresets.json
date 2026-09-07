@@ -1,0 +1,27 @@
+{
+  "version": 5,
+  "cmakeMinimumRequired": { "major": 3, "minor": 24, "patch": 0 },
+  "configurePresets": [
+    {
+      "name": "dev-release",
+      "displayName": "Development Release (editor and tests)",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/dev-release",
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "Release", "RAT_BUILD_EDITOR": "ON", "RAT_BUILD_TESTS": "ON" }
+    },
+    {
+      "name": "dev-debug",
+      "inherits": "dev-release",
+      "binaryDir": "${sourceDir}/build/dev-debug",
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "Debug" }
+    }
+  ],
+  "buildPresets": [
+    { "name": "dev-release", "configurePreset": "dev-release" },
+    { "name": "dev-debug", "configurePreset": "dev-debug" }
+  ],
+  "testPresets": [
+    { "name": "dev-release", "configurePreset": "dev-release", "output": { "outputOnFailure": true }, "execution": { "timeout": 120, "noTestsAction": "error" } },
+    { "name": "dev-debug", "configurePreset": "dev-debug", "output": { "outputOnFailure": true }, "execution": { "timeout": 120, "noTestsAction": "error" } }
+  ]
+}

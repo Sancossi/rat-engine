@@ -9,7 +9,7 @@ tags: [sprint]
 
 # Sprint 11 — Set Move Route
 
-Цель: закрыть команду v1 [[research: Set Move Route]] — NPC ходит по сетке без physics-ящиков; на `grey_yard` это видно в Play.
+Цель: закрыть команду v1 [[research-set-move-route|research: Set Move Route]] — NPC ходит по сетке без physics-ящиков; на `grey_yard` это видно в Play.
 
 DoD:
 
@@ -21,11 +21,11 @@ DoD:
 
 Порядок:
 
-- [[feat: Set Move Route (basic)]] → [[feat: Grey yard move route]] → [[feat: Event marker uses bind Y]]
+- [[feat-set-move-route-basic|feat: Set Move Route (basic)]] → [[feat-grey-yard-move-route|feat: Grey yard move route]] → [[feat-event-marker-uses-bind-y|feat: Event marker uses bind Y]]
 
 ## Итог
 
-DoD выполнен 2026-09-03. `set_move_route` + overlay; `yard_walker` Parallel на (−4, −1); маркеры с `EventDef.y` на плите. Schema: [[chore: Document set_move_route in map schema]].
+DoD выполнен 2026-09-03. `set_move_route` + overlay; `yard_walker` Parallel на (−4, −1); маркеры с `EventDef.y` на плите. Schema: [[chore-document-set-move-route-schema|chore: Document set_move_route in map schema]].
 
 ## Bugs found
 

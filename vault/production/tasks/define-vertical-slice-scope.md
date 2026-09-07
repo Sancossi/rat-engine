@@ -14,9 +14,9 @@ notion_id: 3ccf3827-36cc-8111-94f9-f8c8ee497873
 
 Intent: зафиксировать одну короткую сессию (5–15 мин) на `grey_yard` (или явном наследнике): что в срезе, что нет, как пройти руками.
 
-Acceptance: заметка на этой карточке — карта, квест, NPC, field action, edit-in-playmode demo, out-of-scope. Опереться на [[Collect 5 reference games]]. Не писать код и не плодить новый контент-спринт.
+Acceptance: заметка на этой карточке — карта, квест, NPC, field action, edit-in-playmode demo, out-of-scope. Опереться на [[collect-5-reference-games|Collect 5 reference games]]. Не писать код и не плодить новый контент-спринт.
 
-Related: [[GDD]], [[S1: Acceptance playthrough checklist]], [[Sprint 9 — First playable loop]], [[Content vertical slice]], [[ADR-006 Edit-in-playmode author loop]].
+Related: [[GDD]], [[s1-acceptance-playthrough-checklist|S1: Acceptance playthrough checklist]], [[Sprint 9 — First playable loop]], [[content-vertical-slice|Content vertical slice]], [[ADR-006 Edit-in-playmode author loop]].
 
 ## Locked
 
@@ -38,12 +38,12 @@ Related: [[GDD]], [[S1: Acceptance playthrough checklist]], [[Sprint 9 — First
 2. **Foreman** — cyan, ~(-2, 2), Action. Принять квест (switch 1): rusty cog для gate winch, scrap east of the crates. **Уже есть** (1 NPC; второго/третьего нет).
 3. **Crates** — AABB (3–5, −1–1) режет короткий путь; volume `crate_notice` (Player touch, пока switch 2 выкл.): обойти north/south. **Уже есть.**
 4. **Scrap** — ~(6, 0). До quest: «Ask the foreman». После switch 1: `rusty_cog`, self-switch A. Повтор: «picked clean». **Уже есть.**
-5. **Inventory** — **I**: RM-список, виден `rusty_cog`. Повтор I закрывает. **Уже есть** ([[feat: Inventory list UI]]).
+5. **Inventory** — **I**: RM-список, виден `rusty_cog`. Повтор I закрывает. **Уже есть** ([[feat-inventory-list-ui|feat: Inventory list UI]]).
 6. **Turn-in** — снова foreman (Has item): quest complete, cog списан, switch 2. После: «Yard's quiet». **Уже есть.**
-7. **Loft (field action)** — лестница east на (2, 4), `y` 0–2; плиты `top_y` 2.0 на (0–2,4) и (0–1,5), дыра (2,5). Interact лицом → Climb, камера сзади, вперёд = вверх ([[feat: MGS3 ladder climb]]). Сход на плиту / в дыру. **Геометрия есть; события на плите нет** — это [[feat: Loft event height]] (не DoD Sprint 9). Ground-event с плиты не должен fire ([[events-match-ground-while-on-slab]], Fixed).
-8. **Gantry (field action)** — рампа east (8, 8) 0→1; jumpable на ~y 1 у (10, 8); Action `elevated_after_blocker` (11, 8) → switch 40 «Relay lever». **Уже есть** как обход, **не** связан с cog. Прыжок — [[feat: Responsive Mario-like jump]] (Space), не scare-blocker из [[GDD]].
-9. **Pause / save** — Esc: слот пишет `GameState` (карта, xyz, switches/vars/items) и грузит обратно. **DoD Sprint 9** ([[feat: Save load game file]]); на момент lock слайс ещё может идти параллельно — сессия считает это обязательным, не «уже в билде».
-10. **Edit-in-playmode** — жест ниже, тот же exe, без рестарта ([[S2: Acceptance — edit then play without restart]]).
+7. **Loft (field action)** — лестница east на (2, 4), `y` 0–2; плиты `top_y` 2.0 на (0–2,4) и (0–1,5), дыра (2,5). Interact лицом → Climb, камера сзади, вперёд = вверх ([[feat-mgs3-ladder-climb|feat: MGS3 ladder climb]]). Сход на плиту / в дыру. **Геометрия есть; события на плите нет** — это [[feat-loft-event-height|feat: Loft event height]] (не DoD Sprint 9). Ground-event с плиты не должен fire ([[events-match-ground-while-on-slab]], Fixed).
+8. **Gantry (field action)** — рампа east (8, 8) 0→1; jumpable на ~y 1 у (10, 8); Action `elevated_after_blocker` (11, 8) → switch 40 «Relay lever». **Уже есть** как обход, **не** связан с cog. Прыжок — [[feat-responsive-mario-like-jump|feat: Responsive Mario-like jump]] (Space), не scare-blocker из [[GDD]].
+9. **Pause / save** — Esc: слот пишет `GameState` (карта, xyz, switches/vars/items) и грузит обратно. **DoD Sprint 9** ([[feat-save-load-game-file|feat: Save load game file]]); на момент lock слайс ещё может идти параллельно — сессия считает это обязательным, не «уже в билде».
+10. **Edit-in-playmode** — жест ниже, тот же exe, без рестарта ([[s2-acceptance-edit-then-play-without-restart|S2: Acceptance — edit then play without restart]]).
 
 Уложиться в 5–15 мин: 1–6 ≈ 5 мин; 7–8 по желанию; 9–10 добирают верхнюю границу.
 
@@ -51,8 +51,8 @@ Related: [[GDD]], [[S1: Acceptance playthrough checklist]], [[Sprint 9 — First
 
 Рецензент в том же `rat-editor`:
 
-1. После шага 2 (квест взят) или на свежем запуске: **F2** → Edit ([[S2: Play/Edit mode toggle]]; Tab занят ImGui).
-2. Клик по crate-blocker (3–5 × −1–1) → drag по XZ земли, **с короткого пути** (например north, за z ≥ 1). [[feat: Mouse viewport map edit]].
+1. После шага 2 (квест взят) или на свежем запуске: **F2** → Edit ([[s2-play-edit-mode-toggle|S2: Play/Edit mode toggle]]; Tab занят ImGui).
+2. Клик по crate-blocker (3–5 × −1–1) → drag по XZ земли, **с короткого пути** (например north, за z ≥ 1). [[feat-mouse-viewport-map-edit|feat: Mouse viewport map edit]].
 3. **F2** → Play. Идти east от спавна к scrap **напрямую**, без обхода. Коллизия сразу.
 4. (Не часть жеста.) Crate volume остаётся на старом AABB — это ок: demo про карту, не про синхрон volume.
 
@@ -66,17 +66,17 @@ Related: [[GDD]], [[S1: Acceptance playthrough checklist]], [[Sprint 9 — First
 
 - **Successor map / вторая комната** — не плодим JSON; `grey_yard` держим.
 - **2–3 NPC и scare-blocker** из [[GDD]] — не на текущем `grey_yard`; не блокер lock.
-- **Событие на лофте (Y плиты)** — [[feat: Loft event height]]; не DoD Sprint 9.
+- **Событие на лофте (Y плиты)** — [[feat-loft-event-height|feat: Loft event height]]; не DoD Sprint 9.
 - **Battle screen / combat-RPG** — [[GDD]] non-goal, [[ADR-005 Conflict model exploration plus field action]].
-- **Meshes as required** — greybox / столбы ок ([[S1: Acceptance playthrough checklist]] Known issues).
-- **[[Art direction moodboard pass]]** — палитры FF6 / Chrono Cross после среза, не в сессии.
-- **[[feat: Field physics puzzles]]** — ящики / панели / провалы / двери с разбегу.
+- **Meshes as required** — greybox / столбы ок ([[s1-acceptance-playthrough-checklist|S1: Acceptance playthrough checklist]] Known issues).
+- **[[art-direction-moodboard-pass|Art direction moodboard pass]]** — палитры FF6 / Chrono Cross после среза, не в сессии.
+- **[[feat-field-physics-puzzles|feat: Field physics puzzles]]** — ящики / панели / провалы / двери с разбегу.
 - **Set Move Route** — команда в [[Event System]] v1, runtime не в first playable.
 - **Deep inventory** (экип, сетка, drag-drop) — только RM-список.
 
 ## Refs → эта сессия
 
-По одной строке на игру из [[Collect 5 reference games]] (take той карточки; здесь только привязка к проходу):
+По одной строке на игру из [[collect-5-reference-games|Collect 5 reference games]] (take той карточки; здесь только привязка к проходу):
 
 | Game | Эта сессия |
 | --- | --- |
@@ -89,9 +89,9 @@ Related: [[GDD]], [[S1: Acceptance playthrough checklist]], [[Sprint 9 — First
 ## Follow-up
 
 - Контент 2-го NPC / scare-blocker — только если остаёмся на `grey_yard`, отдельная task, не эта карточка.
-- [[feat: Grey yard apprentice NPC]] — третий NPC (Sprint 10).
-- [[feat: Loft event height]] — когда понадобится триггер на плите.
-- [[Art direction moodboard pass]] — look-lock FF6 / CC после playable loop.
+- [[feat-grey-yard-apprentice-npc|feat: Grey yard apprentice NPC]] — третий NPC (Sprint 10).
+- [[feat-loft-event-height|feat: Loft event height]] — когда понадобится триггер на плите.
+- [[art-direction-moodboard-pass|Art direction moodboard pass]] — look-lock FF6 / CC после playable loop.
 
 ## Resolution
 

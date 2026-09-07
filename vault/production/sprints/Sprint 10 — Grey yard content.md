@@ -9,7 +9,7 @@ tags: [sprint]
 
 # Sprint 10 — Grey yard content
 
-Цель: наполнить зафиксированную сессию ([[Define vertical slice scope]]) тем, чего не хватает GDD на той же карте: триггер на плите, 2–3 NPC, визуальный lock. Не Set Move Route и не field physics.
+Цель: наполнить зафиксированную сессию ([[define-vertical-slice-scope|Define vertical slice scope]]) тем, чего не хватает GDD на той же карте: триггер на плите, 2–3 NPC, визуальный lock. Не Set Move Route и не field physics.
 
 DoD:
 
@@ -21,12 +21,12 @@ DoD:
 
 Порядок:
 
-- [[feat: Loft event height]] → [[feat: Grey yard apprentice NPC]] → [[Art direction moodboard pass]] → [[research: Set Move Route]]
+- [[feat-loft-event-height|feat: Loft event height]] → [[feat-grey-yard-apprentice-npc|feat: Grey yard apprentice NPC]] → [[art-direction-moodboard-pass|Art direction moodboard pass]] → [[research-set-move-route|research: Set Move Route]]
 
 ## Итог
 
-DoD выполнен 2026-09-03. `loft_plank` на (0,4) с `y: 2.0`; третий голос `apprentice` (−3, 1); Moodboard — 7 hex в [[Art Direction]]. Research: overlay / `route[]` / один interpreter; impl — [[feat: Set Move Route (basic)]].
+DoD выполнен 2026-09-03. `loft_plank` на (0,4) с `y: 2.0`; третий голос `apprentice` (−3, 1); Moodboard — 7 hex в [[Art Direction]]. Research: overlay / `route[]` / один interpreter; impl — [[feat-set-move-route-basic|feat: Set Move Route (basic)]].
 
 ## Bugs found
 
-none новых на закрытии. Backlog: [[feat: Event marker uses bind Y]], [[feat: Apprentice post-quest page]], [[chore: Named grey_yard look-refs]], [[feat: Set Move Route (basic)]].
+none новых на закрытии. Backlog: [[feat-event-marker-uses-bind-y|feat: Event marker uses bind Y]], [[feat-apprentice-post-quest-page|feat: Apprentice post-quest page]], [[chore-named-grey-yard-look-refs|chore: Named grey_yard look-refs]], [[feat-set-move-route-basic|feat: Set Move Route (basic)]].

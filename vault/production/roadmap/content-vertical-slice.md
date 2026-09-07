@@ -10,7 +10,7 @@ notion_id: 3ccf3827-36cc-81d4-aab8-c510c4394b0d
 
 # Content vertical slice
 
-Locked session: [[Define vertical slice scope]] (не дублировать spec здесь).
+Locked session: [[define-vertical-slice-scope|Define vertical slice scope]] (не дублировать spec здесь).
 
 **In:** карта `grey_yard`; cog-квест (foreman + `rusty_cog`); третий NPC (`apprentice`); loft event `y` (`loft_plank`); `yard_walker` Parallel `set_move_route`; field action = Climb лофта + прыжок на gantry; один Edit-жест (перетащить crate-blocker в Play без рестарта); moodboard lock в [[Art Direction]].
 

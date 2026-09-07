@@ -25,3 +25,5 @@ Pending.
 ## Bugs found
 
 Pending.
+
+Included regression: [[gui-input-and-framebuffer-scale-diverge]].

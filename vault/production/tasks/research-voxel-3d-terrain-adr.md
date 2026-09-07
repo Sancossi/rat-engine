@@ -14,7 +14,7 @@ Intent: зафиксировать, как хранить и печь **3D-те�
 
 Acceptance: [[ADR-015 Voxel 3D terrain]] с выбором представления (рекомендация: sparse occupancy 1 м = `tile_size`, рампа = клин в клетке с yaw; не animated spin). До ADR в код вокселей не класть. Не Minecraft-продукт, не новый renderer, не field physics. Карты остаются JSON ([[ADR-007 Events and maps stored as JSON]]).
 
-Origin: [[feat: Voxel 3D terrain and rotating ramps]]. Origin: [[Sprint 14 — Voxel 3D terrain]]. Related: [[feat: Stacked surfaces caves and basements]], [[Cannot climb onto grey_yard bridge]]. Next: [[feat: Voxel occupancy schema and bake]].
+Origin: [[feat-voxel-3d-terrain-and-rotating-ramps|feat: Voxel 3D terrain and rotating ramps]]. Origin: [[Sprint 14 — Voxel 3D terrain]]. Related: [[feat-stacked-surfaces-caves-and-basements|feat: Stacked surfaces caves and basements]], [[cannot-climb-onto-grey-yard-bridge|Cannot climb onto grey_yard bridge]]. Next: [[feat-voxel-occupancy-schema-and-bake|feat: Voxel occupancy schema and bake]].
 
 ## Resolution
 
@@ -24,4 +24,4 @@ Verify: открыть ADR-015; строка Voxel occupancy в [[Systems Index]
 
 ## Bugs found
 
-none. Follow-up overlap/precedence зафиксирован в ADR (occupancy wins на том же 1 м AABB) для [[feat: Voxel occupancy schema and bake]].
+none. Follow-up overlap/precedence зафиксирован в ADR (occupancy wins на том же 1 м AABB) для [[feat-voxel-occupancy-schema-and-bake|feat: Voxel occupancy schema and bake]].

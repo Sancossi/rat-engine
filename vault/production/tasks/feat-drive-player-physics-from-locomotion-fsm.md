@@ -14,7 +14,7 @@ Intent: сейчас `locomotion_from` только **классифицируе
 
 Acceptance: Climb в `locomotion_from` + имена; integrate разбит по состояниям (или явный switch без скрытых `continue`); текущие `[unit][player]` / `[loco]` зелёные. Не смешивать с Interact-to-climb.
 
-Origin: chat 2026-09-02 (уточнение к лестнице). Related: [[feat: Player locomotion FSM]], [[feat: Ladder toward-climb, jump grab, jump off]].
+Origin: chat 2026-09-02 (уточнение к лестнице). Related: [[feat-player-locomotion-fsm|feat: Player locomotion FSM]], [[feat-ladder-toward-climb-jump-grab|feat: Ladder toward-climb, jump grab, jump off]].
 
 ## Resolution
 
@@ -22,4 +22,4 @@ Origin: chat 2026-09-02 (уточнение к лестнице). Related: [[fea
 
 ## Bugs found
 
-none. Jump-grab buffer bounce was found on [[feat: Ladder toward-climb, jump grab, jump off]] and fixed there.
+none. Jump-grab buffer bounce was found on [[feat-ladder-toward-climb-jump-grab|feat: Ladder toward-climb, jump grab, jump off]] and fixed there.

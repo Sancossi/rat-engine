@@ -9,7 +9,7 @@ tags: [bug]
 
 # Ramp greybox fill breaks cells and hides the high side
 
-Origin: chat 2026-09-04 (play/edit). Greybox: [[feat: Edit and greybox edge walls]]. Terrain: `build_terrain_geometry` / `vs_debugdraw_lines` for fill tris (`greybox.cpp`). Related: gantry ramp `grey_yard` (8, 8) east 0→1, high cells y=1 at (9–11, 8).
+Origin: chat 2026-09-04 (play/edit). Greybox: [[feat-edit-greybox-edge-walls|feat: Edit and greybox edge walls]]. Terrain: `build_terrain_geometry` / `vs_debugdraw_lines` for fill tris (`greybox.cpp`). Related: gantry ramp `grey_yard` (8, 8) east 0→1, high cells y=1 at (9–11, 8).
 
 ## Repro
 

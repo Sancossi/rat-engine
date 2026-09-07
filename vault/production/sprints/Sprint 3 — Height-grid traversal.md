@@ -24,4 +24,4 @@ DoD:
 
 ## Итог
 
-Sprint закрыт 2026-08-31. Реализованы height-grid в map JSON, ground query, smooth stairs/ramps, height-aware коллизии и события, elevation в Edit, отзывчивый прыжок (coyote/buffer). Acceptance пройден: лестницы, прыжок и elevated event без рестарта. Follow-up баги [[landing-on-jumpable-blocker-slides-player-off]] и [[ramp-allows-entry-from-side]] — Fixed. Миграция хаба в vault: [[feat: migrate Notion hub to Obsidian vault]]. Хвосты height-grid polish в Sprint 4 не переносились.
+Sprint закрыт 2026-08-31. Реализованы height-grid в map JSON, ground query, smooth stairs/ramps, height-aware коллизии и события, elevation в Edit, отзывчивый прыжок (coyote/buffer). Acceptance пройден: лестницы, прыжок и elevated event без рестарта. Follow-up баги [[landing-on-jumpable-blocker-slides-player-off]] и [[ramp-allows-entry-from-side]] — Fixed. Миграция хаба в vault: [[feat-migrate-notion-hub-to-obsidian-vault|feat: migrate Notion hub to Obsidian vault]]. Хвосты height-grid polish в Sprint 4 не переносились.

@@ -9,7 +9,7 @@ tags: [bug]
 
 # Edge walls hang in the air
 
-Origin: [[Sprint 6 — Viewport map edit]] (chat). Greybox: [[feat: Edit and greybox edge walls]].
+Origin: [[Sprint 6 — Viewport map edit]] (chat). Greybox: [[feat-edit-greybox-edge-walls|feat: Edit and greybox edge walls]].
 
 ## Repro
 
