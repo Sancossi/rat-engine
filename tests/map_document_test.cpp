@@ -11,6 +11,8 @@
 #include <catch2/catch_test_macros.hpp>
 
 #include <algorithm>
+#include <limits>
+#include <nlohmann/json.hpp>
 #include <string>
 
 using Catch::Approx;
@@ -410,4 +412,100 @@ TEST_CASE("EventRuntime load of MapData reports compile failure and keeps previo
   REQUIRE(runtime.map().id == "doc_flat");
   REQUIRE(runtime.map().events.size() == 1);
   REQUIRE(runtime.map().events[0].id == "keep");
+}
+
+TEST_CASE("Map grid numbers are checked before narrowing and allocation", "[unit][mapdoc][storage]") {
+  for (const char* width : {"4294967298", "2147483647", "2.5", "-4294967294", "18446744073709551615"}) {
+    const std::string text = std::string(R"({"schema_version":1,"id":"bad","width":)") + width + R"(,"height":2,"events":[]})";
+    INFO(text);
+    CHECK_FALSE(rat::load_map_from_string(text).ok);
+  }
+  auto huge = make_flat_document_map();
+  huge.schema_version = 1;
+  huge.width = (std::numeric_limits<int>::max)();
+  huge.height = (std::numeric_limits<int>::max)();
+  huge.height_grid = {};
+  CHECK_FALSE(rat::compile_map_data(huge).ok);
+  CHECK_FALSE(rat::serialize_map_to_string(huge).ok);
+  auto text = nlohmann::json::parse(rat::serialize_map_to_string(make_flat_document_map()).json_text);
+  text["height_grid"]["origin_x"] = (std::numeric_limits<int>::max)();
+  CHECK_FALSE(rat::load_map_from_string(text.dump()).ok);
+  text["height_grid"]["origin_x"] = 0;
+  text["height_grid"]["width"] = 1000000;
+  text["height_grid"]["height"] = 1000000;
+  CHECK_FALSE(rat::load_map_from_string(text.dump()).ok);
+}
+
+TEST_CASE("Nonfinite authored geometry is rejected by compile serialization and save", "[unit][mapdoc][storage]") {
+  const float nan = std::numeric_limits<float>::quiet_NaN();
+  for (int field = 0; field < 11; ++field) {
+    INFO("Nonfinite field " << field);
+    auto map = make_flat_document_map();
+    map.schema_version = 5;
+    switch (field) {
+      case 0: map.tile_size = nan; break;
+      case 1: map.height_grid.ground_y[0] = nan; break;
+      case 2: map.ramps.push_back({{0, 0}, rat::RampDirection::East, 0, nan}); break;
+      case 3: map.edge_barriers.push_back({{0, 0}, rat::RampDirection::East, nan}); break;
+      case 4: map.floor_slabs.push_back({{0, 0}, nan, 0.25f}); break;
+      case 5: map.ladders.push_back({{0, 0}, rat::RampDirection::East, 0, nan}); break;
+      case 6: map.indoor_volumes.push_back({{0, 0, 1, 1}, 0, nan}); break;
+      case 7: map.blockers.push_back({{nan, 0, 1, 1}}); break;
+      case 8: map.events.push_back(rat::make_stub_event("npc", 0, 0)); map.events[0].y = nan; break;
+      case 9: {
+        map.events.push_back(rat::make_stub_event("npc", 0, 0));
+        rat::Command command;
+        command.op = rat::CommandOp::TransferPlayer; command.map_id = map.id; command.x = nan;
+        map.events[0].pages[0].commands.push_back(command); break;
+      }
+      case 10: {
+        map.events.push_back(rat::make_stub_event("npc", 0, 0));
+        rat::EventGraphNode node; node.id = "transfer"; node.kind = "transfer_player"; node.map_id = map.id; node.z = nan;
+        map.events[0].pages[0].graph = rat::EventGraph{{node}, {}}; break;
+      }
+    }
+    CHECK_FALSE(rat::compile_map_data(map).ok);
+    CHECK_FALSE(rat::serialize_map_to_string(map).ok);
+    rat::MemoryFileStore files;
+    REQUIRE(files.write("map", "previous").ok);
+    CHECK_FALSE(rat::save_map_to_file(map, "map", files).ok);
+    CHECK(files.read("map").bytes.as_text() == "previous");
+  }
+}
+
+TEST_CASE("Raw map permits graph drafts but file save requires a compilable graph", "[unit][mapdoc][storage]") {
+  auto map = make_flat_document_map();
+  map.events.push_back(rat::make_stub_event("draft", 0, 0));
+  rat::EventGraphNode node; node.id = "n"; node.kind = "unknown_draft_kind";
+  map.events[0].pages[0].graph = rat::EventGraph{{node}, {}};
+  const auto serialized = rat::serialize_map_to_string(map);
+  REQUIRE(serialized.ok);
+  REQUIRE(rat::load_map_from_string(serialized.json_text).ok);
+  rat::MemoryFileStore files;
+  REQUIRE(files.write("map", "previous").ok);
+  CHECK_FALSE(rat::save_map_to_file(map, "map", files).ok);
+  CHECK(files.read("map").bytes.as_text() == "previous");
+}
+
+TEST_CASE("Map rejects overflow float input and duplicate JSON keys before conversion", "[unit][mapdoc][storage]") {
+  CHECK_FALSE(rat::load_map_from_string(R"({"schema_version":1,"id":"a","id":"b","width":1,"height":1})").ok);
+  CHECK_FALSE(rat::load_map_from_string(R"({"schema_version":1,"id":"a","width":1,"height":1,"tile_size":1e100})").ok);
+  CHECK_FALSE(rat::load_map_from_string(R"({"schema_version":1,"id":"a","width":1,"height":1,"events":[{"id":"npc","tile":{"x":0,"z":0},"pages":[{"trigger":"action","commands":[{"op":"control_switch","id":-1,"value":true}]}]}]})").ok);
+}
+
+TEST_CASE("Occupancy outside grid reports its exact index with widened origin arithmetic", "[unit][mapdoc][storage]") {
+  auto map = make_flat_document_map();
+  map.schema_version = 5;
+  map.height_grid.origin_x = -100;
+  map.occupancy.push_back({(std::numeric_limits<int>::max)(), 0, 0});
+  const auto compiled = rat::compile_map_data(map);
+  CHECK_FALSE(compiled.ok);
+  CHECK(has_error_at(compiled.issues, "/occupancy/0"));
+  const auto valid = rat::serialize_map_to_string(make_flat_document_map());
+  auto json = nlohmann::json::parse(valid.json_text);
+  json["schema_version"] = 5;
+  json["occupancy"] = {{{"x", 4}, {"y", 0}, {"z", 0}, {"kind", "solid"}}};
+  const auto loaded = rat::load_map_document_from_string(json.dump());
+  CHECK_FALSE(loaded.ok);
+  CHECK(has_error_at(loaded.issues, "/occupancy/0"));
 }

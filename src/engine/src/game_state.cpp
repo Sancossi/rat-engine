@@ -1,4 +1,5 @@
 #include "rat/game_state.hpp"
+#include "strict_json.hpp"
 
 #include <charconv>
 #include <map>
@@ -26,7 +27,7 @@ bool parse_float(std::string_view token, float& out) {
   try {
     std::size_t consumed = 0;
     out = std::stof(std::string(token), &consumed);
-    return consumed == token.size();
+    return consumed == token.size() && std::isfinite(out);
   } catch (...) {
     return false;
   }
@@ -125,99 +126,113 @@ bool GameState::has_item(const std::string& id, int min_quantity) const {
 }
 
 bool GameState::save_to_memory(std::string& out) const {
-  std::ostringstream oss;
-  oss << "RATSAVE1\n";
-  oss << "map " << map_id_ << '\n';
-  oss << "pos " << player_x_ << ' ' << player_y_ << ' ' << player_z_ << '\n';
-  for (const auto& [id, value] : switches_) {
-    oss << "sw " << id << ' ' << (value ? 1 : 0) << '\n';
-  }
-  for (const auto& [id, value] : variables_) {
-    oss << "var " << id << ' ' << value << '\n';
-  }
-  for (const auto& [event_id, bits] : self_switches_) {
-    oss << "ss " << event_id << ' ' << static_cast<unsigned>(bits) << '\n';
-  }
-  for (const auto& item : inventory_) {
-    oss << "item " << item.id << ' ' << item.quantity << ' ' << (item.key_item ? 1 : 0) << '\n';
-  }
-  out = oss.str();
-  return true;
+  using json = nlohmann::json;
+  if (map_id_.empty() || !std::isfinite(player_x_) || !std::isfinite(player_y_) ||
+      !std::isfinite(player_z_)) return false;
+  try {
+    json root{{"schema_version", 2}, {"map_id", map_id_},
+              {"position", {{"x", player_x_}, {"y", player_y_}, {"z", player_z_}}},
+              {"switches", json::array()}, {"variables", json::array()},
+              {"self_switches", json::array()}, {"inventory", json::array()}};
+    for (const auto& [id, value] : debug_switches())
+      root["switches"].push_back({{"id", id}, {"value", value}});
+    for (const auto& [id, value] : debug_variables())
+      root["variables"].push_back({{"id", id}, {"value", value}});
+    const std::map<std::string, std::uint8_t> ordered(self_switches_.begin(), self_switches_.end());
+    for (const auto& [id, bits] : ordered)
+      root["self_switches"].push_back({{"event_id", id}, {"bits", bits}});
+    for (const auto& item : inventory_)
+      root["inventory"].push_back({{"id", item.id}, {"quantity", item.quantity}, {"key_item", item.key_item}});
+    out = root.dump(2);
+    return true;
+  } catch (const std::exception&) { return false; }
 }
 
 bool GameState::load_from_memory(std::string_view data) {
-  clear();
-  if (data.empty()) {
-    return false;
-  }
-
-  std::istringstream iss{std::string(data)};
-  std::string line;
-  if (!std::getline(iss, line) || line != "RATSAVE1") {
-    return false;
-  }
-
-  while (std::getline(iss, line)) {
-    if (line.empty()) {
-      continue;
-    }
-    std::istringstream ls(line);
-    std::string tag;
-    ls >> tag;
-    if (tag == "map") {
-      std::getline(ls >> std::ws, map_id_);
-    } else if (tag == "pos") {
-      std::string sx;
-      std::string sy;
-      std::string sz;
-      if (!(ls >> sx >> sy >> sz)) {
-        return false;
+  using namespace detail;
+  GameState parsed;
+  std::unordered_set<std::string> item_ids;
+  try {
+    if (!data.starts_with("RATSAVE1")) {
+      const auto root = parse_unique_json(data);
+      exact_fields(root, {"schema_version", "map_id", "position", "switches", "variables", "self_switches", "inventory"});
+      if (checked_number<int>(root.at("schema_version")) != 2) return false;
+      parsed.map_id_ = root.at("map_id").get<std::string>();
+      const auto& pos = root.at("position");
+      exact_fields(pos, {"x", "y", "z"});
+      parsed.player_x_ = checked_number<float>(pos.at("x"));
+      parsed.player_y_ = checked_number<float>(pos.at("y"));
+      parsed.player_z_ = checked_number<float>(pos.at("z"));
+      for (const char* name : {"switches", "variables", "self_switches", "inventory"})
+        if (!root.at(name).is_array()) return false;
+      for (const auto& entry : root.at("switches")) {
+        exact_fields(entry, {"id", "value"});
+        if (!parsed.switches_.emplace(checked_number<std::uint32_t>(entry.at("id")), entry.at("value").get<bool>()).second) return false;
       }
-      if (!parse_float(sx, player_x_) || !parse_float(sy, player_y_) || !parse_float(sz, player_z_)) {
-        return false;
+      for (const auto& entry : root.at("variables")) {
+        exact_fields(entry, {"id", "value"});
+        if (!parsed.variables_.emplace(checked_number<std::uint32_t>(entry.at("id")), checked_number<int>(entry.at("value"))).second) return false;
       }
-    } else if (tag == "sw") {
-      std::uint32_t id = 0;
-      int value = 0;
-      std::string sid;
-      std::string sval;
-      if (!(ls >> sid >> sval) || !parse_u32(sid, id) || !parse_int(sval, value)) {
-        return false;
+      for (const auto& entry : root.at("self_switches")) {
+        exact_fields(entry, {"event_id", "bits"});
+        const auto id = entry.at("event_id").get<std::string>();
+        const auto bits = checked_number<std::uint8_t>(entry.at("bits"));
+        if (id.empty() || bits > 15 || !parsed.self_switches_.emplace(id, bits).second) return false;
       }
-      switches_[id] = value != 0;
-    } else if (tag == "var") {
-      std::uint32_t id = 0;
-      int value = 0;
-      std::string sid;
-      std::string sval;
-      if (!(ls >> sid >> sval) || !parse_u32(sid, id) || !parse_int(sval, value)) {
-        return false;
-      }
-      variables_[id] = value;
-    } else if (tag == "ss") {
-      std::string event_id;
-      unsigned bits = 0;
-      if (!(ls >> event_id >> bits) || event_id.empty()) {
-        return false;
-      }
-      self_switches_[std::move(event_id)] = static_cast<std::uint8_t>(bits & 0x0Fu);
-    } else if (tag == "item") {
-      std::string id;
-      int quantity = 0;
-      int key = 0;
-      std::string sq;
-      std::string sk;
-      if (!(ls >> id >> sq >> sk) || !parse_int(sq, quantity) || !parse_int(sk, key)) {
-        return false;
-      }
-      if (!id.empty() && quantity > 0) {
-        inventory_.push_back(InventoryItem{std::move(id), quantity, key != 0});
+      for (const auto& entry : root.at("inventory")) {
+        exact_fields(entry, {"id", "quantity", "key_item"});
+        InventoryItem item{entry.at("id").get<std::string>(), checked_number<int>(entry.at("quantity")), entry.at("key_item").get<bool>()};
+        if (item.id.empty() || item.quantity < 0 || !item_ids.insert(item.id).second) return false;
+        parsed.inventory_.push_back(std::move(item));
       }
     } else {
-      return false;
+      std::istringstream input{std::string(data)};
+      std::string line;
+      if (!std::getline(input, line)) return false;
+      if (!line.empty() && line.back() == '\r') line.pop_back();
+      if (line != "RATSAVE1") return false;
+      bool seen_map = false, seen_position = false;
+      while (std::getline(input, line)) {
+        if (line.empty() || line == "\r") continue;
+        std::istringstream fields(line);
+        std::string tag, a, b, c, extra;
+        fields >> tag;
+        if (tag == "map") {
+          if (seen_map) return false;
+          seen_map = true;
+          std::getline(fields >> std::ws, parsed.map_id_);
+          if (!parsed.map_id_.empty() && parsed.map_id_.back() == '\r') parsed.map_id_.pop_back();
+          continue;
+        }
+        if (!(fields >> a >> b)) return false;
+        if (tag == "pos") {
+          if (seen_position || !(fields >> c) || !parse_float(a, parsed.player_x_) ||
+              !parse_float(b, parsed.player_y_) || !parse_float(c, parsed.player_z_)) return false;
+          seen_position = true;
+        } else if (tag == "sw" || tag == "var") {
+          std::uint32_t id;
+          int value;
+          if (!parse_u32(a, id) || !parse_int(b, value)) return false;
+          if (tag == "sw") {
+            if ((value != 0 && value != 1) || !parsed.switches_.emplace(id, value != 0).second) return false;
+          } else if (!parsed.variables_.emplace(id, value).second) return false;
+        } else if (tag == "ss") {
+          std::uint32_t bits;
+          if (!parse_u32(b, bits) || bits > 15 || !parsed.self_switches_.emplace(a, static_cast<std::uint8_t>(bits)).second) return false;
+        } else if (tag == "item") {
+          int quantity, key;
+          if (!(fields >> c) || !parse_int(b, quantity) || !parse_int(c, key) || quantity < 0 ||
+              (key != 0 && key != 1) || !item_ids.insert(a).second) return false;
+          parsed.inventory_.push_back({a, quantity, key != 0});
+        } else return false;
+        if (fields >> extra) return false;
+      }
+      if (!seen_map || !seen_position) return false;
     }
-  }
-  return true;
+    if (parsed.map_id_.empty()) return false;
+    *this = std::move(parsed);
+    return true;
+  } catch (const std::exception&) { return false; }
 }
 
 std::map<std::uint32_t, bool> GameState::debug_switches() const {

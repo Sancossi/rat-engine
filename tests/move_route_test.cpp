@@ -649,6 +649,8 @@ TEST_CASE("load resets overlay; save blob does not keep patrol", "[unit][route]"
   tick(runtime, state, rat::PlayerBody{});
   REQUIRE(runtime.event_overlay("npc").has_value());
 
+  // Save v2 requires the active map identity; standalone EventRuntime does not set it.
+  state.set_map_id(loaded.map.id);
   std::string blob;
   REQUIRE(state.save_to_memory(blob));
   REQUIRE(blob.find("npc") == std::string::npos);

@@ -14,6 +14,7 @@
 #include <catch2/catch_test_macros.hpp>
 
 #include <algorithm>
+#include <limits>
 #include <string>
 #include <vector>
 
@@ -584,7 +585,7 @@ TEST_CASE("SimulationSession rejects a foreign map_id on load", "[unit][sim]") {
   CHECK(session.state().map_id() == "sim_flat");
 }
 
-TEST_CASE("SimulationSession applies a save with empty map_id", "[unit][sim]") {
+TEST_CASE("SimulationSession rejects a save with empty map_id", "[unit][sim]") {
   rat::SimulationSession session;
   REQUIRE(session.load(make_flat_map()).ok);
 
@@ -596,11 +597,11 @@ TEST_CASE("SimulationSession applies a save with empty map_id", "[unit][sim]") {
   loaded.set_player_position(3.25f, 1.25f, 0.75f);
   REQUIRE(loaded.map_id().empty());
 
-  REQUIRE(session.apply_loaded_game(loaded).ok);
-  CHECK(session.player().x == Approx(3.25f).margin(1e-5f));
-  CHECK(session.player().y == Approx(1.25f).margin(1e-5f));
-  CHECK(session.player().z == Approx(0.75f).margin(1e-5f));
-  CHECK(session.state().map_id().empty());
+  REQUIRE_FALSE(session.apply_loaded_game(loaded).ok);
+  CHECK(session.player().x == saved_player.x);
+  CHECK(session.player().y == saved_player.y);
+  CHECK(session.player().z == saved_player.z);
+  CHECK(session.state().map_id() == "sim_flat");
 }
 
 TEST_CASE("SimulationSession tick duration follows FakeClock auto-advance",
@@ -612,4 +613,25 @@ TEST_CASE("SimulationSession tick duration follows FakeClock auto-advance",
   REQUIRE(session.load(make_flat_map()).ok);
   session.tick({});
   CHECK(session.last_tick_seconds() == Approx(0.004));
+}
+
+TEST_CASE("Apply loaded game rejects invalid public state without changing live session", "[unit][sim][storage]") {
+  rat::SimulationSession session;
+  REQUIRE(session.load(make_flat_map()).ok);
+  session.set_player(make_start_player());
+  session.state().set_variable(7, 42);
+  const auto before = session.player();
+  for (int fault = 0; fault < 3; ++fault) {
+    rat::GameState loaded;
+    if (fault == 1) loaded.set_map_id("other");
+    if (fault == 2) {
+      loaded.set_map_id("sim_flat");
+      loaded.set_player_position(std::numeric_limits<float>::quiet_NaN(), 0, 0);
+    }
+    CHECK_FALSE(session.apply_loaded_game(loaded).ok);
+    CHECK(session.state().get_variable(7) == 42);
+    CHECK(session.state().map_id() == "sim_flat");
+    CHECK(session.player().x == before.x);
+    CHECK(session.player().z == before.z);
+  }
 }

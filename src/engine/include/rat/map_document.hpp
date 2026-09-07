@@ -56,6 +56,12 @@ struct MapDocumentLoadResult {
 [[nodiscard]] bool map_issues_have_errors(const std::vector<MapIssue>& issues);
 [[nodiscard]] std::string format_map_issues(const std::vector<MapIssue>& issues);
 
+// 64 MiB of float heights; checked before allocation. This is a file-format
+// resource limit, shared by loaders and programmatic map compilation.
+inline constexpr std::uint64_t kMaxMapGridCells = 16u * 1024u * 1024u;
+[[nodiscard]] bool safe_map_grid(int width, int height, int origin_x = 0, int origin_z = 0);
+// Numeric/structural safety only: intentionally permits unfinished event graphs.
+[[nodiscard]] std::vector<MapIssue> validate_map_structure(const MapData& data);
 [[nodiscard]] std::vector<MapIssue> validate_map_document(const MapData& data);
 [[nodiscard]] MapCompileResult compile_map_data(const MapData& data);
 [[nodiscard]] MapCompileResult compile_map_document(const MapDocument& document);

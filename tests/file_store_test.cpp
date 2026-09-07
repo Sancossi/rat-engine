@@ -105,3 +105,103 @@ TEST_CASE("NativeWindowHandle is opaque void pointers", "[unit][platform]") {
   CHECK(handle.nwh == nullptr);
   CHECK(handle.ndt == nullptr);
 }
+
+namespace {
+class FaultOps final : public rat::AtomicFileOps {
+ public:
+  int fail_at = 0;
+  int step = 0;
+  bool temp_exists = false;
+  bool closed = false;
+  std::string main = "previous";
+  std::string backup = "older";
+  std::string temp;
+  rat::FileWriteResult next() { return {++step != fail_at, "injected I/O failure"}; }
+  rat::FileWriteResult create_temp(std::string_view) override {
+    auto result = next();
+    temp_exists = result.ok;
+    return result;
+  }
+  rat::FileWriteResult write_temp(std::string_view bytes) override {
+    REQUIRE(temp_exists);
+    auto result = next();
+    temp = result.ok ? std::string(bytes) : std::string(bytes.substr(0, 2));
+    return result;
+  }
+  rat::FileWriteResult finish_temp() override { closed = true; return next(); }
+  rat::FileWriteResult backup_existing(std::string_view) override {
+    REQUIRE(closed);
+    auto result = next();
+    if (result.ok) backup = main;
+    return result;
+  }
+  rat::FileWriteResult replace_target(std::string_view) override {
+    REQUIRE(closed);
+    auto result = next();
+    if (result.ok) { main = temp; temp_exists = false; }
+    return result;
+  }
+  void cleanup_temp() noexcept override { temp_exists = false; temp.clear(); }
+};
+}
+
+TEST_CASE("Atomic transaction preserves main at every failed low-level step", "[unit][file][atomic]") {
+  for (int step = 1; step <= 5; ++step) {
+    INFO("Failure at transaction step " << step);
+    FaultOps ops;
+    ops.fail_at = step;
+    const auto result = rat::atomic_write(ops, "map.json", "replacement");
+    CHECK_FALSE(result.ok);
+    CHECK_FALSE(result.error.empty());
+    CHECK(ops.step == step); // No operation after the failing one.
+    CHECK(ops.main == "previous");
+    CHECK(ops.backup == (step == 5 ? "previous" : "older"));
+    CHECK_FALSE(ops.temp_exists);
+  }
+  FaultOps ops;
+  REQUIRE(rat::atomic_write(ops, "map.json", "replacement").ok);
+  CHECK(ops.main == "replacement");
+  CHECK(ops.backup == "previous");
+  CHECK_FALSE(ops.temp_exists);
+}
+
+TEST_CASE("Atomic memory saves retain exactly the previous bytes", "[unit][file][atomic]") {
+  rat::MemoryFileStore files;
+  REQUIRE(files.write_atomic("slot", "first").ok);
+  CHECK_FALSE(files.read("slot.bak").ok);
+  REQUIRE(files.write_atomic("slot", "second").ok);
+  CHECK(files.read("slot.bak").bytes.as_text() == "first");
+  REQUIRE(files.write_atomic("slot", "third").ok);
+  CHECK(files.read("slot.bak").bytes.as_text() == "second");
+  CHECK_FALSE(files.read("slot.bak.bak").ok);
+}
+
+TEST_CASE("OS atomic save replaces file and keeps a checked backup without temp leftovers", "[unit][file][atomic]") {
+  const auto dir = std::filesystem::temp_directory_path() / "rat-atomic-storage-test";
+  std::filesystem::create_directories(dir);
+  const auto path = dir / "slot.json";
+  const auto bak = dir / "slot.json.bak";
+  std::error_code ec;
+  std::filesystem::remove(path, ec);
+  std::filesystem::remove(bak, ec);
+  rat::OsFileStore files;
+  REQUIRE(files.write_atomic(path.string(), "first").ok);
+  REQUIRE(files.write_atomic(path.string(), "second").ok);
+  CHECK(files.read(path.string()).bytes.as_text() == "second");
+  CHECK(files.read(bak.string()).bytes.as_text() == "first");
+  REQUIRE(files.write_atomic(path.string(), "third").ok);
+  CHECK(files.read(bak.string()).bytes.as_text() == "second");
+  std::filesystem::remove(bak);
+  std::filesystem::create_directory(bak); // Backup replacement must fail, main survives.
+  CHECK_FALSE(files.write_atomic(path.string(), "must not publish").ok);
+  CHECK(files.read(path.string()).bytes.as_text() == "third");
+  std::size_t entries = 0;
+  for (const auto& entry : std::filesystem::directory_iterator(dir)) {
+    CHECK(entry.path().filename().string().find(".tmp.") == std::string::npos);
+    ++entries;
+  }
+  CHECK(entries == 2);
+  std::filesystem::remove(bak);
+  std::filesystem::remove(path);
+  std::filesystem::remove(dir);
+}

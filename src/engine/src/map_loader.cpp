@@ -1,6 +1,8 @@
 #include "rat/map_loader.hpp"
 
 #include "rat/event_graph.hpp"
+#include "rat/map_document.hpp"
+#include "strict_json.hpp"
 
 #include <nlohmann/json.hpp>
 
@@ -12,6 +14,8 @@ namespace rat {
 namespace {
 
 using json = nlohmann::json;
+using detail::checked_number;
+using detail::checked_value;
 
 MapLoadResult fail(std::string message) {
   MapLoadResult result;
@@ -82,17 +86,17 @@ Condition parse_condition(const json& node) {
   const std::string type = node.at("type").get<std::string>();
   if (type == "switch") {
     condition.type = ConditionType::Switch;
-    condition.id = node.at("id").get<std::uint32_t>();
+    condition.id = checked_number<std::uint32_t>(node.at("id"));
     condition.bool_value = node.at("value").get<bool>();
   } else if (type == "variable") {
     condition.type = ConditionType::Variable;
-    condition.id = node.at("id").get<std::uint32_t>();
+    condition.id = checked_number<std::uint32_t>(node.at("id"));
     condition.op = parse_compare_op(node.at("op").get<std::string>());
-    condition.int_value = node.at("value").get<int>();
+    condition.int_value = checked_number<int>(node.at("value"));
   } else if (type == "item") {
     condition.type = ConditionType::Item;
     condition.string_id = node.at("id").get<std::string>();
-    condition.int_value = node.value("quantity", 1);
+    condition.int_value = checked_value<int>(node, "quantity", 1);
   } else if (type == "self_switch") {
     condition.type = ConditionType::SelfSwitch;
     const std::string key = node.at("key").get<std::string>();
@@ -129,7 +133,7 @@ RouteStep parse_route_step(const json& node) {
     step.dir = parse_ramp_direction(node.at("dir").get<std::string>());
   } else if (op == "wait") {
     step.op = RouteStepOp::Wait;
-    step.frames = node.at("frames").get<int>();
+    step.frames = checked_number<int>(node.at("frames"));
     if (step.frames < 0) {
       throw std::runtime_error("route wait frames must be >= 0");
     }
@@ -162,12 +166,12 @@ Command parse_command(const json& node) {
     command.text = node.at("text").get<std::string>();
   } else if (op == "control_switch") {
     command.op = CommandOp::ControlSwitch;
-    command.id = node.at("id").get<std::uint32_t>();
+    command.id = checked_number<std::uint32_t>(node.at("id"));
     command.bool_value = node.at("value").get<bool>();
   } else if (op == "control_variable") {
     command.op = CommandOp::ControlVariable;
-    command.id = node.at("id").get<std::uint32_t>();
-    command.int_value = node.at("value").get<int>();
+    command.id = checked_number<std::uint32_t>(node.at("id"));
+    command.int_value = checked_number<int>(node.at("value"));
   } else if (op == "control_self_switch") {
     command.op = CommandOp::ControlSelfSwitch;
     const std::string key = node.at("key").get<std::string>();
@@ -185,20 +189,20 @@ Command parse_command(const json& node) {
     }
   } else if (op == "wait") {
     command.op = CommandOp::Wait;
-    command.frames = node.at("frames").get<int>();
+    command.frames = checked_number<int>(node.at("frames"));
     if (command.frames < 0) {
       throw std::runtime_error("wait frames must be >= 0");
     }
   } else if (op == "transfer_player") {
     command.op = CommandOp::TransferPlayer;
     command.map_id = node.at("map_id").get<std::string>();
-    command.x = node.at("x").get<float>();
-    command.y = node.value("y", 0.0f);
-    command.z = node.at("z").get<float>();
+    command.x = checked_number<float>(node.at("x"));
+    command.y = checked_value<float>(node, "y", 0.0f);
+    command.z = checked_number<float>(node.at("z"));
   } else if (op == "change_items") {
     command.op = CommandOp::ChangeItems;
     command.item_id = node.at("id").get<std::string>();
-    command.item_delta = node.at("delta").get<int>();
+    command.item_delta = checked_number<int>(node.at("delta"));
     command.key_item = node.value("key_item", false);
   } else if (op == "play_se") {
     command.op = CommandOp::PlaySE;
@@ -223,10 +227,10 @@ Command parse_command(const json& node) {
 
 Aabb2 parse_aabb(const json& node) {
   return Aabb2{
-      node.at("min_x").get<float>(),
-      node.at("min_z").get<float>(),
-      node.at("max_x").get<float>(),
-      node.at("max_z").get<float>(),
+      checked_number<float>(node.at("min_x")),
+      checked_number<float>(node.at("min_z")),
+      checked_number<float>(node.at("max_x")),
+      checked_number<float>(node.at("max_z")),
   };
 }
 
@@ -239,10 +243,10 @@ BlockerDef parse_blocker(const json& node) {
   const bool has_jumpable = node.contains("jumpable");
 
   if (has_base_y) {
-    blocker.base_y = node.at("base_y").get<float>();
+    blocker.base_y = checked_number<float>(node.at("base_y"));
   }
   if (has_top_y) {
-    blocker.top_y = node.at("top_y").get<float>();
+    blocker.top_y = checked_number<float>(node.at("top_y"));
   }
   if (has_jumpable) {
     blocker.jumpable = node.at("jumpable").get<bool>();
@@ -262,8 +266,8 @@ BlockerDef parse_blocker(const json& node) {
 }
 
 bool edge_tile_in_grid(const HeightGrid& grid, int tile_x, int tile_z) {
-  const int local_x = tile_x - grid.origin_x;
-  const int local_z = tile_z - grid.origin_z;
+  const auto local_x = static_cast<std::int64_t>(tile_x) - grid.origin_x;
+  const auto local_z = static_cast<std::int64_t>(tile_z) - grid.origin_z;
   return local_x >= 0 && local_z >= 0 && local_x < grid.width && local_z < grid.height;
 }
 
@@ -321,7 +325,7 @@ EventGraphNode parse_graph_node(const json& node) {
   const json& params = node.at("params");
   const auto take_uint_id = [&]() {
     if (params.contains("id") && params.at("id").is_number_unsigned()) {
-      graph_node.switch_id = params.at("id").get<std::uint32_t>();
+      graph_node.switch_id = checked_number<std::uint32_t>(params.at("id"));
     }
   };
   const auto take_bool_value = [&]() {
@@ -339,7 +343,7 @@ EventGraphNode parse_graph_node(const json& node) {
   } else if (graph_node.kind == "control_variable") {
     take_uint_id();
     if (params.contains("value") && params.at("value").is_number_integer()) {
-      graph_node.int_value = params.at("value").get<int>();
+      graph_node.int_value = checked_number<int>(params.at("value"));
     }
   } else if (graph_node.kind == "control_self_switch") {
     if (params.contains("key") && params.at("key").is_string()) {
@@ -351,7 +355,7 @@ EventGraphNode parse_graph_node(const json& node) {
     take_bool_value();
   } else if (graph_node.kind == "wait") {
     if (params.contains("frames")) {
-      graph_node.frames = params.at("frames").get<int>();
+      graph_node.frames = checked_number<int>(params.at("frames"));
     }
   } else if (graph_node.kind == "conditional_branch") {
     if (params.contains("condition")) {
@@ -362,18 +366,18 @@ EventGraphNode parse_graph_node(const json& node) {
       graph_node.map_id = params.at("map_id").get<std::string>();
     }
     if (params.contains("x")) {
-      graph_node.x = params.at("x").get<float>();
+      graph_node.x = checked_number<float>(params.at("x"));
     }
-    graph_node.y = params.value("y", 0.0f);
+    graph_node.y = checked_value<float>(params, "y", 0.0f);
     if (params.contains("z")) {
-      graph_node.z = params.at("z").get<float>();
+      graph_node.z = checked_number<float>(params.at("z"));
     }
   } else if (graph_node.kind == "change_items") {
     if (params.contains("id") && params.at("id").is_string()) {
       graph_node.item_id = params.at("id").get<std::string>();
     }
     if (params.contains("delta")) {
-      graph_node.item_delta = params.at("delta").get<int>();
+      graph_node.item_delta = checked_number<int>(params.at("delta"));
     }
     graph_node.key_item = params.value("key_item", false);
   } else if (graph_node.kind == "play_se") {
@@ -392,7 +396,7 @@ EventGraphNode parse_graph_node(const json& node) {
     take_uint_id();
     take_bool_value();
     if (params.contains("frames")) {
-      graph_node.frames = params.at("frames").get<int>();
+      graph_node.frames = checked_number<int>(params.at("frames"));
     }
     if (params.contains("condition")) {
       graph_node.branch_condition = parse_condition(params.at("condition"));
@@ -406,7 +410,7 @@ EventGraphEdge parse_graph_edge(const json& node) {
   edge.from = node.at("from").get<std::string>();
   edge.to = node.at("to").get<std::string>();
   if (node.contains("order")) {
-    edge.order = node.at("order").get<int>();
+    edge.order = checked_number<int>(node.at("order"));
   }
   if (node.contains("branch")) {
     edge.branch = node.at("branch").get<std::string>();
@@ -464,13 +468,13 @@ EventDef parse_event(const json& node) {
   }
   if (node.contains("tile")) {
     const auto& tile = node.at("tile");
-    event.tile = TileCoord{tile.at("x").get<int>(), tile.at("z").get<int>()};
+    event.tile = TileCoord{checked_number<int>(tile.at("x")), checked_number<int>(tile.at("z"))};
   }
   if (node.contains("volume")) {
     event.volume = parse_aabb(node.at("volume"));
   }
   if (node.contains("y")) {
-    event.y = node.at("y").get<float>();
+    event.y = checked_number<float>(node.at("y"));
   }
   if (!node.contains("pages") || !node.at("pages").is_array()) {
     throw std::runtime_error("event pages must be an array");
@@ -528,9 +532,9 @@ OccupancyKind parse_occupancy_kind(const std::string& value) {
 
 OccupancyCell parse_occupancy_cell(const json& node) {
   OccupancyCell cell;
-  cell.x = node.at("x").get<int>();
-  cell.y = node.at("y").get<int>();
-  cell.z = node.at("z").get<int>();
+  cell.x = checked_number<int>(node.at("x"));
+  cell.y = checked_number<int>(node.at("y"));
+  cell.z = checked_number<int>(node.at("z"));
   cell.kind = parse_occupancy_kind(node.at("kind").get<std::string>());
   if (cell.kind == OccupancyKind::Ramp) {
     if (!node.contains("yaw")) {
@@ -553,20 +557,20 @@ MapAssetRef parse_map_asset(const json& node) {
 
 MapData parse_map(const json& root) {
   MapData map;
-  map.schema_version = root.at("schema_version").get<int>();
+  map.schema_version = checked_number<int>(root.at("schema_version"));
   if (map.schema_version != 1 && map.schema_version != 2 && map.schema_version != 3 &&
       map.schema_version != 4 && map.schema_version != 5) {
     throw std::runtime_error("unsupported schema_version (expected 1, 2, 3, 4, or 5)");
   }
   map.id = root.at("id").get<std::string>();
-  map.width = root.at("width").get<int>();
-  map.height = root.at("height").get<int>();
-  map.tile_size = root.value("tile_size", 1.0f);
+  map.width = checked_number<int>(root.at("width"));
+  map.height = checked_number<int>(root.at("height"));
+  map.tile_size = checked_value<float>(root, "tile_size", 1.0f);
   if (map.id.empty()) {
     throw std::runtime_error("map id must not be empty");
   }
-  if (map.width <= 0 || map.height <= 0) {
-    throw std::runtime_error("map width/height must be > 0");
+  if (!safe_map_grid(map.width, map.height)) {
+    throw std::runtime_error("map width/height exceed safe grid limits");
   }
   if (map.schema_version == 1) {
     map.height_grid.origin_x = 0;
@@ -579,14 +583,18 @@ MapData parse_map(const json& root) {
       throw std::runtime_error("schema v2 requires height_grid object");
     }
     const auto& grid = root.at("height_grid");
-    map.height_grid.origin_x = grid.at("origin_x").get<int>();
-    map.height_grid.origin_z = grid.at("origin_z").get<int>();
-    map.height_grid.width = grid.at("width").get<int>();
-    map.height_grid.height = grid.at("height").get<int>();
-    if (map.height_grid.width <= 0 || map.height_grid.height <= 0) {
-      throw std::runtime_error("height_grid width/height must be > 0");
+    map.height_grid.origin_x = checked_number<int>(grid.at("origin_x"));
+    map.height_grid.origin_z = checked_number<int>(grid.at("origin_z"));
+    map.height_grid.width = checked_number<int>(grid.at("width"));
+    map.height_grid.height = checked_number<int>(grid.at("height"));
+    if (!safe_map_grid(map.height_grid.width, map.height_grid.height, map.height_grid.origin_x, map.height_grid.origin_z)) {
+      throw std::runtime_error("height_grid dimensions exceed safe grid limits");
     }
-    map.height_grid.ground_y = grid.at("ground_y").get<std::vector<float>>();
+    const auto& heights = grid.at("ground_y");
+    if (!heights.is_array() || heights.size() != static_cast<std::size_t>(map.height_grid.width) * map.height_grid.height)
+      throw std::runtime_error("height_grid ground_y length mismatch");
+    map.height_grid.ground_y.reserve(heights.size());
+    for (const auto& height : heights) map.height_grid.ground_y.push_back(checked_number<float>(height));
     const std::size_t expected = static_cast<std::size_t>(map.height_grid.width) * map.height_grid.height;
     if (map.height_grid.ground_y.size() != expected) {
       throw std::runtime_error("height_grid ground_y length mismatch");
@@ -595,10 +603,10 @@ MapData parse_map(const json& root) {
       for (const auto& ramp : root.at("ramps")) {
         RampDef out;
         const auto& tile = ramp.at("tile");
-        out.tile = TileCoord{tile.at("x").get<int>(), tile.at("z").get<int>()};
+        out.tile = TileCoord{checked_number<int>(tile.at("x")), checked_number<int>(tile.at("z"))};
         out.direction = parse_ramp_direction(ramp.at("direction").get<std::string>());
-        out.low_y = ramp.at("low_y").get<float>();
-        out.high_y = ramp.at("high_y").get<float>();
+        out.low_y = checked_number<float>(ramp.at("low_y"));
+        out.high_y = checked_number<float>(ramp.at("high_y"));
         if (out.high_y < out.low_y) {
           throw std::runtime_error("ramp high_y must be >= low_y");
         }
@@ -609,9 +617,9 @@ MapData parse_map(const json& root) {
       for (const auto& node : root.at("edge_barriers")) {
         EdgeBarrierDef out;
         const auto& tile = node.at("tile");
-        out.tile = TileCoord{tile.at("x").get<int>(), tile.at("z").get<int>()};
+        out.tile = TileCoord{checked_number<int>(tile.at("x")), checked_number<int>(tile.at("z"))};
         out.direction = parse_ramp_direction(node.at("direction").get<std::string>());
-        out.height = node.at("height").get<float>();
+        out.height = checked_number<float>(node.at("height"));
         map.edge_barriers.push_back(out);
       }
     }
@@ -622,9 +630,9 @@ MapData parse_map(const json& root) {
       for (const auto& node : root.at("floor_slabs")) {
         FloorSlabDef out;
         const auto& tile = node.at("tile");
-        out.tile = TileCoord{tile.at("x").get<int>(), tile.at("z").get<int>()};
-        out.top_y = node.at("top_y").get<float>();
-        out.thickness = node.value("thickness", kDefaultFloorSlabThickness);
+        out.tile = TileCoord{checked_number<int>(tile.at("x")), checked_number<int>(tile.at("z"))};
+        out.top_y = checked_number<float>(node.at("top_y"));
+        out.thickness = checked_value<float>(node, "thickness", kDefaultFloorSlabThickness);
         map.floor_slabs.push_back(out);
       }
     }
@@ -632,10 +640,10 @@ MapData parse_map(const json& root) {
       for (const auto& node : root.at("ladders")) {
         LadderDef out;
         const auto& tile = node.at("tile");
-        out.tile = TileCoord{tile.at("x").get<int>(), tile.at("z").get<int>()};
+        out.tile = TileCoord{checked_number<int>(tile.at("x")), checked_number<int>(tile.at("z"))};
         out.direction = parse_ramp_direction(node.at("direction").get<std::string>());
-        out.y_lo = node.at("y_lo").get<float>();
-        out.y_hi = node.at("y_hi").get<float>();
+        out.y_lo = checked_number<float>(node.at("y_lo"));
+        out.y_hi = checked_number<float>(node.at("y_hi"));
         map.ladders.push_back(out);
       }
     }
@@ -645,8 +653,8 @@ MapData parse_map(const json& root) {
       for (const auto& node : root.at("indoor_volumes")) {
         IndoorVolume out;
         out.xz = parse_aabb(node);
-        out.y_lo = node.at("y_lo").get<float>();
-        out.y_hi = node.at("y_hi").get<float>();
+        out.y_lo = checked_number<float>(node.at("y_lo"));
+        out.y_hi = checked_number<float>(node.at("y_hi"));
         map.indoor_volumes.push_back(out);
       }
     }
@@ -700,10 +708,12 @@ MapData parse_map(const json& root) {
 
 MapLoadResult load_map_from_string(std::string_view json_text) {
   try {
-    const json root = json::parse(json_text);
+    const json root = detail::parse_unique_json(json_text);
     MapLoadResult result;
     result.ok = true;
     result.map = parse_map(root);
+    const auto issues = validate_map_structure(result.map);
+    if (map_issues_have_errors(issues)) return fail(format_map_issues(issues));
     return result;
   } catch (const std::exception& ex) {
     return fail(ex.what());
@@ -725,6 +735,8 @@ MapLoadResult load_map_from_file(const std::string& path, const FileStore& files
 namespace {
 
 using json = nlohmann::json;
+using detail::checked_number;
+using detail::checked_value;
 
 const char* trigger_to_string(TriggerKind trigger) {
   switch (trigger) {
@@ -1001,6 +1013,8 @@ json dump_event(const EventDef& event) {
 
 MapSerializeResult serialize_map_to_string(const MapData& map) {
   try {
+    const auto issues = validate_map_structure(map);
+    if (map_issues_have_errors(issues)) throw std::runtime_error(format_map_issues(issues));
     json root{{"schema_version", map.schema_version},
               {"id", map.id},
               {"width", map.width},
@@ -1098,6 +1112,8 @@ MapFileResult save_map_to_file(const MapData& map, const std::string& path) {
 }
 
 MapFileResult save_map_to_file(const MapData& map, const std::string& path, FileStore& files) {
+  const auto compiled = compile_map_data(map);
+  if (!compiled.ok) return {false, format_map_issues(compiled.issues)};
   const MapSerializeResult serialized = serialize_map_to_string(map);
   if (!serialized.ok) {
     return MapFileResult{false, serialized.error};
@@ -1105,7 +1121,7 @@ MapFileResult save_map_to_file(const MapData& map, const std::string& path, File
 
   std::string payload = serialized.json_text;
   payload += '\n';
-  const FileWriteResult written = files.write(path, payload);
+  const FileWriteResult written = files.write_atomic(path, payload);
   if (!written.ok) {
     return MapFileResult{false, written.error.empty() ? "failed to write map file: " + path
                                                       : written.error};

@@ -5,6 +5,7 @@
 #include "rat/surface_query.hpp"
 
 #include <algorithm>
+#include <cmath>
 #include <string>
 #include <utility>
 
@@ -39,7 +40,11 @@ SimulationLoadResult SimulationSession::load(const MapData& map) {
 }
 
 GameFileResult SimulationSession::apply_loaded_game(const GameState& loaded) {
-  if (!loaded.map_id().empty() && loaded.map_id() != events_.map().id) {
+  if (loaded.map_id().empty() || !std::isfinite(loaded.player_x()) ||
+      !std::isfinite(loaded.player_y()) || !std::isfinite(loaded.player_z())) {
+    return GameFileResult{false, "save requires a map_id and finite player position"};
+  }
+  if (loaded.map_id() != events_.map().id) {
     return GameFileResult{false, "save map_id '" + loaded.map_id() +
                                      "' does not match current map '" + events_.map().id + "'"};
   }

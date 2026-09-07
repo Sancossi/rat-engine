@@ -10,7 +10,7 @@ GameFileResult save_game(FileStore& files, std::string_view path, const GameStat
   if (!state.save_to_memory(blob)) {
     return GameFileResult{false, "failed to serialize game state"};
   }
-  const FileWriteResult written = files.write(path, blob);
+  const FileWriteResult written = files.write_atomic(path, blob);
   if (!written.ok) {
     return GameFileResult{false, written.error.empty()
                                      ? "failed to write save file: " + std::string(path)

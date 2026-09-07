@@ -43,7 +43,8 @@ class GameState {
   [[nodiscard]] bool get_self_switch(std::string_view event_id, char key) const;
   void set_self_switch(std::string_view event_id, char key, bool value);
 
-  // Stub persistence: in-memory roundtrip (file I/O can wrap the same blob later).
+  // Writes schema 2 JSON; reads strict schema 2 or legacy RATSAVE1. Failure
+  // leaves the output string / existing state unchanged. Requires a map id.
   [[nodiscard]] bool save_to_memory(std::string& out) const;
   [[nodiscard]] bool load_from_memory(std::string_view data);
 
