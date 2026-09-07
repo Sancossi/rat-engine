@@ -2,7 +2,7 @@
 type: task
 area: Engine
 status: In progress
-review: Pending
+review: In review
 task_type: Chore
 sprint: Sprint 15
 tags: [task, stabilization]
@@ -46,3 +46,6 @@ Correction 68187f4 is in independent review: processed cursor positions follow I
 
 
 Infrastructure correction 68187f4 independently Approved: all three scenarios passed on verified WARP; reviewer checked cursor ordering, Unicode capture and device ownership through shutdown. Independent artifacts: build/stabilization/review-warp-ch6tjfh6/. Full scenario/scale coverage is now being implemented and its review remains pending.
+
+
+GUI workflow slice 554fe02 is in independent review. Twenty-one new scenarios passed: twelve destructive-action modal combinations, failed-save retry, map and slot backup restore, malformed startup/load, two real restart processes, three creation controls/duplicate error, and history/voxel no-op/abort/undo/redo. Actual production editor malformed-map launch exited 1 cleanly. Full verification: 703 C++ tests, eight Python checks, vault; parent full Release rebuild passed. Logs: build/stabilization/gui-guards-verify.log and gui-native-malformed/report.json. Real GUI exposed Ctrl+Z blocked after button navigation focus; corrected while retaining text-input ownership. Graph, ramp, bridge, unsupported repair, scale and packaged GUI groups remain in progress.
