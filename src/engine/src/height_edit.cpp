@@ -496,7 +496,7 @@ HeightEditResult place_map_occupancy_ramp(MapData& map, int x, int y, int z, Ram
 HeightEditResult remove_map_occupancy_cell(MapData& map, int x, int y, int z) {
   const int existing = find_occupancy_index(map.occupancy, x, y, z);
   if (existing < 0) {
-    return error_result("occupancy cell not found");
+    return ok_result();
   }
   const HeightEditResult upgraded = upgrade_map_schema_for_occupancy(map);
   if (!upgraded.ok) {

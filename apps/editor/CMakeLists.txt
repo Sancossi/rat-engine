@@ -1,4 +1,6 @@
 add_library(rat_editor_logic
+  editor_action_controller.cpp
+  editor_action_controller.hpp
   editor_document.cpp
   editor_document.hpp
   event_graph_edit.cpp

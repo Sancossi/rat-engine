@@ -2,6 +2,7 @@ add_library(rat_core
   src/app_mode.cpp
   src/asset.cpp
   src/audio.cpp
+  src/authoring_snapshot.cpp
   src/buffered_press.cpp
   src/blocker_edit.cpp
   src/camera.cpp

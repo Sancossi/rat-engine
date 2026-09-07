@@ -392,6 +392,10 @@ std::vector<MapIssue> validate_map_structure(const MapData& data) {
       if (page.graph) for (std::size_t n = 0; n < page.graph->nodes.size(); ++n) {
         const auto node_path = index_path(page_path + "/graph/nodes", n) + "/params";
         const auto& node = page.graph->nodes[n];
+        if (node.layout) {
+          finite(node.layout->x, index_path(page_path + "/graph/nodes", n) + "/layout/x");
+          finite(node.layout->y, index_path(page_path + "/graph/nodes", n) + "/layout/y");
+        }
         finite(node.x, node_path + "/x"); finite(node.y, node_path + "/y"); finite(node.z, node_path + "/z");
       }
     }

@@ -554,7 +554,7 @@ TEST_CASE("Remove occupancy deletes the upper stacked solid and keeps the lower"
 TEST_CASE("Remove occupancy is a no-op when the cell is empty", "[unit][height_edit][edit]") {
   rat::MapData map = make_occupancy_edit_map(5);
   const auto removed = rat::remove_map_occupancy_cell(map, 1, 3, 2);
-  REQUIRE_FALSE(removed.ok);
+  REQUIRE(removed.ok);
   REQUIRE(map.occupancy.empty());
 }
 

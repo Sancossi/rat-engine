@@ -180,6 +180,7 @@ void add_kind_node(EditorDocument& document, EventDef& event, EventGraphCanvasSt
     const float slot = static_cast<float>(graph.nodes.size());
     set_stored_pos(canvas, id, ImVec2(180.0f, 24.0f + (slot - 1.0f) * (metrics.height + 16.0f)));
   }
+  graph.nodes.back().layout = EventGraphNodeLayout{canvas.pos[id].first, canvas.pos[id].second};
   canvas.selected_id = id;
   canvas.selected_edge_from.clear();
   canvas.selected_edge_to.clear();
@@ -212,6 +213,7 @@ void duplicate_canvas_node(EditorDocument& document, EventDef& event, EventGraph
     return;
   }
   set_stored_pos(canvas, copy_id, ImVec2(src.x + 24.0f, src.y + 24.0f));
+  graph.nodes.back().layout = EventGraphNodeLayout{src.x + 24.0f, src.y + 24.0f};
   if (const EventGraphNode* copy = find_node(graph, copy_id)) {
     remember_clipboard(canvas, *copy);
   }
@@ -244,6 +246,7 @@ void paste_clipboard_node(EditorDocument& document, EventDef& event, EventGraphC
   canvas.clipboard_x += 24.0f;
   canvas.clipboard_y += 24.0f;
   set_stored_pos(canvas, node.id, ImVec2(canvas.clipboard_x, canvas.clipboard_y));
+  graph.nodes.back().layout = EventGraphNodeLayout{canvas.clipboard_x, canvas.clipboard_y};
   canvas.clipboard = graph.nodes.back();
   canvas.selected_id = node.id;
   canvas.selected_edge_from.clear();
@@ -403,6 +406,7 @@ void draw_event_graph_canvas(EditorDocument& document, EventGraphCanvasState& ca
   for (std::size_t i = 0; i < graph.nodes.size(); ++i) {
     const EventGraphNode& node = graph.nodes[i];
     const float y = 20.0f + static_cast<float>(i) * 120.0f;
+    set_stored_pos(canvas, node.id, node.layout ? ImVec2(node.layout->x, node.layout->y) : ImVec2(180.0f, y));
     rects.push_back(NodeRect{node.id, stored_pos(canvas, node.id, 180.0f, y),
                              event_graph_node_metrics(node.kind, node.route.size()),
                              node.kind == "conditional_branch"});
@@ -542,12 +546,23 @@ void draw_event_graph_canvas(EditorDocument& document, EventGraphCanvasState& ca
     if (ImGui::IsItemClicked()) {
       canvas.selected_id = rect.id;
       canvas.selected_edge_from.clear();
+      if (auto* node = find_node(graph, rect.id)) canvas.node_drag_initial_layout = node->layout;
+      canvas.node_drag_initial_x = rect.stored.x;
+      canvas.node_drag_initial_y = rect.stored.y;
     }
     if (ImGui::IsItemActive() && ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
       dragging_node = true;
       const ImVec2 delta = ImGui::GetIO().MouseDelta;
-      set_stored_pos(canvas, rect.id,
-                     ImVec2(rect.stored.x + delta.x / zoom, rect.stored.y + delta.y / zoom));
+      const ImVec2 next(rect.stored.x + delta.x / zoom, rect.stored.y + delta.y / zoom);
+      set_stored_pos(canvas, rect.id, next);
+      if (auto* node = find_node(graph, rect.id); node && (delta.x != 0.0f || delta.y != 0.0f)) {
+        node->layout = (next.x == canvas.node_drag_initial_x && next.y == canvas.node_drag_initial_y)
+          ? canvas.node_drag_initial_layout : std::optional<EventGraphNodeLayout>{{next.x, next.y}};
+        preview_event(document, event);
+      }
+    }
+    if (ImGui::IsItemDeactivated() && document.preview_active()) {
+      (void)document.commit_preview();
     }
     if (ImGui::IsWindowHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
       canvas.selected_id = rect.id;
@@ -764,11 +779,11 @@ void draw_event_graph_canvas(EditorDocument& document, EventGraphCanvasState& ca
           io.KeyCtrl, io.KeyShift, ImGui::IsKeyPressed(ImGuiKey_Z, false),
           ImGui::IsKeyPressed(ImGuiKey_Y, false));
       if (history == EventGraphCanvasHistoryAction::Undo) {
-        if (document.undo().applied) {
+        if (document.undo().ok) {
           canvas_need_reload = true;
         }
       } else if (history == EventGraphCanvasHistoryAction::Redo) {
-        if (document.redo().applied) {
+        if (document.redo().ok) {
           canvas_need_reload = true;
         }
       }

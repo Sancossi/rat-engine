@@ -1,6 +1,7 @@
 #pragma once
 
 #include "editor_document.hpp"
+#include "editor_action_controller.hpp"
 #include "frame_coordinator.hpp"
 #include "panels/blocker_panel.hpp"
 #include "panels/event_panel.hpp"
@@ -12,6 +13,7 @@
 #include <rat/audio.hpp>
 #include <rat/debug_snapshot.hpp>
 #include <rat/gameplay_notify.hpp>
+#include <rat/file_store.hpp>
 #include <rat/input.hpp>
 #include <rat/log.hpp>
 #include <rat/simulation_session.hpp>
@@ -28,7 +30,7 @@ class Engine;
 
 class EditorApp {
  public:
-  EditorApp() = default;
+  explicit EditorApp(FileStore& files = os_files()) : files_(&files) {}
   ~EditorApp();
 
   EditorApp(const EditorApp&) = delete;
@@ -58,10 +60,16 @@ class EditorApp {
   void finish_cell_brush(bool abort);
   void bind_session_assets();
   void save_play_slot();
-  void load_play_slot();
+  void load_play_slot(bool backup = false);
+  void request_map_action(EditorActionKind kind, const std::string& path, bool preserve_player);
+  bool install_authoring_map(MapData candidate, const std::string& path, bool preserve_player, bool restore);
+  EditorActionResult settle_authoring();
+  void reset_authoring_input();
+  void draw_unsaved_modal();
 
   static void on_host_resize(void* user, int width, int height);
 
+  FileStore* files_ = nullptr;
   NativeWindow host_{};
   FrameCoordinator coordinator_{};
   Engine* engine_ = nullptr;
@@ -75,12 +83,15 @@ class EditorApp {
   std::unique_ptr<QueuedAudio> audio_;
   SimulationSession session_{};
   EditorDocument document_{};
+  EditorActionController actions_{};
+  bool runtime_valid_ = false;
   GameplayNotifyBus notify_bus_{};
   BlockerPanelState blocker_panel_{};
   TerrainPanelState terrain_panel_{};
   EventPanelState event_panel_{};
   AppMode app_mode_ = AppMode::Play;
   std::string map_path_;
+  std::string open_map_path_;
   std::string last_apply_error_;
   std::string last_serialize_status_;
   ViewportTool viewport_tool_ = ViewportTool::Select;

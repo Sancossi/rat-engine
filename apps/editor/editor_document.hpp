@@ -16,6 +16,9 @@ class EditorDocument {
   EditorDocument() = default;
 
   void load(MapData data);
+  void restore(MapData data);
+  [[nodiscard]] EditApplyResult commit_preview();
+  [[nodiscard]] const std::string& last_error() const { return last_error_; }
   [[nodiscard]] EditApplyResult execute(std::unique_ptr<EditCommand> command);
   [[nodiscard]] EditApplyResult undo();
   [[nodiscard]] EditApplyResult redo();
@@ -33,7 +36,7 @@ class EditorDocument {
   [[nodiscard]] bool preview_event(int index, EventDef next);
   void discard_preview();
 
-  [[nodiscard]] EventGraphApplyResult compile_graphs_for_apply();
+  [[nodiscard]] EventGraphApplyResult compile_graphs_for_apply() const;
 
   [[nodiscard]] bool consume_changed();
   [[nodiscard]] bool last_mutated_elevation() const { return last_mutated_elevation_; }
@@ -58,6 +61,11 @@ class EditorDocument {
   MapDocument map_{};
   EditHistory history_{};
   std::optional<MapData> preview_{};
+  int preview_blocker_ = -1;
+  int preview_event_ = -1;
+  std::string last_error_;
+  bool committing_preview_ = false;
+  std::string clean_snapshot_;
   bool dirty_ = false;
   bool changed_ = false;
   bool last_mutated_elevation_ = false;

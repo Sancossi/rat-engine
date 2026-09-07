@@ -184,7 +184,7 @@ TEST_CASE("page without graph keeps inspector command list on apply",
 
   rat::EventDef edited = document.data().events[0];
   edited.pages[0].commands[0].text = "edited list";
-  REQUIRE(document.execute(rat::make_replace_event_command(0, std::move(edited))).applied);
+  REQUIRE(document.execute(rat::make_replace_event_command(0, std::move(edited))).ok);
   REQUIRE_FALSE(document.data().events[0].pages[0].graph.has_value());
   REQUIRE(document.data().events[0].pages[0].commands[0].text == "edited list");
 

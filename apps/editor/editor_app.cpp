@@ -31,6 +31,7 @@
 #include <imgui_impl_glfw.h>
 
 #include <cstdint>
+#include <cstdio>
 #include <filesystem>
 #include <iostream>
 #include <string>
@@ -89,22 +90,18 @@ void EditorApp::sync_authoring_to_engine() {
     sync_selection_to_engine();
     return;
   }
-  const MapCompileResult compiled = compile_map_data(document_.visible_data());
-  if (!compiled.ok) {
-    last_apply_error_ = format_map_issues(compiled.issues);
+  const auto& authored = document_.visible_data();
+  const auto issues = validate_map_structure(authored);
+  if (map_issues_have_errors(issues)) {
+    last_apply_error_ = format_map_issues(issues);
     sync_selection_to_engine();
     return;
   }
-  last_apply_error_.clear();
-  session_.events().load(compiled.runtime);
-  session_.rebuild_surface();
-  engine_->set_terrain_map(session_.events().map());
-  engine_->set_blockers(session_.events().map().blockers);
-  engine_->set_event_markers(event_markers_from_map(session_.events().map()));
+  // Rendering an authoring preview must never reload or reset the simulation VM.
+  engine_->set_terrain_map(authored);
+  engine_->set_blockers(authored.blockers);
+  engine_->set_event_markers(event_markers_from_map(authored));
   sync_selection_to_engine();
-  if (document_.last_mutated_elevation()) {
-    snap_player_to_ground_clear_jump();
-  }
 }
 
 void EditorApp::run_drag_step_commands(const ViewportPick& pick, TileDelta delta) {
@@ -249,63 +246,100 @@ void EditorApp::finish_cell_brush(bool abort) {
   brush_active_ = false;
 }
 
-bool EditorApp::hot_apply_map_path(const std::string& path, bool preserve_player) {
-  if (engine_ == nullptr) {
-    last_apply_error_ = "engine not ready";
-    return false;
-  }
+EditorActionResult EditorApp::settle_authoring() {
+  const auto committed = document_.commit_preview();
+  if (!committed.ok) return {false, committed.error};
+  document_.end_stroke();
+  drag_active_ = brush_active_ = false;
+  blocker_panel_.field_origin.reset();
+  event_panel_.field_origin.reset();
+  return {};
+}
 
+void EditorApp::reset_authoring_input() {
+  session_.clear_pending_input();
+  fixed_accumulator_ = 0.0f;
+  previous_buttons_ = host_.sample_buttons();
+  mouse_left_was_down_ = host_.mouse_left_down();
+  mouse_right_was_down_ = host_.mouse_right_down();
+  escape_was_down_ = host_.key_escape_down();
+  i_was_down_ = host_.key_i_down();
+  drag_active_ = brush_active_ = false;
+  event_context_open_ = false;
+  event_panel_.canvas.dragging_wire = false;
+  event_panel_.canvas.drag_wire_from.clear();
+  event_panel_.canvas.pending_from.clear();
+  event_panel_.canvas.pending_branch.reset();
+}
+
+void EditorApp::request_map_action(EditorActionKind kind, const std::string& path, bool preserve_player) {
+  if (actions_.pending()) return;
+  PendingEditorAction action{kind, path, preserve_player};
+  if (kind == EditorActionKind::RestoreMapBackup) {
+    const auto loaded = load_map_from_file(path + ".bak", *files_);
+    if (!loaded.ok) { last_apply_error_ = "Backup: " + loaded.error; return; }
+    action.candidate = loaded.map;
+  }
+  (void)actions_.request(std::move(action));
+}
+
+bool EditorApp::hot_apply_map_path(const std::string& path, bool preserve_player) {
+  const auto loaded = load_map_from_file(path, *files_);
+  if (!loaded.ok) { last_apply_error_ = loaded.error; return false; }
+  return install_authoring_map(loaded.map, path, preserve_player, false);
+}
+
+bool EditorApp::install_authoring_map(MapData candidate, const std::string& path,
+                                     bool preserve_player, bool restore) {
+  if (!engine_) { last_apply_error_ = "engine not ready"; return false; }
+  // Parsing/structural safety is transactional. A well-formed draft whose graph
+  // cannot run is still openable for repair; it never enables Play.
+  const auto issues = validate_map_structure(candidate);
+  if (map_issues_have_errors(issues)) { last_apply_error_ = format_map_issues(issues); return false; }
+  const auto compiled = compile_map_data(candidate);
   std::vector<BlockerDef> blockers;
   std::vector<Vec3> markers;
-  HotApplyTargets targets{session_.events(), session_.state(), session_.player(), blockers, markers,
-                          &session_.surface_query(), &session_.jump()};
-  HotApplyOptions options;
-  options.preserve_player_position = preserve_player;
-
-  const HotApplyResult result = hot_apply_map_from_file(path, targets, options);
-  if (!result.ok) {
-    last_apply_error_ = result.error;
-    if (logger_ != nullptr) {
-      log(*logger_, LogLevel::Error, "editor",
-          std::string("hot-apply failed (") + path + "): " + result.error);
-    }
-    return false;
+  runtime_valid_ = compiled.ok;
+  if (runtime_valid_) {
+    HotApplyTargets targets{session_.events(), session_.state(), session_.player(), blockers, markers,
+                            &session_.surface_query(), &session_.jump()};
+    HotApplyOptions options;
+    options.preserve_player_position = preserve_player;
+    const auto applied = hot_apply_map(candidate, targets, options);
+    if (!applied.ok) { last_apply_error_ = applied.error; return false; }
+    last_apply_error_.clear();
+  } else {
+    last_apply_error_ = format_map_issues(compiled.issues);
+    app_mode_ = AppMode::Edit;
   }
-
-  last_apply_error_.clear();
   map_path_ = path;
-  document_.load(session_.events().map());
-  (void)document_.consume_changed();
-  terrain_panel_.tile_x = session_.events().map().height_grid.origin_x;
-  terrain_panel_.tile_z = session_.events().map().height_grid.origin_z;
-  terrain_panel_.step = 0.25f;
-  terrain_panel_.set_y = 0.0f;
-  terrain_panel_.ramp_direction_index = 0;
-  terrain_panel_.ramp_low_y = 0.0f;
-  terrain_panel_.ramp_high_y = 0.0f;
-  terrain_panel_.tile_sync_ready = false;
-  terrain_panel_.last_tile_x = 0;
-  terrain_panel_.last_tile_z = 0;
+  open_map_path_ = path;
+  if (restore) document_.restore(std::move(candidate));
+  else document_.load(std::move(candidate));
+  terrain_panel_ = {};
+  terrain_panel_.tile_x = document_.data().height_grid.origin_x;
+  terrain_panel_.tile_z = document_.data().height_grid.origin_z;
   blocker_panel_ = {};
-  event_panel_.field_origin.reset();
-  event_panel_.field_origin_index = -1;
-  event_panel_.canvas = {};
-  event_panel_.last_compile_error.clear();
-  engine_->set_terrain_map(session_.events().map());
-  engine_->set_blockers(std::move(blockers));
-  engine_->set_event_markers(std::move(markers));
-  engine_->set_player(session_.player());
-  sync_selection_to_engine();
-  bind_session_assets();
+  event_panel_ = {};
   session_.set_app_mode(app_mode_);
-  session_.clear_pending_input();
-  previous_buttons_ = host_.sample_buttons();
-  fixed_accumulator_ = 0.0f;
-  snap_player_to_ground_clear_jump();
+  if (runtime_valid_) {
+    engine_->set_terrain_map(session_.events().map());
+    engine_->set_blockers(std::move(blockers));
+    engine_->set_event_markers(std::move(markers));
+    engine_->set_player(session_.player());
+    bind_session_assets();
+    snap_player_to_ground_clear_jump();
+  }
+  sync_authoring_to_engine();
+  sync_selection_to_engine();
+  reset_authoring_input();
+  refresh_mode_banner();
   return true;
 }
 
 bool EditorApp::save_map_path(const std::string& path) {
+  const auto settled = settle_authoring();
+  if (!settled.ok) { last_apply_error_ = settled.error; return false; }
   if (path.empty()) {
     last_apply_error_ = "map path is empty";
     return false;
@@ -321,7 +355,7 @@ bool EditorApp::save_map_path(const std::string& path) {
     }
     return false;
   }
-  const MapFileResult result = save_map_to_file(document_.data(), path);
+  const MapFileResult result = save_map_to_file(document_.data(), path, *files_);
   if (!result.ok) {
     last_apply_error_ = result.error;
     last_serialize_status_.clear();
@@ -348,7 +382,7 @@ void EditorApp::save_play_slot() {
     }
     return;
   }
-  const GameFileResult result = save_game(os_files(), kPlaySaveSlotPath, session_.state());
+  const GameFileResult result = save_game(*files_, kPlaySaveSlotPath, session_.state());
   if (!result.ok) {
     last_save_status_ = result.error.empty() ? "Save failed" : result.error;
     if (logger_ != nullptr) {
@@ -362,9 +396,10 @@ void EditorApp::save_play_slot() {
   }
 }
 
-void EditorApp::load_play_slot() {
+void EditorApp::load_play_slot(bool backup) {
+  const std::string path = std::string(kPlaySaveSlotPath) + (backup ? ".bak" : "");
   GameState loaded;
-  const GameFileResult result = load_game(os_files(), kPlaySaveSlotPath, loaded);
+  const GameFileResult result = load_game(*files_, path, loaded);
   if (!result.ok) {
     last_save_status_ = result.error.empty() ? "Load failed" : result.error;
     if (logger_ != nullptr) {
@@ -383,13 +418,16 @@ void EditorApp::load_play_slot() {
   if (engine_ != nullptr) {
     engine_->set_player(session_.player());
   }
-  last_save_status_ = std::string("Loaded ") + kPlaySaveSlotPath;
+  last_save_status_ = std::string(backup ? "Restored backup: " : "Loaded ") + path;
+  reset_authoring_input();
   if (logger_ != nullptr) {
     log(*logger_, LogLevel::Info, "save", last_save_status_);
   }
 }
 
 bool EditorApp::apply_edited_map(bool preserve_player) {
+  const auto settled = settle_authoring();
+  if (!settled.ok) { last_apply_error_ = settled.error; return false; }
   if (engine_ == nullptr) {
     last_apply_error_ = "engine not ready";
     return false;
@@ -423,6 +461,7 @@ bool EditorApp::apply_edited_map(bool preserve_player) {
     return false;
   }
 
+  runtime_valid_ = true;
   last_apply_error_.clear();
   engine_->set_terrain_map(session_.events().map());
   engine_->set_blockers(std::move(blockers));
@@ -455,6 +494,17 @@ void EditorApp::bind_session_assets() {
 }
 
 bool EditorApp::init() {
+  actions_.settle = [this] { return settle_authoring(); };
+  actions_.dirty = [this] { return document_.dirty(); };
+  actions_.save = [this] { const bool ok = save_map_path(map_path_); return EditorActionResult{ok, last_apply_error_}; };
+  actions_.reset_input = [this] { reset_authoring_input(); };
+  actions_.perform = [this](const PendingEditorAction& action) {
+    if (action.kind == EditorActionKind::Close) { running_ = false; return EditorActionResult{}; }
+    const bool ok = action.candidate
+      ? install_authoring_map(*action.candidate, action.path, action.preserve_player, true)
+      : hot_apply_map_path(action.path, action.preserve_player);
+    return EditorActionResult{ok, last_apply_error_};
+  };
   file_log_ = std::make_unique<FileLogSink>(default_log_path());
   stderr_log_ = std::make_unique<StreamLogSink>(std::cerr);
   tee_log_ = std::make_unique<TeeLogSink>(*file_log_, *stderr_log_);
@@ -566,7 +616,7 @@ int EditorApp::run() {
     return 1;
   }
 
-  while (!host_.should_close()) {
+  while (running_ && host_.is_open()) {
     const double now = host_.time();
     float dt = static_cast<float>(now - last_time_);
     last_time_ = now;
@@ -623,11 +673,10 @@ void EditorApp::set_app_mode(AppMode next_mode) {
   if (app_mode_ == next_mode) {
     return;
   }
-  blocker_panel_.field_origin.reset();
-  blocker_panel_.field_origin_index = -1;
-  event_panel_.field_origin.reset();
-  event_panel_.field_origin_index = -1;
-  document_.discard_preview();
+  if (actions_.pending()) return;
+  const auto settled = settle_authoring();
+  if (!settled.ok) { last_apply_error_ = settled.error; return; }
+  if (next_mode == AppMode::Play && !apply_edited_map(true)) return;
   app_mode_ = next_mode;
   session_.set_app_mode(next_mode);
   if (next_mode != AppMode::Play) {
@@ -776,7 +825,7 @@ void EditorApp::handle_edit_mouse_input(const ImGuiIO& io) {
         break;
       }
       case ViewportClickActionKind::PlaceEvent: {
-        const std::string id = "stub_" + std::to_string(event_panel_.next_stub_event++);
+        const std::string id = allocate_unique_event_id(document_.data(), "stub_1");
         (void)document_.execute(make_place_event_command(make_stub_event(id, action.tile.x, action.tile.z)));
         document_.select_event(static_cast<int>(document_.data().events.size()) - 1);
         break;
@@ -847,6 +896,8 @@ void EditorApp::simulate(float dt) {
     return;
   }
 
+  if (host_.consume_close_request()) (void)actions_.request({EditorActionKind::Close});
+  if (actions_.pending()) { session_.clear_pending_input(); fixed_accumulator_ = 0.0f; return; }
   const ImGuiIO& io = ImGui::GetIO();
 
   const InputButtons buttons = host_.sample_buttons();
@@ -904,8 +955,10 @@ void EditorApp::simulate(float dt) {
   }
 
   if (input.hot_apply_pressed && !map_path_.empty()) {
+    request_map_action(EditorActionKind::LoadMap, map_path_, true);
     session_.clear_pending_input();
-    hot_apply_map_path(map_path_, true);
+    fixed_accumulator_ = 0.0f;
+    return;
   }
 
   if (app_mode_ == AppMode::Edit) {
@@ -954,7 +1007,7 @@ void EditorApp::simulate(float dt) {
     }
   }
 
-  if (app_mode_ == AppMode::Play && (play_paused_ || inventory_open_)) {
+  if (app_mode_ == AppMode::Edit || !runtime_valid_ || play_paused_ || inventory_open_) {
     engine_->set_player(session_.player());
     engine_->greybox().tick(dt);
     return;
@@ -1003,6 +1056,7 @@ void EditorApp::draw_ui() {
   ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
   ImGui::Begin("DockSpace", nullptr, dock_flags);
   ImGui::PopStyleVar(3);
+  ImGui::BeginDisabled(actions_.pending());
 
   if (ImGui::BeginMenuBar()) {
     if (ImGui::BeginMenu("File")) {
@@ -1019,7 +1073,7 @@ void EditorApp::draw_ui() {
 
   ImGui::Begin("Hierarchy");
   ImGui::Text("Mode: %s  (F2)", app_mode_name(app_mode_));
-  ImGui::Text("Map: %s", session_.state().map_id().c_str());
+  ImGui::Text("Map: %s%s", document_.data().id.c_str(), document_.dirty() ? " *" : "");
   ImGui::Text("Player: (%.2f, %.2f, %.2f)", session_.player().x, session_.player().y,
               session_.player().z);
   ImGui::Text("Events: %zu", session_.events().map().events.size());
@@ -1056,16 +1110,21 @@ void EditorApp::draw_ui() {
   if (app_mode_ == AppMode::Edit && ImGui::Button("Apply edited map")) {
     apply_edited_map(true);
   }
+  char open_path_buffer[1024];
+  std::snprintf(open_path_buffer, sizeof(open_path_buffer), "%s", open_map_path_.c_str());
+  if (ImGui::InputText("Map to open", open_path_buffer, sizeof(open_path_buffer))) open_map_path_ = open_path_buffer;
+  if (ImGui::Button("Open map")) request_map_action(EditorActionKind::LoadMap, open_map_path_, false);
   if (!map_path_.empty() && ImGui::Button("Load map JSON (F5, keep pos)")) {
-    hot_apply_map_path(map_path_, true);
+    request_map_action(EditorActionKind::LoadMap, map_path_, true);
   }
   if (!map_path_.empty() && ImGui::Button("Reload map (reset player)")) {
-    if (hot_apply_map_path(map_path_, false)) {
-      session_.player().x = -1.5f;
-      session_.player().z = 1.5f;
-      snap_player_to_ground_clear_jump();
-    }
+    request_map_action(EditorActionKind::LoadMap, map_path_, false);
   }
+  if (!map_path_.empty() && ImGui::Button("Restore map backup")) {
+    request_map_action(EditorActionKind::RestoreMapBackup, map_path_, true);
+  }
+  if (!document_.last_error().empty())
+    ImGui::TextWrapped("Edit error: %s", document_.last_error().c_str());
   if (!last_apply_error_.empty()) {
     ImGui::TextColored(ImVec4(1.0f, 0.35f, 0.35f, 1.0f), "Map I/O error: %s",
                        last_apply_error_.c_str());
@@ -1156,12 +1215,8 @@ void EditorApp::draw_ui() {
             document_.visible_data().blockers[static_cast<std::size_t>(document_.selected_blocker())];
         const float center_x = 0.5f * (selected.bounds.min_x + selected.bounds.max_x);
         const float center_z = 0.5f * (selected.bounds.min_z + selected.bounds.max_z);
-        if (session_.surface_query() == nullptr) {
-          session_.rebuild_surface();
-        }
-        sampled_ground_y = session_.surface_query() == nullptr
-                               ? 0.0f
-                               : session_.surface_query()->sample(center_x, center_z).y;
+        const SurfaceQuery authored_surface(document_.visible_data());
+        sampled_ground_y = authored_surface.sample(center_x, center_z).y;
       }
       draw_blocker_panel(document_, blocker_panel_, sampled_ground_y, last_apply_error_);
       draw_ladder_panel(document_, terrain_panel_);
@@ -1227,7 +1282,7 @@ void EditorApp::draw_ui() {
       if (on_event && events[static_cast<std::size_t>(event_context_index_)].tile.has_value()) {
         tile = *events[static_cast<std::size_t>(event_context_index_)].tile;
       }
-      const std::string id = "stub_" + std::to_string(event_panel_.next_stub_event++);
+      const std::string id = allocate_unique_event_id(document_.data(), "stub_1");
       (void)document_.execute(make_place_event_command(make_stub_event(id, tile.x, tile.z)));
       document_.select_event(static_cast<int>(document_.data().events.size()) - 1);
     }
@@ -1271,6 +1326,7 @@ void EditorApp::draw_ui() {
     if (ImGui::Button("Load")) {
       load_play_slot();
     }
+    if (ImGui::Button("Restore save slot backup")) load_play_slot(true);
     ImGui::TextUnformatted("Escape pause");
     if (!last_save_status_.empty()) {
       ImGui::TextWrapped("%s", last_save_status_.c_str());
@@ -1329,7 +1385,12 @@ void EditorApp::draw_ui() {
     ImGui::End();
   }
 
+  ImGui::EndDisabled();
   ImGui::End();
+  actions_.pump();
+  draw_unsaved_modal();
+  host_.set_title(std::string("rat-engine [") + app_mode_name(app_mode_) + "] " +
+                  document_.data().id + (document_.dirty() ? " *" : ""));
 
   if (app_mode_ == AppMode::Edit && edit_submode_ == EditSubmode::Events && engine_ != nullptr) {
     const MapData& map = document_.visible_data();
@@ -1356,6 +1417,22 @@ void EditorApp::draw_ui() {
       draw_list->AddText(ImVec2(pixel->x - text_size.x * 0.5f, pixel->y - text_size.y),
                          IM_COL32(255, 255, 255, 255), event.id.c_str());
     }
+  }
+}
+
+void EditorApp::draw_unsaved_modal() {
+  if (!actions_.awaiting_decision()) return;
+  ImGui::OpenPopup("Unsaved changes");
+  if (ImGui::BeginPopupModal("Unsaved changes", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+    ImGui::TextUnformatted("Save changes before continuing?");
+    if (!actions_.error().empty()) ImGui::TextWrapped("%s", actions_.error().c_str());
+    if (ImGui::Button("Save")) actions_.choose(UnsavedChoice::Save);
+    ImGui::SameLine();
+    if (ImGui::Button("Discard")) actions_.choose(UnsavedChoice::Discard);
+    ImGui::SameLine();
+    if (ImGui::Button("Cancel")) actions_.choose(UnsavedChoice::Cancel);
+    if (!actions_.pending()) ImGui::CloseCurrentPopup();
+    ImGui::EndPopup();
   }
 }
 

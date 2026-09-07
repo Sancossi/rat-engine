@@ -10,13 +10,14 @@
 namespace rat {
 
 struct EditApplyResult {
-  bool applied = false;
+  bool ok = false;
+  bool changed = false;
   bool mutates_blockers = false;
   bool mutates_events = false;
   bool mutates_elevation = false;
   std::string error;
 
-  explicit operator bool() const { return applied; }
+  explicit operator bool() const { return ok; }
 };
 
 class EditCommand {
@@ -86,6 +87,8 @@ class EditHistory {
   std::vector<std::unique_ptr<EditCommand>> redo_;
   std::vector<std::unique_ptr<EditCommand>> stroke_;
   bool in_stroke_ = false;
+  std::string stroke_before_;
+  std::string stroke_after_;
 };
 
 }  // namespace rat

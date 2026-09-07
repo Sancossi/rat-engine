@@ -21,7 +21,7 @@ void draw_event_panel(EditorDocument& document, EventPanelState& state, const ch
                                                               : 1.0f;
 
   if (ImGui::Button("Add stub event")) {
-    const std::string id = "stub_" + std::to_string(state.next_stub_event++);
+    const std::string id = allocate_unique_event_id(document.data(), "stub_1");
     state.field_origin.reset();
     state.field_origin_index = -1;
     (void)document.execute(make_place_event_command(make_stub_event(id, 0, 0)));
@@ -36,7 +36,7 @@ void draw_event_panel(EditorDocument& document, EventPanelState& state, const ch
         make_delete_event_command(static_cast<std::size_t>(document.selected_event())));
   }
 
-  const auto& event_list = document.visible_data().events;
+  const auto event_list = document.visible_data().events;
   if (ImGui::BeginListBox("##events", ImVec2(-1.0f, 120.0f))) {
     for (int i = 0; i < static_cast<int>(event_list.size()); ++i) {
       const auto& ev = event_list[static_cast<std::size_t>(i)];
@@ -87,7 +87,14 @@ void draw_event_panel(EditorDocument& document, EventPanelState& state, const ch
 
   EventDef event =
       document.visible_data().events[static_cast<std::size_t>(document.selected_event())];
-  ImGui::Text("id: %s", event.id.c_str());
+  char id_buffer[256];
+  std::snprintf(id_buffer, sizeof(id_buffer), "%s", event.id.c_str());
+  if (ImGui::InputText("Event ID", id_buffer, sizeof(id_buffer))) {
+    if (!state.field_origin) state.field_origin = event;
+    event.id = id_buffer;
+    preview_selected_event(event);
+  }
+  commit_event_field_edit();
   ImGui::Text("pages: %zu", event.pages.size());
   ImGui::Text("Why not: %s", why_not != nullptr ? why_not : "");
 

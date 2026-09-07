@@ -185,6 +185,11 @@ struct Command {
   std::vector<RouteStep> route;
 };
 
+struct EventGraphNodeLayout {
+  float x = 0.0f;
+  float y = 0.0f;
+};
+
 struct EventGraphNode {
   std::string id;
   std::string kind;
@@ -204,6 +209,7 @@ struct EventGraphNode {
   bool key_item = false;
   bool through = false;
   std::vector<RouteStep> route;
+  std::optional<EventGraphNodeLayout> layout;
 };
 
 struct EventGraphEdge {

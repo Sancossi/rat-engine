@@ -11,7 +11,6 @@ namespace rat {
 struct EventPanelState {
   std::optional<EventDef> field_origin;
   int field_origin_index = -1;
-  int next_stub_event = 1;
   int graph_tab_select = -1;
   EventGraphCanvasState canvas;
   std::string last_compile_error;

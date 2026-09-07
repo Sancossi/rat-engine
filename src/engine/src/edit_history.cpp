@@ -1,6 +1,7 @@
 #include "rat/edit_history.hpp"
 
 #include "rat/blocker_edit.hpp"
+#include "rat/authoring_snapshot.hpp"
 #include "rat/event_edit.hpp"
 #include "rat/height_edit.hpp"
 
@@ -14,14 +15,34 @@ namespace {
 
 EditApplyResult result_from(const EditCommand& command) {
   EditApplyResult result;
-  result.applied = true;
+  result.ok = true;
+  result.changed = true;
   result.mutates_blockers = command.mutates_blockers();
   result.mutates_events = command.mutates_events();
   result.mutates_elevation = command.mutates_elevation();
   return result;
 }
 
-class PlaceBlockerCommand final : public EditCommand {
+class CheckedCommand : public EditCommand {
+ public:
+  [[nodiscard]] bool applied_successfully() const override { return error_.empty(); }
+  [[nodiscard]] std::string last_error() const override { return error_; }
+ protected:
+  std::string error_;
+  bool index_valid(std::size_t index, std::size_t size) {
+    error_ = index < size ? "" : "edit index is out of range";
+    return error_.empty();
+  }
+  bool event_id_valid(const MapData& map, const std::string& id, std::size_t excluded = static_cast<std::size_t>(-1)) {
+    error_.clear();
+    if (id.empty()) error_ = "event id must not be empty";
+    for (std::size_t i = 0; i < map.events.size(); ++i)
+      if (i != excluded && map.events[i].id == id) error_ = "event id already exists: " + id;
+    return error_.empty();
+  }
+};
+
+class PlaceBlockerCommand final : public CheckedCommand {
  public:
   explicit PlaceBlockerCommand(BlockerDef blocker) : blocker_(std::move(blocker)) {}
 
@@ -44,12 +65,12 @@ class PlaceBlockerCommand final : public EditCommand {
   std::size_t index_ = 0;
 };
 
-class DeleteBlockerCommand final : public EditCommand {
+class DeleteBlockerCommand final : public CheckedCommand {
  public:
   explicit DeleteBlockerCommand(std::size_t index) : index_(index) {}
 
   void apply(MapData& map) override {
-    if (index_ >= map.blockers.size()) {
+    if (!index_valid(index_, map.blockers.size())) {
       captured_ = false;
       return;
     }
@@ -74,7 +95,7 @@ class DeleteBlockerCommand final : public EditCommand {
   bool captured_ = false;
 };
 
-class MoveBlockerCommand final : public EditCommand {
+class MoveBlockerCommand final : public CheckedCommand {
  public:
   MoveBlockerCommand(std::size_t index, int tile_dx, int tile_dz, float tile_size)
       : index_(index), tile_dx_(tile_dx), tile_dz_(tile_dz), tile_size_(tile_size) {}
@@ -87,8 +108,8 @@ class MoveBlockerCommand final : public EditCommand {
   [[nodiscard]] bool mutates_events() const override { return false; }
 
  private:
-  void translate(MapData& map, int dx, int dz) const {
-    if (index_ >= map.blockers.size()) {
+  void translate(MapData& map, int dx, int dz) {
+    if (!index_valid(index_, map.blockers.size())) {
       return;
     }
     BlockerDef& blocker = map.blockers[index_];
@@ -101,13 +122,13 @@ class MoveBlockerCommand final : public EditCommand {
   float tile_size_ = 1.0f;
 };
 
-class ReplaceBlockerCommand final : public EditCommand {
+class ReplaceBlockerCommand final : public CheckedCommand {
  public:
   ReplaceBlockerCommand(std::size_t index, BlockerDef next)
       : index_(index), next_(std::move(next)) {}
 
   void apply(MapData& map) override {
-    if (index_ >= map.blockers.size()) {
+    if (!index_valid(index_, map.blockers.size())) {
       captured_ = false;
       return;
     }
@@ -133,11 +154,12 @@ class ReplaceBlockerCommand final : public EditCommand {
   bool captured_ = false;
 };
 
-class PlaceEventCommand final : public EditCommand {
+class PlaceEventCommand final : public CheckedCommand {
  public:
   explicit PlaceEventCommand(EventDef event) : event_(std::move(event)) {}
 
   void apply(MapData& map) override {
+    if (!event_id_valid(map, event_.id)) return;
     index_ = map.events.size();
     map.events.push_back(event_);
   }
@@ -156,12 +178,12 @@ class PlaceEventCommand final : public EditCommand {
   std::size_t index_ = 0;
 };
 
-class DeleteEventCommand final : public EditCommand {
+class DeleteEventCommand final : public CheckedCommand {
  public:
   explicit DeleteEventCommand(std::size_t index) : index_(index) {}
 
   void apply(MapData& map) override {
-    if (index_ >= map.events.size()) {
+    if (!index_valid(index_, map.events.size())) {
       captured_ = false;
       return;
     }
@@ -186,7 +208,7 @@ class DeleteEventCommand final : public EditCommand {
   bool captured_ = false;
 };
 
-class MoveEventCommand final : public EditCommand {
+class MoveEventCommand final : public CheckedCommand {
  public:
   MoveEventCommand(std::size_t index, int tile_dx, int tile_dz, float tile_size)
       : index_(index), tile_dx_(tile_dx), tile_dz_(tile_dz), tile_size_(tile_size) {}
@@ -199,8 +221,8 @@ class MoveEventCommand final : public EditCommand {
   [[nodiscard]] bool mutates_events() const override { return true; }
 
  private:
-  void translate(MapData& map, int dx, int dz) const {
-    if (index_ >= map.events.size()) {
+  void translate(MapData& map, int dx, int dz) {
+    if (!index_valid(index_, map.events.size())) {
       return;
     }
     translate_event_on_grid(map.events[index_], dx, dz, tile_size_);
@@ -212,15 +234,16 @@ class MoveEventCommand final : public EditCommand {
   float tile_size_ = 1.0f;
 };
 
-class ReplaceEventCommand final : public EditCommand {
+class ReplaceEventCommand final : public CheckedCommand {
  public:
   ReplaceEventCommand(std::size_t index, EventDef next) : index_(index), next_(std::move(next)) {}
 
   void apply(MapData& map) override {
-    if (index_ >= map.events.size()) {
+    if (!index_valid(index_, map.events.size())) {
       captured_ = false;
       return;
     }
+    if (!event_id_valid(map, next_.id, index_)) { captured_ = false; return; }
     previous_ = map.events[index_];
     captured_ = true;
     map.events[index_] = next_;
@@ -347,7 +370,10 @@ class CompositeCommand final : public EditCommand {
   void apply(MapData& map) override {
     for (std::unique_ptr<EditCommand>& child : children_) {
       child->apply(map);
+      if (!child->applied_successfully()) { ok_ = false; error_ = child->last_error(); return; }
     }
+    ok_ = true;
+    error_.clear();
   }
 
   void revert(MapData& map) override {
@@ -356,7 +382,9 @@ class CompositeCommand final : public EditCommand {
     }
   }
 
-  [[nodiscard]] bool applied_successfully() const override { return !children_.empty(); }
+  [[nodiscard]] bool applied_successfully() const override { return ok_ && !children_.empty(); }
+
+  [[nodiscard]] std::string last_error() const override { return error_; }
 
   [[nodiscard]] bool mutates_blockers() const override {
     for (const std::unique_ptr<EditCommand>& child : children_) {
@@ -386,6 +414,8 @@ class CompositeCommand final : public EditCommand {
   }
 
  private:
+  bool ok_ = true;
+  std::string error_;
   std::vector<std::unique_ptr<EditCommand>> children_{};
 };
 
@@ -430,6 +460,7 @@ std::unique_ptr<EditCommand> make_place_event_command(EventDef event) {
 }
 
 std::unique_ptr<EditCommand> make_duplicate_event_command(const MapData& map, std::size_t index) {
+  if (index >= map.events.size()) return nullptr;
   return make_place_event_command(make_duplicate_event(map, index));
 }
 
@@ -521,58 +552,56 @@ std::unique_ptr<EditCommand> make_remove_map_occupancy_cell_command(int x, int y
 }
 
 EditApplyResult EditHistory::execute(MapData& map, std::unique_ptr<EditCommand> command) {
-  if (command == nullptr) {
-    return {};
-  }
-  command->apply(map);
+  if (!command) return {false, false, false, false, false, "missing edit command"};
+  MapData candidate = map;
+  command->apply(candidate);
   if (!command->applied_successfully()) {
-    EditApplyResult failed;
-    failed.error = command->last_error();
-    return failed;
+    return {false, false, false, false, false, command->last_error()};
   }
-  const EditApplyResult result = result_from(*command);
+  if (authoring_snapshot(candidate) == authoring_snapshot(map)) return {true, false};
+  const auto result = result_from(*command);
   if (in_stroke_) {
-    stroke_.push_back(std::move(command));
-    redo_.clear();
-    return result;
+    if (stroke_.empty()) stroke_before_ = authoring_snapshot(map);
+    stroke_after_ = authoring_snapshot(candidate);
   }
-  undo_.push_back(std::move(command));
-  redo_.clear();
+  map = std::move(candidate);
+  if (in_stroke_) stroke_.push_back(std::move(command));
+  else {
+    undo_.push_back(std::move(command));
+    redo_.clear();
+  }
   return result;
 }
 
 EditApplyResult EditHistory::undo(MapData& map) {
   if (in_stroke_) {
-    if (!stroke_.empty()) {
-      return abort_stroke(map);
-    }
+    if (!stroke_.empty()) return abort_stroke(map);
     in_stroke_ = false;
   }
-  if (undo_.empty()) {
-    return {};
-  }
-  std::unique_ptr<EditCommand> command = std::move(undo_.back());
+  if (undo_.empty()) return {};
+  MapData candidate = map;
+  undo_.back()->revert(candidate);
+  const auto result = result_from(*undo_.back());
+  map = std::move(candidate);
+  redo_.push_back(std::move(undo_.back()));
   undo_.pop_back();
-  command->revert(map);
-  const EditApplyResult result = result_from(*command);
-  redo_.push_back(std::move(command));
   return result;
 }
 
 EditApplyResult EditHistory::redo(MapData& map) {
-  if (in_stroke_ || redo_.empty()) {
-    return {};
-  }
-  std::unique_ptr<EditCommand> command = std::move(redo_.back());
-  redo_.pop_back();
-  command->apply(map);
+  if (in_stroke_ || redo_.empty()) return {};
+  MapData candidate = map;
+  auto& command = redo_.back();
+  command->apply(candidate);
   if (!command->applied_successfully()) {
-    EditApplyResult failed;
-    failed.error = command->last_error();
-    return failed;
+    return {false, false, false, false, false, command->last_error()};
   }
-  const EditApplyResult result = result_from(*command);
+  auto result = result_from(*command);
+  result.changed = authoring_snapshot(candidate) != authoring_snapshot(map);
+  if (!result.changed) result.mutates_blockers = result.mutates_events = result.mutates_elevation = false;
+  map = std::move(candidate);
   undo_.push_back(std::move(command));
+  redo_.pop_back();
   return result;
 }
 
@@ -582,6 +611,8 @@ void EditHistory::begin_stroke() {
   }
   in_stroke_ = true;
   stroke_.clear();
+  stroke_before_.clear();
+  stroke_after_.clear();
 }
 
 void EditHistory::end_stroke() {
@@ -589,6 +620,7 @@ void EditHistory::end_stroke() {
     return;
   }
   in_stroke_ = false;
+  if (stroke_before_ == stroke_after_) { stroke_.clear(); return; }
   std::unique_ptr<EditCommand> command = take_stroke_command(stroke_);
   if (command == nullptr) {
     return;
@@ -606,7 +638,9 @@ EditApplyResult EditHistory::abort_stroke(MapData& map) {
     return {};
   }
   std::unique_ptr<EditCommand> command = take_stroke_command(stroke_);
+  const auto before = authoring_snapshot(map);
   command->revert(map);
+  if (before == authoring_snapshot(map)) return {true, false};
   return result_from(*command);
 }
 

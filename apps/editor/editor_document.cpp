@@ -1,6 +1,7 @@
 #include "editor_document.hpp"
 
 #include <utility>
+#include <rat/authoring_snapshot.hpp>
 
 namespace rat {
 
@@ -33,12 +34,12 @@ void EditorDocument::clamp_selection() {
 }
 
 void EditorDocument::apply_map(MapData map, const EditApplyResult& result) {
-  if (!result.applied) {
+  if (!result.ok || !result.changed) {
     return;
   }
   discard_preview();
   map_.replace(std::move(map));
-  dirty_ = true;
+  dirty_ = authoring_snapshot(map_.data()) != clean_snapshot_;
   last_mutated_elevation_ = result.mutates_elevation;
   clamp_selection();
   note_changed();
@@ -47,7 +48,9 @@ void EditorDocument::apply_map(MapData map, const EditApplyResult& result) {
 void EditorDocument::load(MapData data) {
   discard_preview();
   history_.clear();
+  last_error_.clear();
   map_.replace(std::move(data));
+  clean_snapshot_ = authoring_snapshot(map_.data());
   dirty_ = false;
   last_mutated_elevation_ = false;
   selected_blocker_ = map_.data().blockers.empty() ? -1 : 0;
@@ -56,32 +59,51 @@ void EditorDocument::load(MapData data) {
   note_changed();
 }
 
-EventGraphApplyResult EditorDocument::compile_graphs_for_apply() {
-  discard_preview();
-  EventGraphApplyResult result = compile_event_graphs_for_apply(map_.data());
-  if (!result.ok) {
-    return result;
+void EditorDocument::restore(MapData data) {
+  const auto baseline = clean_snapshot_;
+  load(std::move(data));
+  clean_snapshot_ = baseline;
+  dirty_ = authoring_snapshot(map_.data()) != clean_snapshot_;
+}
+
+EditApplyResult EditorDocument::commit_preview() {
+  if (!preview_) return {true, false};
+  const auto issues = validate_map_structure(*preview_);
+  if (map_issues_have_errors(issues)) {
+    last_error_ = format_map_issues(issues);
+    return {false, false, false, false, false, last_error_};
   }
-  map_.replace(std::move(result.map));
-  result.map = map_.data();
-  dirty_ = true;
-  note_changed();
-  return result;
+  committing_preview_ = true;
+  struct ResetCommitFlag { bool& flag; ~ResetCommitFlag() { flag = false; } } reset{committing_preview_};
+  if (preview_event_ >= 0)
+    return execute(make_replace_event_command(static_cast<std::size_t>(preview_event_),
+      preview_->events[static_cast<std::size_t>(preview_event_)]));
+  if (preview_blocker_ >= 0)
+    return execute(make_replace_blocker_command(static_cast<std::size_t>(preview_blocker_),
+      preview_->blockers[static_cast<std::size_t>(preview_blocker_)]));
+  return {false, false, false, false, false, "preview has no edit target"};
+}
+
+EventGraphApplyResult EditorDocument::compile_graphs_for_apply() const {
+  return compile_event_graphs_for_apply(map_.data());
 }
 
 EditApplyResult EditorDocument::execute(std::unique_ptr<EditCommand> command) {
-  if (command == nullptr) {
-    return {};
+  if (!command) { last_error_ = "missing edit command"; return {false, false, false, false, false, last_error_}; }
+  if (!committing_preview_ && preview_) {
+    const auto settled = commit_preview();
+    if (!settled.ok) return settled;
   }
-  discard_preview();
   MapData map = map_.data();
   const EditApplyResult result = history_.execute(map, std::move(command));
+  last_error_ = result.error;
+  if (result.ok) discard_preview();
   apply_map(std::move(map), result);
   return result;
 }
 
 EditApplyResult EditorDocument::undo() {
-  discard_preview();
+  if (const auto settled = commit_preview(); !settled.ok) return settled;
   MapData map = map_.data();
   const EditApplyResult result = history_.undo(map);
   apply_map(std::move(map), result);
@@ -89,7 +111,7 @@ EditApplyResult EditorDocument::undo() {
 }
 
 EditApplyResult EditorDocument::redo() {
-  discard_preview();
+  if (const auto settled = commit_preview(); !settled.ok) return settled;
   MapData map = map_.data();
   const EditApplyResult result = history_.redo(map);
   apply_map(std::move(map), result);
@@ -113,16 +135,19 @@ EditApplyResult EditorDocument::abort_stroke() {
 }
 
 void EditorDocument::mark_clean() {
+  clean_snapshot_ = authoring_snapshot(map_.data());
   dirty_ = false;
 }
 
 void EditorDocument::clear_selection() {
+  if (!commit_preview().ok) return;
   selected_blocker_ = -1;
   selected_event_ = -1;
   selected_page_ = 0;
 }
 
 void EditorDocument::select_blocker(int index) {
+  if (!commit_preview().ok) return;
   selected_blocker_ = index;
   selected_event_ = -1;
   selected_page_ = 0;
@@ -130,6 +155,7 @@ void EditorDocument::select_blocker(int index) {
 }
 
 void EditorDocument::select_event(int index) {
+  if (!commit_preview().ok) return;
   selected_blocker_ = -1;
   selected_event_ = index;
   selected_page_ = 0;
@@ -137,6 +163,7 @@ void EditorDocument::select_event(int index) {
 }
 
 void EditorDocument::set_selected_page(int page) {
+  if (page != selected_page_ && !commit_preview().ok) return;
   selected_page_ = page;
   clamp_selection();
 }
@@ -148,6 +175,8 @@ bool EditorDocument::preview_blocker(int index, BlockerDef next) {
   MapData preview = map_.data();
   preview.blockers[static_cast<std::size_t>(index)] = std::move(next);
   preview_ = std::move(preview);
+  preview_blocker_ = index;
+  preview_event_ = -1;
   note_changed();
   return true;
 }
@@ -159,6 +188,8 @@ bool EditorDocument::preview_event(int index, EventDef next) {
   MapData preview = map_.data();
   preview.events[static_cast<std::size_t>(index)] = std::move(next);
   preview_ = std::move(preview);
+  preview_event_ = index;
+  preview_blocker_ = -1;
   note_changed();
   return true;
 }
@@ -168,6 +199,7 @@ void EditorDocument::discard_preview() {
     return;
   }
   preview_.reset();
+  preview_blocker_ = preview_event_ = -1;
   note_changed();
 }
 

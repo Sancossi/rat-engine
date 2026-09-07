@@ -27,6 +27,9 @@ struct EventGraphCanvasState {
   std::optional<EventGraphNode> clipboard;
   float clipboard_x = 0.0f;
   float clipboard_y = 0.0f;
+  std::optional<EventGraphNodeLayout> node_drag_initial_layout;
+  float node_drag_initial_x = 0.0f;
+  float node_drag_initial_y = 0.0f;
   bool dragging_wire = false;
   std::string drag_wire_from;
   std::optional<std::string> drag_wire_branch;

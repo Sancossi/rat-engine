@@ -56,7 +56,7 @@ void draw_terrain_panel(EditorDocument& document, TerrainPanelState& state) {
   }
 
   auto run_height = [&](std::unique_ptr<EditCommand> command) {
-    return document.execute(std::move(command)).applied;
+    return document.execute(std::move(command)).ok;
   };
   auto sync_set_y = [&]() {
     const HeightGetResult updated =

@@ -196,17 +196,17 @@ TEST_CASE("execute undo redo of a blocker command report blockers only", "[unit]
 
   const rat::EditApplyResult executed =
       history.execute(map, rat::make_place_blocker_command(make_blocker(0.0f, 0.0f, 1.0f, 1.0f)));
-  REQUIRE(executed.applied);
+  REQUIRE(executed.ok);
   REQUIRE(executed.mutates_blockers);
   REQUIRE_FALSE(executed.mutates_events);
 
   const rat::EditApplyResult undone = history.undo(map);
-  REQUIRE(undone.applied);
+  REQUIRE(undone.ok);
   REQUIRE(undone.mutates_blockers);
   REQUIRE_FALSE(undone.mutates_events);
 
   const rat::EditApplyResult redone = history.redo(map);
-  REQUIRE(redone.applied);
+  REQUIRE(redone.ok);
   REQUIRE(redone.mutates_blockers);
   REQUIRE_FALSE(redone.mutates_events);
 }
@@ -218,17 +218,17 @@ TEST_CASE("execute undo redo of an event command report events only", "[unit][ed
 
   const rat::EditApplyResult executed =
       history.execute(map, rat::make_move_event_command(0, 1, 0, map.tile_size));
-  REQUIRE(executed.applied);
+  REQUIRE(executed.ok);
   REQUIRE_FALSE(executed.mutates_blockers);
   REQUIRE(executed.mutates_events);
 
   const rat::EditApplyResult undone = history.undo(map);
-  REQUIRE(undone.applied);
+  REQUIRE(undone.ok);
   REQUIRE_FALSE(undone.mutates_blockers);
   REQUIRE(undone.mutates_events);
 
   const rat::EditApplyResult redone = history.redo(map);
-  REQUIRE(redone.applied);
+  REQUIRE(redone.ok);
   REQUIRE_FALSE(redone.mutates_blockers);
   REQUIRE(redone.mutates_events);
 }
@@ -260,7 +260,7 @@ TEST_CASE("replace blocker AABB undo restores previous box and redo grows again"
 
   const rat::EditApplyResult executed =
       history.execute(map, rat::make_replace_blocker_command(0, grown));
-  REQUIRE(executed.applied);
+  REQUIRE(executed.ok);
   REQUIRE(executed.mutates_blockers);
   REQUIRE_FALSE(executed.mutates_events);
   REQUIRE(map.blockers[0].bounds.min_x == Approx(0.0f));
@@ -269,7 +269,7 @@ TEST_CASE("replace blocker AABB undo restores previous box and redo grows again"
   REQUIRE(map.blockers[0].bounds.max_z == Approx(1.0f));
 
   const rat::EditApplyResult undone = history.undo(map);
-  REQUIRE(undone.applied);
+  REQUIRE(undone.ok);
   REQUIRE(undone.mutates_blockers);
   REQUIRE_FALSE(undone.mutates_events);
   REQUIRE(map.blockers[0].bounds.min_x == Approx(0.0f));
@@ -318,7 +318,7 @@ TEST_CASE("replace event Show Text undo restores the old string", "[unit][edit]"
 
   const rat::EditApplyResult executed =
       history.execute(map, rat::make_replace_event_command(0, edited));
-  REQUIRE(executed.applied);
+  REQUIRE(executed.ok);
   REQUIRE_FALSE(executed.mutates_blockers);
   REQUIRE(executed.mutates_events);
   REQUIRE(map.events[0].pages[0].commands[0].text == "Hello");
@@ -338,7 +338,7 @@ TEST_CASE("place cube undo restores ground and redo raises again", "[unit][edit]
 
   const rat::EditApplyResult executed =
       history.execute(map, rat::make_place_map_tile_cube_command(1, 2));
-  REQUIRE(executed.applied);
+  REQUIRE(executed.ok);
   REQUIRE_FALSE(executed.mutates_blockers);
   REQUIRE_FALSE(executed.mutates_events);
   REQUIRE(executed.mutates_elevation);
@@ -348,7 +348,7 @@ TEST_CASE("place cube undo restores ground and redo raises again", "[unit][edit]
   REQUIRE(raised.value == Approx(rat::kPlaceCubeDeltaY));
 
   const rat::EditApplyResult undone = history.undo(map);
-  REQUIRE(undone.applied);
+  REQUIRE(undone.ok);
   REQUIRE_FALSE(undone.mutates_blockers);
   REQUIRE_FALSE(undone.mutates_events);
   REQUIRE(undone.mutates_elevation);
@@ -358,7 +358,7 @@ TEST_CASE("place cube undo restores ground and redo raises again", "[unit][edit]
   REQUIRE(restored.value == Approx(0.0f));
 
   const rat::EditApplyResult redone = history.redo(map);
-  REQUIRE(redone.applied);
+  REQUIRE(redone.ok);
   REQUIRE(redone.mutates_elevation);
   const rat::HeightGetResult reraised = rat::get_tile_ground_y(map.height_grid, 1, 2);
   REQUIRE(reraised.ok);
@@ -377,7 +377,7 @@ TEST_CASE("upsert edge barrier undo removes it and redo restores", "[unit][edit]
 
   const rat::EditApplyResult executed =
       history.execute(map, rat::make_upsert_map_edge_barrier_command(edge));
-  REQUIRE(executed.applied);
+  REQUIRE(executed.ok);
   REQUIRE(executed.mutates_elevation);
   REQUIRE(map.edge_barriers.size() == 1);
   REQUIRE(map.edge_barriers[0].height == Approx(rat::kEdgeBarrierMiniHeight));
@@ -405,7 +405,7 @@ TEST_CASE("failed place cube on ramp does not create undo entry", "[unit][edit][
   rat::EditHistory history;
   const rat::EditApplyResult executed =
       history.execute(map, rat::make_place_map_tile_cube_command(1, 1));
-  REQUIRE_FALSE(executed.applied);
+  REQUIRE_FALSE(executed.ok);
   REQUIRE_FALSE(executed.mutates_blockers);
   REQUIRE_FALSE(executed.mutates_events);
   REQUIRE_FALSE(executed.mutates_elevation);
@@ -426,7 +426,7 @@ TEST_CASE("failed place cube on legacy map keeps elevation snapshot unchanged", 
   rat::EditHistory history;
   const rat::EditApplyResult executed =
       history.execute(map, rat::make_place_map_tile_cube_command(1, 1));
-  REQUIRE_FALSE(executed.applied);
+  REQUIRE_FALSE(executed.ok);
   REQUIRE_FALSE(executed.mutates_blockers);
   REQUIRE_FALSE(executed.mutates_events);
   REQUIRE_FALSE(executed.mutates_elevation);
@@ -610,4 +610,38 @@ TEST_CASE("place occupancy ramp undoes back to empty", "[unit][edit][height][vie
 
   REQUIRE(history.undo(map));
   REQUIRE(map.occupancy.empty());
+}
+
+TEST_CASE("Failed redo retains its command and the complete map", "[unit][edit]") {
+  class Failable final : public rat::EditCommand {
+   public:
+    explicit Failable(bool& fail) : fail_(fail) {}
+    void apply(rat::MapData& map) override { map.id = fail_ ? "partial corruption" : "edited"; }
+    void revert(rat::MapData& map) override { map.id = "undo"; }
+    bool applied_successfully() const override { return !fail_; }
+    std::string last_error() const override { return "injected redo failure"; }
+    bool mutates_blockers() const override { return false; }
+    bool mutates_events() const override { return false; }
+   private: bool& fail_;
+  };
+  auto map = make_tiny_map(); rat::EditHistory history; bool fail = false;
+  REQUIRE(history.execute(map, std::make_unique<Failable>(fail)).changed);
+  REQUIRE(history.undo(map));
+  fail = true;
+  const auto redone = history.redo(map);
+  CHECK_FALSE(redone.ok); CHECK_FALSE(redone.changed); CHECK_FALSE(redone.error.empty());
+  CHECK(map.id == "undo"); CHECK(history.can_redo()); CHECK_FALSE(history.can_undo());
+  fail = false; REQUIRE(history.redo(map)); CHECK(map.id == "edited");
+}
+
+TEST_CASE("A stroke returning to its initial content keeps redo and adds no history", "[unit][edit]") {
+  auto map = make_tiny_map(); rat::EditHistory history;
+  REQUIRE(history.execute(map, rat::make_place_event_command(rat::make_stub_event("redo", 0, 0))));
+  REQUIRE(history.undo(map));
+  history.begin_stroke();
+  REQUIRE(history.execute(map, rat::make_place_event_command(rat::make_stub_event("temporary", 0, 0))));
+  REQUIRE(history.execute(map, rat::make_delete_event_command(0)));
+  history.end_stroke();
+  CHECK_FALSE(history.can_undo()); CHECK(history.can_redo());
+  REQUIRE(history.redo(map)); CHECK(map.events[0].id == "redo");
 }

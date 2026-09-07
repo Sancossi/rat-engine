@@ -5,6 +5,8 @@
 #include <rat/input_bindings.hpp>
 #include <rat/native_window_handle.hpp>
 
+#include <string>
+
 struct GLFWwindow;
 
 namespace rat {
@@ -24,6 +26,8 @@ class NativeWindow {
   [[nodiscard]] bool is_open() const;
   [[nodiscard]] bool should_close() const;
   void request_close();
+  bool consume_close_request();
+  void set_title(const std::string& title);
   void poll();
   [[nodiscard]] double time() const;
   [[nodiscard]] InputButtons sample_buttons() const;

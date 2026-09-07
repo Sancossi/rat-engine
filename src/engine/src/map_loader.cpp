@@ -319,6 +319,11 @@ EventGraphNode parse_graph_node(const json& node) {
   EventGraphNode graph_node;
   graph_node.id = node.at("id").get<std::string>();
   graph_node.kind = node.at("kind").get<std::string>();
+  if (node.contains("layout")) {
+    const auto& layout = node.at("layout");
+    graph_node.layout = EventGraphNodeLayout{checked_number<float>(layout.at("x")),
+                                            checked_number<float>(layout.at("y"))};
+  }
   if (!node.contains("params")) {
     return graph_node;
   }
@@ -957,7 +962,9 @@ json dump_graph_node(const EventGraphNode& node) {
       params["frames"] = node.frames;
     }
   }
-  return json{{"id", node.id}, {"kind", node.kind}, {"params", params}};
+  json result{{"id", node.id}, {"kind", node.kind}, {"params", params}};
+  if (node.layout) result["layout"] = {{"x", node.layout->x}, {"y", node.layout->y}};
+  return result;
 }
 
 json dump_graph_edge(const EventGraphEdge& edge) {

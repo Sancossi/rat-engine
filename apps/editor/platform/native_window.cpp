@@ -200,6 +200,16 @@ bool NativeWindow::should_close() const {
   return window_ == nullptr || glfwWindowShouldClose(window_) == GLFW_TRUE;
 }
 
+bool NativeWindow::consume_close_request() {
+  if (!window_ || !glfwWindowShouldClose(window_)) return false;
+  glfwSetWindowShouldClose(window_, GLFW_FALSE);
+  return true;
+}
+
+void NativeWindow::set_title(const std::string& title) {
+  if (window_) glfwSetWindowTitle(window_, title.c_str());
+}
+
 void NativeWindow::request_close() {
   if (window_ != nullptr) {
     glfwSetWindowShouldClose(window_, GLFW_TRUE);

@@ -34,7 +34,7 @@ void draw_blocker_panel(EditorDocument& document, BlockerPanelState& state, floa
         make_delete_blocker_command(static_cast<std::size_t>(document.selected_blocker())));
   }
 
-  const auto& blockers = document.visible_data().blockers;
+  const auto blockers = document.visible_data().blockers;
   if (ImGui::BeginListBox("##blockers", ImVec2(-1.0f, 100.0f))) {
     for (int i = 0; i < static_cast<int>(blockers.size()); ++i) {
       const auto& b = blockers[static_cast<std::size_t>(i)].bounds;
