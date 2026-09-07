@@ -1,8 +1,8 @@
 ---
 type: task
 area: Engine
-status: In review
-review: In review
+status: Done
+review: Approved
 task_type: Chore
 sprint: Sprint 15
 due:
@@ -23,7 +23,11 @@ Origin: [[feat-rotating-ramp-voxels|feat: Rotating ramp voxels]]
 
 ## Resolution
 
+Implemented in 2a44876; independent review Approved. Full verification 698/698 C++ tests passed, focused geometry/bridge run 6 tests / 1,314 assertions. See [[s15-geometry]] for shared evidence.
+
 ## Bugs found
+
+Slab-height mismatch and review arithmetic findings resolved; see [[s15-geometry]].
 
 Scheduling: carried from Sprint 14 into [[Sprint 15 — Stabilization]]; original Origin retained.
 

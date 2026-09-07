@@ -1,8 +1,8 @@
 ---
 type: bug
 area: Engine
-status: Investigating
-review: In review
+status: Fixed
+review: Approved
 severity: Medium
 sprint: Sprint 15
 tags: [bug, stabilization]
@@ -33,3 +33,12 @@ Pending; included in the approved stage-5 high-face connection contract.
 ## Bugs found
 
 Pending.
+
+
+## Resolution
+
+Fixed in 2a44876; independent review Approved. Full verification 698/698 C++ tests passed. See [[s15-geometry]]; actual GUI gesture evidence remains [[s15-acceptance]].
+
+## Bugs found
+
+No unresolved implementation findings.

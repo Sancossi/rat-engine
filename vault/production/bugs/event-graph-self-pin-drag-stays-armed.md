@@ -1,8 +1,8 @@
 ---
 type: bug
 area: Engine
-status: Investigating
-review: In review
+status: Fixed
+review: Approved
 severity: Low
 sprint: Sprint 15
 tags: [bug]
@@ -23,3 +23,12 @@ Connect is rejected (`from == to`); drag state clears; no preview bezier.
 ## Actual
 
 `connect_event_graph_nodes` fails, but `dragging_wire` can stay true until Esc/RMB/next release, so the preview hangs.
+
+
+## Resolution
+
+Fixed in 2a44876; independent review Approved. Full verification 698/698 C++ tests passed. See [[s15-geometry]]; actual GUI gesture evidence remains [[s15-acceptance]].
+
+## Bugs found
+
+No unresolved implementation findings.
