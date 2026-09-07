@@ -2,6 +2,7 @@
 type: bug
 area: Engine
 status: Investigating
+review: Needs fixes
 severity: Medium
 sprint: Sprint 15
 tags: [bug, stabilization]
@@ -18,3 +19,6 @@ FrameCoordinator simulates before current ImGui frame capture flags are availabl
 ## Acceptance
 
 Shared frame input reaches ImGui and viewport consistently; UI capture blocks gameplay input. Logical/framebuffer conversion is explicit, with automated 100/150/200 percent scale click/drag and render checks. Resolve within the already-approved stage 6 GUI work.
+
+
+Infrastructure review 22eb27d: ordered events reached ImGui but final held-state sampling lost quick gameplay/viewport taps. ImGui trickling also retained text past deferred Close/F5. These in-scope input fixes and real-widget regressions are active in [[s15-acceptance]].

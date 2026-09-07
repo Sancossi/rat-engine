@@ -2,6 +2,7 @@
 type: task
 area: Engine
 status: In progress
+review: Needs fixes
 task_type: Chore
 sprint: Sprint 15
 tags: [task, stabilization]
@@ -32,4 +33,4 @@ Included regression: [[gui-input-and-framebuffer-scale-diverge]].
 Stage 6a implemented in 3c4ce34: full and fresh headless Windows builds each passed 703/703 tests; renderer-only rat_engine built, no GLFW/ImGui/audio dependencies. Header dependency proof passed after shared app extraction. Parent full Release build passed. Install and ZIP built with data/licences/runtime; installed --help passed from unrelated temporary cwd. Independent review Approved: 5 launch tests / 39 assertions passed. GUI/package resources are not yet verified; stage 6b is active.
 
 
-GUI infrastructure committed in 22eb27d. Actual local software renderer report: Direct3D 11 / WARP; real Enter Edit click and ordered quick Backspace tap passed. Parent inspected captured PNG and rebuilt full Release successfully. Artifacts: build/stabilization/gui-input2/artifacts/scenario-report.json, first-edit-frame.png and first-edit-frame.json. Regular 703 tests passed. Infrastructure review pending; full scenario suite remains in progress. GUI work found duplicate ImGui IDs between viewport radios and terrain buttons; fixed with distinct widget IDs.
+GUI infrastructure committed in 22eb27d. Actual local software renderer report: Direct3D 11 / WARP; real Enter Edit click and ordered quick Backspace tap passed. Parent inspected captured PNG and rebuilt full Release successfully. Artifacts: build/stabilization/gui-input2/artifacts/scenario-report.json, first-edit-frame.png and first-edit-frame.json. Regular 703 tests passed. Infrastructure review Needs fixes: quick complete taps are lost by gameplay/viewport final-held-state sampling; deferred actions can settle before ImGui trickled input queue is exhausted. Real quick-action/click and multi-key-text-plus-Close/F5 regressions required. Full scenario suite remains in progress. GUI work found duplicate ImGui IDs between viewport radios and terrain buttons; fixed with distinct widget IDs.
