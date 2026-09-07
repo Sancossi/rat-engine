@@ -2,7 +2,7 @@
 type: bug
 area: Engine
 status: Investigating
-review: In review
+review: Needs fixes
 severity: Medium
 sprint: Sprint 15
 tags: [bug, stabilization]
@@ -22,3 +22,6 @@ Shared frame input reaches ImGui and viewport consistently; UI capture blocks ga
 
 
 Infrastructure review 22eb27d: ordered events reached ImGui but final held-state sampling lost quick gameplay/viewport taps. ImGui trickling also retained text past deferred Close/F5. These in-scope input fixes and real-widget regressions are active in [[s15-acceptance]].
+
+
+Re-review d5ae2f4: original edge/text-queue fixes pass real GUI checks. Remaining cursor timeline mismatch: queued clicks at A must not use later raw cursor B. Unicode fixture encoding and actual software-device verification also require correction in the same acceptance stage.

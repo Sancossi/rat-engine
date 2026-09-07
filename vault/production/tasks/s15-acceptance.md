@@ -2,7 +2,7 @@
 type: task
 area: Engine
 status: In progress
-review: In review
+review: Needs fixes
 task_type: Chore
 sprint: Sprint 15
 tags: [task, stabilization]
@@ -37,3 +37,6 @@ GUI infrastructure committed in 22eb27d. Actual local software renderer report: 
 
 
 GUI input corrections committed in d5ae2f4. Actual WARP input-order and authoring-text scenarios passed, including quick F2/F5/viewport taps and queued multi-key text before Close/F5. Parent inspected the modal capture showing complete field content. Full verification actual process exit 0: 703/703 C++ tests, 8 Python checks and vault. Parent full Release build passed. Infrastructure re-review pending; remaining GUI groups are still in progress.
+
+
+Evidence correction: early GUI runs proved real rendering/input, but their WARP label recorded requested mode, not verified device. Pinned bgfx can fall back to adapter 0; actual software-device proof is withdrawn until explicit WARP context and DXGI software-adapter verification are implemented and tests rerun. Independent d5ae2f4 review confirms original input fixes, but queued clicks still combine processed buttons with raw cursor coordinates. A Unicode regression was accidentally ASCII question marks due shell encoding. Both regressions are being corrected before infrastructure approval.
