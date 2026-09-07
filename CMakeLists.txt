@@ -34,3 +34,6 @@ if(RAT_BUILD_TESTS)
   add_subdirectory(tests)
   rat_add_core_isolation_ctest()
 endif()
+
+# Nested dependency projects may reload the cached compiler prefix. Set it last.
+include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/RatMsvcIncludes.cmake")

@@ -1,7 +1,8 @@
 param(
     [ValidateSet('dev-release', 'dev-debug')][string]$Preset = 'dev-release',
     [string]$Python,
-    [switch]$ConfigureOnly
+    [switch]$ConfigureOnly,
+    [switch]$CheckHeaderDependencies
 )
 $ErrorActionPreference = 'Stop'
 $repoRoot = Split-Path $PSScriptRoot -Parent
@@ -36,7 +37,7 @@ if ($LASTEXITCODE -ne 0 -or -not $vsInstall) { throw 'No Visual Studio installat
 $devShell = Join-Path $vsInstall 'Common7/Tools/Microsoft.VisualStudio.DevShell.dll'
 Import-Module $devShell
 Enter-VsDevShell -VsInstallPath $vsInstall -SkipAutomaticLocation -DevCmdArguments '-arch=x64 -host_arch=x64'
-$env:VSLANG = '1033' # Stable MSVC diagnostics/include prefixes for Ninja dependency scanning.
+$env:VSLANG = '1033' # Prefer English when installed; CMake also probes the actual localized prefix.
 
 Push-Location $repoRoot
 try {
@@ -45,6 +46,9 @@ try {
     Invoke-Checked 'cmake' @('--preset', $Preset)
     if (-not $ConfigureOnly) {
         Invoke-Checked 'cmake' @('--build', '--preset', $Preset)
+        if ($CheckHeaderDependencies) {
+            & (Join-Path $PSScriptRoot 'check_msvc_dependencies.ps1') -BuildDirectory (Join-Path $repoRoot "build/$Preset")
+        }
         Invoke-Checked 'ctest' @('--preset', $Preset)
     }
     Write-Output "Build directory: $(Join-Path $repoRoot "build/$Preset")"
@@ -52,3 +56,6 @@ try {
 } finally {
     Pop-Location
 }
+
+# Native stderr (e.g. unittest progress) is not a failed verification.
+exit 0
