@@ -1,8 +1,8 @@
 ---
 type: task
 area: Engine
-status: In review
-review: In review
+status: Done
+review: Approved
 task_type: Chore
 sprint: Sprint 15
 tags: [task, stabilization]
@@ -21,8 +21,8 @@ Depends: [[s15-foundation]].
 
 ## Resolution
 
-Implemented in ebe7759. Full Windows verification passed: 656/656 C++ tests, Python checks and vault validation. Independent review Needs fixes: malformed graph params silently default; derived ramp/voxel heights can overflow despite finite inputs. Isolated reproductions: build/stabilization/review-storage/probe.cpp. Corrected in c90638f; full verification 658/658 C++ tests, 8 Python checks and vault passed. Re-review pending.
+Implemented in ebe7759. Full Windows verification passed: 656/656 C++ tests, Python checks and vault validation. Independent review Needs fixes: malformed graph params silently default; derived ramp/voxel heights can overflow despite finite inputs. Isolated reproductions: build/stabilization/review-storage/probe.cpp. Corrected in c90638f; full verification 658/658 C++ tests, 8 Python checks and vault passed. Independent re-review Approved: isolated malformed-parameter and geometry-overflow probes now reject all cases. Parent stage-close full Release build passed (cmake --build --preset dev-release, exit 0); editor: build/dev-release/apps/editor/rat-editor.exe.
 
 ## Bugs found
 
-Pending.
+Review found two additional validation bypasses; both corrected in c90638f and independently reproduced as rejected. No unresolved storage findings.

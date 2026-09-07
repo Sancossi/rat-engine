@@ -1,8 +1,8 @@
 ---
 type: bug
 area: Engine
-status: Investigating
-review: In review
+status: Fixed
+review: Approved
 severity: High
 sprint: Sprint 15
 tags: [bug, audit]
@@ -20,3 +20,12 @@ OsFileStore открывает целевой файл с trunc до завер�
 ## Expected / acceptance
 
 Ошибка записи до замены сохраняет прежнюю карту/save; временный файл и корректная замена.
+
+
+## Resolution
+
+Fixed in ebe7759 and c90638f; independent review Approved. Full Windows verification: 658/658 C++ tests, 8 Python checks and vault passed. See [[s15-storage]] for stage evidence.
+
+## Bugs found
+
+Validation review followups resolved in c90638f; no unresolved findings.
