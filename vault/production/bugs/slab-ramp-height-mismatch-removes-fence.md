@@ -2,7 +2,7 @@
 type: bug
 area: Engine
 status: Investigating
-review: Pending
+review: In review
 severity: Medium
 sprint: Sprint 15
 tags: [bug, stabilization]
