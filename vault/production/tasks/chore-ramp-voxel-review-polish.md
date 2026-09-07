@@ -25,3 +25,6 @@ Origin: [[feat-rotating-ramp-voxels|feat: Rotating ramp voxels]]
 ## Bugs found
 
 Scheduling: carried from Sprint 14 into [[Sprint 15 — Stabilization]]; original Origin retained.
+
+
+Follow-up reproduced during stabilization: [[slab-ramp-height-mismatch-removes-fence]].

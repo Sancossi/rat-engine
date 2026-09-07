@@ -29,3 +29,6 @@ Pending.
 ## Bugs found
 
 Pending.
+
+
+Follow-up reproduced during stabilization: [[slab-ramp-height-mismatch-removes-fence]].
