@@ -1,4 +1,5 @@
 #include "editor_document.hpp"
+#include <rat/retained_memory.hpp>
 
 #include <utility>
 #include <rat/authoring_snapshot.hpp>
@@ -211,6 +212,12 @@ bool EditorDocument::consume_changed() {
   const bool changed = changed_;
   changed_ = false;
   return changed;
+}
+
+EditorDocumentMemory EditorDocument::estimated_retained_memory() const {
+  return {history_.estimated_retained_memory(), sizeof(*this) - sizeof(history_),
+      retained_dynamic_bytes(map_.data()), preview_ ? retained_dynamic_bytes(*preview_) : 0,
+      retained_dynamic_bytes(clean_snapshot_), retained_dynamic_bytes(last_error_)};
 }
 
 }  // namespace rat

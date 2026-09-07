@@ -11,9 +11,23 @@
 
 namespace rat {
 
+struct EditorDocumentMemory {
+  EditHistoryMemory history;
+  std::size_t document_object_bytes = 0;  // Excludes inline history, counted above.
+  std::size_t map_dynamic_bytes = 0;
+  std::size_t preview_dynamic_bytes = 0;
+  std::size_t clean_snapshot_bytes = 0;
+  std::size_t error_bytes = 0;
+  [[nodiscard]] std::size_t total_bytes() const {
+    return history.total_bytes() + document_object_bytes + map_dynamic_bytes
+        + preview_dynamic_bytes + clean_snapshot_bytes + error_bytes;
+  }
+};
+
 class EditorDocument {
  public:
   EditorDocument() = default;
+  [[nodiscard]] EditorDocumentMemory estimated_retained_memory() const;
 
   void load(MapData data);
   void restore(MapData data);

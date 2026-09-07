@@ -1,4 +1,5 @@
 #include "rat/edit_history.hpp"
+#include "rat/retained_memory.hpp"
 
 #include "rat/blocker_edit.hpp"
 #include "rat/authoring_snapshot.hpp"
@@ -44,6 +45,9 @@ class CheckedCommand : public EditCommand {
 
 class PlaceBlockerCommand final : public CheckedCommand {
  public:
+  std::size_t estimated_retained_bytes() const override {
+    return sizeof(*this) + retained_dynamic_bytes(error_);
+  }
   explicit PlaceBlockerCommand(BlockerDef blocker) : blocker_(std::move(blocker)) {}
 
   void apply(MapData& map) override {
@@ -67,6 +71,9 @@ class PlaceBlockerCommand final : public CheckedCommand {
 
 class DeleteBlockerCommand final : public CheckedCommand {
  public:
+  std::size_t estimated_retained_bytes() const override {
+    return sizeof(*this) + retained_dynamic_bytes(error_);
+  }
   explicit DeleteBlockerCommand(std::size_t index) : index_(index) {}
 
   void apply(MapData& map) override {
@@ -97,6 +104,9 @@ class DeleteBlockerCommand final : public CheckedCommand {
 
 class MoveBlockerCommand final : public CheckedCommand {
  public:
+  std::size_t estimated_retained_bytes() const override {
+    return sizeof(*this) + retained_dynamic_bytes(error_);
+  }
   MoveBlockerCommand(std::size_t index, int tile_dx, int tile_dz, float tile_size)
       : index_(index), tile_dx_(tile_dx), tile_dz_(tile_dz), tile_size_(tile_size) {}
 
@@ -124,6 +134,9 @@ class MoveBlockerCommand final : public CheckedCommand {
 
 class ReplaceBlockerCommand final : public CheckedCommand {
  public:
+  std::size_t estimated_retained_bytes() const override {
+    return sizeof(*this) + retained_dynamic_bytes(error_);
+  }
   ReplaceBlockerCommand(std::size_t index, BlockerDef next)
       : index_(index), next_(std::move(next)) {}
 
@@ -156,6 +169,9 @@ class ReplaceBlockerCommand final : public CheckedCommand {
 
 class PlaceEventCommand final : public CheckedCommand {
  public:
+  std::size_t estimated_retained_bytes() const override {
+    return sizeof(*this) + retained_dynamic_bytes(error_) + retained_dynamic_bytes(event_);
+  }
   explicit PlaceEventCommand(EventDef event) : event_(std::move(event)) {}
 
   void apply(MapData& map) override {
@@ -180,6 +196,9 @@ class PlaceEventCommand final : public CheckedCommand {
 
 class DeleteEventCommand final : public CheckedCommand {
  public:
+  std::size_t estimated_retained_bytes() const override {
+    return sizeof(*this) + retained_dynamic_bytes(error_) + retained_dynamic_bytes(removed_);
+  }
   explicit DeleteEventCommand(std::size_t index) : index_(index) {}
 
   void apply(MapData& map) override {
@@ -210,6 +229,9 @@ class DeleteEventCommand final : public CheckedCommand {
 
 class MoveEventCommand final : public CheckedCommand {
  public:
+  std::size_t estimated_retained_bytes() const override {
+    return sizeof(*this) + retained_dynamic_bytes(error_);
+  }
   MoveEventCommand(std::size_t index, int tile_dx, int tile_dz, float tile_size)
       : index_(index), tile_dx_(tile_dx), tile_dz_(tile_dz), tile_size_(tile_size) {}
 
@@ -236,6 +258,9 @@ class MoveEventCommand final : public CheckedCommand {
 
 class ReplaceEventCommand final : public CheckedCommand {
  public:
+  std::size_t estimated_retained_bytes() const override {
+    return sizeof(*this) + retained_dynamic_bytes(error_) + retained_dynamic_bytes(next_) + retained_dynamic_bytes(previous_);
+  }
   ReplaceEventCommand(std::size_t index, EventDef next) : index_(index), next_(std::move(next)) {}
 
   void apply(MapData& map) override {
@@ -268,6 +293,21 @@ class ReplaceEventCommand final : public CheckedCommand {
 
 class ReplaceElevationSnapshotCommand final : public EditCommand {
  public:
+  std::size_t estimated_retained_bytes() const override {
+    return sizeof(*this) + retained_dynamic_bytes(last_error_)
+        + retained_vector_bytes(before_height_grid_.ground_y)
+        + retained_vector_bytes(before_ramps_)
+        + retained_vector_bytes(before_edge_barriers_)
+        + retained_vector_bytes(before_floor_slabs_)
+        + retained_vector_bytes(before_ladders_)
+        + retained_vector_bytes(before_occupancy_)
+        + retained_vector_bytes(after_height_grid_.ground_y)
+        + retained_vector_bytes(after_ramps_)
+        + retained_vector_bytes(after_edge_barriers_)
+        + retained_vector_bytes(after_floor_slabs_)
+        + retained_vector_bytes(after_ladders_)
+        + retained_vector_bytes(after_occupancy_);
+  }
   using ElevationEditFn = std::function<HeightEditResult(MapData&)>;
 
   explicit ReplaceElevationSnapshotCommand(ElevationEditFn edit) : edit_(std::move(edit)) {}
@@ -359,6 +399,11 @@ class ReplaceElevationSnapshotCommand final : public EditCommand {
 
 class CompositeCommand final : public EditCommand {
  public:
+  std::size_t estimated_retained_bytes() const override {
+    auto n = sizeof(*this) + retained_dynamic_bytes(error_) + retained_vector_bytes(children_);
+    for (const auto& child : children_) n += child->estimated_retained_bytes();
+    return n;
+  }
   void append(std::unique_ptr<EditCommand> command) {
     if (command != nullptr) {
       children_.push_back(std::move(command));
@@ -661,6 +706,18 @@ bool EditHistory::can_redo() const {
 
 bool EditHistory::in_stroke() const {
   return in_stroke_;
+}
+
+EditHistoryMemory EditHistory::estimated_retained_memory() const {
+  EditHistoryMemory result;
+  result.object_bytes = sizeof(*this);
+  result.queue_capacity_bytes = retained_vector_bytes(undo_) + retained_vector_bytes(redo_)
+      + retained_vector_bytes(stroke_);
+  for (const auto& c : undo_) result.undo_commands_bytes += c->estimated_retained_bytes();
+  for (const auto& c : redo_) result.redo_commands_bytes += c->estimated_retained_bytes();
+  for (const auto& c : stroke_) result.stroke_commands_bytes += c->estimated_retained_bytes();
+  result.stroke_buffers_bytes = retained_dynamic_bytes(stroke_before_) + retained_dynamic_bytes(stroke_after_);
+  return result;
 }
 
 }  // namespace rat

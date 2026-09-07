@@ -615,6 +615,7 @@ TEST_CASE("place occupancy ramp undoes back to empty", "[unit][edit][height][vie
 TEST_CASE("Failed redo retains its command and the complete map", "[unit][edit]") {
   class Failable final : public rat::EditCommand {
    public:
+    std::size_t estimated_retained_bytes() const override { return sizeof(*this); }
     explicit Failable(bool& fail) : fail_(fail) {}
     void apply(rat::MapData& map) override { map.id = fail_ ? "partial corruption" : "edited"; }
     void revert(rat::MapData& map) override { map.id = "undo"; }

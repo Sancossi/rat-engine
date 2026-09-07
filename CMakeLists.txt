@@ -20,6 +20,7 @@ endif()
 option(RAT_BUILD_RENDERER "Build bgfx renderer library" ON)
 option(RAT_BUILD_GUI_TESTS "Build real-editor GUI acceptance runner" OFF)
 option(RAT_BUILD_EDITOR "Build GLFW + ImGui rat-editor application" ON)
+option(RAT_BUILD_BENCHMARKS "Build headless performance baseline executable" OFF)
 option(RAT_BUILD_TESTS "Build unit/mechanic tests (Catch2)" ON)
 
 if((RAT_BUILD_EDITOR OR RAT_BUILD_GUI_TESTS) AND NOT RAT_BUILD_RENDERER)
@@ -44,6 +45,10 @@ if(RAT_BUILD_TESTS OR RAT_BUILD_GUI_TESTS)
   enable_testing()
 endif()
 add_subdirectory(apps/editor)
+
+if(RAT_BUILD_BENCHMARKS)
+  add_subdirectory(benchmarks)
+endif()
 
 if(RAT_BUILD_TESTS)
   add_subdirectory(tests)

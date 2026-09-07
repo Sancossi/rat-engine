@@ -23,6 +23,9 @@ struct EditApplyResult {
 class EditCommand {
  public:
   virtual ~EditCommand() = default;
+  // Includes concrete object sizeof and known owned allocations; excludes allocator
+  // overhead and opaque std::function target storage.
+  [[nodiscard]] virtual std::size_t estimated_retained_bytes() const = 0;
   virtual void apply(MapData& map) = 0;
   virtual void revert(MapData& map) = 0;
   [[nodiscard]] virtual bool applied_successfully() const { return true; }
@@ -69,8 +72,22 @@ class EditCommand {
 [[nodiscard]] std::unique_ptr<EditCommand> make_remove_map_occupancy_cell_command(int x, int y,
                                                                                    int z);
 
+struct EditHistoryMemory {
+  std::size_t object_bytes = 0;
+  std::size_t queue_capacity_bytes = 0;
+  std::size_t undo_commands_bytes = 0;
+  std::size_t redo_commands_bytes = 0;
+  std::size_t stroke_commands_bytes = 0;
+  std::size_t stroke_buffers_bytes = 0;
+  [[nodiscard]] std::size_t total_bytes() const {
+    return object_bytes + queue_capacity_bytes + undo_commands_bytes + redo_commands_bytes
+        + stroke_commands_bytes + stroke_buffers_bytes;
+  }
+};
+
 class EditHistory {
  public:
+  [[nodiscard]] EditHistoryMemory estimated_retained_memory() const;
   EditApplyResult execute(MapData& map, std::unique_ptr<EditCommand> command);
   EditApplyResult undo(MapData& map);
   EditApplyResult redo(MapData& map);

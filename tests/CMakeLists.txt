@@ -1,4 +1,6 @@
 add_executable(rat_tests
+  benchmark_quantiles_test.cpp
+  retained_memory_test.cpp
   app_mode_test.cpp
   asset_registry_test.cpp
   audio_queue_test.cpp

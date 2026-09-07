@@ -31,6 +31,7 @@ add_library(rat_core
   src/map_loader.cpp
   src/player.cpp
   src/player_jump.cpp
+  src/retained_memory.cpp
   src/replay.cpp
   src/render_world.cpp
   src/save_game.cpp
