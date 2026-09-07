@@ -258,7 +258,8 @@ int main(int argc, char** argv) {
   try {
     const auto map = user / "gui-map.json";
     fs::remove(user/"imgui.ini");
-    if (scenario == "infrastructure") fs::copy_file(data / "maps/grey_yard.json", map, fs::copy_options::overwrite_existing);
+    if (scenario.starts_with("surface-")) fs::copy_file(data / "maps/surface_readability.json", map, fs::copy_options::overwrite_existing);
+    else if (scenario == "infrastructure") fs::copy_file(data / "maps/grey_yard.json", map, fs::copy_options::overwrite_existing);
     else {
       Json fixture{{"schema_version",5},{"id","gui_fixture"},{"width",16},{"height",16},{"tile_size",1.0},
         {"height_grid",{{"origin_x",-4},{"origin_z",-4},{"width",16},{"height",16},{"ground_y",std::vector<float>(256,0)}}},
@@ -308,6 +309,12 @@ int main(int argc, char** argv) {
         utf8(artifacts/"editor.log"),utf8(artifacts/"snapshot.json"),utf8(user/"imgui.ini")};
     rat::EditorInitialState initial;
     initial.renderer = renderer; initial.automation_layout = true; initial.hidden_window = true;
+    if (scenario.starts_with("surface-")) {
+      driver.input.logical_width = driver.input.framebuffer_width = 1920;
+      driver.input.logical_height = driver.input.framebuffer_height = 1080;
+      rat::PlayerBody player; player.x = 0; player.y = 0; player.z = 0; initial.player = player;
+      if (scenario == "surface-tilt") initial.camera_pose = rat::ClimbCameraPose{{8,11,10},{0,0,0}};
+    }
     if (scenario.starts_with("scale-")) {
       initial.ui_scale = std::stof(scenario.substr(6)) / 100.0f;
       driver.input.logical_width = static_cast<int>(1280 * initial.ui_scale);
@@ -345,7 +352,12 @@ int main(int argc, char** argv) {
       "Executable-adjacent audio resource did not load");
     driver.require(driver.app.observed_cyrillic_font(), "Loaded UI font lacks actual Cyrillic glyphs");
     report["resources"] = {{"data_root",utf8(data)},{"audio",assets->compiled_path(rat::make_asset_id("sfx/beep"))},{"cyrillic_glyphs_loaded",true}};
-    if (scenario == "infrastructure") {
+    if (scenario.starts_with("surface-")) {
+      driver.enter_edit(); driver.frame(5);
+      driver.require(driver.app.observed_document().data().id == "surface_readability", "Surface fixture did not load");
+      driver.capture(scenario); driver.debug(scenario);
+      report["scenarios"].push_back({{"name",scenario},{"status","passed"}});
+    } else if (scenario == "infrastructure") {
     driver.click("Inspector", "Enter Edit (F2)");
     if (driver.app.observed_mode() != rat::AppMode::Edit) throw std::runtime_error("Real mode button did not enter Edit");
     driver.click("Inspector", "Map to open");
