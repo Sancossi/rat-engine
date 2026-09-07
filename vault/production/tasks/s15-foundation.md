@@ -1,8 +1,8 @@
 ---
 type: task
 area: Engine
-status: In progress
-review: Needs fixes
+status: In review
+review: Approved
 task_type: Chore
 sprint: Sprint 15
 tags: [task, stabilization]
@@ -19,8 +19,8 @@ Acceptance: stage contract met; meaningful tests passed; independent review Appr
 
 ## Resolution
 
-Pending.
+Implemented in c11288b; documentation corrections in 83746e7. Independent reviewer Approved after corrections. Fresh Windows preset configure/build, 643/643 C++ tests, 8/8 Python checks and vault validation passed. Three project skills validated. Parent stage-close rebuild queued at the next safe shared-tree build checkpoint while storage API changes are in progress.
 
 ## Bugs found
 
-Pending.
+Review caught inaccurate graph-runtime wording; corrected before approval. No unresolved foundation findings.
