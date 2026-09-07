@@ -2,7 +2,7 @@
 type: task
 area: Engine
 status: In progress
-review: Pending
+review: In review
 task_type: Chore
 sprint: Sprint 15
 tags: [task, stabilization]
@@ -52,3 +52,6 @@ GUI workflow slice 554fe02 is in independent review. Twenty-one new scenarios pa
 
 
 Independent review Approved 554fe02: all 21 new scenarios passed again; artifacts build/stabilization/review-guards-sh5ixh8v/. No blocking findings. Remaining suite must prove modal pause in an advancing Play session, since the initial guard matrix starts in Edit. Whole stage remains in progress.
+
+
+GUI geometry/graph/repair slice ddc8d9c is in independent review. Eleven new WARP scenarios passed: four side-ramp directions, three bridge variants, graph gestures/layout history, advancing-Play modal pause, EventTouch repair and cross-map transfer repair. Full verification 703 C++ tests, eight Python checks and vault passed (gui-geometry-graph-verify.log); parent full Release rebuild passed. GUI found graph pins shifting when connection status appeared and duplicate undo handling; both corrected. Artifacts: build/stabilization/gui-geometry/, gui-graph/, gui-unsupported/. Scale/framebuffer and aggregate/package scenarios remain in progress.
