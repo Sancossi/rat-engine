@@ -1,7 +1,8 @@
 ---
 type: task
 area: Engine
-status: In progress
+status: In review
+review: In review
 task_type: Chore
 sprint: Sprint 15
 tags: [task, stabilization]
@@ -22,7 +23,7 @@ Depends: [[s15-storage]].
 
 Included follow-up: [[chore-edit-voxel-review-polish]].
 
-Pending.
+Implemented in 160a376. Full Windows verification: 670/670 C++ tests, 8 Python checks and vault passed. Final independent review pending; actual desktop acceptance follows in stage 6.
 
 ## Bugs found
 
