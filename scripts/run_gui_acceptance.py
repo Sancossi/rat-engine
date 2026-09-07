@@ -11,6 +11,58 @@ import subprocess
 import sys
 import tempfile
 import time
+import zlib
+
+
+def png_pixels(path: Path):
+    """Decode the renderer's lossless 8-bit RGB/RGBA capture without image dependencies."""
+    data = path.read_bytes()
+    offset, compressed = 8, bytearray()
+    while offset < len(data):
+        size = struct.unpack(">I", data[offset:offset + 4])[0]
+        kind, chunk = data[offset + 4:offset + 8], data[offset + 8:offset + 8 + size]
+        if kind == b"IHDR":
+            width, height, bits, color, _, _, interlace = struct.unpack(">IIBBBBB", chunk)
+            if bits != 8 or color not in (2, 6) or interlace:
+                raise RuntimeError("Unsupported renderer PNG format")
+            channels = 4 if color == 6 else 3
+        if kind == b"IDAT":
+            compressed.extend(chunk)
+        offset += size + 12
+    raw = zlib.decompress(compressed)
+    stride, rows = width * channels, []
+    for y in range(height):
+        start = y * (stride + 1)
+        filter_type, row = raw[start], bytearray(raw[start + 1:start + 1 + stride])
+        previous = rows[-1] if rows else bytearray(stride)
+        for x in range(stride):
+            a, b, c = (row[x-channels] if x >= channels else 0), previous[x], (previous[x-channels] if x >= channels else 0)
+            if filter_type == 0:
+                predictor = 0
+            elif filter_type == 1:
+                predictor = a
+            elif filter_type == 2:
+                predictor = b
+            elif filter_type == 3:
+                predictor = (a+b)//2
+            elif filter_type == 4:
+                p = a+b-c
+                predictor = min((a,b,c), key=lambda value: abs(p-value))
+            else:
+                raise RuntimeError("Unknown PNG row filter")
+            row[x] = (row[x] + predictor) & 255
+        rows.append(row)
+    def luminance(point, minimum=False):
+        x, y = (round(value) for value in point)
+        if not (2 <= x < width-2 and 2 <= y < height-2):
+            raise RuntimeError("Surface probe outside capture")
+        values = []
+        for dy in (-1,0,1):
+            for dx in (-1,0,1):
+                rgb = rows[y+dy][(x+dx)*channels:(x+dx)*channels+3]
+                values.append(0.2126*rgb[0]+0.7152*rgb[1]+0.0722*rgb[2])
+        return min(values) if minimum else sorted(values)[4]
+    return luminance
 
 
 def main() -> int:
@@ -87,6 +139,23 @@ def main() -> int:
                     width, height = struct.unpack(">II", header[16:24])
                     captures.append({"path": str(path), "width": width, "height": height})
                 item["captures"] = captures
+                if name in ("surface-top", "surface-tilt", "surface-under"):
+                    luminance = png_pixels(output / (name + ".png"))
+                    values = {key: luminance(point) for key, point in child["surface_probes"].items()}
+                    item["surface_luminance"] = values
+                    if name == "surface-tilt":
+                        if luminance(child["surface_probes"]["cube_edge"], minimum=True) > 45:
+                            raise RuntimeError("Rendered cube contour is missing")
+                        if not (values["cube_top"] > values["cube_z"] + 25 and values["cube_z"] > values["cube_x"] + 15):
+                            raise RuntimeError("Rendered top and side lighting did not separate")
+                        slopes = [values["ramp_" + yaw] for yaw in ("north", "east", "south", "west")]
+                        if max(slopes) - min(slopes) < 20:
+                            raise RuntimeError("Rendered ramp slopes lack directional shading")
+                    elif name == "surface-top":
+                        if not (2 < values["step_two"] - values["step_one"] < 10):
+                            raise RuntimeError("Rendered top-down height cue is absent or excessive")
+                    elif not (values["bridge_under"] < 100 and values["ground"] > 120):
+                        raise RuntimeError("Rendered bridge underside is not dark against the ground")
                 if name.startswith("scale-"):
                     scale = int(name.split("-")[1]) / 100
                     expected = (int(1280 * scale + 80) * 5 // 4, int(720 * scale + 60) * 5 // 4)

@@ -15,9 +15,43 @@
 
 #include "fs_debugdraw_lines.bin.h"
 #include "vs_debugdraw_lines.bin.h"
+#include "vs_surface_glsl.bin.h"
+#include "fs_surface_glsl.bin.h"
+#include "vs_surface_spirv.bin.h"
+#include "fs_surface_spirv.bin.h"
+#include "vs_contour_glsl.bin.h"
+#include "fs_contour_glsl.bin.h"
+#include "vs_contour_spirv.bin.h"
+#include "fs_contour_spirv.bin.h"
+#if defined(_WIN32)
+#include "vs_surface_dxbc.bin.h"
+#include "fs_surface_dxbc.bin.h"
+#include "vs_contour_dxbc.bin.h"
+#include "fs_contour_dxbc.bin.h"
+#endif
 
 namespace rat {
 namespace {
+struct ContourVertex { float x,y,z,other_x,other_y,other_z,side,padding; };
+
+bgfx::ProgramHandle surface_program(bool contour) {
+  const auto make=[](const auto& vs,const auto& fs) {
+    return bgfx::createProgram(bgfx::createShader(bgfx::copy(vs,sizeof(vs))),
+                               bgfx::createShader(bgfx::copy(fs,sizeof(fs))),true);
+  };
+  switch(bgfx::getRendererType()) {
+    case bgfx::RendererType::OpenGL:
+      return contour ? make(vs_contour_glsl,fs_contour_glsl) : make(vs_surface_glsl,fs_surface_glsl);
+    case bgfx::RendererType::Vulkan:
+      return contour ? make(vs_contour_spirv,fs_contour_spirv) : make(vs_surface_spirv,fs_surface_spirv);
+#if defined(_WIN32)
+    case bgfx::RendererType::Direct3D11:
+    case bgfx::RendererType::Direct3D12:
+      return contour ? make(vs_contour_dxbc,fs_contour_dxbc) : make(vs_surface_dxbc,fs_surface_dxbc);
+#endif
+    default: return BGFX_INVALID_HANDLE;
+  }
+}
 
 // Position + Color0 only — matches vs/fs_debugdraw_lines (u_modelViewProj + vertex color).
 // Do NOT use vs_debugdraw_fill here: that shader expects a_indices and u_matColor.
@@ -48,13 +82,23 @@ bool GreyboxScene::init() {
       .add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float)
       .add(bgfx::Attrib::Color0, 4, bgfx::AttribType::Uint8, true)
       .end();
+  surface_layout_.begin().add(bgfx::Attrib::Position,3,bgfx::AttribType::Float)
+      .add(bgfx::Attrib::Normal,3,bgfx::AttribType::Float)
+      .add(bgfx::Attrib::Color0,4,bgfx::AttribType::Uint8,true).end();
+  contour_layout_.begin().add(bgfx::Attrib::Position,3,bgfx::AttribType::Float)
+      .add(bgfx::Attrib::TexCoord0,3,bgfx::AttribType::Float)
+      .add(bgfx::Attrib::TexCoord1,2,bgfx::AttribType::Float).end();
+  surface_program_=surface_program(false);
+  contour_program_=surface_program(true);
+  surface_uniform_=bgfx::createUniform("u_surface",bgfx::UniformType::Vec4);
+  contour_uniform_=bgfx::createUniform("u_contour",bgfx::UniformType::Vec4);
 
   const bgfx::RendererType::Enum type = bgfx::getRendererType();
   program_ = bgfx::createProgram(
       bgfx::createEmbeddedShader(k_shaders, type, "vs_debugdraw_lines"),
       bgfx::createEmbeddedShader(k_shaders, type, "fs_debugdraw_lines"), true);
 
-  if (!bgfx::isValid(program_)) {
+  if (!bgfx::isValid(program_) || !bgfx::isValid(surface_program_) || !bgfx::isValid(contour_program_)) {
     shutdown();
     return false;
   }
@@ -66,6 +110,10 @@ bool GreyboxScene::init() {
 
 void GreyboxScene::shutdown() {
   destroy_program(program_);
+  destroy_program(surface_program_);
+  destroy_program(contour_program_);
+  if(bgfx::isValid(surface_uniform_)) { bgfx::destroy(surface_uniform_);surface_uniform_=BGFX_INVALID_HANDLE; }
+  if(bgfx::isValid(contour_uniform_)) { bgfx::destroy(contour_uniform_);contour_uniform_=BGFX_INVALID_HANDLE; }
   initialized_ = false;
 }
 
@@ -144,8 +192,7 @@ void GreyboxScene::set_terrain_map(const MapData& map) {
 }
 
 void GreyboxScene::rebuild_terrain_visuals() {
-  terrain_vertex_data_.clear();
-  terrain_indices_.clear();
+  surface_ = {};
   terrain_grid_line_data_.clear();
   terrain_geometry_ = {};
 
@@ -166,20 +213,16 @@ void GreyboxScene::rebuild_terrain_visuals() {
     terrain_geometry_ = {};
     return;
   }
-  terrain_vertex_data_.reserve(fill.vertices.size());
-  for (const GreyboxFillVertex& vertex : fill.vertices) {
-    terrain_vertex_data_.push_back(DebugColorVertex{vertex.x, vertex.y, vertex.z, vertex.abgr});
-  }
-  terrain_indices_ = fill.indices;
+  surface_ = build_surface_visual_mesh(fill,map.tile_size);
 
   auto push_vertex = [](std::vector<DebugColorVertex>& out, float x, float y, float z,
                         std::uint32_t color) {
     out.push_back(DebugColorVertex{x, y, z, color});
   };
 
-  const std::uint32_t grid_color = 0xff3a3a3a;
-  const std::uint32_t axis_x = 0xff5050d0;
-  const std::uint32_t axis_z = 0xffd05050;
+  const std::uint32_t grid_color = 0xff8d8984;
+  const std::uint32_t axis_x = 0xff858598;
+  const std::uint32_t axis_z = 0xff988585;
   constexpr float kLineOffset = 0.03f;
   const auto lines = build_terrain_grid_lines(terrain_geometry_, kLineOffset);
   terrain_grid_line_data_.reserve(lines.size() * 2);
@@ -277,6 +320,7 @@ void GreyboxScene::draw(bgfx::ViewId view_id) {
   bgfx::setViewRect(view_id, 0, 0, static_cast<uint16_t>(width_),
                     static_cast<uint16_t>(height_));
   bgfx::setViewTransform(view_id, camera_.view.m, camera_.proj.m);
+  bgfx::setViewMode(view_id,bgfx::ViewMode::Sequential);
   bgfx::touch(view_id);
 
   constexpr float kHalf = 16.0f;
@@ -318,27 +362,29 @@ void GreyboxScene::draw(bgfx::ViewId view_id) {
   };
 
   auto submit_tris_packed =
-      [&](const std::vector<DebugColorVertex>& verts, const std::vector<std::uint16_t>& indices) {
+      [&](const std::vector<SurfaceVertex>& verts, const std::vector<std::uint32_t>& indices) {
     const std::uint32_t num_verts = static_cast<std::uint32_t>(verts.size());
     const std::uint32_t num_indices = static_cast<std::uint32_t>(indices.size());
     if (num_verts == 0 || num_indices == 0) {
       return;
     }
-    if (num_verts != bgfx::getAvailTransientVertexBuffer(num_verts, layout_) ||
-        num_indices != bgfx::getAvailTransientIndexBuffer(num_indices)) {
+    if (num_verts != bgfx::getAvailTransientVertexBuffer(num_verts, surface_layout_) ||
+        num_indices != bgfx::getAvailTransientIndexBuffer(num_indices,true)) {
       return;
     }
     bgfx::TransientVertexBuffer tvb;
     bgfx::TransientIndexBuffer tib;
-    bgfx::allocTransientVertexBuffer(&tvb, num_verts, layout_);
-    bgfx::allocTransientIndexBuffer(&tib, num_indices);
-    bx::memCopy(tvb.data, verts.data(), verts.size() * sizeof(DebugColorVertex));
-    bx::memCopy(tib.data, indices.data(), indices.size() * sizeof(std::uint16_t));
+    bgfx::allocTransientVertexBuffer(&tvb, num_verts, surface_layout_);
+    bgfx::allocTransientIndexBuffer(&tib, num_indices,true);
+    bx::memCopy(tvb.data, verts.data(), verts.size() * sizeof(SurfaceVertex));
+    bx::memCopy(tib.data, indices.data(), indices.size() * sizeof(std::uint32_t));
     bgfx::setVertexBuffer(0, &tvb);
     bgfx::setIndexBuffer(&tib);
     bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_WRITE_Z |
                    BGFX_STATE_DEPTH_TEST_LESS);
-    bgfx::submit(view_id, program_);
+    const float material[]={1.0f / std::max(terrain_map_.tile_size,1e-20f),0,0,0};
+    bgfx::setUniform(surface_uniform_,material);
+    bgfx::submit(view_id, surface_program_);
   };
 
   auto submit_lines_packed = [&](const std::vector<DebugColorVertex>& verts) {
@@ -358,9 +404,30 @@ void GreyboxScene::draw(bgfx::ViewId view_id) {
     bgfx::submit(view_id, program_);
   };
 
-  if (!terrain_vertex_data_.empty() && !terrain_indices_.empty()) {
-    submit_tris_packed(terrain_vertex_data_, terrain_indices_);
+  if (!surface_.vertices.empty() && !surface_.indices.empty()) {
+    submit_tris_packed(surface_.vertices, surface_.indices);
     submit_lines_packed(terrain_grid_line_data_);
+    std::vector<ContourVertex> vertices;
+    std::vector<std::uint32_t> indices;
+    vertices.reserve(surface_.contours.size()*4); indices.reserve(surface_.contours.size()*6);
+    for(const auto& edge:surface_.contours) {
+      const auto base=static_cast<std::uint32_t>(vertices.size());
+      for(float side:{-1.0f,1.0f}) vertices.push_back({edge.a.x,edge.a.y,edge.a.z,edge.b.x,edge.b.y,edge.b.z,side,0});
+      for(float side:{-1.0f,1.0f}) vertices.push_back({edge.b.x,edge.b.y,edge.b.z,edge.a.x,edge.a.y,edge.a.z,side,0});
+      for(auto i:{0u,1u,2u,0u,2u,3u}) indices.push_back(base+i);
+    }
+    const auto nv=static_cast<std::uint32_t>(vertices.size()),ni=static_cast<std::uint32_t>(indices.size());
+    if(nv && bgfx::getAvailTransientVertexBuffer(nv,contour_layout_)==nv && bgfx::getAvailTransientIndexBuffer(ni,true)==ni) {
+      bgfx::TransientVertexBuffer vb; bgfx::TransientIndexBuffer ib;
+      bgfx::allocTransientVertexBuffer(&vb,nv,contour_layout_);bgfx::allocTransientIndexBuffer(&ib,ni,true);
+      bx::memCopy(vb.data,vertices.data(),vertices.size()*sizeof(ContourVertex));
+      bx::memCopy(ib.data,indices.data(),indices.size()*sizeof(std::uint32_t));
+      const float contour[]={1.0f/width_,1.0f/height_,1.5f,0.00001f};
+      bgfx::setUniform(contour_uniform_,contour);
+      bgfx::setVertexBuffer(0,&vb);bgfx::setIndexBuffer(&ib);
+      bgfx::setState(BGFX_STATE_WRITE_RGB|BGFX_STATE_WRITE_A|BGFX_STATE_DEPTH_TEST_LEQUAL);
+      bgfx::submit(view_id,contour_program_);
+    }
   } else {
     const DebugColorVertex floor_verts[4] = {
         {-kHalf, 0.0f, -kHalf, floor_color},

@@ -20,6 +20,9 @@ struct GreyboxFillVertex {
 struct GreyboxFillMesh {
   std::vector<GreyboxFillVertex> vertices;
   std::vector<std::uint16_t> indices;
+  // Optional outward hints for legacy quads whose winding was only used by a
+  // two-sided unlit pass. One per quad; zero means derive from triangle winding.
+  std::vector<Vec3> face_normals;
 };
 
 [[nodiscard]] bool player_inside_indoor_volume(const MapData& map, const PlayerBody& body);

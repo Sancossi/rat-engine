@@ -1,7 +1,11 @@
 include(FetchContent)
 
 if(RAT_BUILD_RENDERER)
-set(BGFX_BUILD_TOOLS OFF CACHE BOOL "Build bgfx tools" FORCE)
+set(BGFX_BUILD_TOOLS ON CACHE BOOL "Build bgfx tools" FORCE)
+set(BGFX_BUILD_TOOLS_SHADER ON CACHE BOOL "Build bgfx shader compiler" FORCE)
+set(BGFX_BUILD_TOOLS_BIN2C OFF CACHE BOOL "" FORCE)
+set(BGFX_BUILD_TOOLS_GEOMETRY OFF CACHE BOOL "" FORCE)
+set(BGFX_BUILD_TOOLS_TEXTURE OFF CACHE BOOL "" FORCE)
 set(BGFX_BUILD_EXAMPLES OFF CACHE BOOL "Build bgfx examples" FORCE)
 set(BGFX_CUSTOM_TARGETS OFF CACHE BOOL "bgfx custom targets" FORCE)
 set(BGFX_INSTALL OFF CACHE BOOL "Install bgfx" FORCE)
@@ -15,7 +19,7 @@ FetchContent_Declare(
 )
 
 FetchContent_MakeAvailable(bgfx_cmake)
-# Embedded shaders ship with bgfx examples; no shader compiler needed.
+# UI/debug programs ship precompiled; our surface programs use pinned shaderc.
 set(RAT_BGFX_IMGUI_SHADER_DIR "${bgfx_cmake_SOURCE_DIR}/bgfx/examples/common/imgui" CACHE INTERNAL "bgfx imgui shader headers")
 set(RAT_BGFX_DEBUGDRAW_SHADER_DIR "${bgfx_cmake_SOURCE_DIR}/bgfx/examples/common/debugdraw" CACHE INTERNAL "bgfx debugdraw shader headers")
 endif()

@@ -270,6 +270,30 @@
       "requirements": [
         "production executable exits 1 cleanly on malformed startup"
       ]
+    },
+    {
+      "name": "surface-top",
+      "requirements": [
+        "actual surface shader and contours",
+        "fixed-pose capture",
+        "top-down height breaks"
+      ]
+    },
+    {
+      "name": "surface-tilt",
+      "requirements": [
+        "actual surface shader and contours",
+        "fixed-pose capture",
+        "rendered luminance probes"
+      ]
+    },
+    {
+      "name": "surface-under",
+      "requirements": [
+        "actual surface shader and contours",
+        "fixed-pose capture",
+        "rendered luminance probes"
+      ]
     }
   ]
 }

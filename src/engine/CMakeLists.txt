@@ -37,6 +37,7 @@ add_library(rat_core
   src/save_game.cpp
   src/simulation_session.cpp
   src/surface_query.cpp
+  src/surface_visual.cpp
   src/terrain_geometry.cpp
   src/viewport_edit.cpp
 )
@@ -75,6 +76,7 @@ rat_target_defaults(rat_engine)
 
 set(_rat_debugdraw_shader_out "${CMAKE_CURRENT_BINARY_DIR}/generated_shaders")
 file(MAKE_DIRECTORY "${_rat_debugdraw_shader_out}")
+include("${CMAKE_SOURCE_DIR}/cmake/RatSurfaceShaders.cmake")
 file(COPY
   "${RAT_BGFX_DEBUGDRAW_SHADER_DIR}/vs_debugdraw_lines.bin.h"
   "${RAT_BGFX_DEBUGDRAW_SHADER_DIR}/fs_debugdraw_lines.bin.h"

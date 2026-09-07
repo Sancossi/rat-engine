@@ -4,6 +4,7 @@
 #include "rat/map_data.hpp"
 #include "rat/player.hpp"
 #include "rat/terrain_geometry.hpp"
+#include "rat/surface_visual.hpp"
 
 #include <bgfx/bgfx.h>
 
@@ -81,14 +82,19 @@ class GreyboxScene {
   std::vector<BlockerDef> blockers_;
   std::vector<Vec3> event_markers_;
   TerrainGeometry terrain_geometry_{};
-  std::vector<DebugColorVertex> terrain_vertex_data_;
-  std::vector<std::uint16_t> terrain_indices_;
+  SurfaceVisualMesh surface_;
   std::vector<DebugColorVertex> terrain_grid_line_data_;
   int selected_blocker_ = -1;
   int selected_event_marker_ = -1;
 
   bgfx::ProgramHandle program_ = BGFX_INVALID_HANDLE;
+  bgfx::ProgramHandle surface_program_ = BGFX_INVALID_HANDLE;
+  bgfx::ProgramHandle contour_program_ = BGFX_INVALID_HANDLE;
+  bgfx::UniformHandle surface_uniform_ = BGFX_INVALID_HANDLE;
+  bgfx::UniformHandle contour_uniform_ = BGFX_INVALID_HANDLE;
   bgfx::VertexLayout layout_;
+  bgfx::VertexLayout surface_layout_;
+  bgfx::VertexLayout contour_layout_;
 };
 
 }  // namespace rat

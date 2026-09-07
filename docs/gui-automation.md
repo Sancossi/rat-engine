@@ -51,7 +51,10 @@ Additional implemented scenario arguments:
 - `production-malformed-start` is orchestrated as the actual production executable,
   and must exit 1 cleanly. The C++ runner's negative initialization scenario is separate.
 
-`scripts/gui_scenarios.json` maps all 40 scenarios to requirements. The installed
+- `surface-{top,tilt,under}`: fixed-view surface material/contour captures and
+  rendered luminance regressions; see [surface contract](surface-readability.md).
+
+`scripts/gui_scenarios.json` maps all 43 scenarios to requirements. The installed
 `run_gui_acceptance.py` runs fresh processes from an unrelated working directory,
 including two restart phases sharing one project. It omits `--data-root` to exercise
 executable-adjacent resources, verifies loaded audio and PNG dimensions, and checks

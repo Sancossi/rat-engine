@@ -32,6 +32,7 @@ add_executable(rat_tests
   log_test.cpp
   hot_apply_test.cpp
   indoor_volume_test.cpp
+  surface_visual_test.cpp
   input_test.cpp
   inventory_list_test.cpp
   map_document_test.cpp

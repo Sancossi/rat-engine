@@ -6,6 +6,8 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
+#include <array>
+#include <map>
 
 namespace rat {
 namespace {
@@ -145,31 +147,48 @@ GreyboxFillMesh build_greybox_fill_mesh(const MapData& map, const PlayerBody& bo
                                  slab_quads + ladder_quads + occupancy_quads;
   mesh.vertices.reserve(quad_count * 4);
   mesh.indices.reserve(quad_count * 6);
+  mesh.face_normals.reserve(quad_count);
 
   auto push = [&](float x0, float y0, float z0, float x1, float y1, float z1, float x2, float y2,
-                  float z2, float x3, float y3, float z3, std::uint32_t base) {
+                  float z2, float x3, float y3, float z3, std::uint32_t base, Vec3 normal = {}) {
     push_fill_quad(mesh, x0, y0, z0, x1, y1, z1, x2, y2, z2, x3, y3, z3,
                    color_for(x0, y0, z0, x1, y1, z1, x2, y2, z2, x3, y3, z3, base));
+    mesh.face_normals.push_back(normal);
   };
+
+  // Sum directed heights on each shared edge. Its sign points from the higher
+  // terrain toward the lower terrain, independent of the legacy wall winding.
+  std::map<std::array<float,4>,double> wall_heights;
+  for(const auto& tile:geometry.tiles) {
+    wall_heights[{tile.max_x,tile.min_z,tile.max_x,tile.max_z}] += (static_cast<double>(tile.y_ne)+tile.y_se)*0.5;
+    wall_heights[{tile.min_x,tile.min_z,tile.min_x,tile.max_z}] -= (static_cast<double>(tile.y_nw)+tile.y_sw)*0.5;
+    wall_heights[{tile.min_x,tile.max_z,tile.max_x,tile.max_z}] += (static_cast<double>(tile.y_sw)+tile.y_se)*0.5;
+    wall_heights[{tile.min_x,tile.min_z,tile.max_x,tile.min_z}] -= (static_cast<double>(tile.y_nw)+tile.y_ne)*0.5;
+  }
 
   for (const TerrainTileQuad& tile : geometry.tiles) {
     push(tile.min_x, tile.y_nw, tile.min_z, tile.max_x, tile.y_ne, tile.min_z, tile.max_x,
          tile.y_se, tile.max_z, tile.min_x, tile.y_sw, tile.max_z, kTerrainFillAbgr);
   }
   for (const TerrainSideFace& face : side_faces) {
+    const double height=wall_heights[{face.x0,face.z0,face.x1,face.z1}];
+    const float direction=height>=0 ? 1.0f : -1.0f;
+    const Vec3 outward=face.x0==face.x1 ? Vec3{direction,0,0} : Vec3{0,0,direction};
     push(face.x0, face.y0_lo, face.z0, face.x0, face.y0_hi, face.z0, face.x1, face.y1_hi, face.z1,
-         face.x1, face.y1_lo, face.z1, kTerrainFillAbgr);
+         face.x1, face.y1_lo, face.z1, kTerrainFillAbgr,outward);
   }
   for (const TerrainSideFace& face : fence_faces) {
     push(face.x0, face.y0_lo, face.z0, face.x0, face.y0_hi, face.z0, face.x1, face.y1_hi, face.z1,
          face.x1, face.y1_lo, face.z1, kFenceFillAbgr);
   }
   const float ts = map.tile_size > 0.0f ? map.tile_size : 1.0f;
+  const Vec3 box_normals[]={{0,1,0},{0,-1,0},{0,0,-1},{1,0,0},{0,0,1},{-1,0,0}};
   for (const FloorSlabDef& slab : map.floor_slabs) {
     const std::vector<TerrainFillQuad> fill = build_floor_slab_fill_quads(slab, ts);
+    std::size_t face_index=0;
     for (const TerrainFillQuad& quad : fill) {
       push(quad.x0, quad.y0, quad.z0, quad.x1, quad.y1, quad.z1, quad.x2, quad.y2, quad.z2, quad.x3,
-           quad.y3, quad.z3, kSlabFillAbgr);
+           quad.y3, quad.z3, kSlabFillAbgr,box_normals[face_index++]);
     }
   }
   for (const LadderDef& ladder : map.ladders) {
@@ -199,6 +218,7 @@ GreyboxFillMesh build_greybox_fill_mesh(const MapData& map, const PlayerBody& bo
     }
     const float y_hi = ladder.y_hi;
     const float y_lo = ladder.y_lo;
+    const auto first_face=mesh.face_normals.size();
     push(min_x, y_hi, min_z, max_x, y_hi, min_z, max_x, y_hi, max_z, min_x, y_hi, max_z,
          kLadderFillAbgr);
     push(min_x, y_lo, max_z, max_x, y_lo, max_z, max_x, y_lo, min_z, min_x, y_lo, min_z,
@@ -211,14 +231,17 @@ GreyboxFillMesh build_greybox_fill_mesh(const MapData& map, const PlayerBody& bo
          kLadderFillAbgr);
     push(min_x, y_lo, max_z, min_x, y_hi, max_z, min_x, y_hi, min_z, min_x, y_lo, min_z,
          kLadderFillAbgr);
+    for(std::size_t i=0;i<6;++i) mesh.face_normals[first_face+i]=box_normals[i];
   }
   for (const OccupancyCell& cell : map.occupancy) {
     const std::vector<TerrainFillQuad> fill =
         cell.kind == OccupancyKind::Ramp ? build_occupancy_ramp_fill_quads(cell, ts)
                                          : build_occupancy_solid_fill_quads(cell, ts);
+    std::size_t face_index=0;
     for (const TerrainFillQuad& quad : fill) {
       push(quad.x0, quad.y0, quad.z0, quad.x1, quad.y1, quad.z1, quad.x2, quad.y2, quad.z2, quad.x3,
-           quad.y3, quad.z3, kTerrainFillAbgr);
+           quad.y3, quad.z3, kTerrainFillAbgr,cell.kind==OccupancyKind::Solid ? box_normals[face_index] : Vec3{});
+      ++face_index;
     }
   }
   return mesh;

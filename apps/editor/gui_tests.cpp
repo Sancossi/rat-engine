@@ -314,6 +314,7 @@ int main(int argc, char** argv) {
       driver.input.logical_height = driver.input.framebuffer_height = 1080;
       rat::PlayerBody player; player.x = 0; player.y = 0; player.z = 0; initial.player = player;
       if (scenario == "surface-tilt") initial.camera_pose = rat::ClimbCameraPose{{8,11,10},{0,0,0}};
+      if (scenario == "surface-under") initial.camera_pose = rat::ClimbCameraPose{{8,1,10},{1.5f,1.5f,.5f}};
     }
     if (scenario.starts_with("scale-")) {
       initial.ui_scale = std::stof(scenario.substr(6)) / 100.0f;
@@ -356,6 +357,18 @@ int main(int argc, char** argv) {
       driver.enter_edit(); driver.frame(5);
       driver.require(driver.app.observed_document().data().id == "surface_readability", "Surface fixture did not load");
       driver.capture(scenario); driver.debug(scenario);
+      Json probes=Json::object();
+      const auto probe=[&](const char* name,rat::Vec3 world) {
+        const auto p=driver.app.project_world(world);driver.require(p.has_value(),"Surface probe projection failed");
+        probes[name]={p->x,p->y};
+      };
+      probe("cube_top",{-3.5f,1,1.5f});probe("cube_x",{-3,.5f,1.5f});probe("cube_z",{-3.5f,.5f,2});
+      probe("cube_edge",{-3.5f,1,2});
+      probe("step_one",{-3.5f,1,-2.5f});probe("step_two",{-3.5f,2,-1.5f});
+      probe("ramp_north",{-3.5f,.5f,3.5f});probe("ramp_east",{-1.5f,.5f,3.5f});
+      probe("ramp_south",{.5f,.5f,3.5f});probe("ramp_west",{2.5f,.5f,3.5f});
+      probe("bridge_under",{1.5f,2,.5f});probe("ground",{1.5f,0,2});
+      report["surface_probes"]=probes;
       report["scenarios"].push_back({{"name",scenario},{"status","passed"}});
     } else if (scenario == "infrastructure") {
     driver.click("Inspector", "Enter Edit (F2)");
