@@ -28,15 +28,6 @@ append_slab_side_fences rounds top_y / tile_size to derive the layer, accepting 
 
 ## Resolution
 
-Pending; included in the approved stage-5 high-face connection contract.
-
-## Bugs found
-
-Pending.
-
-
-## Resolution
-
 Fixed in 2a44876; independent review Approved. Full verification 698/698 C++ tests passed. See [[s15-geometry]]; actual GUI gesture evidence remains [[s15-acceptance]].
 
 ## Bugs found
