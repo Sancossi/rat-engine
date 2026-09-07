@@ -20,7 +20,7 @@ Depends: [[s15-geometry]].
 
 ## Resolution
 
-Pending.
+In progress: stage 6a build/launch/package foundations, then real GUI runner/scenarios, then CI/static analysis/benchmark. Preliminary local Clang Analyzer check passed 43/43 rat_core and rat_editor_logic translation units using clang-tidy 22.1.8, warnings as errors. Report: build/stabilization/tidy-preflight/report.json. This preflight predates delivery/GUI changes; a final run is required.
 
 ## Bugs found
 
