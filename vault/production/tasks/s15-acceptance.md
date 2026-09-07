@@ -2,7 +2,7 @@
 type: task
 area: Engine
 status: In progress
-review: Needs fixes
+review: In review
 task_type: Chore
 sprint: Sprint 15
 tags: [task, stabilization]
@@ -34,3 +34,6 @@ Stage 6a implemented in 3c4ce34: full and fresh headless Windows builds each pas
 
 
 GUI infrastructure committed in 22eb27d. Actual local software renderer report: Direct3D 11 / WARP; real Enter Edit click and ordered quick Backspace tap passed. Parent inspected captured PNG and rebuilt full Release successfully. Artifacts: build/stabilization/gui-input2/artifacts/scenario-report.json, first-edit-frame.png and first-edit-frame.json. Regular 703 tests passed. Infrastructure review Needs fixes: quick complete taps are lost by gameplay/viewport final-held-state sampling; deferred actions can settle before ImGui trickled input queue is exhausted. Real quick-action/click and multi-key-text-plus-Close/F5 regressions required. Full scenario suite remains in progress. GUI work found duplicate ImGui IDs between viewport radios and terrain buttons; fixed with distinct widget IDs.
+
+
+GUI input corrections committed in d5ae2f4. Actual WARP input-order and authoring-text scenarios passed, including quick F2/F5/viewport taps and queued multi-key text before Close/F5. Parent inspected the modal capture showing complete field content. Full verification actual process exit 0: 703/703 C++ tests, 8 Python checks and vault. Parent full Release build passed. Infrastructure re-review pending; remaining GUI groups are still in progress.
