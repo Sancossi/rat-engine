@@ -110,15 +110,20 @@ asset libraries remain future work; see [architecture roadmap](docs/architecture
 
 ## Current limits
 
-Sprint 15 implements the [approved stabilization plan](docs/superpowers/plans/2026-09-07-stabilization.md).
-Existing replay, save and editor authoring paths have recorded correctness gaps;
-the [audit](docs/audits/2026-09-07-project-review.md) describes initial findings.
-EventTouch is not executable and cross-map transfer has no map loader. Asset IDs
-and an in-memory loader exist; a production mesh/texture importer is still planned.
+The scoped replay, save and editor-authoring defects from the
+[initial audit](docs/audits/2026-09-07-project-review.md) have been fixed and
+independently reviewed under the [stabilization plan](docs/superpowers/plans/2026-09-07-stabilization.md).
+Local Windows acceptance passed the full GUI suite and installed-package suite;
+see the [verification evidence](docs/audits/2026-09-07-stabilization-evidence.md).
+EventTouch remains unsupported and cross-map transfer has no map loader; both
+are rejected at compile/Save/Apply while authored drafts remain repairable.
+Asset IDs and an in-memory loader exist; a production mesh/texture importer is
+still planned.
 
-CI currently builds Windows/Linux and runs headless tests. GUI input automation,
-sanitizers and packaged desktop acceptance remain in stabilization; headless tests
-do not verify the desktop interface.
+CI is configured for Windows/Linux Release, headless tests, GUI automation,
+Linux Debug sanitizers, static analysis and source-absent package acceptance.
+Remote CI, Linux and sanitizer execution have not been observed in this session;
+local Windows results do not establish those outcomes.
 
 ## Project knowledge
 
