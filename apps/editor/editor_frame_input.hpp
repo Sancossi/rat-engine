@@ -11,7 +11,7 @@ namespace rat {
 // One complete input sample feeds both ImGui and gameplay/viewport bindings.
 // Key codes are the platform-independent GLFW key numbers; no GLFW types leak here.
 struct EditorInputEvent {
-  enum class Kind { Key, Character, MouseButton, Wheel, Focus };
+  enum class Kind { Key, Character, MouseButton, Wheel, Focus, Cursor };
   Kind kind = Kind::Key;
   int code = 0;
   bool down = false;

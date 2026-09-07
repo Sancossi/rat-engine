@@ -694,6 +694,8 @@ bool EditorApp::step_frame(const EditorFrameInput& input, float dt) {
   return running_;
 }
 
+bool EditorApp::observed_capture_mouse() const { return ImGui::GetCurrentContext() && ImGui::GetIO().WantCaptureMouse; }
+
 void EditorApp::request_capture(const std::string& path) { if (engine_) engine_->request_capture(path); }
 CaptureResult EditorApp::capture_result() const { return engine_ ? engine_->capture_result() : CaptureResult{}; }
 std::string EditorApp::renderer_name() const { return engine_ ? engine_->backend_name() : "uninitialized"; }
@@ -811,8 +813,8 @@ void EditorApp::handle_edit_mouse_input(const ImGuiIO& io) {
 
   double cursor_x = 0.0;
   double cursor_y = 0.0;
-  cursor_x = frame_input_.cursor_x * static_cast<double>(width_) / std::max(1, frame_input_.logical_width);
-  cursor_y = frame_input_.cursor_y * static_cast<double>(height_) / std::max(1, frame_input_.logical_height);
+  cursor_x = processed_input_.cursor_x * static_cast<double>(width_) / std::max(1, frame_input_.logical_width);
+  cursor_y = processed_input_.cursor_y * static_cast<double>(height_) / std::max(1, frame_input_.logical_height);
   const MapData& map = document_.visible_data();
   const TerrainGeometry terrain =
       build_terrain_geometry(map.height_grid, map.ramps, map.tile_size);
@@ -1113,7 +1115,6 @@ void EditorApp::begin_ui() {
                           static_cast<float>(std::max(1, frame_input_.logical_height)));
   io.DisplayFramebufferScale = ImVec2(static_cast<float>(width_) / io.DisplaySize.x,
                                       static_cast<float>(height_) / io.DisplaySize.y);
-  io.AddMousePosEvent(static_cast<float>(frame_input_.cursor_x), static_cast<float>(frame_input_.cursor_y));
   io.AddMouseWheelEvent(frame_input_.wheel_x, frame_input_.wheel_y);
   const auto send_modifiers = [&](const auto& held) {
     io.AddKeyEvent(ImGuiMod_Ctrl, held[GLFW_KEY_LEFT_CONTROL] || held[GLFW_KEY_RIGHT_CONTROL]);
@@ -1137,10 +1138,12 @@ void EditorApp::begin_ui() {
         break;
       case EditorInputEvent::Kind::Wheel: io.AddMouseWheelEvent(event.x, event.y); break;
       case EditorInputEvent::Kind::Focus: io.AddFocusEvent(event.down); break;
+      case EditorInputEvent::Kind::Cursor: io.AddMousePosEvent(event.x, event.y); break;
     }
   }
   for (int i = 0; i < 5; ++i) io.AddMouseButtonEvent(i, frame_input_.mouse_buttons[static_cast<std::size_t>(i)]);
   io.AddFocusEvent(frame_input_.focused);
+  io.AddMousePosEvent(static_cast<float>(frame_input_.cursor_x), static_cast<float>(frame_input_.cursor_y));
   const auto& keys = frame_input_.keys;
   imgui_keys_ = keys;
   io.AddKeyEvent(ImGuiMod_Ctrl, keys[GLFW_KEY_LEFT_CONTROL] || keys[GLFW_KEY_RIGHT_CONTROL]);
@@ -1158,6 +1161,8 @@ void EditorApp::begin_ui() {
   // consume that same processed state, so a native press/release between polls
   // cannot disappear or activate gameplay before UI capture has been evaluated.
   processed_input_ = frame_input_;
+  processed_input_.cursor_x = io.MousePos.x;
+  processed_input_.cursor_y = io.MousePos.y;
   for (int key = GLFW_KEY_SPACE; key <= GLFW_KEY_LAST; ++key) {
     const auto mapped = ImGui_ImplGlfw_KeyToImGuiKey(key, 0);
     processed_input_.keys[static_cast<std::size_t>(key)] = mapped != ImGuiKey_None && ImGui::IsKeyDown(mapped);

@@ -13,12 +13,40 @@
 #include <mutex>
 #include <cstdio>
 #include <cstdlib>
+#if defined(_WIN32)
+#include <d3d11.h>
+#include <dxgi1_2.h>
+#include <wrl/client.h>
+#endif
 
 namespace rat {
 
 struct Renderer::Callbacks final : bgfx::CallbackI {
   mutable std::mutex mutex;
   CaptureResult capture;
+  std::string software_adapter;
+#if defined(_WIN32)
+  Microsoft::WRL::ComPtr<ID3D11Device> software_device;
+  bool create_warp() {
+    software_device.Reset();
+    const HRESULT created = D3D11CreateDevice(nullptr, D3D_DRIVER_TYPE_WARP, nullptr,
+        D3D11_CREATE_DEVICE_BGRA_SUPPORT, nullptr, 0, D3D11_SDK_VERSION,
+        software_device.GetAddressOf(), nullptr, nullptr);
+    if (FAILED(created)) return false;
+    Microsoft::WRL::ComPtr<IDXGIDevice> dxgi;
+    Microsoft::WRL::ComPtr<IDXGIAdapter> adapter;
+    Microsoft::WRL::ComPtr<IDXGIAdapter1> adapter1;
+    DXGI_ADAPTER_DESC1 description{};
+    if (FAILED(software_device.As(&dxgi)) || FAILED(dxgi->GetAdapter(&adapter)) ||
+        FAILED(adapter.As(&adapter1)) || FAILED(adapter1->GetDesc1(&description)) ||
+        !(description.Flags & DXGI_ADAPTER_FLAG_SOFTWARE)) return false;
+    char name[512]{};
+    if (!WideCharToMultiByte(CP_UTF8, WC_ERR_INVALID_CHARS, description.Description, -1,
+                            name, sizeof(name), nullptr, nullptr)) return false;
+    software_adapter = std::string(name) + " / DXGI_ADAPTER_FLAG_SOFTWARE / WARP";
+    return true;
+  }
+#endif
   void fatal(const char* file, uint16_t line, bgfx::Fatal::Enum, const char* message) override {
     std::fprintf(stderr, "bgfx fatal %s:%u: %s\n", file, line, message);
     std::abort();
@@ -68,7 +96,7 @@ CaptureResult Renderer::capture_result() const {
 std::string Renderer::backend_name() const {
   if (!initialized_) return "uninitialized";
   std::string name = bgfx::getRendererName(bgfx::getRendererType());
-  if (mode_ == RendererMode::SoftwareD3D11) name += " / WARP";
+  if (mode_ == RendererMode::SoftwareD3D11) name += " / " + callbacks_->software_adapter;
   if (mode_ == RendererMode::SoftwareOpenGL) name += " / software OpenGL requested";
   return name;
 }
@@ -99,8 +127,19 @@ bool Renderer::init(const RendererConfig& config) {
   init.type = bgfx::RendererType::Direct3D11;
 #endif
   if (config.mode == RendererMode::SoftwareD3D11) {
+#if defined(_WIN32)
+    // The pinned bgfx DXGI selector can replace the software vendor request
+    // with adapter zero. Supply a verified WARP device rather than relying on it.
+    if (!callbacks_->create_warp()) {
+      std::fprintf(stderr, "Failed to create and verify D3D11 WARP software device\n");
+      return false;
+    }
     init.type = bgfx::RendererType::Direct3D11;
     init.vendorId = BGFX_PCI_ID_SOFTWARE_RASTERIZER;
+    init.platformData.context = callbacks_->software_device.Get();
+#else
+    return false;
+#endif
   } else if (config.mode == RendererMode::SoftwareOpenGL) {
     init.type = bgfx::RendererType::OpenGL;
   }
@@ -129,6 +168,9 @@ void Renderer::shutdown() {
     return;
   }
   bgfx::shutdown();
+#if defined(_WIN32)
+  callbacks_->software_device.Reset();
+#endif
   initialized_ = false;
 }
 

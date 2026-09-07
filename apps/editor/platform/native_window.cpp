@@ -232,6 +232,10 @@ bool NativeWindow::create(int width, int height, const char* title, bool hidden)
     static_cast<NativeWindow*>(glfwGetWindowUserPointer(window))->events_.push_back(
         {EditorInputEvent::Kind::Focus, 0, focused != 0});
   });
+  glfwSetCursorPosCallback(window_, [](GLFWwindow* window, double x, double y) {
+    static_cast<NativeWindow*>(glfwGetWindowUserPointer(window))->events_.push_back(
+        {EditorInputEvent::Kind::Cursor, 0, false, static_cast<float>(x), static_cast<float>(y)});
+  });
   return true;
 }
 

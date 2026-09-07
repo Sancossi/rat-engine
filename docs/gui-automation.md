@@ -7,6 +7,13 @@ viewport handlers, ImGui and bgfx rendering. The runner requires explicit
 data. Renderer selection is `--renderer software-d3d11` (Windows WARP) or
 `--renderer software-opengl` (Linux Mesa with `LIBGL_ALWAYS_SOFTWARE=1`).
 
+Windows software mode creates a D3D11 WARP device explicitly, verifies its actual
+DXGI adapter has `DXGI_ADAPTER_FLAG_SOFTWARE`, and supplies that device to bgfx.
+The report includes the actual adapter description. A software vendor request
+alone is insufficient with the pinned bgfx DXGI adapter-zero fallback. Linux
+currently reports software OpenGL as requested; local Linux verification remains
+unavailable.
+
 The infrastructure scenarios (`--scenario infrastructure`, `input-order`, and
 `authoring-text`) exercise real mode buttons, quick keyboard/viewport taps,
 Unicode fields, and multi-key text batches queued with Close/F5. They capture the
@@ -19,7 +26,7 @@ focus events. Native GLFW callbacks and scripted input use this same stream;
 the GLFW ImGui backend does not install a competing callback stream or run its
 polling NewFrame implementation. FrameCoordinator orders input, ImGui NewFrame,
 simulation, audio, UI drawing and presentation. Viewport and gameplay consume
-the same processed input state as ImGui, including transitions trickled across
+the same processed input state and cursor position as ImGui, including transitions trickled across
 frames. Close/F5 pause immediately and remain latched until ImGui's pre-action
 event queue is drained and the active widget has consumed its text. Trickling
 remains enabled so multiple transitions cannot disappear.

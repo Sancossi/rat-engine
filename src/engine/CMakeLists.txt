@@ -99,4 +99,5 @@ target_compile_features(rat_engine PUBLIC cxx_std_20)
 
 if(WIN32)
   target_compile_definitions(rat_engine PUBLIC NOMINMAX WIN32_LEAN_AND_MEAN)
+  target_link_libraries(rat_engine PRIVATE d3d11 dxgi)
 endif()

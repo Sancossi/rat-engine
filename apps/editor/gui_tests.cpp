@@ -21,10 +21,14 @@ struct Driver {
   rat::EditorFrameInput input;
   fs::path artifacts;
   int frames = 0;
+  Json trace = Json::array();
   void frame(int count = 1) {
     for (int i = 0; i < count; ++i) {
       app.step_frame(input, 1.0f / 60.0f);
       ++frames;
+      const auto& processed = app.observed_processed_input();
+      trace.push_back({{"frame",frames},{"mouse",{processed.cursor_x,processed.cursor_y,processed.mouse_buttons[0]}},
+        {"capture_mouse",app.observed_capture_mouse()},{"events",app.observed_document().data().events.size()}});
       input.characters.clear(); input.events.clear();
       input.wheel_x = input.wheel_y = 0;
       input.close_requested = false;
@@ -102,7 +106,7 @@ struct Driver {
     const auto& doc = app.observed_document();
     Json snapshot{{"frames",frames},{"dirty",doc.dirty()},{"can_undo",doc.can_undo()},
       {"can_redo",doc.can_redo()},{"modal",app.observed_modal()},{"error",app.observed_error()},
-      {"renderer",app.renderer_name()},{"items",items}};
+      {"renderer",app.renderer_name()},{"items",items},{"trace",trace}};
     std::ofstream(artifacts / (name + ".json")) << snapshot.dump(2);
   }
 };
@@ -203,13 +207,29 @@ int main(int argc, char** argv) {
         driver.click("Unsaved changes","Cancel"); driver.frame(4);
         driver.require(driver.app.observed_document().data().events[0].id == "queuedab", "Queued text leaked after modal dismissal");
       }
+      driver.click("Inspector","Place event##viewport_tool");
+      driver.input.cursor_x = point->x; driver.input.cursor_y = point->y; driver.frame(3);
+      const auto original_tile = driver.app.observed_document().data().events[0].tile;
+      driver.input.events = {{rat::EditorInputEvent::Kind::MouseButton,0,true},
+        {rat::EditorInputEvent::Kind::MouseButton,0,false}, {rat::EditorInputEvent::Kind::MouseButton,0,true},
+        {rat::EditorInputEvent::Kind::MouseButton,0,false}};
+      driver.frame();
+      const auto moved = driver.app.project_world({-2.5f,0.0f,0.5f});
+      driver.require(moved.has_value(), "Moved cursor projection missing");
+      driver.input.cursor_x = moved->x; driver.input.cursor_y = moved->y; driver.frame(8);
+      const auto& created = driver.app.observed_document().data().events;
+      driver.require(created.size() == 1 && driver.app.observed_document().selected_event() == 0,
+                     "Queued click selected/created at newer raw cursor instead of processed ImGui position");
+      driver.require(created[0].tile->x == original_tile->x && created[0].tile->z == original_tile->z,
+                     "Queued drag used newer raw cursor instead of processed ImGui position");
       driver.debug("input-order");
       report["scenarios"].push_back({{"name",scenario},{"status","passed"}});
     } else if (scenario == "authoring-text") {
       driver.add_event();
       driver.require(driver.app.observed_document().data().events.size() == 1, "Real Add stub event failed");
-      driver.text("Inspector","Event ID", U"??????? ?");
-      driver.require(driver.app.observed_document().data().events[0].id == "??????? ?", "Unicode authored field failed");
+      driver.text("Inspector","Event ID", U"\u0441\u043e\u0431\u044b\u0442\u0438\u0435 \u0401");
+      driver.require(driver.app.observed_document().data().events[0].id == "\u0441\u043e\u0431\u044b\u0442\u0438\u0435 \u0401", "Unicode authored field failed");
+      driver.capture("cyrillic-field");
       driver.click("Inspector","Save current map JSON");
       driver.require(!driver.app.observed_document().dirty(), "UI save did not mark clean");
       driver.text("Inspector","Event ID",U"focused",false);

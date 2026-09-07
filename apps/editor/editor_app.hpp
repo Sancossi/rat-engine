@@ -50,6 +50,8 @@ class EditorApp {
   bool init(const EditorLaunchOptions& options, const EditorInitialState& initial = {});
   int run();
   bool step_frame(const EditorFrameInput& input, float dt);
+  [[nodiscard]] const EditorFrameInput& observed_processed_input() const { return processed_input_; }
+  [[nodiscard]] bool observed_capture_mouse() const;
   [[nodiscard]] const EditorDocument& observed_document() const { return document_; }
   [[nodiscard]] const SimulationSession& observed_session() const { return session_; }
   [[nodiscard]] const EventGraphCanvasState& observed_canvas() const { return event_panel_.canvas; }
