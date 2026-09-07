@@ -12,6 +12,7 @@
 
 #include <algorithm>
 #include <limits>
+#include <tuple>
 #include <nlohmann/json.hpp>
 #include <string>
 
@@ -508,4 +509,87 @@ TEST_CASE("Occupancy outside grid reports its exact index with widened origin ar
   const auto loaded = rat::load_map_document_from_string(json.dump());
   CHECK_FALSE(loaded.ok);
   CHECK(has_error_at(loaded.issues, "/occupancy/0"));
+}
+
+TEST_CASE("Present graph parameters never silently fall back to defaults", "[unit][mapdoc][storage]") {
+  using nlohmann::json;
+  const auto base = json::parse(R"({"schema_version":1,"id":"strict_graph","width":1,"height":1,"events":[{"id":"e","tile":{"x":0,"z":0},"pages":[{"trigger":"action","graph":{"nodes":[{"id":"n","kind":"control_variable","params":{"id":1,"value":2}}],"edges":[{"from":"entry","to":"n"},{"from":"n","to":"exit"}]}}]}]})");
+  const auto reject = [&](const json& text) {
+    INFO(text.dump());
+    CHECK_FALSE(rat::load_map_from_string(text.dump()).ok);
+    CHECK_FALSE(rat::load_map_document_from_string(text.dump()).ok);
+    rat::MemoryFileStore files;
+    REQUIRE(files.write("main", "previous main").ok);
+    REQUIRE(files.write("candidate", text.dump()).ok);
+    CHECK_FALSE(rat::load_map_document_from_file("candidate", files).ok);
+    CHECK(files.read("main").bytes.as_text() == "previous main");
+  };
+  for (const json bad : {json(-1), json(1.5), json("1"), json(true), json(4294967296ULL)}) {
+    auto text = base;
+    text["events"][0]["pages"][0]["graph"]["nodes"][0]["params"]["id"] = bad;
+    reject(text);
+  }
+  for (const json bad : {json(1.5), json("2"), json(true), json(2147483648LL)}) {
+    auto text = base;
+    text["events"][0]["pages"][0]["graph"]["nodes"][0]["params"]["value"] = bad;
+    reject(text);
+  }
+  for (const auto& [kind, key, value] : std::vector<std::tuple<std::string, std::string, json>>{
+    {"control_switch", "value", 1}, {"control_self_switch", "key", "ZZ"},
+    {"control_self_switch", "key", 1}, {"play_se", "id", 3}, {"change_items", "id", 4},
+    {"show_text", "text", false}, {"set_move_route", "through", 1}}) {
+    auto text = base;
+    auto& node = text["events"][0]["pages"][0]["graph"]["nodes"][0];
+    node["kind"] = kind;
+    node["params"] = {{key, value}};
+    reject(text);
+  }
+  auto text = base;
+  text["events"][0]["pages"][0]["graph"]["nodes"][0]["params"] = 1;
+  reject(text);
+  REQUIRE(rat::load_map_document_from_string(base.dump()).ok);
+}
+
+TEST_CASE("Finite authored operands cannot overflow derived terrain geometry", "[unit][mapdoc][storage]") {
+  using nlohmann::json;
+  const auto base = json::parse(rat::serialize_map_to_string(make_flat_document_map()).json_text);
+  for (int field = 0; field < 6; ++field) {
+    auto text = base;
+    text["schema_version"] = 5;
+    auto map = make_flat_document_map();
+    map.schema_version = 5;
+    switch (field) {
+      case 0:
+        text["ramps"] = {{{"tile", {{"x", 0}, {"z", 0}}}, {"direction", "east"}, {"low_y", -3e38}, {"high_y", 3e38}}};
+        map.ramps.push_back({{0, 0}, rat::RampDirection::East, -3e38f, 3e38f}); break;
+      case 1:
+        text["tile_size"] = 1e30;
+        text["occupancy"] = {{{"x", 0}, {"y", 1000000000}, {"z", 0}, {"kind", "solid"}}};
+        map.tile_size = 1e30f; map.occupancy.push_back({0, 1000000000, 0}); break;
+      case 2:
+        text["height_grid"]["ground_y"][0] = 3e38;
+        text["edge_barriers"] = {{{"tile", {{"x", 0}, {"z", 0}}}, {"direction", "east"}, {"height", 3e38}}};
+        map.height_grid.ground_y[0] = 3e38f; map.edge_barriers.push_back({{0, 0}, rat::RampDirection::East, 3e38f}); break;
+      case 3:
+        text["floor_slabs"] = {{{"tile", {{"x", 0}, {"z", 0}}}, {"top_y", -3e38}, {"thickness", 3e38}}};
+        map.floor_slabs.push_back({{0, 0}, -3e38f, 3e38f}); break;
+      case 4:
+        text["ladders"] = {{{"tile", {{"x", 0}, {"z", 0}}}, {"direction", "east"}, {"y_lo", -3e38}, {"y_hi", 3e38}}};
+        map.ladders.push_back({{0, 0}, rat::RampDirection::East, -3e38f, 3e38f}); break;
+      case 5:
+        text["blockers"] = {{{"min_x", -3e38}, {"max_x", 3e38}, {"min_z", 0}, {"max_z", 1}}};
+        map.blockers.push_back({{-3e38f, 0, 3e38f, 1}}); break;
+    }
+    INFO("derived field " << field);
+    CHECK_FALSE(rat::load_map_from_string(text.dump()).ok);
+    CHECK_FALSE(rat::load_map_document_from_string(text.dump()).ok);
+    CHECK_FALSE(rat::compile_map_data(map).ok);
+    CHECK_FALSE(rat::serialize_map_to_string(map).ok);
+    rat::MemoryFileStore files;
+    REQUIRE(files.write("main", "previous main").ok);
+    REQUIRE(files.write("main.bak", "previous backup").ok);
+    CHECK_FALSE(rat::save_map_to_file(map, "main", files).ok);
+    CHECK(files.read("main").bytes.as_text() == "previous main");
+    CHECK(files.read("main.bak").bytes.as_text() == "previous backup");
+  }
 }

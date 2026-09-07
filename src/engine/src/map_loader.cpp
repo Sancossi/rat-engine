@@ -319,17 +319,18 @@ EventGraphNode parse_graph_node(const json& node) {
   EventGraphNode graph_node;
   graph_node.id = node.at("id").get<std::string>();
   graph_node.kind = node.at("kind").get<std::string>();
-  if (!node.contains("params") || !node.at("params").is_object()) {
+  if (!node.contains("params")) {
     return graph_node;
   }
   const json& params = node.at("params");
+  if (!params.is_object()) throw std::runtime_error("graph node params must be an object");
   const auto take_uint_id = [&]() {
-    if (params.contains("id") && params.at("id").is_number_unsigned()) {
+    if (params.contains("id")) {
       graph_node.switch_id = checked_number<std::uint32_t>(params.at("id"));
     }
   };
   const auto take_bool_value = [&]() {
-    if (params.contains("value") && params.at("value").is_boolean()) {
+    if (params.contains("value")) {
       graph_node.bool_value = params.at("value").get<bool>();
     }
   };
@@ -342,15 +343,15 @@ EventGraphNode parse_graph_node(const json& node) {
     take_bool_value();
   } else if (graph_node.kind == "control_variable") {
     take_uint_id();
-    if (params.contains("value") && params.at("value").is_number_integer()) {
+    if (params.contains("value")) {
       graph_node.int_value = checked_number<int>(params.at("value"));
     }
   } else if (graph_node.kind == "control_self_switch") {
-    if (params.contains("key") && params.at("key").is_string()) {
+    if (params.contains("key")) {
       const std::string key = params.at("key").get<std::string>();
-      if (key.size() == 1 && key[0] >= 'A' && key[0] <= 'D') {
-        graph_node.self_switch = key[0];
-      }
+      if (key.size() != 1 || key[0] < 'A' || key[0] > 'D')
+        throw std::runtime_error("graph self_switch key must be A-D");
+      graph_node.self_switch = key[0];
     }
     take_bool_value();
   } else if (graph_node.kind == "wait") {
@@ -373,7 +374,7 @@ EventGraphNode parse_graph_node(const json& node) {
       graph_node.z = checked_number<float>(params.at("z"));
     }
   } else if (graph_node.kind == "change_items") {
-    if (params.contains("id") && params.at("id").is_string()) {
+    if (params.contains("id")) {
       graph_node.item_id = params.at("id").get<std::string>();
     }
     if (params.contains("delta")) {
@@ -381,7 +382,7 @@ EventGraphNode parse_graph_node(const json& node) {
     }
     graph_node.key_item = params.value("key_item", false);
   } else if (graph_node.kind == "play_se") {
-    if (params.contains("id") && params.at("id").is_string()) {
+    if (params.contains("id")) {
       graph_node.text = params.at("id").get<std::string>();
     }
   } else if (graph_node.kind == "set_move_route") {
@@ -393,7 +394,9 @@ EventGraphNode parse_graph_node(const json& node) {
     if (params.contains("text")) {
       graph_node.text = params.at("text").get<std::string>();
     }
-    take_uint_id();
+    // Unknown kinds are repairable drafts and have no typed parameter schema.
+    // Preserve the known numeric fallback only; do not interpret an opaque id as a switch.
+    if (params.contains("id") && params.at("id").is_number()) take_uint_id();
     take_bool_value();
     if (params.contains("frames")) {
       graph_node.frames = checked_number<int>(params.at("frames"));

@@ -58,7 +58,7 @@ class SimulationSession {
   [[nodiscard]] SimulationLoadResult load(const MapData& map);
   // Apply a loaded GameState as session progress. Reloads event interpreters from
   // the current map so a prior session.load() cannot wipe switches/vars/items.
-  // Fails if loaded.map_id() is non-empty and does not match the current map.
+  // Fails without mutation if map_id is empty/mismatched or position is nonfinite.
   [[nodiscard]] GameFileResult apply_loaded_game(const GameState& loaded);
   void set_player(PlayerBody player);
   void set_app_mode(AppMode mode);

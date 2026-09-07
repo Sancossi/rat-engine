@@ -267,6 +267,16 @@ std::vector<MapIssue> validate_map_structure(const MapData& data) {
   const auto bounds = [&](const Aabb2& box, const std::string& path) {
     finite(box.min_x, path + "/min_x"); finite(box.min_z, path + "/min_z");
     finite(box.max_x, path + "/max_x"); finite(box.max_z, path + "/max_z");
+    finite(box.max_x - box.min_x, path + "/width");
+    finite(box.max_z - box.min_z, path + "/depth");
+    finite(box.max_x + box.min_x, path + "/center_x");
+    finite(box.max_z + box.min_z, path + "/center_z");
+  };
+  const auto world_tile = [&](TileCoord tile, const std::string& path) {
+    finite(static_cast<float>(tile.x) * data.tile_size, path + "/x");
+    finite(static_cast<float>(static_cast<double>(tile.x) + 1.0) * data.tile_size, path + "/x");
+    finite(static_cast<float>(tile.z) * data.tile_size, path + "/z");
+    finite(static_cast<float>(static_cast<double>(tile.z) + 1.0) * data.tile_size, path + "/z");
   };
   if (data.id.empty()) add_error(issues, "/id", "map id must not be empty");
   if (data.schema_version < 1 || data.schema_version > 5)
@@ -296,33 +306,63 @@ std::vector<MapIssue> validate_map_structure(const MapData& data) {
   for (std::size_t i = 0; i < data.ramps.size(); ++i) {
     const auto path = index_path("/ramps", i);
     finite(data.ramps[i].low_y, path + "/low_y"); finite(data.ramps[i].high_y, path + "/high_y");
+    finite(data.ramps[i].high_y - data.ramps[i].low_y, path + "/rise");
+    world_tile(data.ramps[i].tile, path + "/tile");
   }
-  for (std::size_t i = 0; i < data.edge_barriers.size(); ++i)
-    finite(data.edge_barriers[i].height, index_path("/edge_barriers", i) + "/height");
+  for (std::size_t i = 0; i < data.edge_barriers.size(); ++i) {
+    const auto& edge = data.edge_barriers[i];
+    const auto path = index_path("/edge_barriers", i);
+    finite(edge.height, path + "/height");
+    world_tile(edge.tile, path + "/tile");
+    if (tile_in_grid(grid, edge.tile.x, edge.tile.z)) {
+      const auto x = static_cast<std::int64_t>(edge.tile.x) - grid.origin_x;
+      const auto z = static_cast<std::int64_t>(edge.tile.z) - grid.origin_z;
+      const auto index = static_cast<std::size_t>(z) * grid.width + static_cast<std::size_t>(x);
+      if (index < grid.ground_y.size()) finite(grid.ground_y[index] + edge.height, path + "/top_y");
+      for (const auto& ramp : data.ramps) {
+        if (ramp.tile.x == edge.tile.x && ramp.tile.z == edge.tile.z) {
+          finite(ramp.low_y + edge.height, path + "/top_y");
+          finite(ramp.high_y + edge.height, path + "/top_y");
+        }
+      }
+    }
+  }
   for (std::size_t i = 0; i < data.floor_slabs.size(); ++i) {
     const auto path = index_path("/floor_slabs", i);
     finite(data.floor_slabs[i].top_y, path + "/top_y");
     finite(data.floor_slabs[i].thickness, path + "/thickness");
     finite(data.floor_slabs[i].top_y - data.floor_slabs[i].thickness, path);
+    world_tile(data.floor_slabs[i].tile, path + "/tile");
   }
   for (std::size_t i = 0; i < data.ladders.size(); ++i) {
     const auto path = index_path("/ladders", i);
     finite(data.ladders[i].y_lo, path + "/y_lo"); finite(data.ladders[i].y_hi, path + "/y_hi");
+    finite(data.ladders[i].y_hi - data.ladders[i].y_lo, path + "/height");
+    world_tile(data.ladders[i].tile, path + "/tile");
   }
   for (std::size_t i = 0; i < data.indoor_volumes.size(); ++i) {
     const auto path = index_path("/indoor_volumes", i);
     bounds(data.indoor_volumes[i].xz, path);
     finite(data.indoor_volumes[i].y_lo, path + "/y_lo"); finite(data.indoor_volumes[i].y_hi, path + "/y_hi");
+    finite(data.indoor_volumes[i].y_hi - data.indoor_volumes[i].y_lo, path + "/height");
   }
   for (std::size_t i = 0; i < data.blockers.size(); ++i) {
     const auto path = index_path("/blockers", i);
     bounds(data.blockers[i].bounds, path);
     if (data.blockers[i].base_y) finite(*data.blockers[i].base_y, path + "/base_y");
     if (data.blockers[i].top_y) finite(*data.blockers[i].top_y, path + "/top_y");
+    if (data.blockers[i].base_y && data.blockers[i].top_y)
+      finite(*data.blockers[i].top_y - *data.blockers[i].base_y, path + "/height");
   }
   for (std::size_t i = 0; i < data.occupancy.size(); ++i) {
     const auto& cell = data.occupancy[i];
     const auto path = index_path("/occupancy", i);
+    world_tile({cell.x, cell.z}, path);
+    const float bottom = static_cast<float>(cell.y) * data.tile_size;
+    const float top = static_cast<float>(static_cast<double>(cell.y) + 1.0) * data.tile_size;
+    finite(bottom, path + "/bottom_y");
+    finite(top, path + "/top_y");
+    finite(top - data.tile_size, path + "/slab_bottom_y");
     if (!tile_in_grid(grid, cell.x, cell.z)) add_error(issues, path, "occupancy cell xz is outside height grid");
     if (cell.y == (std::numeric_limits<int>::max)() || cell.y == (std::numeric_limits<int>::min)())
       add_error(issues, path + "/y", "occupancy neighbor height exceeds integer range");
@@ -342,6 +382,7 @@ std::vector<MapIssue> validate_map_structure(const MapData& data) {
     const auto path = index_path("/events", i);
     if (event.id.empty() || !event_ids.insert(event.id).second)
       add_error(issues, path + "/id", "event id must be nonempty and unique");
+    if (event.tile) world_tile(*event.tile, path + "/tile");
     if (event.volume) bounds(*event.volume, path + "/volume");
     if (event.y) finite(*event.y, path + "/y");
     for (std::size_t p = 0; p < event.pages.size(); ++p) {
