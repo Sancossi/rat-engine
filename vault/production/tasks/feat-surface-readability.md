@@ -1,8 +1,8 @@
 ---
 type: task
 area: Engine
-status: In review
-review: In review
+status: Done
+review: Approved
 task_type: Feature
 sprint:
 due:
@@ -26,7 +26,7 @@ Acceptance:
 
 ## Resolution
 
-Implemented in 72c51d7; baseline fixture/captures in 612d517. Independent review in progress. Release and headless each passed 713 tests; Python 10 and vault passed. Full 43 GUI scenarios passed on WARP; installed package subset of infrastructure plus three surface scenarios passed with package/cwd unchanged. Parent inspected matching top/tilted before/after captures and confirmed readable shapes. Evidence: build/surface-readability/final-artifacts/gui-run-qvjzd_at/; build/dev-release/gui-artifacts/gui-run-3gu0jmti/; build/surface-readability/package-artifacts/gui-run-_s2kvmih/. Standalone feature; no new sprint activated.
+Implemented in 72c51d7; baseline fixture/captures in 612d517. Independent review Approved after correction 4eeb457. Release and headless each passed 713 tests; Python 10 and vault passed. Full 43 GUI scenarios passed on WARP; installed package subset of infrastructure plus three surface scenarios passed with package/cwd unchanged. Parent inspected matching top/tilted before/after captures and confirmed readable shapes. Evidence: build/surface-readability/final-artifacts/gui-run-qvjzd_at/; build/dev-release/gui-artifacts/gui-run-3gu0jmti/; build/surface-readability/package-artifacts/gui-run-_s2kvmih/. Standalone feature; no new sprint activated.
 
 ## Bugs found
 
@@ -37,3 +37,6 @@ Review 72c51d7 Needs fixes: contour interval extraction scans all segments per i
 
 
 Correction 4eeb457 replaces quadratic interval scanning with an endpoint sweep and bounded normal classification. Long-strip500/10000 regression checks linear operation counts and exact perimeter. Full Release714/714, Python10 and vault passed; post-fix WARP three surface scenarios passed: build/surface-readability/sweep-artifacts/gui-run-8qx09y3f/. Independent re-review pending. Prior full43GUI and installed4 evidence belongs to72c51d7.
+
+
+Final acceptance: 4eeb457 independently Approved. Reviewer repeated seven surface tests/1134 assertions and three real WARP scenarios, inspected tilted image; report build/surface-readability/review-sweep-artifacts/gui-run-h7x2zhf5/. Parent reran FULL43 GUI scenarios on corrected implementation, exit0, report build/surface-readability/final-review-artifacts/gui-run-rq2hlw7n/gui-acceptance-report.json; package/cwd unchanged. Full Release714 and Python10 passed. No unresolved review findings. Final stage-close Release rebuild follows this status update.
