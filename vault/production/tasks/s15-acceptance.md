@@ -70,3 +70,6 @@ Stage6c memory/benchmark slice6694640 is in independent review. Full Release and
 
 
 Independent review Approved6694640: five focused memory/benchmark tests with51 assertions passed; independent benchmark ran all four maps with10,000 measured ticks each, report build/stabilization/review-benchmark-rm5r2bw6/report.json. No blocking findings; baseline metadata and CI/final verification remain in progress.
+
+
+Baseline evidence f82f5df independently Approved: docs/benchmarks/2026-09-07-windows-release.json records implementation6694640, Release/compiler/machine/time, unchanged measured-source list and preserved unrelated tracked edits. Units/sample counts and memory phase totals match independent run. CI/final validation remains in progress.
