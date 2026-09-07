@@ -200,6 +200,12 @@ void GreyboxScene::set_selected_event_marker(int index) {
   selected_event_marker_ = index;
 }
 
+void GreyboxScene::set_camera_override(std::optional<ClimbCameraPose> pose) {
+  camera_override_ = std::move(pose);
+  has_display_ = false;
+  rebuild_camera();
+}
+
 void GreyboxScene::rebuild_camera() {
   if (has_player_) {
     params_.focus = {player_.x, player_.y, player_.z};
@@ -208,7 +214,10 @@ void GreyboxScene::rebuild_camera() {
 
   ClimbCameraPose target;
   Vec3 target_up;
-  if (climb_locked_) {
+  if (camera_override_ && !climb_locked_) {
+    target = *camera_override_;
+    target_up = {0.0f, 1.0f, 0.0f};
+  } else if (climb_locked_) {
     target = climb_camera_pose({player_.x, player_.y, player_.z}, climb_into_x_, climb_into_z_);
     target_up = {0.0f, 1.0f, 0.0f};
   } else {

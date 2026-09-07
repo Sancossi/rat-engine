@@ -594,6 +594,7 @@ bool EditorApp::init(const EditorLaunchOptions& options, const EditorInitialStat
   snap_player_to_ground_clear_jump();
   if (initial_.player) session_.player() = *initial_.player;
   engine_->set_player(session_.player());
+  engine_->greybox().set_camera_override(initial_.camera_pose);
 
   refresh_mode_banner();
 
@@ -1467,6 +1468,10 @@ void EditorApp::draw_ui() {
     const int selected = document_.selected_event();
     const auto& events = document_.visible_data().events;
     if (selected >= 0 && selected < static_cast<int>(events.size())) {
+      if (initial_.automation_layout) {
+        ImGui::SetNextWindowPos(ImVec2(565, 24), ImGuiCond_FirstUseEver);
+        ImGui::SetNextWindowSize(ImVec2(710, 680), ImGuiCond_FirstUseEver);
+      }
       draw_event_graph_window(document_, event_panel_, &event_graph_open_);
     }
   }

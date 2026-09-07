@@ -37,6 +37,7 @@ struct EditorInitialState {
   bool automation_layout = false;
   bool hidden_window = false;
   std::optional<PlayerBody> player;
+  std::optional<ClimbCameraPose> camera_pose;
 };
 
 class EditorApp {

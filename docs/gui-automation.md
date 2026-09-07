@@ -33,8 +33,20 @@ Additional implemented scenario arguments:
 - `history-voxel`: no-op field/removal, undo-to-clean, aborted stroke preserving redo,
   real viewport voxel placement/removal and undo/redo.
 
-The remaining graph, all-yaw ramp, bridge, scaling and package acceptance groups
-are still pending; passing the scenarios above is not the complete GUI suite.
+- `graph`: actual pin gestures (self, source, empty release and two-click connection),
+  add/connect/delete, one-gesture layout undo/redo, no-op redo preservation and persistence.
+- `ramp-{north,east,south,west}`: elevated solid side placement through the actual
+  projection and picking pipeline; immutable camera poses expose the four faces.
+- `bridge-{above,under,filled}`: real held movement onto queried thin support,
+  through an underpass, and blocked by the corresponding filled-solid fixture.
+- `play-modal`: previously advancing dirty Play pauses for the modal and resumes
+  without replaying held F5 or accumulating paused simulation time.
+- `unsupported-touch`, `unsupported-transfer`: Open unsupported drafts through UI,
+  reject Apply/Play, repair through real widgets and successfully Apply/Play.
+  EventTouch remains a visible disabled choice.
+
+Scaling and installed-package acceptance groups are still pending; passing the
+scenarios above is not the complete GUI suite.
 
 `EditorFrameInput` carries held state and ordered key, character, mouse, wheel and
 focus events. Native GLFW callbacks and scripted input use this same stream;

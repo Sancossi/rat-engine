@@ -1,6 +1,7 @@
 #include "event_graph_window.hpp"
 
 #include "event_graph_canvas.hpp"
+#include "../gui_observer.hpp"
 
 #include <rat/edit_history.hpp>
 #include <rat/event_edit.hpp>
@@ -160,7 +161,9 @@ void draw_event_graph_window(EditorDocument& document, EventPanelState& state, b
   EventPage& page = event.pages[static_cast<std::size_t>(document.selected_page())];
   int trigger = static_cast<int>(page.trigger);
   constexpr const char* triggers[] = {"action", "player_touch", "event_touch (unsupported)", "autorun", "parallel"};
-  if (ImGui::BeginCombo("Trigger", trigger >= 0 && trigger < 5 ? triggers[trigger] : "invalid")) {
+  const bool trigger_open = ImGui::BeginCombo("Trigger", trigger >= 0 && trigger < 5 ? triggers[trigger] : "invalid");
+  if (!trigger_open) observe_gui_item("Trigger");
+  if (trigger_open) {
     for (int choice = 0; choice < 5; ++choice) {
       ImGui::BeginDisabled(choice == static_cast<int>(TriggerKind::EventTouch));
       if (ImGui::Selectable(triggers[choice], choice == trigger)) {

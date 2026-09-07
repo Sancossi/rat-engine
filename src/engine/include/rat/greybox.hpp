@@ -8,6 +8,7 @@
 #include <bgfx/bgfx.h>
 
 #include <cstdint>
+#include <optional>
 #include <span>
 #include <vector>
 
@@ -34,6 +35,7 @@ class GreyboxScene {
   void resize(std::uint32_t width, std::uint32_t height);
   void set_focus(float x, float y, float z);
   void set_camera_mode(CameraMode mode);
+  void set_camera_override(std::optional<ClimbCameraPose> pose);
   void set_player(const PlayerBody& player);
   void set_climb_lock(bool locked, float into_x, float into_z);
   void tick(float dt);
@@ -72,6 +74,7 @@ class GreyboxScene {
   std::uint32_t height_ = 1;
   OrthoCameraParams params_{};
   OrthoCamera camera_{};
+  std::optional<ClimbCameraPose> camera_override_;
   PlayerBody player_{};
   MapData terrain_map_{};
   bool has_terrain_map_ = false;

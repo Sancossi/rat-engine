@@ -364,6 +364,9 @@ void draw_event_graph_canvas(EditorDocument& document, EventGraphCanvasState& ca
       const std::string pending_label =
           canvas.pending_branch.has_value() ? (" " + *canvas.pending_branch) : std::string();
       ImGui::Text("Connecting from %s%s", canvas.pending_from.c_str(), pending_label.c_str());
+    } else {
+      // Keep the canvas origin stable while a pin gesture is active.
+      ImGui::TextUnformatted(" ");
     }
   }
 
@@ -765,20 +768,8 @@ void draw_event_graph_canvas(EditorDocument& document, EventGraphCanvasState& ca
       paste_clipboard_node(document, event, canvas);
       canvas_need_reload = true;
     }
-    if (io.WantCaptureKeyboard) {
-      const EventGraphCanvasHistoryAction history = event_graph_canvas_history_action(
-          io.KeyCtrl, io.KeyShift, ImGui::IsKeyPressed(ImGuiKey_Z, false),
-          ImGui::IsKeyPressed(ImGuiKey_Y, false));
-      if (history == EventGraphCanvasHistoryAction::Undo) {
-        if (document.undo().ok) {
-          canvas_need_reload = true;
-        }
-      } else if (history == EventGraphCanvasHistoryAction::Redo) {
-        if (document.redo().ok) {
-          canvas_need_reload = true;
-        }
-      }
-    }
+    // Global editor history shortcuts are consumed once by EditorApp, including
+    // navigation focus here. Text fields retain their own undo handling.
   }
 
   if (canvas_hovered) {

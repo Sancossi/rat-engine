@@ -2,6 +2,7 @@
 #include "gui_observer.hpp"
 #include <rat/map_loader.hpp>
 #include <rat/save_game.hpp>
+#include <rat/collision.hpp>
 #include <rat/authoring_snapshot.hpp>
 #if defined(_WIN32)
 #include <windows.h>
@@ -67,7 +68,9 @@ struct Driver {
       ++frames;
       const auto& processed = app.observed_processed_input();
       trace.push_back({{"frame",frames},{"mouse",{processed.cursor_x,processed.cursor_y,processed.mouse_buttons[0]}},
-        {"capture_mouse",app.observed_capture_mouse()},{"events",app.observed_document().data().events.size()}});
+        {"capture_mouse",app.observed_capture_mouse()},{"events",app.observed_document().data().events.size()},
+        {"player",{app.observed_session().player().x,app.observed_session().player().y,app.observed_session().player().z}},
+        {"tick",app.observed_session().tick_id()}});
       input.characters.clear(); input.events.clear();
       input.wheel_x = input.wheel_y = 0;
       input.close_requested = false;
@@ -114,6 +117,18 @@ struct Driver {
     input.cursor_x = x; input.cursor_y = y; frame(2);
     input.mouse_buttons[static_cast<std::size_t>(button)] = true; frame();
     input.mouse_buttons[static_cast<std::size_t>(button)] = false; frame(2);
+  }
+  void drag(const rat::GuiItemObservation& from, float target_x, float target_y, bool detour = false) {
+    input.cursor_x = (from.min_x+from.max_x)*0.5; input.cursor_y = (from.min_y+from.max_y)*0.5;
+    frame(2); input.mouse_buttons[0] = true; frame();
+    if (detour) { input.cursor_x += 35; input.cursor_y += 20; frame(2); }
+    input.cursor_x = target_x; input.cursor_y = target_y; frame(2);
+    input.mouse_buttons[0] = false; frame(3);
+  }
+  void connect(const std::string& from, const std::string& to) {
+    const auto source = find("Event Graph","##out_"+from);
+    const auto target = find("Event Graph","##in_"+to);
+    drag(source,(target.min_x+target.max_x)*0.5f,(target.min_y+target.max_y)*0.5f);
   }
   void world_click(rat::Vec3 position, int button = 0) {
     const auto pixel = app.project_world(position);
@@ -212,7 +227,32 @@ int main(int argc, char** argv) {
       Json fixture{{"schema_version",5},{"id","gui_fixture"},{"width",16},{"height",16},{"tile_size",1.0},
         {"height_grid",{{"origin_x",-4},{"origin_z",-4},{"width",16},{"height",16},{"ground_y",std::vector<float>(256,0)}}},
         {"occupancy",Json::array()},{"events",Json::array()}};
+      if (scenario == "graph" || scenario == "unsupported-touch" || scenario == "unsupported-transfer") {
+        Json graph{{"nodes",{{{"id","text"},{"kind","show_text"},{"params",{{"text","Original"}}},{"layout",{{"x",180},{"y",24}}}}}},
+                   {"edges",{{{"from","entry"},{"to","text"}},{{"from","text"},{"to","exit"}}}}};
+        Json event{{"id","graph_event"},{"tile",{{"x",-3},{"z",0}}},
+                   {"pages",{{{"trigger","action"},{"graph",graph}}}}};
+        fixture["events"].push_back(event);
+      }
+      if (scenario.starts_with("ramp-")) fixture["occupancy"].push_back({{"x",0},{"y",2},{"z",0},{"kind","solid"}});
+      if (scenario == "bridge-above") {
+        fixture["occupancy"] = {{{"x",0},{"y",0},{"z",0},{"kind","ramp"},{"yaw","east"}},
+                                 {{"x",1},{"y",1},{"z",0},{"kind","ramp"},{"yaw","east"}}};
+        fixture["floor_slabs"] = {{{"tile",{{"x",2},{"z",0}}},{"top_y",2.0},{"thickness",0.25}}};
+      }
+      if (scenario == "bridge-under") fixture["floor_slabs"] = {{{"tile",{{"x",1},{"z",0}}},{"top_y",2.0},{"thickness",0.25}}};
+      if (scenario == "bridge-filled") fixture["occupancy"] = {{{"x",1},{"y",0},{"z",0},{"kind","solid"}},{{"x",1},{"y",1},{"z",0},{"kind","solid"}}};
       if (scenario != "restart-add") std::ofstream(map) << fixture.dump(2);
+      if (scenario.starts_with("unsupported-")) {
+        auto unsupported = fixture;
+        auto& page = unsupported["events"][0]["pages"][0];
+        if (scenario == "unsupported-touch") page["trigger"] = "event_touch";
+        else {
+          page["graph"]["nodes"][0]["kind"] = "transfer_player";
+          page["graph"]["nodes"][0]["params"] = {{"map_id","other_map"},{"x",0},{"y",0},{"z",0}};
+        }
+        std::ofstream(user/"unsupported.json") << unsupported.dump(2);
+      }
       fixture["id"] = "alternative_fixture";
       std::ofstream(user/"alternative.json") << fixture.dump(2);
       fixture["id"] = "backup_fixture";
@@ -232,6 +272,21 @@ int main(int argc, char** argv) {
         utf8(artifacts/"editor.log"),utf8(artifacts/"snapshot.json"),utf8(user/"imgui.ini")};
     rat::EditorInitialState initial;
     initial.renderer = renderer; initial.automation_layout = true; initial.hidden_window = true;
+    if (scenario.starts_with("ramp-")) {
+      const auto yaw = scenario.substr(5);
+      rat::ClimbCameraPose camera;
+      camera.focus = {0.5f,2.5f,0.5f}; camera.eye = camera.focus; camera.eye.y += 4.0f;
+      if (yaw == "west") camera.eye.x += 6.0f;
+      else if (yaw == "east") camera.eye.x -= 6.0f;
+      else if (yaw == "north") camera.eye.z += 6.0f;
+      else if (yaw == "south") camera.eye.z -= 6.0f;
+      else throw std::runtime_error("Unknown ramp yaw fixture");
+      initial.camera_pose = camera;
+    }
+    if (scenario.starts_with("bridge-")) {
+      rat::PlayerBody player; player.x = scenario == "bridge-above" ? 0.15f : 0.5f;
+      player.y = 0; player.z = 0.5f; player.speed = 4.0f; initial.player = player;
+    }
     const bool initialized = driver.app.init(options, initial);
     if (scenario == "malformed-start") {
       driver.require(!initialized, "Malformed startup unexpectedly initialized");
@@ -446,6 +501,123 @@ int main(int argc, char** argv) {
       driver.key(GLFW_KEY_Y,true);
       driver.require(driver.app.observed_document().data().occupancy.empty(), "Voxel removal redo failed");
       driver.capture(scenario); driver.debug(scenario); report["scenarios"].push_back({{"name",scenario},{"status","passed"}});
+    } else if (scenario.starts_with("ramp-")) {
+      driver.enter_edit(); driver.click("Inspector","Place ramp voxel##viewport_tool");
+      const auto yaw = scenario.substr(5);
+      rat::Vec3 face{0.5f,2.5f,0.5f};
+      int x = 0, z = 0;
+      rat::RampDirection expected = rat::RampDirection::North;
+      if (yaw == "west") { face.x = 1.0f; x = 1; expected = rat::RampDirection::West; }
+      if (yaw == "east") { face.x = 0.0f; x = -1; expected = rat::RampDirection::East; }
+      if (yaw == "north") { face.z = 1.0f; z = 1; expected = rat::RampDirection::North; }
+      if (yaw == "south") { face.z = 0.0f; z = -1; expected = rat::RampDirection::South; }
+      driver.capture("before-side-place"); driver.world_click(face);
+      const auto& cells = driver.app.observed_document().data().occupancy;
+      driver.require(cells.size() == 2, "Real visible side-face click did not place ramp");
+      const auto& ramp = cells.back();
+      driver.require(ramp.kind == rat::OccupancyKind::Ramp && ramp.x == x && ramp.y == 2 && ramp.z == z && ramp.yaw == expected,
+                     "Side-face gesture placed wrong cell/layer/yaw");
+      driver.capture(scenario); driver.debug(scenario); report["scenarios"].push_back({{"name",scenario},{"status","passed"}});
+    } else if (scenario.starts_with("bridge-")) {
+      driver.click_at(1000,650);
+      // Top-down input basis maps A to world +X. This is the real keyboard path.
+      driver.input.keys[GLFW_KEY_A] = true;
+      bool crossed = false, thin_support = false;
+      for (int i = 0; i < 80; ++i) {
+        driver.frame(); const auto& session = driver.app.observed_session(); const auto& player = session.player();
+        if (scenario == "bridge-above" && player.x >= 2.1f && player.x < 2.8f && session.jump().grounded && std::abs(player.y-2.0f)<0.06f) {
+          const auto& map_data = session.events().map();
+          const auto world = rat::bake_collision_world(map_data,rat::SurfaceQuery(map_data));
+          const auto support = rat::query_solid_support(world,player.x,player.z,player.half_extent,player.y,0.01f);
+          for (const auto& box : world.boxes)
+            thin_support |= support && !support->on_ramp && player.x >= box.min_x && player.x < box.max_x &&
+              player.z >= box.min_z && player.z < box.max_z && std::abs(box.y_hi-player.y)<0.01f && std::abs(box.y_hi-box.y_lo-0.25f)<0.01f;
+          crossed = true; break;
+        }
+        if (scenario != "bridge-above" && player.x > 1.2f && player.x < 1.8f) {
+          crossed = true;
+          driver.require(std::abs(player.y)<0.01f && session.jump().grounded, "Underpass left ground");
+        }
+      }
+      driver.input.keys[GLFW_KEY_A] = false; driver.frame();
+      if (scenario == "bridge-above") driver.require(crossed && thin_support, "Player did not walk onto actual thin bridge support");
+      else if (scenario == "bridge-under") driver.require(crossed && driver.app.observed_session().player().x > 2.0f, "Player did not progress through underpass");
+      else driver.require(!crossed && driver.app.observed_session().player().x < 0.7f, "Filled-ground-to-deck negative fixture did not block identical input");
+      driver.capture(scenario); driver.debug(scenario); report["scenarios"].push_back({{"name",scenario},{"status","passed"}});
+    } else if (scenario == "graph") {
+      driver.enter_edit(); driver.click("Inspector","Events"); driver.click("Inspector","graph_event  tile(-3,0)"); driver.click("Inspector","Open Event Graph");
+      const auto baseline = rat::authoring_snapshot(driver.app.observed_document().data());
+      driver.capture("graph-initial");
+      driver.connect("text","text");
+      driver.require(!driver.app.observed_canvas().dragging_wire && driver.app.observed_canvas().pending_from.empty() &&
+        !driver.app.observed_document().can_undo() && rat::authoring_snapshot(driver.app.observed_document().data()) == baseline, "Self-pin gesture mutated graph or retained wire");
+      auto source = driver.find("Event Graph","##out_text");
+      driver.drag(source,(source.min_x+source.max_x)*0.5f,(source.min_y+source.max_y)*0.5f,true);
+      driver.require(!driver.app.observed_canvas().dragging_wire && driver.app.observed_canvas().pending_from.empty() && !driver.app.observed_document().can_undo(), "Source-output release retained drag or history");
+      source = driver.find("Event Graph","##out_text");
+      driver.drag(source,source.max_x+50,source.max_y+130);
+      driver.require(!driver.app.observed_canvas().dragging_wire && driver.app.observed_canvas().pending_from.empty() && !driver.app.observed_document().can_undo(), "Empty release retained drag or history");
+      driver.click("Event Graph","##out_text");
+      driver.require(driver.app.observed_canvas().pending_from == "text", "Plain source click lost two-click connection");
+      driver.click("Event Graph","##in_exit");
+      driver.require(driver.app.observed_canvas().pending_from.empty() && !driver.app.observed_document().can_undo(), "No-op existing connection recorded history");
+      driver.click("Event Graph","Wait");
+      const auto added = driver.app.observed_document().data().events[0].pages[0].graph->nodes.back().id;
+      driver.connect("text",added); driver.connect(added,"exit");
+      driver.require(driver.app.observed_document().data().events[0].pages[0].graph->edges.size() == 3, "Real pin connections failed");
+      driver.click("Inspector","Save current map JSON");
+      driver.require(!driver.app.observed_document().dirty(), "Connected graph did not save");
+      driver.click("Event Graph","##drag_"+added); driver.key(GLFW_KEY_DELETE);
+      driver.require(driver.app.observed_document().data().events[0].pages[0].graph->nodes.size() == 1, "Real graph Delete key failed");
+      driver.key(GLFW_KEY_Z,true);
+      driver.require(driver.app.observed_document().data().events[0].pages[0].graph->nodes.size() == 2, "Graph delete undo failed");
+      const auto original = *driver.app.observed_document().data().events[0].pages[0].graph->nodes[0].layout;
+      auto header = driver.find("Event Graph","##drag_text");
+      driver.drag(header,(header.min_x+header.max_x)*0.5f+45,(header.min_y+header.max_y)*0.5f+30);
+      const auto moved = *driver.app.observed_document().data().events[0].pages[0].graph->nodes[0].layout;
+      driver.require(moved.x != original.x || moved.y != original.y, "Real node header drag did not author layout");
+      driver.key(GLFW_KEY_Z,true);
+      driver.require(driver.app.observed_document().data().events[0].pages[0].graph->nodes[0].layout->x == original.x && driver.app.observed_document().can_redo(), "Node gesture did not undo as one entry");
+      header = driver.find("Event Graph","##drag_text");
+      driver.drag(header,(header.min_x+header.max_x)*0.5f,(header.min_y+header.max_y)*0.5f,true);
+      driver.require(driver.app.observed_document().can_redo(), "No-op node drag discarded redo");
+      driver.key(GLFW_KEY_Y,true); driver.click("Inspector","Save current map JSON");
+      driver.key(GLFW_KEY_F5);
+      driver.require(driver.app.observed_document().data().events[0].pages[0].graph->nodes[0].layout->x == moved.x, "Authored node layout did not survive UI save/reload");
+      driver.capture(scenario); driver.debug(scenario); report["scenarios"].push_back({{"name",scenario},{"status","passed"}});
+    } else if (scenario.starts_with("unsupported-")) {
+      driver.enter_edit(); driver.open_path(user/"unsupported.json");
+      driver.require(driver.app.observed_mode() == rat::AppMode::Edit && !driver.app.observed_runtime_valid(), "Unsupported draft did not open for repair");
+      driver.click("Inspector","Apply edited map");
+      driver.require(!driver.app.observed_runtime_valid() && !driver.app.observed_error().empty(), "Unsupported Apply did not surface failure");
+      driver.click("Inspector","Enter Play (F2)");
+      driver.require(driver.app.observed_mode() == rat::AppMode::Edit, "Unsupported draft entered Play");
+      driver.click("Inspector","Events"); driver.click("Inspector","graph_event  tile(-3,0)"); driver.click("Inspector","Open Event Graph");
+      if (scenario == "unsupported-touch") {
+        driver.click("Event Graph","Trigger");
+        const auto disabled = driver.find("","event_touch (unsupported)",true);
+        driver.require(!disabled.enabled, "Unsupported EventTouch choice was enabled");
+        driver.capture("unsupported-choice"); driver.click("","action");
+      } else driver.text("Event Graph","##map",U"gui_fixture");
+      driver.require(driver.app.observed_document().dirty(), "UI repair did not author a change");
+      driver.click("Inspector","Apply edited map");
+      driver.require(driver.app.observed_runtime_valid(), "Repaired draft failed Apply");
+      driver.click("Inspector","Enter Play (F2)");
+      driver.require(driver.app.observed_mode() == rat::AppMode::Play, "Repaired draft could not enter Play");
+      driver.capture(scenario); driver.debug(scenario); report["scenarios"].push_back({{"name",scenario},{"status","passed"}});
+    } else if (scenario == "play-modal") {
+      driver.add_event(); driver.click("Inspector","Enter Play (F2)"); driver.click_at(1000,650);
+      const auto before = driver.app.observed_session().tick_id(); driver.frame(10);
+      driver.require(driver.app.observed_session().tick_id() > before && driver.app.observed_document().dirty(), "Play fixture was not advancing and dirty");
+      driver.input.keys[GLFW_KEY_F5] = true; driver.frame(4);
+      driver.require(driver.app.observed_modal(), "Dirty Play F5 did not show guard");
+      const auto paused = driver.app.observed_session().tick_id(); driver.frame(30);
+      driver.require(driver.app.observed_session().tick_id() == paused, "Previously advancing Play continued during modal");
+      driver.capture(scenario); driver.click("Unsaved changes","Cancel"); driver.frame(4);
+      driver.require(!driver.app.observed_modal() && driver.app.observed_session().tick_id() > paused &&
+        driver.app.observed_session().tick_id()-paused <= 15, "Dismissal replayed held F5 or accumulated paused time");
+      driver.input.keys[GLFW_KEY_F5] = false; driver.frame(2); driver.debug(scenario);
+      report["scenarios"].push_back({{"name",scenario},{"status","passed"}});
     } else throw std::runtime_error("Unknown scenario " + scenario);
     report["renderer"] = driver.app.renderer_name();
     report["status"] = "passed";
