@@ -2,7 +2,7 @@
 type: task
 area: Engine
 status: In progress
-review: In review
+review: Pending
 task_type: Chore
 sprint: Sprint 15
 tags: [task, stabilization]
@@ -61,3 +61,6 @@ Independent review Approved ddc8d9c: all eleven scenarios passed again, includin
 
 
 Final local GUI slice 4efcb52 is in independent review. All 40 manifest entries passed through CTest in 60.34s; final report build/dev-release/gui-artifacts/gui-run-jofze2bd/gui-acceptance-report.json. Full regular verification 703 C++ tests/eight Python/vault and parent Release rebuild passed. Installed package full40 passed from Unicode/spaced package and user roots, actual fonts/audio checked, package hashes and unrelated cwd unchanged: build/stabilization/gui-package-artifacts/gui-run-b5l5mdrj/gui-acceptance-report.json. GUI-only install without editor passed infrastructure. Scale100/150/200, scripted resize/1.25 framebuffer ratio and exact PNG dimensions, active graph gesture close, full read-only snapshots and installed aggregate are implemented. Linux/source-absent remote execution and CI/static/benchmark stage6c remain pending.
+
+
+Stage6b independently Approved 4efcb52: reviewer reran full40 exit0 in60.10s, inspected 200% Cyrillic/modal capture and verified dimensions1700x975/2500x1425/3300x1875. Report build/stabilization/review-final-artifacts/gui-run-1_fw67v0/gui-acceptance-report.json. Package/cwd unchanged, all local GUI requirements approved. Stage6c now in progress: benchmark/retained memory, CI/sanitizers/final static checks and delivery verification.

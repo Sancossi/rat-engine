@@ -1,8 +1,8 @@
 ---
 type: bug
 area: Engine
-status: Investigating
-review: Pending
+status: Fixed
+review: Approved
 severity: Medium
 sprint: Sprint 15
 tags: [bug, stabilization]
@@ -31,3 +31,12 @@ Correction 68187f4 is in independent review: processed cursor positions follow I
 
 
 Infrastructure correction 68187f4 independently Approved: all three scenarios passed on verified WARP; reviewer checked cursor ordering, Unicode capture and device ownership through shutdown. Independent artifacts: build/stabilization/review-warp-ch6tjfh6/. Full scenario/scale coverage is now being implemented and its review remains pending.
+
+
+## Resolution
+
+Fixed across 22eb27d, d5ae2f4, 68187f4 and 4efcb52. Shared ordered input and processed positions feed GUI/gameplay consistently; pending destructive actions drain text input and pause Play. Logical/framebuffer transforms and graph display scaling preserve actual hit positions and authored layout. Independent full Windows WARP suite passed40/40, including100/150/200 UI scales, native resize and scripted1.25 framebuffer ratio; captures match1700x975/2500x1425/3300x1875. Report build/stabilization/review-final-artifacts/gui-run-1_fw67v0/gui-acceptance-report.json. Parent full Release build passed. This tests scripted framebuffer dimensions, not changing Windows DPI settings.
+
+## Bugs found
+
+Quick-tap loss, trickled cursor/text timing, graph origin shift and duplicate undo were found and fixed within acceptance. No unresolved input/scale findings.
