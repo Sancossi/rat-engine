@@ -34,6 +34,9 @@ if(NOT RAT_BUILD_EDITOR AND NOT RAT_BUILD_GUI_TESTS)
   return()
 endif()
 
+target_compile_definitions(imgui PUBLIC IMGUI_ENABLE_TEST_ENGINE)
+target_sources(imgui PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/gui_observer.cpp")
+
 add_library(rat_editor_app
   platform/launch_environment.cpp
   platform/launch_environment.hpp
@@ -117,4 +120,12 @@ if(RAT_BUILD_EDITOR)
       DESTINATION "licenses/${_dependency}"
       FILES_MATCHING PATTERN "LICENSE*" PATTERN "COPYING*" PATTERN ".git" EXCLUDE)
   endforeach()
+endif()
+
+if(RAT_BUILD_GUI_TESTS)
+  add_executable(rat-editor-gui-tests gui_tests.cpp)
+  target_link_libraries(rat-editor-gui-tests PRIVATE rat::editor_app glfw)
+  target_compile_definitions(rat-editor-gui-tests PRIVATE GLFW_INCLUDE_NONE)
+  rat_target_defaults(rat-editor-gui-tests)
+  install(TARGETS rat-editor-gui-tests RUNTIME DESTINATION .)
 endif()

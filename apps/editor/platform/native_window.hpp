@@ -1,5 +1,7 @@
 #pragma once
 
+#include "../editor_frame_input.hpp"
+
 #include <rat/clock.hpp>
 #include <rat/input.hpp>
 #include <rat/input_bindings.hpp>
@@ -20,7 +22,8 @@ class NativeWindow {
   NativeWindow(const NativeWindow&) = delete;
   NativeWindow& operator=(const NativeWindow&) = delete;
 
-  bool create(int width, int height, const char* title);
+  bool create(int width, int height, const char* title, bool hidden = false);
+  void resize_logical(int width, int height);
   void destroy();
 
   [[nodiscard]] bool is_open() const;
@@ -29,6 +32,7 @@ class NativeWindow {
   bool consume_close_request();
   void set_title(const std::string& title);
   void poll();
+  EditorFrameInput sample_frame_input();
   [[nodiscard]] double time() const;
   [[nodiscard]] InputButtons sample_buttons() const;
   void set_input_bindings(InputBindings bindings);
@@ -57,6 +61,9 @@ class NativeWindow {
   void* user_ = nullptr;
   void (*resize_)(void* user, int width, int height) = nullptr;
   bool glfw_ready_ = false;
+  std::vector<EditorInputEvent> events_;
+  float wheel_x_ = 0.0f;
+  float wheel_y_ = 0.0f;
 };
 
 }  // namespace rat

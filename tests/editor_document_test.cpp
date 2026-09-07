@@ -176,7 +176,7 @@ TEST_CASE("EditorDocument preview does not dirty committed map or history", "[un
   REQUIRE(document.visible_data().blockers[0].bounds.max_x == Approx(1.0f));
 }
 
-TEST_CASE("FrameCoordinator runs poll, simulate, audio, ui, present in order",
+TEST_CASE("FrameCoordinator runs poll, begin ui, simulate, audio, draw, present in order",
           "[unit][editordoc]") {
   std::vector<std::string> order;
   rat::FrameCoordinator coordinator;
@@ -190,7 +190,7 @@ TEST_CASE("FrameCoordinator runs poll, simulate, audio, ui, present in order",
   coordinator.draw_ui = [&] { order.emplace_back("draw"); };
   coordinator.present = [&] { order.emplace_back("present"); };
   coordinator.run_frame(0.016f);
-  REQUIRE(order == std::vector<std::string>{"poll", "simulate", "audio", "begin_ui", "draw",
+  REQUIRE(order == std::vector<std::string>{"poll", "begin_ui", "simulate", "audio", "draw",
                                             "present"});
 }
 

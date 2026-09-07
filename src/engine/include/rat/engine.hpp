@@ -30,6 +30,9 @@ class Engine {
   void submit_world(const RenderWorld& world);
   void end_frame();
   void frame();
+  void request_capture(const std::string& path) { renderer_.request_capture(path); }
+  [[nodiscard]] CaptureResult capture_result() const { return renderer_.capture_result(); }
+  [[nodiscard]] std::string backend_name() const { return renderer_.backend_name(); }
 
   void set_player(const PlayerBody& player);
   void set_blockers(std::vector<BlockerDef> blockers);

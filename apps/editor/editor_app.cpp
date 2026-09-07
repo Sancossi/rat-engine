@@ -1,6 +1,7 @@
 #include "editor_app.hpp"
 
 #include "imgui_bgfx.hpp"
+#include "gui_observer.hpp"
 #include "panels/event_graph_window.hpp"
 #include "panels/ladder_panel.hpp"
 #include "platform/miniaudio_sink.hpp"
@@ -29,6 +30,9 @@
 
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
+#include <GLFW/glfw3.h>
+
+ImGuiKey ImGui_ImplGlfw_KeyToImGuiKey(int keycode, int scancode);
 
 #include <cstdint>
 #include <cstdio>
@@ -51,7 +55,7 @@ std::filesystem::path utf8_path(std::string_view text) {
   return std::filesystem::path(std::u8string(text.begin(), text.end()));
 }
 
-void try_load_cyrillic_ui_font(ImGuiIO& io, Logger& logger, const std::string& data_root) {
+void try_load_cyrillic_ui_font(ImGuiIO& io, Logger& logger, const std::string& data_root, float scale) {
   const std::string path = data_root + "/fonts/NotoSans-Regular.ttf";
   std::error_code ec;
   if (!std::filesystem::is_regular_file(utf8_path(path), ec)) {
@@ -59,7 +63,7 @@ void try_load_cyrillic_ui_font(ImGuiIO& io, Logger& logger, const std::string& d
         std::string("UI font missing, using default: ") + path);
     return;
   }
-  ImFont* font = io.Fonts->AddFontFromFileTTF(path.c_str(), kUiFontSizePx, nullptr,
+  ImFont* font = io.Fonts->AddFontFromFileTTF(path.c_str(), kUiFontSizePx * scale, nullptr,
                                               io.Fonts->GetGlyphRangesCyrillic());
   if (font == nullptr) {
     log(logger, LogLevel::Error, "editor",
@@ -262,11 +266,11 @@ EditorActionResult EditorApp::settle_authoring() {
 void EditorApp::reset_authoring_input() {
   session_.clear_pending_input();
   fixed_accumulator_ = 0.0f;
-  previous_buttons_ = host_.sample_buttons();
-  mouse_left_was_down_ = host_.mouse_left_down();
-  mouse_right_was_down_ = host_.mouse_right_down();
-  escape_was_down_ = host_.key_escape_down();
-  i_was_down_ = host_.key_i_down();
+  previous_buttons_ = frame_input_.buttons(host_.input_bindings());
+  mouse_left_was_down_ = frame_input_.mouse_buttons[0];
+  mouse_right_was_down_ = frame_input_.mouse_buttons[1];
+  escape_was_down_ = frame_input_.keys[GLFW_KEY_ESCAPE];
+  i_was_down_ = frame_input_.keys[GLFW_KEY_I];
   drag_active_ = brush_active_ = false;
   event_context_open_ = false;
   finish_event_graph_wire_release(event_panel_.canvas, false);
@@ -471,7 +475,7 @@ bool EditorApp::apply_edited_map(bool preserve_player) {
   bind_session_assets();
   session_.set_app_mode(app_mode_);
   session_.clear_pending_input();
-  previous_buttons_ = host_.sample_buttons();
+  previous_buttons_ = frame_input_.buttons(host_.input_bindings());
   fixed_accumulator_ = 0.0f;
   snap_player_to_ground_clear_jump();
   return true;
@@ -493,7 +497,8 @@ void EditorApp::bind_session_assets() {
   asset_registry_->pump_loads();
 }
 
-bool EditorApp::init(const EditorLaunchOptions& options) {
+bool EditorApp::init(const EditorLaunchOptions& options, const EditorInitialState& initial) {
+  initial_ = initial;
   launch_options_ = options;
   for (const auto* path : {&options.data_root, &options.user_data_dir, &options.map_path,
                            &options.save_slot_path, &options.log_path, &options.debug_snapshot_path,
@@ -550,7 +555,7 @@ bool EditorApp::init(const EditorLaunchOptions& options) {
   log(*logger_, LogLevel::Info, "editor", "data root " + launch_options_.data_root);
   log(*logger_, LogLevel::Info, "editor", "user data root " + launch_options_.user_data_dir);
 
-  if (!host_.create(width_, height_, "rat-editor")) {
+  if (!host_.create(width_, height_, "rat-editor", initial_.hidden_window)) {
     log(*logger_, LogLevel::Error, "editor", "NativeWindow::create failed");
     return false;
   }
@@ -565,7 +570,8 @@ bool EditorApp::init(const EditorLaunchOptions& options) {
   config.window = host_.handle();
   config.width = static_cast<std::uint32_t>(width_ > 0 ? width_ : 1);
   config.height = static_cast<std::uint32_t>(height_ > 0 ? height_ : 1);
-  config.vsync = true;
+  config.mode = initial_.renderer;
+  config.vsync = !initial_.automation_layout;
 
   if (!engine_->init(config)) {
     log(*logger_, LogLevel::Error, "editor", "Engine::init failed");
@@ -585,6 +591,8 @@ bool EditorApp::init(const EditorLaunchOptions& options) {
   session_.player().x = -1.5f;
   session_.player().z = 1.5f;
   snap_player_to_ground_clear_jump();
+  if (initial_.player) session_.player() = *initial_.player;
+  engine_->set_player(session_.player());
 
   refresh_mode_banner();
 
@@ -595,9 +603,10 @@ bool EditorApp::init(const EditorLaunchOptions& options) {
   io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
   io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
   ImGui::StyleColorsDark();
-  try_load_cyrillic_ui_font(io, *logger_, launch_options_.data_root);
+  ImGui::GetStyle().ScaleAllSizes(initial_.ui_scale);
+  try_load_cyrillic_ui_font(io, *logger_, launch_options_.data_root, initial_.ui_scale);
 
-  if (!ImGui_ImplGlfw_InitForOther(host_.glfw_window(), true)) {
+  if (!ImGui_ImplGlfw_InitForOther(host_.glfw_window(), false)) {
     log(*logger_, LogLevel::Error, "editor", "ImGui_ImplGlfw_InitForOther failed");
     shutdown();
     return false;
@@ -609,7 +618,15 @@ bool EditorApp::init(const EditorLaunchOptions& options) {
     return false;
   }
 
-  coordinator_.poll = [this] { host_.poll(); };
+  coordinator_.poll = [this] {
+    host_.poll();
+    auto native = host_.sample_frame_input();
+    if (!scripted_frame_) frame_input_ = std::move(native);
+    else frame_input_.close_requested = native.close_requested;
+    if (frame_input_.framebuffer_width > 0 && frame_input_.framebuffer_height > 0 &&
+        (width_ != frame_input_.framebuffer_width || height_ != frame_input_.framebuffer_height))
+      on_framebuffer_resize(frame_input_.framebuffer_width, frame_input_.framebuffer_height);
+  };
   coordinator_.simulate = [this](float dt) { simulate(dt); };
   coordinator_.drain_audio = [this] {
     if (audio_ != nullptr) {
@@ -640,11 +657,36 @@ int EditorApp::run() {
     if (dt > 0.1f) {
       dt = 0.1f;
     }
+    frame_dt_ = dt;
     coordinator_.run_frame(dt);
   }
 
   shutdown();
   return 0;
+}
+
+bool EditorApp::step_frame(const EditorFrameInput& input, float dt) {
+  if (!running_ || !engine_) return false;
+  if (input.logical_width != frame_input_.logical_width || input.logical_height != frame_input_.logical_height)
+    host_.resize_logical(input.logical_width, input.logical_height);
+  if (input.close_requested) host_.request_close();
+  frame_input_ = input;
+  frame_dt_ = std::clamp(dt, 0.0001f, 0.25f);
+  scripted_frame_ = true;
+  coordinator_.run_frame(frame_dt_);
+  scripted_frame_ = false;
+  return running_;
+}
+
+void EditorApp::request_capture(const std::string& path) { if (engine_) engine_->request_capture(path); }
+CaptureResult EditorApp::capture_result() const { return engine_ ? engine_->capture_result() : CaptureResult{}; }
+std::string EditorApp::renderer_name() const { return engine_ ? engine_->backend_name() : "uninitialized"; }
+std::optional<PixelPos> EditorApp::project_world(Vec3 world) const {
+  if (!engine_) return std::nullopt;
+  auto pixel = project_world_to_pixels(engine_->greybox().camera(), world,
+      static_cast<std::uint32_t>(width_), static_cast<std::uint32_t>(height_));
+  if (!pixel) return std::nullopt;
+  return PixelPos{pixel->x * frame_input_.logical_width / width_, pixel->y * frame_input_.logical_height / height_};
 }
 
 void EditorApp::shutdown() {
@@ -725,11 +767,11 @@ void EditorApp::handle_edit_mouse_input(const ImGuiIO& io) {
     return;
   }
 
-  const bool left_down = host_.mouse_left_down();
-  const bool right_down = host_.mouse_right_down();
+  const bool left_down = frame_input_.mouse_buttons[0];
+  const bool right_down = frame_input_.mouse_buttons[1];
   const bool right_pressed = right_down && !mouse_right_was_down_;
   const bool aborting_brush = (brush_active_ || document_.in_stroke()) &&
-                              (right_down || host_.key_escape_down());
+                              (right_down || frame_input_.keys[GLFW_KEY_ESCAPE]);
   if (aborting_brush) {
     finish_cell_brush(true);
   }
@@ -753,7 +795,8 @@ void EditorApp::handle_edit_mouse_input(const ImGuiIO& io) {
 
   double cursor_x = 0.0;
   double cursor_y = 0.0;
-  host_.cursor_pos(cursor_x, cursor_y);
+  cursor_x = frame_input_.cursor_x * static_cast<double>(width_) / std::max(1, frame_input_.logical_width);
+  cursor_y = frame_input_.cursor_y * static_cast<double>(height_) / std::max(1, frame_input_.logical_height);
   const MapData& map = document_.visible_data();
   const TerrainGeometry terrain =
       build_terrain_geometry(map.height_grid, map.ramps, map.tile_size);
@@ -911,11 +954,19 @@ void EditorApp::simulate(float dt) {
     return;
   }
 
-  if (host_.consume_close_request()) (void)actions_.request({EditorActionKind::Close});
+  deferred_close_ = frame_input_.close_requested;
+  const auto current_buttons = frame_input_.buttons(host_.input_bindings());
+  deferred_reload_ = current_buttons.hot_apply && !previous_buttons_.hot_apply && !map_path_.empty();
+  // Pause immediately, but render the active field once before settling its preview.
+  // Characters queued with Close/F5 belong to that field, before the modal opens.
+  if (deferred_close_ || deferred_reload_) {
+    previous_buttons_ = current_buttons;
+    session_.clear_pending_input(); fixed_accumulator_ = 0.0f; return;
+  }
   if (actions_.pending()) { session_.clear_pending_input(); fixed_accumulator_ = 0.0f; return; }
   const ImGuiIO& io = ImGui::GetIO();
 
-  const InputButtons buttons = host_.sample_buttons();
+  const InputButtons buttons = frame_input_.buttons(host_.input_bindings());
   InputGating gating;
   gating.player_control = player_control_enabled(app_mode_);
   gating.keyboard_captured = io.WantCaptureKeyboard;
@@ -944,7 +995,7 @@ void EditorApp::simulate(float dt) {
       map_input_frame(buttons, previous_buttons_, gating, input_eye, input_focus);
   previous_buttons_ = buttons;
 
-  const bool escape_down = host_.key_escape_down();
+  const bool escape_down = frame_input_.keys[GLFW_KEY_ESCAPE];
   if (app_mode_ == AppMode::Play && escape_down && !escape_was_down_) {
     play_paused_ = !play_paused_;
     if (play_paused_) {
@@ -955,7 +1006,7 @@ void EditorApp::simulate(float dt) {
   }
   escape_was_down_ = escape_down;
 
-  const bool i_down = host_.key_i_down();
+  const bool i_down = frame_input_.keys[GLFW_KEY_I];
   if (app_mode_ == AppMode::Play && i_down && !i_was_down_ && !play_paused_) {
     inventory_open_ = !inventory_open_;
     if (inventory_open_) {
@@ -1042,8 +1093,53 @@ void EditorApp::simulate(float dt) {
 }
 
 void EditorApp::begin_ui() {
-  ImGui_ImplGlfw_NewFrame();
-  imgui_bgfx::begin_frame(width_, height_);
+  auto& io = ImGui::GetIO();
+  io.DeltaTime = frame_dt_;
+  io.DisplaySize = ImVec2(static_cast<float>(std::max(1, frame_input_.logical_width)),
+                          static_cast<float>(std::max(1, frame_input_.logical_height)));
+  io.DisplayFramebufferScale = ImVec2(static_cast<float>(width_) / io.DisplaySize.x,
+                                      static_cast<float>(height_) / io.DisplaySize.y);
+  io.AddMousePosEvent(static_cast<float>(frame_input_.cursor_x), static_cast<float>(frame_input_.cursor_y));
+  io.AddMouseWheelEvent(frame_input_.wheel_x, frame_input_.wheel_y);
+  const auto send_modifiers = [&](const auto& held) {
+    io.AddKeyEvent(ImGuiMod_Ctrl, held[GLFW_KEY_LEFT_CONTROL] || held[GLFW_KEY_RIGHT_CONTROL]);
+    io.AddKeyEvent(ImGuiMod_Shift, held[GLFW_KEY_LEFT_SHIFT] || held[GLFW_KEY_RIGHT_SHIFT]);
+    io.AddKeyEvent(ImGuiMod_Alt, held[GLFW_KEY_LEFT_ALT] || held[GLFW_KEY_RIGHT_ALT]);
+    io.AddKeyEvent(ImGuiMod_Super, held[GLFW_KEY_LEFT_SUPER] || held[GLFW_KEY_RIGHT_SUPER]);
+  };
+  for (const auto& event : frame_input_.events) {
+    switch (event.kind) {
+      case EditorInputEvent::Kind::Key:
+        if (event.code >= 0 && event.code < static_cast<int>(imgui_keys_.size())) {
+          imgui_keys_[static_cast<std::size_t>(event.code)] = event.down;
+          send_modifiers(imgui_keys_);
+          const auto key = ImGui_ImplGlfw_KeyToImGuiKey(event.code, 0);
+          if (key != ImGuiKey_None) io.AddKeyEvent(key, event.down);
+        }
+        break;
+      case EditorInputEvent::Kind::Character: io.AddInputCharacter(static_cast<unsigned int>(event.code)); break;
+      case EditorInputEvent::Kind::MouseButton:
+        if (event.code >= 0 && event.code < 5) io.AddMouseButtonEvent(event.code, event.down);
+        break;
+      case EditorInputEvent::Kind::Wheel: io.AddMouseWheelEvent(event.x, event.y); break;
+      case EditorInputEvent::Kind::Focus: io.AddFocusEvent(event.down); break;
+    }
+  }
+  for (int i = 0; i < 5; ++i) io.AddMouseButtonEvent(i, frame_input_.mouse_buttons[static_cast<std::size_t>(i)]);
+  io.AddFocusEvent(frame_input_.focused);
+  const auto& keys = frame_input_.keys;
+  imgui_keys_ = keys;
+  io.AddKeyEvent(ImGuiMod_Ctrl, keys[GLFW_KEY_LEFT_CONTROL] || keys[GLFW_KEY_RIGHT_CONTROL]);
+  io.AddKeyEvent(ImGuiMod_Shift, keys[GLFW_KEY_LEFT_SHIFT] || keys[GLFW_KEY_RIGHT_SHIFT]);
+  io.AddKeyEvent(ImGuiMod_Alt, keys[GLFW_KEY_LEFT_ALT] || keys[GLFW_KEY_RIGHT_ALT]);
+  io.AddKeyEvent(ImGuiMod_Super, keys[GLFW_KEY_LEFT_SUPER] || keys[GLFW_KEY_RIGHT_SUPER]);
+  for (int key = GLFW_KEY_SPACE; key <= GLFW_KEY_LAST; ++key) {
+    const auto mapped = ImGui_ImplGlfw_KeyToImGuiKey(key, 0);
+    if (mapped != ImGuiKey_None) io.AddKeyEvent(mapped, keys[static_cast<std::size_t>(key)]);
+  }
+  for (const auto codepoint : frame_input_.characters) io.AddInputCharacter(codepoint);
+  begin_gui_observation();
+  imgui_bgfx::begin_frame();
 }
 
 void EditorApp::present() {
@@ -1086,6 +1182,10 @@ void EditorApp::draw_ui() {
   const ImGuiID dockspace_id = ImGui::GetID("RatDockSpace");
   ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_PassthruCentralNode);
 
+  if (initial_.automation_layout) {
+    ImGui::SetNextWindowPos(ImVec2(0, 24), ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowSize(ImVec2(300, 150), ImGuiCond_FirstUseEver);
+  }
   ImGui::Begin("Hierarchy");
   ImGui::Text("Mode: %s  (F2)", app_mode_name(app_mode_));
   ImGui::Text("Map: %s%s", document_.data().id.c_str(), document_.dirty() ? " *" : "");
@@ -1095,6 +1195,10 @@ void EditorApp::draw_ui() {
   ImGui::Text("Parallel: %d", session_.events().active_parallel_count());
   ImGui::End();
 
+  if (initial_.automation_layout) {
+    ImGui::SetNextWindowPos(ImVec2(0, 180), ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowSize(ImVec2(560, 530), ImGuiCond_FirstUseEver);
+  }
   ImGui::Begin("Inspector");
   ImGui::Text("App mode: %s", app_mode_name(app_mode_));
   if (app_mode_ == AppMode::Edit) {
@@ -1196,7 +1300,7 @@ void EditorApp::draw_ui() {
         ImGui::SameLine();
       }
       first_tool = false;
-      if (ImGui::RadioButton(label, viewport_tool_ == tool)) {
+      if (ImGui::RadioButton((std::string(label) + "##viewport_tool").c_str(), viewport_tool_ == tool)) {
         viewport_tool_ = tool;
       }
     };
@@ -1402,6 +1506,9 @@ void EditorApp::draw_ui() {
 
   ImGui::EndDisabled();
   ImGui::End();
+  if (deferred_close_) (void)actions_.request({EditorActionKind::Close});
+  else if (deferred_reload_) request_map_action(EditorActionKind::LoadMap, map_path_, true);
+  deferred_close_ = deferred_reload_ = false;
   actions_.pump();
   draw_unsaved_modal();
   host_.set_title(std::string("rat-engine [") + app_mode_name(app_mode_) + "] " +
@@ -1429,7 +1536,8 @@ void EditorApp::draw_ui() {
         continue;
       }
       const ImVec2 text_size = ImGui::CalcTextSize(event.id.c_str());
-      draw_list->AddText(ImVec2(pixel->x - text_size.x * 0.5f, pixel->y - text_size.y),
+      draw_list->AddText(ImVec2(pixel->x * frame_input_.logical_width / width_ - text_size.x * 0.5f,
+                                  pixel->y * frame_input_.logical_height / height_ - text_size.y),
                          IM_COL32(255, 255, 255, 255), event.id.c_str());
     }
   }

@@ -4,6 +4,8 @@
 #include "editor_launch_options.hpp"
 #include "editor_action_controller.hpp"
 #include "frame_coordinator.hpp"
+#include "gui_observer.hpp"
+#include <rat/renderer.hpp>
 #include "panels/blocker_panel.hpp"
 #include "panels/event_panel.hpp"
 #include "panels/terrain_panel.hpp"
@@ -29,6 +31,14 @@ namespace rat {
 
 class Engine;
 
+struct EditorInitialState {
+  RendererMode renderer = RendererMode::Auto;
+  float ui_scale = 1.0f;
+  bool automation_layout = false;
+  bool hidden_window = false;
+  std::optional<PlayerBody> player;
+};
+
 class EditorApp {
  public:
   explicit EditorApp(FileStore& files = os_files()) : files_(&files) {}
@@ -37,8 +47,22 @@ class EditorApp {
   EditorApp(const EditorApp&) = delete;
   EditorApp& operator=(const EditorApp&) = delete;
 
-  bool init(const EditorLaunchOptions& options);
+  bool init(const EditorLaunchOptions& options, const EditorInitialState& initial = {});
   int run();
+  bool step_frame(const EditorFrameInput& input, float dt);
+  [[nodiscard]] const EditorDocument& observed_document() const { return document_; }
+  [[nodiscard]] const SimulationSession& observed_session() const { return session_; }
+  [[nodiscard]] const EventGraphCanvasState& observed_canvas() const { return event_panel_.canvas; }
+  [[nodiscard]] const std::string& observed_open_path() const { return open_map_path_; }
+  [[nodiscard]] bool observed_modal() const { return actions_.awaiting_decision(); }
+  [[nodiscard]] bool observed_running() const { return running_; }
+  [[nodiscard]] bool observed_runtime_valid() const { return runtime_valid_; }
+  [[nodiscard]] AppMode observed_mode() const { return app_mode_; }
+  [[nodiscard]] std::string observed_error() const { return actions_.error() + last_apply_error_ + document_.last_error(); }
+  [[nodiscard]] std::optional<PixelPos> project_world(Vec3 world) const;
+  void request_capture(const std::string& path);
+  [[nodiscard]] CaptureResult capture_result() const;
+  [[nodiscard]] std::string renderer_name() const;
 
  private:
   void shutdown();
@@ -70,6 +94,13 @@ class EditorApp {
 
   static void on_host_resize(void* user, int width, int height);
 
+  EditorInitialState initial_;
+  EditorFrameInput frame_input_;
+  std::array<bool, 512> imgui_keys_{};
+  float frame_dt_ = 1.0f / 60.0f;
+  bool scripted_frame_ = false;
+  bool deferred_close_ = false;
+  bool deferred_reload_ = false;
   EditorLaunchOptions launch_options_;
   FileStore* files_ = nullptr;
   NativeWindow host_{};

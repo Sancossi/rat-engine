@@ -153,6 +153,39 @@ void for_each_sources(const InputBindings& bindings, Fn&& fn) {
 
 }  // namespace
 
+InputButtons EditorFrameInput::buttons(const InputBindings& bindings) const {
+  KeyboardState keyboard;
+  keyboard.ctrl = keys[GLFW_KEY_LEFT_CONTROL] || keys[GLFW_KEY_RIGHT_CONTROL];
+  keyboard.shift = keys[GLFW_KEY_LEFT_SHIFT] || keys[GLFW_KEY_RIGHT_SHIFT];
+  for_each_sources(bindings, [&](const ActionSources& sources) {
+    for (const auto& chord : sources.keys) {
+      const int key = glfw_key_named(chord.key);
+      if (key >= 0 && keys[static_cast<std::size_t>(key)]) keyboard.keys_down.push_back(chord.key);
+    }
+  });
+  return merge_input_buttons(map_keyboard_buttons(keyboard, bindings), map_gamepad_buttons(gamepad, bindings));
+}
+
+EditorFrameInput NativeWindow::sample_frame_input() {
+  EditorFrameInput input;
+  if (!window_) return input;
+  for (int key = GLFW_KEY_SPACE; key <= GLFW_KEY_LAST; ++key)
+    input.keys[static_cast<std::size_t>(key)] = glfwGetKey(window_, key) == GLFW_PRESS;
+  for (int button = 0; button < 5; ++button)
+    input.mouse_buttons[static_cast<std::size_t>(button)] = glfwGetMouseButton(window_, button) == GLFW_PRESS;
+  glfwGetCursorPos(window_, &input.cursor_x, &input.cursor_y);
+  glfwGetWindowSize(window_, &input.logical_width, &input.logical_height);
+  glfwGetFramebufferSize(window_, &input.framebuffer_width, &input.framebuffer_height);
+  input.focused = glfwGetWindowAttrib(window_, GLFW_FOCUSED) != 0;
+  input.events = std::move(events_);
+  events_.clear();
+  input.wheel_x = std::exchange(wheel_x_, 0.0f);
+  input.wheel_y = std::exchange(wheel_y_, 0.0f);
+  input.gamepad = sample_gamepad();
+  input.close_requested = consume_close_request();
+  return input;
+}
+
 NativeWindow::NativeWindow() : clock_(&owned_clock_) {}
 
 NativeWindow::NativeWindow(const Clock& clock) : clock_(&clock) {}
@@ -161,7 +194,7 @@ NativeWindow::~NativeWindow() {
   destroy();
 }
 
-bool NativeWindow::create(int width, int height, const char* title) {
+bool NativeWindow::create(int width, int height, const char* title, bool hidden) {
   if (window_ != nullptr) {
     return true;
   }
@@ -171,6 +204,7 @@ bool NativeWindow::create(int width, int height, const char* title) {
   glfw_ready_ = true;
   glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
   glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
+  glfwWindowHint(GLFW_VISIBLE, hidden ? GLFW_FALSE : GLFW_TRUE);
   window_ = glfwCreateWindow(width, height, title != nullptr ? title : "rat-editor", nullptr,
                              nullptr);
   if (window_ == nullptr) {
@@ -178,7 +212,31 @@ bool NativeWindow::create(int width, int height, const char* title) {
   }
   glfwSetWindowUserPointer(window_, this);
   glfwSetFramebufferSizeCallback(window_, glfw_framebuffer_size);
+  glfwSetCharCallback(window_, [](GLFWwindow* window, unsigned int codepoint) {
+    static_cast<NativeWindow*>(glfwGetWindowUserPointer(window))->events_.push_back({EditorInputEvent::Kind::Character, static_cast<int>(codepoint)});
+  });
+  glfwSetScrollCallback(window_, [](GLFWwindow* window, double x, double y) {
+    auto* self = static_cast<NativeWindow*>(glfwGetWindowUserPointer(window));
+    self->events_.push_back({EditorInputEvent::Kind::Wheel, 0, false, static_cast<float>(x), static_cast<float>(y)});
+  });
+  glfwSetKeyCallback(window_, [](GLFWwindow* window, int key, int, int action, int) {
+    if (key >= 0 && action != GLFW_REPEAT)
+      static_cast<NativeWindow*>(glfwGetWindowUserPointer(window))->events_.push_back(
+          {EditorInputEvent::Kind::Key, key, action == GLFW_PRESS});
+  });
+  glfwSetMouseButtonCallback(window_, [](GLFWwindow* window, int button, int action, int) {
+    static_cast<NativeWindow*>(glfwGetWindowUserPointer(window))->events_.push_back(
+        {EditorInputEvent::Kind::MouseButton, button, action == GLFW_PRESS});
+  });
+  glfwSetWindowFocusCallback(window_, [](GLFWwindow* window, int focused) {
+    static_cast<NativeWindow*>(glfwGetWindowUserPointer(window))->events_.push_back(
+        {EditorInputEvent::Kind::Focus, 0, focused != 0});
+  });
   return true;
+}
+
+void NativeWindow::resize_logical(int width, int height) {
+  if (window_) glfwSetWindowSize(window_, width, height);
 }
 
 void NativeWindow::destroy() {

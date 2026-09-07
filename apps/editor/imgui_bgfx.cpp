@@ -82,8 +82,8 @@ void render_draw_data(ImDrawData* draw_data) {
   bx::mtxOrtho(ortho, x, x + width, y + height, y, 0.0f, 1000.0f, 0.0f,
                caps->homogeneousDepth);
   bgfx::setViewTransform(view_id_, nullptr, ortho);
-  bgfx::setViewRect(view_id_, 0, 0, static_cast<uint16_t>(width),
-                    static_cast<uint16_t>(height));
+  bgfx::setViewRect(view_id_, 0, 0, static_cast<uint16_t>(fb_width),
+                    static_cast<uint16_t>(fb_height));
 
   const ImVec2 clip_pos = draw_data->DisplayPos;
   const ImVec2 clip_scale = draw_data->FramebufferScale;
@@ -199,12 +199,7 @@ void shutdown() {
   initialized_ = false;
 }
 
-void begin_frame(int display_w, int display_h) {
-  ImGuiIO& io = ImGui::GetIO();
-  io.DisplaySize = ImVec2(static_cast<float>(display_w), static_cast<float>(display_h));
-  io.DisplayFramebufferScale = ImVec2(1.0f, 1.0f);
-  ImGui::NewFrame();
-}
+void begin_frame() { ImGui::NewFrame(); }
 
 void end_frame() {
   ImGui::Render();
