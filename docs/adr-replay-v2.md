@@ -25,7 +25,10 @@ unsupported targets and nonfinite positions before changing GameState.
 recording}` and requires a fresh session. `record_input_sequence` constructs that
 session from the map, complete SimulationConfig and starting PlayerBody. The
 low-level `record_tick` builder checks the current header, input and sequential
-tick ID before appending; callers supplying their own checksums own that data.
+tick ID (including the previous tail ID) before appending in amortized constant
+time. It does not rescan earlier ticks; full read/write/play validation rejects
+historical data that a caller subsequently modified. Callers supplying their own
+checksums own that data.
 
 Freshness compares canonical **state bytes**, not hash equality, with a session
 created by constructor → load same map → set same starting player. This detects
@@ -105,3 +108,22 @@ route-index differences at equal waits, and previous-player touch state. Runtime
 tests cover repairable unsupported drafts, precise paths, forged RuntimeMap safety
 and empty graphs never reviving legacy effects. Interactive GUI verification belongs
 to stage 6; compiler/headless checks alone do not establish the disabled UI behavior.
+
+## Incremental append measurement (2026-09-07)
+
+Windows x64 Release preset, MSVC, AMD Ryzen 9 9950X3D (32 logical processors).
+Command: `build/dev-release/tests/rat_tests.exe "Streaming append scaling observations" --success`.
+The timed section calls the real `record_tick` without pre-reserving its vector;
+fresh-session setup and the final full validation are outside that section.
+
+| Appends | Seconds | Microseconds per append |
+| --- | --- | --- |
+| 1,000 | 0.011954 | 11.954 |
+| 4,000 | 0.046952 | 11.738 |
+| 16,000 | 0.182801 | 11.425 |
+
+These local observations support the linear total-work implementation; they are
+not a timing gate. The benchmark has no timing assertion. A separate regression
+compares streaming and sequence-helper output byte-for-byte and checks that full
+persistence/playback validation still rejects historical input modified by a caller.
+Full verification after this fix: 689/689 C++ cases, Python tests and vault checks.

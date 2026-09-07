@@ -49,6 +49,7 @@ struct ReplayPlayResult : ReplayStatus {
 [[nodiscard]] std::vector<std::uint8_t> runtime_state_bytes(const SimulationSession& session);
 [[nodiscard]] std::uint64_t runtime_checksum(const SimulationSession& session, std::uint64_t seed);
 [[nodiscard]] ReplayRecordResult begin_recording(const SimulationSession& session, std::uint64_t seed = 0);
+// Incremental validation: header and new tick/tail only; persistence/play validate full history.
 [[nodiscard]] ReplayStatus record_tick(ReplayRecording& recording, std::uint64_t tick_id,
                                        const InputFrame& input, std::uint64_t checksum);
 [[nodiscard]] ReplayRecordResult record_input_sequence(const MapData& map, const PlayerBody& start,

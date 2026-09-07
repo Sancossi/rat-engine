@@ -10,6 +10,7 @@
 #include <catch2/catch_test_macros.hpp>
 
 #include <filesystem>
+#include <chrono>
 #include <limits>
 #include <nlohmann/json.hpp>
 #include <string>
@@ -472,4 +473,44 @@ TEST_CASE("Fingerprint includes graph parameters and does not depend on runtime 
   CHECK(rat::play_recording(session, recording).ok);
   compiled.runtime.data.events[0].pages[0].graph->nodes[0].route[0].frames = 6;
   CHECK_FALSE(rat::replay_input_sequence(compiled.runtime.data, recording).ok);
+}
+
+TEST_CASE("Streaming replay matches sequence recording and defers edited history validation to boundaries", "[unit][replay][contract]") {
+  const auto map = load_grey_yard();
+  const auto start = grey_yard_start(map);
+  const auto steps = grey_yard_move_and_event_steps();
+  const auto sequence = rat::record_input_sequence(map, start, steps, 123);
+  REQUIRE(sequence.ok);
+  rat::SimulationSession session; REQUIRE(session.load(map).ok); session.set_player(start);
+  auto streaming = rat::begin_recording(session, 123); REQUIRE(streaming.ok);
+  for (const auto& step : steps) {
+    session.tick(step);
+    REQUIRE(rat::record_tick(streaming.recording, session.tick_id(), step, rat::runtime_checksum(session, 123)).ok);
+  }
+  rat::MemoryFileStore files;
+  REQUIRE(rat::write_replay("sequence", sequence.recording, files).ok);
+  REQUIRE(rat::write_replay("streaming", streaming.recording, files).ok);
+  CHECK(files.read("sequence").bytes.as_text() == files.read("streaming").bytes.as_text());
+  REQUIRE(rat::replay_input_sequence(map, streaming.recording).checksums_match);
+  // Public recording values may be modified. Append does not revisit historical inputs.
+  streaming.recording.ticks.front().input.move.axis_x = std::numeric_limits<float>::infinity();
+  REQUIRE(rat::record_tick(streaming.recording, streaming.recording.ticks.size() + 1, {}, 0).ok);
+  CHECK_FALSE(rat::write_replay("streaming", streaming.recording, files).ok);
+  CHECK(files.read("sequence").bytes.as_text() == files.read("streaming").bytes.as_text());
+  CHECK_FALSE(rat::replay_input_sequence(map, streaming.recording).ok);
+}
+
+TEST_CASE("Streaming append scaling observations", "[benchmark][replay]") {
+  for (std::uint64_t count : {1000u, 4000u, 16000u}) {
+    auto recording = empty_replay(replay_flat());
+    const auto start = std::chrono::steady_clock::now();
+    bool success = true;
+    for (std::uint64_t tick = 1; tick <= count; ++tick)
+      success = rat::record_tick(recording, tick, {}, tick).ok && success;
+    const double seconds = std::chrono::duration<double>(std::chrono::steady_clock::now() - start).count();
+    INFO("appends=" << count << " seconds=" << seconds << " microseconds_per_append=" << seconds * 1e6 / count);
+    REQUIRE(success);
+    REQUIRE(recording.ticks.size() == count);
+    CHECK(rat::validate_recording(recording).ok);
+  }
 }

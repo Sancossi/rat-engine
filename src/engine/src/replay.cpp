@@ -241,12 +241,20 @@ std::vector<std::uint8_t> runtime_state_bytes(const SimulationSession& session) 
 std::uint64_t runtime_checksum(const SimulationSession& session, std::uint64_t seed) {
   return hash_bytes(runtime_state_bytes(session), seed);
 }
-ReplayStatus validate_recording(const ReplayRecording& recording) {
-  const auto& h = recording.header;
-  if (h.schema_version != kReplaySchemaVersion || h.runtime_version != kReplayRuntimeVersion || h.checksum_version != kReplayChecksumVersion)
+namespace {
+ReplayStatus validate_header(const ReplayHeader& header) {
+  if (header.schema_version != kReplaySchemaVersion || header.runtime_version != kReplayRuntimeVersion ||
+      header.checksum_version != kReplayChecksumVersion)
     return bad(ReplayErrorCode::Incompatible, "unsupported replay contract; re-record this session");
+  try { validate_values(header); return good(); }
+  catch (const std::exception& ex) { return bad(ReplayErrorCode::Format, ex.what()); }
+}
+} // namespace
+
+ReplayStatus validate_recording(const ReplayRecording& recording) {
+  const auto header_status = validate_header(recording.header);
+  if (!header_status.ok) return header_status;
   try {
-    validate_values(h);
     for (std::size_t i = 0; i < recording.ticks.size(); ++i) {
       if (recording.ticks[i].tick_id != i + 1) throw std::runtime_error("tick ids must be sequential starting at 1");
       validate_input(recording.ticks[i].input);
@@ -267,9 +275,11 @@ ReplayRecordResult begin_recording(const SimulationSession& session, std::uint64
   return out;
 }
 ReplayStatus record_tick(ReplayRecording& recording, std::uint64_t tick_id, const InputFrame& input, std::uint64_t checksum) {
-  auto status = validate_recording(recording);
+  const auto status = validate_header(recording.header);
   if (!status.ok) return status;
-  if (tick_id != recording.ticks.size() + 1) return bad(ReplayErrorCode::Format, "nonsequential tick");
+  if (tick_id != recording.ticks.size() + 1 ||
+      (!recording.ticks.empty() && recording.ticks.back().tick_id != recording.ticks.size()))
+    return bad(ReplayErrorCode::Format, "nonsequential tick");
   try { validate_input(input); } catch (const std::exception& ex) { return bad(ReplayErrorCode::Format, ex.what()); }
   recording.ticks.push_back({tick_id, input, checksum});
   return good();
