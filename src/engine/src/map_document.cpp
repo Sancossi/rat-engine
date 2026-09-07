@@ -388,7 +388,7 @@ std::vector<MapIssue> validate_map_structure(const MapData& data) {
     for (std::size_t p = 0; p < event.pages.size(); ++p) {
       const auto page_path = index_path(path + "/pages", p);
       const auto& page = event.pages[p];
-      commands(page.commands, page_path + "/commands");
+      if (!page.graph) commands(page.commands, page_path + "/commands");
       if (page.graph) for (std::size_t n = 0; n < page.graph->nodes.size(); ++n) {
         const auto node_path = index_path(page_path + "/graph/nodes", n) + "/params";
         const auto& node = page.graph->nodes[n];
@@ -407,8 +407,42 @@ std::vector<MapIssue> validate_map_structure(const MapData& data) {
   return issues;
 }
 
+std::vector<MapIssue> validate_runtime_capabilities(const MapData& data) {
+  std::vector<MapIssue> issues;
+  std::function<void(const std::vector<Command>&, const std::string&)> commands;
+  commands = [&](const std::vector<Command>& list, const std::string& path) {
+    for (std::size_t i = 0; i < list.size(); ++i) {
+      const auto at = index_path(path, i);
+      const auto& command = list[i];
+      if (command.op == CommandOp::TransferPlayer && command.map_id != data.id)
+        add_error(issues, at + "/map_id", "cross-map Transfer Player is unsupported; use the current map id");
+      commands(command.then_commands, at + "/then");
+      commands(command.else_commands, at + "/else");
+    }
+  };
+  for (std::size_t e = 0; e < data.events.size(); ++e) {
+    for (std::size_t p = 0; p < data.events[e].pages.size(); ++p) {
+      const auto at = index_path(index_path("/events", e) + "/pages", p);
+      const auto& page = data.events[e].pages[p];
+      if (page.trigger == TriggerKind::EventTouch)
+        add_error(issues, at + "/trigger", "Event touch is unsupported");
+      if (page.graph) {
+        for (std::size_t n = 0; n < page.graph->nodes.size(); ++n) {
+          const auto& node = page.graph->nodes[n];
+          if (node.kind == "transfer_player" && node.map_id != data.id)
+            add_error(issues, index_path(at + "/graph/nodes", n) + "/params/map_id",
+                      "cross-map Transfer Player is unsupported; use the current map id");
+        }
+      } else commands(page.commands, at + "/commands");
+    }
+  }
+  return issues;
+}
+
 std::vector<MapIssue> validate_map_document(const MapData& data) {
   std::vector<MapIssue> issues = validate_map_structure(data);
+  const auto unsupported = validate_runtime_capabilities(data);
+  issues.insert(issues.end(), unsupported.begin(), unsupported.end());
   if (data.id.empty()) {
     add_error(issues, "/id", "map id must not be empty");
   }
@@ -567,7 +601,7 @@ std::vector<MapIssue> validate_map_document(const MapData& data) {
       for (std::size_t c = 0; c < page.conditions.size(); ++c) {
         validate_condition(page.conditions[c], index_path(page_path + "/conditions", c), issues);
       }
-      validate_commands(page.commands, page_path + "/commands", issues);
+      if (!page.graph) validate_commands(page.commands, page_path + "/commands", issues);
       if (page.graph.has_value()) {
         const EventGraphCompileResult compiled = compile_event_graph(*page.graph);
         for (MapIssue issue : compiled.issues) {
@@ -595,6 +629,8 @@ std::vector<MapIssue> validate_map_document(const MapData& data) {
 MapCompileResult compile_map_data(const MapData& data) {
   MapCompileResult preflight;
   preflight.issues = validate_map_structure(data);
+  const auto unsupported = validate_runtime_capabilities(data);
+  preflight.issues.insert(preflight.issues.end(), unsupported.begin(), unsupported.end());
   if (map_issues_have_errors(preflight.issues)) return preflight;
   MapData migrated = data;
   apply_v1_height_fallback(migrated);

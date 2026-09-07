@@ -34,8 +34,10 @@ template<class T> T checked_number(const nlohmann::json& value) {
         throw std::runtime_error("integer out of range");
     } else {
       const auto n = value.get<std::int64_t>();
-      if (n < static_cast<std::int64_t>((std::numeric_limits<T>::min)()) ||
-          n > static_cast<std::int64_t>((std::numeric_limits<T>::max)()))
+      if constexpr (std::is_unsigned_v<T>) {
+        if (n < 0 || static_cast<std::uint64_t>(n) > (std::numeric_limits<T>::max)())
+          throw std::runtime_error("integer out of range");
+      } else if (n < (std::numeric_limits<T>::min)() || n > (std::numeric_limits<T>::max)())
         throw std::runtime_error("integer out of range");
     }
   } else {

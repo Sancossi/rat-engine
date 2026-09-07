@@ -159,11 +159,21 @@ void draw_event_graph_window(EditorDocument& document, EventPanelState& state, b
 
   EventPage& page = event.pages[static_cast<std::size_t>(document.selected_page())];
   int trigger = static_cast<int>(page.trigger);
-  if (ImGui::Combo("Trigger", &trigger, "action\0player_touch\0event_touch\0autorun\0parallel\0")) {
-    page.trigger = static_cast<TriggerKind>(trigger);
-    replace_selected_event(event);
-    event = reload_event();
+  constexpr const char* triggers[] = {"action", "player_touch", "event_touch (unsupported)", "autorun", "parallel"};
+  if (ImGui::BeginCombo("Trigger", trigger >= 0 && trigger < 5 ? triggers[trigger] : "invalid")) {
+    for (int choice = 0; choice < 5; ++choice) {
+      ImGui::BeginDisabled(choice == static_cast<int>(TriggerKind::EventTouch));
+      if (ImGui::Selectable(triggers[choice], choice == trigger)) {
+        page.trigger = static_cast<TriggerKind>(choice);
+        replace_selected_event(event);
+        event = reload_event();
+      }
+      ImGui::EndDisabled();
+    }
+    ImGui::EndCombo();
   }
+  if (event.pages[static_cast<std::size_t>(document.selected_page())].trigger == TriggerKind::EventTouch)
+    ImGui::TextUnformatted("Event touch is unsupported. Select another trigger before Play or Save.");
 
   ImGui::Separator();
   ImGui::TextUnformatted("Conditions (AND)");

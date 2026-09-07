@@ -74,7 +74,33 @@ constexpr const char* kGraphExit = "exit";
 
 }  // namespace
 
+EventRuntimeSnapshot EventRuntime::replay_snapshot() const {
+  EventRuntimeSnapshot out;
+  out.foreground = foreground_;
+  out.parallels = parallels_;
+  out.active_message = active_message_;
+  auto sorted = [](const auto& set) {
+    std::vector<std::string> values(set.begin(), set.end());
+    std::sort(values.begin(), values.end());
+    return values;
+  };
+  out.touch_inside = sorted(touch_inside_);
+  out.parallel_started = sorted(parallel_started_);
+  out.autorun_lock = sorted(autorun_lock_);
+  out.overlays = {overlays_.begin(), overlays_.end()};
+  out.have_last_player = have_last_player_;
+  out.last_player_x = last_player_x_;
+  out.last_player_y = last_player_y_;
+  out.last_player_z = last_player_z_;
+  return out;
+}
+
 void EventRuntime::load(const RuntimeMap& runtime) {
+  const auto issues = validate_map_document(runtime.data);
+  if (map_issues_have_errors(issues)) {
+    warnings_.push_back("RuntimeMap rejected: " + format_map_issues(issues));
+    return;
+  }
   clear();
   runtime_map_ = runtime;
   surface_query_ = std::make_unique<SurfaceQuery>(runtime_map_.data);
@@ -114,6 +140,8 @@ void EventRuntime::clear() {
   collision_world_ = {};
   overlays_.clear();
   have_last_player_ = false;
+  last_player_x_ = last_player_y_ = last_player_z_ = 0.0f;
+  dt_ = 0.0f;
 }
 
 bool EventRuntime::player_input_blocked() const {
@@ -449,6 +477,12 @@ bool EventRuntime::exec_command(Interpreter& interp, GameState& state, const Com
       interp.wait_frames = command.frames;
       return true;
     case CommandOp::TransferPlayer:
+      if (command.map_id != runtime_map_.data.id || !std::isfinite(command.x) ||
+          !std::isfinite(command.y) || !std::isfinite(command.z)) {
+        warnings_.push_back("Unsupported or invalid Transfer Player ignored");
+        interp.finished = true;
+        return false;
+      }
       state.set_map_id(command.map_id);
       if (surface_query_) {
         const float sampled_y = surface_query_->sample(command.x, command.z).y;

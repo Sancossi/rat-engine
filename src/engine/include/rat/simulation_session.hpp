@@ -50,6 +50,12 @@ struct SimulationLoadResult {
   std::vector<MapIssue> issues;
 };
 
+struct SessionInputSnapshot {
+  bool jump_press_pending = false;
+  bool interact_press_pending = false;
+  float interact_seconds_left = 0;
+};
+
 class SimulationSession {
  public:
   SimulationSession() = default;
@@ -94,6 +100,9 @@ class SimulationSession {
   [[nodiscard]] const JumpTuning& jump_tuning() const { return config_.jump_tuning; }
   [[nodiscard]] std::unique_ptr<SurfaceQuery>& surface_query() { return surface_; }
   [[nodiscard]] const SurfaceQuery* surface() const { return surface_.get(); }
+  [[nodiscard]] SessionInputSnapshot input_snapshot() const {
+    return {jump_press_pending_, interact_press_pending_, interact_buffer_.seconds_left};
+  }
   [[nodiscard]] double last_tick_seconds() const { return last_tick_seconds_; }
 
  private:

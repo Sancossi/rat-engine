@@ -616,7 +616,7 @@ EventGraph commands_to_graph(const std::vector<Command>& commands) {
 }
 
 void ensure_page_graph_from_commands(EventPage& page) {
-  if (page.graph.has_value() && !page.graph->nodes.empty()) {
+  if (page.graph.has_value()) {
     return;
   }
   page.graph = commands_to_graph(page.commands);

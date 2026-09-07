@@ -9,6 +9,7 @@
 
 #include <cstddef>
 #include <memory>
+#include <map>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -59,6 +60,29 @@ struct InterpreterDebug {
   bool parallel = false;
 };
 
+struct InterpreterState {
+    std::string event_id;
+    int page_index = -1;
+    std::string node_id;
+    int wait_frames = 0;
+    int route_index = 0;
+    bool route_budget_paid = false;
+    bool waiting_message = false;
+    bool parallel = false;
+    bool autorun = false;
+    bool finished = false;
+  };
+
+struct EventRuntimeSnapshot {
+  std::optional<InterpreterState> foreground;
+  std::vector<InterpreterState> parallels; // execution order is significant
+  std::optional<std::string> active_message;
+  std::vector<std::string> touch_inside, parallel_started, autorun_lock;
+  std::map<std::string, EventOverlay> overlays;
+  bool have_last_player = false;
+  float last_player_x = 0, last_player_y = 0, last_player_z = 0;
+};
+
 class EventRuntime {
  public:
   void load(const RuntimeMap& runtime);
@@ -66,6 +90,7 @@ class EventRuntime {
   void set_audio(Audio* audio);  // nullable; not owned
   void set_notify(GameplayNotifyBus* notify);  // nullable; not owned
   void clear();
+  [[nodiscard]] EventRuntimeSnapshot replay_snapshot() const;
 
   // One simulation step. `interact_pressed` is edge-ish: true on the frame interact is pressed.
   void update(GameState& state, const PlayerBody& player, bool interact_pressed, float dt);
@@ -93,18 +118,7 @@ class EventRuntime {
   [[nodiscard]] std::vector<Vec3> event_markers() const;
 
  private:
-  struct Interpreter {
-    std::string event_id;
-    int page_index = -1;
-    std::string node_id;
-    int wait_frames = 0;
-    int route_index = 0;
-    bool route_budget_paid = false;
-    bool waiting_message = false;
-    bool parallel = false;
-    bool autorun = false;
-    bool finished = false;
-  };
+  using Interpreter = InterpreterState;
 
   [[nodiscard]] bool conditions_met(const std::vector<Condition>& conditions,
                                     const GameState& state,

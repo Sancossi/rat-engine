@@ -62,6 +62,7 @@ inline constexpr std::uint64_t kMaxMapGridCells = 16u * 1024u * 1024u;
 [[nodiscard]] bool safe_map_grid(int width, int height, int origin_x = 0, int origin_z = 0);
 // Numeric/structural safety only: intentionally permits unfinished event graphs.
 [[nodiscard]] std::vector<MapIssue> validate_map_structure(const MapData& data);
+[[nodiscard]] std::vector<MapIssue> validate_runtime_capabilities(const MapData& data);
 [[nodiscard]] std::vector<MapIssue> validate_map_document(const MapData& data);
 [[nodiscard]] MapCompileResult compile_map_data(const MapData& data);
 [[nodiscard]] MapCompileResult compile_map_document(const MapDocument& document);

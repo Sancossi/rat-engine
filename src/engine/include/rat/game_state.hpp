@@ -48,6 +48,9 @@ class GameState {
   [[nodiscard]] bool save_to_memory(std::string& out) const;
   [[nodiscard]] bool load_from_memory(std::string_view data);
 
+  [[nodiscard]] std::map<std::string, std::uint8_t> self_switches_snapshot() const {
+    return {self_switches_.begin(), self_switches_.end()};
+  }
   [[nodiscard]] std::map<std::uint32_t, bool> debug_switches() const;
   [[nodiscard]] std::map<std::uint32_t, int> debug_variables() const;
 

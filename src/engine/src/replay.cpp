@@ -1,331 +1,351 @@
 #include "rat/replay.hpp"
-
-#include "rat/file_store.hpp"
-
-#include <nlohmann/json.hpp>
-
-#include <cstdint>
-#include <cstring>
-#include <string>
-#include <vector>
+#include "rat/map_loader.hpp"
+#include "strict_json.hpp"
+#include <algorithm>
+#include <bit>
+#include <cmath>
+#include <stdexcept>
+#include <utility>
 
 namespace rat {
-
-using json = nlohmann::json;
-
 namespace {
+using json = nlohmann::json;
+ReplayStatus good() { return {true, ReplayErrorCode::None, {}}; }
+ReplayStatus bad(ReplayErrorCode code, std::string error) { return {false, code, std::move(error)}; }
 
-constexpr std::uint64_t kFnvOffset = 14695981039346656037ull;
-constexpr std::uint64_t kFnvPrime = 1099511628211ull;
-
-void mix_bytes(std::uint64_t& hash, const void* data, std::size_t size) {
-  const auto* bytes = static_cast<const unsigned char*>(data);
-  for (std::size_t i = 0; i < size; ++i) {
-    hash ^= bytes[i];
-    hash *= kFnvPrime;
-  }
-}
-
-void mix_u64(std::uint64_t& hash, std::uint64_t value) {
-  mix_bytes(hash, &value, sizeof(value));
-}
-
-void mix_u32(std::uint64_t& hash, std::uint32_t value) {
-  mix_bytes(hash, &value, sizeof(value));
-}
-
-void mix_i32(std::uint64_t& hash, std::int32_t value) {
-  mix_bytes(hash, &value, sizeof(value));
-}
-
-void mix_f32(std::uint64_t& hash, float value) {
-  std::uint32_t bits = 0;
-  std::memcpy(&bits, &value, sizeof(bits));
-  mix_u32(hash, bits);
-}
-
-void mix_bool(std::uint64_t& hash, bool value) {
-  const unsigned char bit = value ? 1 : 0;
-  mix_bytes(hash, &bit, 1);
-}
-
-void mix_string(std::uint64_t& hash, std::string_view value) {
-  mix_u64(hash, value.size());
-  mix_bytes(hash, value.data(), value.size());
-}
-
-void mix_player(std::uint64_t& hash, const PlayerBody& player) {
-  mix_f32(hash, player.x);
-  mix_f32(hash, player.y);
-  mix_f32(hash, player.z);
-  mix_f32(hash, player.half_extent);
-  mix_f32(hash, player.speed);
-}
-
-void mix_jump(std::uint64_t& hash, const JumpState& jump) {
-  mix_f32(hash, jump.jump_offset);
-  mix_f32(hash, jump.vertical_speed);
-  mix_f32(hash, jump.coyote_time_left);
-  mix_f32(hash, jump.jump_buffer_left);
-  mix_bool(hash, jump.grounded);
-  mix_i32(hash, jump.support_blocker_index);
-  mix_f32(hash, jump.ladder_lockout_left);
-  mix_f32(hash, jump.ladder_bounce_x);
-  mix_f32(hash, jump.ladder_bounce_z);
-  mix_bool(hash, jump.climbing);
-  mix_f32(hash, jump.climb_into_x);
-  mix_f32(hash, jump.climb_into_z);
-}
-
-void mix_interpreter(std::uint64_t& hash, const InterpreterDebug& interp) {
-  mix_string(hash, interp.event_id);
-  mix_i32(hash, interp.page_index);
-  mix_i32(hash, interp.command_index);
-  mix_i32(hash, interp.wait_frames);
-  mix_bool(hash, interp.waiting_message);
-  mix_bool(hash, interp.parallel);
-}
-
-json dump_input(const InputFrame& input) {
-  return json{{"axis_x", input.move.axis_x},
-              {"axis_z", input.move.axis_z},
-              {"climb_axis_x", input.climb_move.axis_x},
-              {"climb_axis_z", input.climb_move.axis_z},
-              {"jump_pressed", input.jump_pressed},
-              {"jump_held", input.jump_held},
-              {"interact_pressed", input.interact_pressed}};
-}
-
-InputFrame load_input(const json& node) {
-  InputFrame input;
-  if (!node.is_object()) {
-    return input;
-  }
-  input.move.axis_x = node.value("axis_x", 0.0f);
-  input.move.axis_z = node.value("axis_z", 0.0f);
-  input.climb_move.axis_x = node.value("climb_axis_x", 0.0f);
-  input.climb_move.axis_z = node.value("climb_axis_z", 0.0f);
-  input.jump_pressed = node.value("jump_pressed", false);
-  input.jump_held = node.value("jump_held", false);
-  input.interact_pressed = node.value("interact_pressed", false);
-  return input;
-}
-
-json dump_player(const PlayerBody& player) {
-  return json{{"x", player.x},
-              {"y", player.y},
-              {"z", player.z},
-              {"half_extent", player.half_extent},
-              {"speed", player.speed}};
-}
-
+json dump_player(const PlayerBody& v) { return json{{"x", v.x}, {"y", v.y}, {"z", v.z}, {"half_extent", v.half_extent}, {"speed", v.speed}}; }
 PlayerBody load_player(const json& node) {
-  PlayerBody player;
-  if (!node.is_object()) {
-    return player;
-  }
-  player.x = node.value("x", 0.0f);
-  player.y = node.value("y", 0.0f);
-  player.z = node.value("z", 0.0f);
-  player.half_extent = node.value("half_extent", 0.4f);
-  player.speed = node.value("speed", 5.0f);
-  return player;
+  detail::exact_fields(node, {"x", "y", "z", "half_extent", "speed"});
+  PlayerBody v;
+  v.x = detail::checked_number<float>(node.at("x"));
+  v.y = detail::checked_number<float>(node.at("y"));
+  v.z = detail::checked_number<float>(node.at("z"));
+  v.half_extent = detail::checked_number<float>(node.at("half_extent"));
+  v.speed = detail::checked_number<float>(node.at("speed"));
+  return v;
+}
+json dump_jump(const JumpState& v) { return json{{"jump_offset", v.jump_offset}, {"vertical_speed", v.vertical_speed}, {"coyote_time_left", v.coyote_time_left}, {"jump_buffer_left", v.jump_buffer_left}, {"grounded", v.grounded}, {"support_blocker_index", v.support_blocker_index}, {"ladder_lockout_left", v.ladder_lockout_left}, {"ladder_bounce_x", v.ladder_bounce_x}, {"ladder_bounce_z", v.ladder_bounce_z}, {"climbing", v.climbing}, {"climb_into_x", v.climb_into_x}, {"climb_into_z", v.climb_into_z}}; }
+json dump_tuning(const JumpTuning& v) { return json{{"gravity", v.gravity}, {"jump_speed", v.jump_speed}, {"jump_cut", v.jump_cut}, {"faster_fall_gravity", v.faster_fall_gravity}, {"max_fall_speed", v.max_fall_speed}, {"coyote_seconds", v.coyote_seconds}, {"input_buffer_seconds", v.input_buffer_seconds}, {"max_substep_seconds", v.max_substep_seconds}, {"ladder_lockout_seconds", v.ladder_lockout_seconds}, {"ladder_hop_speed", v.ladder_hop_speed}, {"ladder_bounce_speed", v.ladder_bounce_speed}}; }
+JumpTuning load_tuning(const json& node) {
+  detail::exact_fields(node, {"gravity", "jump_speed", "jump_cut", "faster_fall_gravity", "max_fall_speed", "coyote_seconds", "input_buffer_seconds", "max_substep_seconds", "ladder_lockout_seconds", "ladder_hop_speed", "ladder_bounce_speed"});
+  JumpTuning v;
+  v.gravity = detail::checked_number<float>(node.at("gravity"));
+  v.jump_speed = detail::checked_number<float>(node.at("jump_speed"));
+  v.jump_cut = detail::checked_number<float>(node.at("jump_cut"));
+  v.faster_fall_gravity = detail::checked_number<float>(node.at("faster_fall_gravity"));
+  v.max_fall_speed = detail::checked_number<float>(node.at("max_fall_speed"));
+  v.coyote_seconds = detail::checked_number<float>(node.at("coyote_seconds"));
+  v.input_buffer_seconds = detail::checked_number<float>(node.at("input_buffer_seconds"));
+  v.max_substep_seconds = detail::checked_number<float>(node.at("max_substep_seconds"));
+  v.ladder_lockout_seconds = detail::checked_number<float>(node.at("ladder_lockout_seconds"));
+  v.ladder_hop_speed = detail::checked_number<float>(node.at("ladder_hop_speed"));
+  v.ladder_bounce_speed = detail::checked_number<float>(node.at("ladder_bounce_speed"));
+  return v;
+}
+json dump_interpreter(const InterpreterState& v) { return json{{"event_id", v.event_id}, {"page_index", v.page_index}, {"node_id", v.node_id}, {"wait_frames", v.wait_frames}, {"route_index", v.route_index}, {"route_budget_paid", v.route_budget_paid}, {"waiting_message", v.waiting_message}, {"parallel", v.parallel}, {"autorun", v.autorun}, {"finished", v.finished}}; }
+
+json dump_config(const SimulationConfig& v) {
+  return {{"dt", v.dt}, {"app_mode", static_cast<int>(v.app_mode)}, {"jump_tuning", dump_tuning(v.jump_tuning)},
+          {"interact_buffer_seconds", v.interact_buffer_seconds}, {"max_step_up", v.max_step_up}};
+}
+SimulationConfig load_config(const json& node) {
+  detail::exact_fields(node, {"dt", "app_mode", "jump_tuning", "interact_buffer_seconds", "max_step_up"});
+  SimulationConfig v;
+  v.dt = detail::checked_number<float>(node.at("dt"));
+  v.app_mode = static_cast<AppMode>(detail::checked_number<int>(node.at("app_mode")));
+  v.jump_tuning = load_tuning(node.at("jump_tuning"));
+  v.interact_buffer_seconds = detail::checked_number<float>(node.at("interact_buffer_seconds"));
+  v.max_step_up = detail::checked_number<float>(node.at("max_step_up"));
+  return v;
+}
+json dump_input(const InputFrame& v) {
+  return {{"axis_x", v.move.axis_x}, {"axis_z", v.move.axis_z},
+          {"climb_axis_x", v.climb_move.axis_x}, {"climb_axis_z", v.climb_move.axis_z},
+          {"jump_pressed", v.jump_pressed},
+          {"jump_held", v.jump_held},
+          {"interact_pressed", v.interact_pressed},
+          {"toggle_mode_pressed", v.toggle_mode_pressed},
+          {"hot_apply_pressed", v.hot_apply_pressed},
+          {"cycle_camera_pressed", v.cycle_camera_pressed},
+          {"debug_snapshot_pressed", v.debug_snapshot_pressed},
+          {"undo_pressed", v.undo_pressed},
+          {"redo_pressed", v.redo_pressed}};
+}
+InputFrame load_input(const json& node) {
+  detail::exact_fields(node, {"axis_x", "axis_z", "climb_axis_x", "climb_axis_z", "jump_pressed", "jump_held", "interact_pressed", "toggle_mode_pressed", "hot_apply_pressed", "cycle_camera_pressed", "debug_snapshot_pressed", "undo_pressed", "redo_pressed"});
+  InputFrame v;
+  v.move.axis_x = detail::checked_number<float>(node.at("axis_x"));
+  v.move.axis_z = detail::checked_number<float>(node.at("axis_z"));
+  v.climb_move.axis_x = detail::checked_number<float>(node.at("climb_axis_x"));
+  v.climb_move.axis_z = detail::checked_number<float>(node.at("climb_axis_z"));
+  v.jump_pressed = node.at("jump_pressed").get<bool>();
+  v.jump_held = node.at("jump_held").get<bool>();
+  v.interact_pressed = node.at("interact_pressed").get<bool>();
+  v.toggle_mode_pressed = node.at("toggle_mode_pressed").get<bool>();
+  v.hot_apply_pressed = node.at("hot_apply_pressed").get<bool>();
+  v.cycle_camera_pressed = node.at("cycle_camera_pressed").get<bool>();
+  v.debug_snapshot_pressed = node.at("debug_snapshot_pressed").get<bool>();
+  v.undo_pressed = node.at("undo_pressed").get<bool>();
+  v.redo_pressed = node.at("redo_pressed").get<bool>();
+  return v;
 }
 
-json dump_recording(const ReplayRecording& recording) {
-  json ticks = json::array();
-  for (const TickInput& tick : recording.ticks) {
-    ticks.push_back(json{{"tick_id", tick.tick_id},
-                         {"checksum", tick.checksum},
-                         {"input", dump_input(tick.input)}});
-  }
-  return json{
-      {"schema_version", recording.header.schema_version},
-      {"header",
-       json{{"map_id", recording.header.map_id},
-            {"seed", recording.header.seed},
-            {"dt", recording.header.dt},
-            {"start_player", dump_player(recording.header.start_player)}}},
-      {"ticks", std::move(ticks)},
-  };
+void validate_values(const ReplayHeader& header) {
+  if (header.map_id.empty()) throw std::runtime_error("map_id is required");
+  const auto config = load_config(dump_config(header.config)); // validates finite numbers and enum representation
+  const auto player = load_player(dump_player(header.start_player));
+  if (config.app_mode != AppMode::Play && config.app_mode != AppMode::Edit)
+    throw std::runtime_error("invalid app_mode");
+  if (config.dt <= 0 || config.dt > kMaxCatchUpSeconds || config.interact_buffer_seconds < 0 || config.max_step_up < 0)
+    throw std::runtime_error("invalid simulation dt or configuration range");
+  for (const auto& value : dump_tuning(config.jump_tuning))
+    if (value.get<float>() < 0) throw std::runtime_error("negative jump tuning");
+  if (config.jump_tuning.max_substep_seconds <= 0 || config.jump_tuning.jump_cut > 1 ||
+      config.dt / config.jump_tuning.max_substep_seconds > 4096)
+    throw std::runtime_error("invalid jump substeps or jump_cut");
+  if (player.half_extent <= 0 || player.speed < 0) throw std::runtime_error("invalid start player size or speed");
+}
+void validate_input(const InputFrame& input) {
+  const auto parsed = load_input(dump_input(input));
+  for (float value : {parsed.move.axis_x, parsed.move.axis_z, parsed.climb_move.axis_x, parsed.climb_move.axis_z})
+    if (std::abs(value) > 1.00001f) throw std::runtime_error("input axis outside [-1, 1]");
 }
 
-ReplayRecording load_recording(const json& root) {
-  ReplayRecording recording;
-  recording.header.schema_version = root.value("schema_version", kReplaySchemaVersion);
-  if (root.contains("header") && root["header"].is_object()) {
-    const json& header = root["header"];
-    recording.header.map_id = header.value("map_id", std::string{});
-    recording.header.seed = header.value("seed", static_cast<std::uint64_t>(0));
-    recording.header.dt = header.value("dt", kSimulationFixedDt);
-    if (header.contains("start_player")) {
-      recording.header.start_player = load_player(header["start_player"]);
-    }
-  }
-  if (root.contains("ticks") && root["ticks"].is_array()) {
-    for (const json& node : root["ticks"]) {
-      if (!node.is_object()) {
-        continue;
-      }
-      TickInput tick;
-      tick.tick_id = node.value("tick_id", static_cast<std::uint64_t>(0));
-      tick.checksum = node.value("checksum", static_cast<std::uint64_t>(0));
-      if (node.contains("input")) {
-        tick.input = load_input(node["input"]);
-      }
-      recording.ticks.push_back(tick);
-    }
-  }
-  return recording;
+// Canonical typed encoding: tags, fixed big-endian 64-bit scalars and lengths.
+// Object key order is lexical (json's ordered map); array order is preserved.
+void u64(std::vector<std::uint8_t>& out, std::uint64_t v) {
+  for (int shift = 56; shift >= 0; shift -= 8) out.push_back(static_cast<std::uint8_t>(v >> shift));
 }
-
-}  // namespace
-
-std::uint64_t runtime_checksum(const SimulationSession& session, std::uint64_t seed) {
-  std::uint64_t hash = kFnvOffset;
-  mix_u64(hash, seed);
-  mix_u64(hash, session.tick_id());
-  mix_i32(hash, static_cast<std::int32_t>(session.config().app_mode));
-  mix_player(hash, session.player());
-  mix_jump(hash, session.jump());
-
-  const GameState& state = session.state();
-  mix_string(hash, state.map_id());
-  mix_f32(hash, state.player_x());
-  mix_f32(hash, state.player_y());
-  mix_f32(hash, state.player_z());
-
-  for (const auto& [id, value] : state.debug_switches()) {
-    mix_u32(hash, id);
-    mix_bool(hash, value);
+void encode(std::vector<std::uint8_t>& out, const json& value) {
+  if (value.is_null()) { out.push_back(0); return; }
+  if (value.is_boolean()) { out.push_back(value.get<bool>() ? 2 : 1); return; }
+  if (value.is_number_float()) {
+    out.push_back(3); const double n = value.get<double>();
+    u64(out, std::bit_cast<std::uint64_t>(n == 0.0 ? 0.0 : n)); return;
   }
-  for (const auto& [id, value] : state.debug_variables()) {
-    mix_u32(hash, id);
-    mix_i32(hash, value);
+  if (value.is_number_integer()) {
+    // Nonnegative signed/unsigned JSON storage is semantically identical.
+    const bool negative = !value.is_number_unsigned() && value.get<std::int64_t>() < 0;
+    out.push_back(negative ? 4 : 5);
+    u64(out, value.get<std::uint64_t>()); return;
   }
-  for (const InventoryItem& item : state.inventory()) {
-    mix_string(hash, item.id);
-    mix_i32(hash, item.quantity);
-    mix_bool(hash, item.key_item);
+  if (value.is_string()) {
+    out.push_back(6); const auto& text = value.get_ref<const std::string&>();
+    u64(out, text.size()); out.insert(out.end(), text.begin(), text.end()); return;
   }
-  for (const EventDef& event : session.events().map().events) {
-    mix_string(hash, event.id);
-    mix_bool(hash, state.get_self_switch(event.id, 'A'));
-    mix_bool(hash, state.get_self_switch(event.id, 'B'));
-    mix_bool(hash, state.get_self_switch(event.id, 'C'));
-    mix_bool(hash, state.get_self_switch(event.id, 'D'));
-  }
-
-  const EventRuntime& events = session.events();
-  if (events.active_message().has_value()) {
-    mix_bool(hash, true);
-    mix_string(hash, *events.active_message());
-  } else {
-    mix_bool(hash, false);
-  }
-  if (const auto foreground = events.foreground_debug()) {
-    mix_bool(hash, true);
-    mix_interpreter(hash, *foreground);
-  } else {
-    mix_bool(hash, false);
-  }
-  const std::vector<InterpreterDebug> parallels = events.parallel_debug();
-  mix_u64(hash, parallels.size());
-  for (const InterpreterDebug& interp : parallels) {
-    mix_interpreter(hash, interp);
-  }
+  out.push_back(value.is_array() ? 7 : 8); u64(out, value.size());
+  if (value.is_array()) { for (const auto& item : value) encode(out, item); }
+  else for (const auto& [key, item] : value.items()) { encode(out, key); encode(out, item); }
+}
+std::vector<std::uint8_t> bytes(const json& value) {
+  std::vector<std::uint8_t> out; encode(out, value); return out;
+}
+std::uint64_t hash_bytes(std::span<const std::uint8_t> data, std::uint64_t seed = 0) {
+  std::uint64_t hash = 14695981039346656037ull;
+  const auto mix = [&](std::uint8_t byte) { hash ^= byte; hash *= 1099511628211ull; };
+  std::vector<std::uint8_t> prefix; u64(prefix, seed);
+  for (auto byte : prefix) mix(byte);
+  for (auto byte : data) mix(byte);
   return hash;
 }
-
-void record_tick(ReplayRecording& recording, std::uint64_t tick_id, const InputFrame& input,
-                 std::uint64_t checksum) {
-  TickInput tick;
-  tick.tick_id = tick_id;
-  tick.input = input;
-  tick.checksum = checksum;
-  recording.ticks.push_back(tick);
-}
-
-ReplayRecording record_input_sequence(const MapData& map, const PlayerBody& start,
-                                      std::span<const InputFrame> steps, std::uint64_t seed) {
-  ReplayRecording recording;
-  recording.header.schema_version = kReplaySchemaVersion;
-  recording.header.map_id = map.id;
-  recording.header.seed = seed;
-  recording.header.start_player = start;
-
-  SimulationSession session;
-  if (!session.load(map).ok) {
-    return recording;
+json semantic_map(const MapData& data) {
+  auto compiled = compile_map_data(data);
+  if (!compiled.ok) throw std::runtime_error(format_map_issues(compiled.issues));
+  auto map = std::move(compiled.runtime.data);
+  map.schema_version = 5; // all runtime geometry, including v1's migrated heights
+  for (auto& event : map.events) for (auto& page : event.pages) {
+    page.commands.clear(); // graph is authoritative
+    if (page.graph) for (auto& node : page.graph->nodes) node.layout.reset();
   }
-  session.set_player(start);
-  recording.header.dt = session.config().dt;
-
-  for (const InputFrame& frame : steps) {
-    session.tick(frame);
-    record_tick(recording, session.tick_id(), frame, runtime_checksum(session, seed));
-  }
-  return recording;
+  for (auto& asset : map.assets) asset.debug_name.clear();
+  const auto encoded = serialize_map_to_string(map);
+  if (!encoded.ok) throw std::runtime_error(encoded.error);
+  return json::parse(encoded.json_text);
 }
+json snapshot(const SimulationSession& session) {
+  const auto& state = session.state();
+  json game{{"map_id", state.map_id()}, {"position", {state.player_x(), state.player_y(), state.player_z()}},
+            {"switches", json::array()}, {"variables", json::array()},
+            {"self_switches", json::array()}, {"inventory", json::array()}};
+  for (auto [id, value] : state.debug_switches()) game["switches"].push_back({id, value});
+  for (auto [id, value] : state.debug_variables()) game["variables"].push_back({id, value});
+  for (auto [id, bits] : state.self_switches_snapshot()) game["self_switches"].push_back({id, bits});
+  for (const auto& item : state.inventory()) game["inventory"].push_back({item.id, item.quantity, item.key_item});
+  const auto event = session.events().replay_snapshot();
+  json vm{{"foreground", event.foreground ? dump_interpreter(*event.foreground) : json(nullptr)},
+          {"parallels", json::array()}, {"message", event.active_message ? json(*event.active_message) : json(nullptr)},
+          {"touch_inside", event.touch_inside}, {"parallel_started", event.parallel_started},
+          {"autorun_lock", event.autorun_lock}, {"overlays", json::array()},
+          {"have_last_player", event.have_last_player},
+          {"last_player", {event.last_player_x, event.last_player_y, event.last_player_z}}};
+  for (const auto& interp : event.parallels) vm["parallels"].push_back(dump_interpreter(interp));
+  for (const auto& [id, overlay] : event.overlays)
+    vm["overlays"].push_back({id, overlay.tile.x, overlay.tile.z, static_cast<int>(overlay.facing), overlay.x, overlay.z});
+  const auto input = session.input_snapshot();
+  return {{"checksum_version", kReplayChecksumVersion}, {"tick_id", session.tick_id()},
+          {"config", dump_config(session.config())}, {"player", dump_player(session.player())},
+          {"jump", dump_jump(session.jump())}, {"game", std::move(game)}, {"events", std::move(vm)},
+          {"pending_input", {input.jump_press_pending, input.interact_press_pending, input.interact_seconds_left}}};
+}
+ReplayStatus fresh_session(const SimulationSession& session, const ReplayHeader& header) {
+  try {
+    if (session.events().map().id != header.map_id) return bad(ReplayErrorCode::Incompatible, "map_id mismatch");
+    const auto semantic = semantic_map(session.events().map());
+    if (hash_bytes(bytes(semantic)) != header.map_fingerprint)
+      return bad(ReplayErrorCode::Incompatible, "map fingerprint mismatch");
+    if (bytes(dump_config(session.config())) != bytes(dump_config(header.config)))
+      return bad(ReplayErrorCode::Incompatible, "simulation config mismatch");
+    SimulationSession expected(header.config);
+    if (!expected.load(session.events().map()).ok) return bad(ReplayErrorCode::InvalidSession, "invalid map");
+    expected.set_player(header.start_player);
+    if (runtime_state_bytes(expected) != runtime_state_bytes(session))
+      return bad(ReplayErrorCode::InvalidSession, "recording/playback requires a fresh session without saved progress, pending input or VM state");
+    return good();
+  } catch (const std::exception& ex) { return bad(ReplayErrorCode::InvalidSession, ex.what()); }
+}
+json dump_recording(const ReplayRecording& recording) {
+  const auto& h = recording.header;
+  json root{{"schema_version", h.schema_version}, {"header", {{"map_id", h.map_id},
+    {"map_fingerprint", h.map_fingerprint}, {"runtime_version", h.runtime_version}, {"checksum_version", h.checksum_version},
+    {"seed", h.seed}, {"config", dump_config(h.config)}, {"start_player", dump_player(h.start_player)}}},
+    {"ticks", json::array()}};
+  for (const auto& tick : recording.ticks)
+    root["ticks"].push_back({{"tick_id", tick.tick_id}, {"checksum", tick.checksum}, {"input", dump_input(tick.input)}});
+  return root;
+}
+ReplayRecording load_recording(const json& root) {
+  detail::exact_fields(root, {"schema_version", "header", "ticks"});
+  ReplayRecording out;
+  auto& h = out.header;
+  h.schema_version = detail::checked_number<std::uint32_t>(root.at("schema_version"));
+  const auto& header = root.at("header");
+  detail::exact_fields(header, {"map_id", "map_fingerprint", "runtime_version", "checksum_version", "seed", "config", "start_player"});
+  h.map_id = header.at("map_id").get<std::string>();
+  h.map_fingerprint = detail::checked_number<std::uint64_t>(header.at("map_fingerprint"));
+  h.runtime_version = detail::checked_number<std::uint32_t>(header.at("runtime_version"));
+  h.checksum_version = detail::checked_number<std::uint32_t>(header.at("checksum_version"));
+  h.seed = detail::checked_number<std::uint64_t>(header.at("seed"));
+  h.config = load_config(header.at("config"));
+  h.start_player = load_player(header.at("start_player"));
+  if (!root.at("ticks").is_array()) throw std::runtime_error("ticks must be an array");
+  for (const auto& node : root.at("ticks")) {
+    detail::exact_fields(node, {"tick_id", "input", "checksum"});
+    out.ticks.push_back({detail::checked_number<std::uint64_t>(node.at("tick_id")), load_input(node.at("input")),
+                         detail::checked_number<std::uint64_t>(node.at("checksum"))});
+  }
+  return out;
+}
+} // namespace
 
+std::vector<std::uint8_t> runtime_state_bytes(const SimulationSession& session) { return bytes(snapshot(session)); }
+std::uint64_t runtime_checksum(const SimulationSession& session, std::uint64_t seed) {
+  return hash_bytes(runtime_state_bytes(session), seed);
+}
+ReplayStatus validate_recording(const ReplayRecording& recording) {
+  const auto& h = recording.header;
+  if (h.schema_version != kReplaySchemaVersion || h.runtime_version != kReplayRuntimeVersion || h.checksum_version != kReplayChecksumVersion)
+    return bad(ReplayErrorCode::Incompatible, "unsupported replay contract; re-record this session");
+  try {
+    validate_values(h);
+    for (std::size_t i = 0; i < recording.ticks.size(); ++i) {
+      if (recording.ticks[i].tick_id != i + 1) throw std::runtime_error("tick ids must be sequential starting at 1");
+      validate_input(recording.ticks[i].input);
+    }
+    return good();
+  } catch (const std::exception& ex) { return bad(ReplayErrorCode::Format, ex.what()); }
+}
+ReplayRecordResult begin_recording(const SimulationSession& session, std::uint64_t seed) {
+  ReplayRecordResult out;
+  try {
+    auto& h = out.recording.header;
+    h.map_id = session.events().map().id;
+    h.map_fingerprint = hash_bytes(bytes(semantic_map(session.events().map())));
+    h.seed = seed; h.config = session.config(); h.start_player = session.player();
+    static_cast<ReplayStatus&>(out) = validate_recording(out.recording);
+    if (out.ok) static_cast<ReplayStatus&>(out) = fresh_session(session, h);
+  } catch (const std::exception& ex) { static_cast<ReplayStatus&>(out) = bad(ReplayErrorCode::InvalidSession, ex.what()); }
+  return out;
+}
+ReplayStatus record_tick(ReplayRecording& recording, std::uint64_t tick_id, const InputFrame& input, std::uint64_t checksum) {
+  auto status = validate_recording(recording);
+  if (!status.ok) return status;
+  if (tick_id != recording.ticks.size() + 1) return bad(ReplayErrorCode::Format, "nonsequential tick");
+  try { validate_input(input); } catch (const std::exception& ex) { return bad(ReplayErrorCode::Format, ex.what()); }
+  recording.ticks.push_back({tick_id, input, checksum});
+  return good();
+}
+ReplayRecordResult record_input_sequence(const MapData& map, const PlayerBody& start,
+    std::span<const InputFrame> steps, std::uint64_t seed, SimulationConfig config) {
+  SimulationSession session(config);
+  ReplayRecordResult out;
+  try {
+    ReplayHeader header; header.map_id = map.id; header.config = config; header.start_player = start;
+    validate_values(header);
+    for (const auto& input : steps) validate_input(input);
+    const auto loaded = session.load(map);
+    if (!loaded.ok) throw std::runtime_error(format_map_issues(loaded.issues));
+    session.set_player(start);
+    out = begin_recording(session, seed);
+    if (!out.ok) return out;
+    for (const auto& input : steps) {
+      session.tick(input);
+      out.recording.ticks.push_back({session.tick_id(), input, runtime_checksum(session, seed)});
+    }
+  } catch (const std::exception& ex) { static_cast<ReplayStatus&>(out) = bad(ReplayErrorCode::InvalidSession, ex.what()); }
+  return out;
+}
 ReplayPlayResult play_recording(SimulationSession& session, const ReplayRecording& recording) {
-  ReplayPlayResult result;
-  result.checksums_match = true;
-  const std::uint64_t seed = recording.header.seed;
-
-  for (const TickInput& tick : recording.ticks) {
+  ReplayPlayResult out;
+  static_cast<ReplayStatus&>(out) = validate_recording(recording);
+  if (!out.ok) return out;
+  static_cast<ReplayStatus&>(out) = fresh_session(session, recording.header);
+  if (!out.ok) return out;
+  out.checksums_match = true;
+  out.checksum = runtime_checksum(session, recording.header.seed);
+  for (const auto& tick : recording.ticks) {
     session.tick(tick.input);
-    const std::uint64_t actual = runtime_checksum(session, seed);
-    result.checksum = actual;
-    const bool tick_id_mismatch = tick.tick_id != 0 && tick.tick_id != session.tick_id();
-    const bool checksum_mismatch = tick.checksum != 0 && tick.checksum != actual;
-    if ((tick_id_mismatch || checksum_mismatch) && !result.first_diverging_tick.has_value()) {
-      result.first_diverging_tick = session.tick_id();
-      result.checksums_match = false;
+    ++out.ticks_executed;
+    out.checksum = runtime_checksum(session, recording.header.seed);
+    if (out.checksum != tick.checksum && !out.first_diverging_tick) {
+      out.first_diverging_tick = tick.tick_id;
+      out.checksums_match = false;
     }
   }
-
-  result.player = session.player();
-  result.state = session.state();
-  if (recording.ticks.empty()) {
-    result.checksum = runtime_checksum(session, seed);
-  }
-  return result;
+  out.player = session.player(); out.state = session.state();
+  return out;
 }
-
 ReplayPlayResult replay_input_sequence(const MapData& map, const ReplayRecording& recording) {
-  SimulationSession session;
-  if (!session.load(map).ok) {
-    return ReplayPlayResult{};
-  }
+  ReplayPlayResult out;
+  static_cast<ReplayStatus&>(out) = validate_recording(recording);
+  if (!out.ok) return out;
+  SimulationSession session(recording.header.config);
+  const auto loaded = session.load(map);
+  if (!loaded.ok) { static_cast<ReplayStatus&>(out) = bad(ReplayErrorCode::InvalidSession, format_map_issues(loaded.issues)); return out; }
   session.set_player(recording.header.start_player);
   return play_recording(session, recording);
 }
-
-bool write_replay(std::string_view path, const ReplayRecording& recording) {
-  return write_replay(path, recording, os_files());
-}
-
-bool write_replay(std::string_view path, const ReplayRecording& recording, FileStore& files) {
-  const std::string json_text = dump_recording(recording).dump(2) + '\n';
-  return files.write(path, json_text).ok;
-}
-
-std::optional<ReplayRecording> read_replay(std::string_view path) {
-  return read_replay(path, os_files());
-}
-
-std::optional<ReplayRecording> read_replay(std::string_view path, const FileStore& files) {
-  const FileReadResult read = files.read(path);
-  if (!read.ok) {
-    return std::nullopt;
-  }
+ReplayStatus write_replay(std::string_view path, const ReplayRecording& recording) { return write_replay(path, recording, os_files()); }
+ReplayStatus write_replay(std::string_view path, const ReplayRecording& recording, FileStore& files) {
+  auto status = validate_recording(recording);
+  if (!status.ok) return status;
   try {
-    const json root = json::parse(read.bytes.as_text());
-    return load_recording(root);
-  } catch (...) {
-    return std::nullopt;
-  }
+    const auto written = files.write_atomic(path, dump_recording(recording).dump(2) + "\n");
+    return written.ok ? good() : bad(ReplayErrorCode::Io, written.error);
+  } catch (const std::exception& ex) { return bad(ReplayErrorCode::Format, ex.what()); }
 }
-
-}  // namespace rat
+ReplayRecordResult read_replay(std::string_view path) { return read_replay(path, os_files()); }
+ReplayRecordResult read_replay(std::string_view path, const FileStore& files) {
+  ReplayRecordResult out;
+  const auto read = files.read(path);
+  if (!read.ok) { static_cast<ReplayStatus&>(out) = bad(ReplayErrorCode::Io, read.error); return out; }
+  try {
+    const auto root = detail::parse_unique_json(read.bytes.as_text());
+    if (root.contains("schema_version") && detail::checked_number<std::uint32_t>(root.at("schema_version")) != kReplaySchemaVersion) {
+      static_cast<ReplayStatus&>(out) = bad(ReplayErrorCode::Incompatible, "unsupported replay schema; re-record this session"); return out;
+    }
+    out.recording = load_recording(root);
+    static_cast<ReplayStatus&>(out) = validate_recording(out.recording);
+  } catch (const std::exception& ex) { static_cast<ReplayStatus&>(out) = bad(ReplayErrorCode::Format, ex.what()); }
+  return out;
+}
+} // namespace rat

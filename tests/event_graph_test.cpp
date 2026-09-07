@@ -1024,3 +1024,65 @@ TEST_CASE("event graph node metrics grow with widget rows and place branch pins 
   REQUIRE(branch.else_pin_y < branch.height);
   REQUIRE(branch.then_pin_y != Approx(branch.height * 0.5f));
 }
+
+TEST_CASE("Unsupported trigger and transfer are repairable drafts but fail runtime acceptance", "[unit][event][graph][contract]") {
+  for (int kind = 0; kind < 3; ++kind) {
+    auto loaded = rat::load_map_from_string(map_json_with_page(R"({"trigger":"action","commands":[]})"));
+    REQUIRE(loaded.ok);
+    auto& page = loaded.map.events[0].pages[0];
+    std::string path;
+    if (kind == 0) { page.trigger = rat::TriggerKind::EventTouch; path = "/events/0/pages/0/trigger"; }
+    if (kind == 1) {
+      rat::Command command; command.op = rat::CommandOp::TransferPlayer; command.map_id = "elsewhere";
+      page.graph.reset(); page.commands = {command}; path = "/events/0/pages/0/commands/0/map_id";
+    }
+    if (kind == 2) {
+      rat::EventGraphNode node; node.id = "transfer"; node.kind = "transfer_player"; node.map_id = "elsewhere";
+      page.graph = rat::EventGraph{{node}, {{"entry", "transfer"}, {"transfer", "exit"}}};
+      path = "/events/0/pages/0/graph/nodes/0/params/map_id";
+    }
+    const auto compiled = rat::compile_map_data(loaded.map); CHECK_FALSE(compiled.ok);
+    bool exact = false; for (const auto& issue : compiled.issues) if (issue.json_path == path) exact = true;
+    CHECK(exact);
+    const auto serialized = rat::serialize_map_to_string(loaded.map); REQUIRE(serialized.ok);
+    CHECK(rat::load_map_from_string(serialized.json_text).ok); // author can open and repair
+    rat::MemoryFileStore files; REQUIRE(files.write("map", "previous").ok);
+    CHECK_FALSE(rat::save_map_to_file(loaded.map, "map", files).ok);
+    CHECK(files.read("map").bytes.as_text() == "previous");
+  }
+}
+
+TEST_CASE("Forged unsupported RuntimeMap is refused without replacing running map or executing effects", "[unit][event][graph][contract]") {
+  const auto loaded = rat::load_map_from_string(map_json_with_page(R"({"trigger":"action","commands":[]})"));
+  REQUIRE(loaded.ok);
+  rat::EventRuntime runtime; REQUIRE(runtime.load(loaded.map).ok);
+  for (int kind = 0; kind < 2; ++kind) {
+    auto forged = rat::compile_map_data(loaded.map).runtime;
+    auto& page = forged.data.events[0].pages[0];
+    page.trigger = kind == 0 ? rat::TriggerKind::EventTouch : rat::TriggerKind::Autorun;
+    rat::Command command; command.op = rat::CommandOp::TransferPlayer; command.map_id = "other"; command.x = 42;
+    page.graph = rat::commands_to_graph({command});
+    runtime.load(forged);
+    rat::GameState state; state.set_map_id(loaded.map.id); state.set_player_position(1, 0, 1);
+    runtime.update(state, {}, true, 1.0f / 120);
+    CHECK(state.map_id() == loaded.map.id); CHECK(state.player_x() == 1);
+    CHECK(runtime.map().events[0].pages[0].trigger == rat::TriggerKind::Action);
+    CHECK_FALSE(runtime.warnings().empty());
+  }
+}
+
+TEST_CASE("Explicit empty graph remains authoritative over legacy commands", "[unit][event][graph][contract]") {
+  const auto loaded = rat::load_map_from_string(map_json_with_page(R"({"trigger":"autorun","commands":[{"op":"control_switch","id":123,"value":true}],"graph":{"nodes":[],"edges":[]}})"));
+  REQUIRE(loaded.ok);
+  REQUIRE(loaded.map.events[0].pages[0].graph);
+  CHECK(loaded.map.events[0].pages[0].graph->nodes.empty());
+  auto page = loaded.map.events[0].pages[0]; rat::ensure_page_graph_from_commands(page);
+  CHECK(page.graph->nodes.empty());
+  rat::EventRuntime runtime; REQUIRE(runtime.load(loaded.map).ok);
+  rat::GameState state; runtime.update(state, {}, false, 1.0f / 120);
+  CHECK_FALSE(state.get_switch(123));
+  auto map = loaded.map;
+  rat::Command stale; stale.op = rat::CommandOp::TransferPlayer; stale.map_id = "other";
+  map.events[0].pages[0].commands = {stale};
+  CHECK(rat::compile_map_data(map).ok); // stale unsupported command must not veto authoritative empty graph
+}
