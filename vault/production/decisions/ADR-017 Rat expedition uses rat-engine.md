@@ -1,12 +1,14 @@
 ---
 type: adr
 area: Engine
-status: Accepted
+status: Superseded
 decided: 2026-09-08
 tags: [adr, expedition, architecture]
 ---
 
 # ADR-017 — Rat Expedition продолжает собственный rat-engine
+
+Заменено 2026-09-08 решением [[ADR-018 Rat expedition uses Stride]] по прямому выбору пользователя. Ниже сохранён исторический контракт; он не разрешает продолжать реализацию игры на rat-engine.
 
 ## Контекст
 
