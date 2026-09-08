@@ -1,9 +1,11 @@
 ---
 type: task
 area: Game
-status: Not started
+status: In progress
 task_type: Feature
-sprint:
+sprint: Sprint 19
+review: Pending
+baseline_commit: 0cfac74
 due:
 tags: [task, expedition]
 ---
@@ -30,6 +32,14 @@ Dependencies: [[expedition-engine-decision]]. До закрытия зависи
 ## Границы
 
 Только временные ассеты, движение и контекст. Без универсального редактора, свободной камеры и полного MGS-стелса.
+
+## Срезы реализации
+
+- [ ] P1.1: отдельный rat-game/game-release, запуск серой сцены, PNG-спрайт, данные/ошибки загрузки и основа упаковки.
+- [ ] P1.2: высота тела/приседание, совместимость replay/debug, контекстная лестница и безопасные выходы; направленные регрессии.
+- [ ] P1.3: две сцены/переходы/recovery/пауза, мост сверху/снизу, спутники, локальные перекрытия, визуальные сценарии и самостоятельный ZIP.
+
+Порядок принят пользователем запросом начать реализацию 2026-09-08. Один исполнитель, независимое ревью каждого среза; P1 закрывается после общей приёмки. Статусами и отметками управляет ведущий агент.
 
 Origin: [[expedition-engine-decision]]; [[ADR-017 Rat expedition uses rat-engine]]; [[design-rat-expedition-preproduction]]; [[design-expedition-layered-maps]]; [[rat-expedition-layered-maps]]; [[production/roadmap/rat-expedition-release-roadmap|План до релиза]].
 Follow-up: [[expedition-prototype-interactions]].
