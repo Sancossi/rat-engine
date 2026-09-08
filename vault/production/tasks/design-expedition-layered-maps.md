@@ -31,7 +31,11 @@ Follow-up: [[expedition-prototype-traversal]]; [[expedition-prototype-interactio
 
 2026-09-08: оба референса согласованы с GDD, арт-направлением, схемой ярусов и архитектурой. Уточнены будущие P1/P2/E3: настоящие верх/низ моста, высота целей, локальные группы перекрытий и маршрут спутников. Runtime и ассеты не создавались; будущие карточки остаются Not started вне спринта.
 
-Независимое ревью коммита 8be7fee: Approved, замечаний нет. Vault/BMad checks, 29 локальных Markdown-ссылок и сохранность 47 пользовательских файлов проверены. Ведущий агент выполняет полную Release-проверку после закрытия; итог будет записан здесь.
+Независимое ревью коммита 8be7fee: Approved, замечаний нет. Vault/BMad checks, 29 локальных Markdown-ссылок и сохранность 47 пользовательских файлов проверены.
+
+После закрытия 7eaa84a ведущий агент запустил `powershell -ExecutionPolicy Bypass -File scripts/verify.ps1`: exit 0, полный Release build редактора, 714/714 CTest (6,36 с), 16/16 Python и vault passed. Журнал: `build/rat-expedition-layered-maps-verify.log`; редактор: `C:/5_gamedev/rat-engine/build/dev-release/apps/editor/rat-editor.exe`. Runtime-исходники не менялись: актуальные объекты повторно не компилировались, сборка проверила полный граф и скопировала данные. Вывод unittest в stderr оформлен PowerShell как NativeCommandError, но Python сообщил OK и общий exit 0.
+
+GUI, новая игра, визуальные сценарии, интерес и сходство с референсами не проверялись. Это приёмка документов; P1/E3 проверят реальное изображение. После закрытия current false, доска без активного спринта и BMad sync/check синхронизированы.
 
 ## Bugs found
 
