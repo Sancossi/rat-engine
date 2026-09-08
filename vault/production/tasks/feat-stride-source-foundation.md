@@ -1,10 +1,10 @@
 ---
 type: task
 area: Engine
-status: In review
+status: Done
 task_type: Feature
 sprint: Sprint 19
-review: In review
+review: Approved
 baseline_commit: 702cae4
 due:
 tags: [task, expedition, stride, infrastructure]
@@ -29,8 +29,10 @@ Follow-up: [[expedition-prototype-traversal]].
 
 ## Resolution
 
-В работе. Авторизован локальный переход и сборка из исходников. Публикация GitHub fork или релиза сейчас не запрошена.
+Подготовлен официальный Stride в `C:/5_gamedev/stride`, закреплён SHA `e2c786a45f69917bf233793f6a097b150e2fe264`, создана локальная ветка `rat/expedition-foundation`. Добавлены lock, workspace, безопасные bootstrap/build scripts и порядок собственных доработок/выпусков. Реальная Windows x64 Release-сборка Game Studio `4.4.0-dev` успешна; startup smoke достиг окна выбора проекта. Интерактивная сцена, перенос P1 и MCP ещё не проверялись.
+
+Реализация: `8c1dbae`, документация запуска: `673af4a`, исправления ревью: `22b9cf3`. Два независимых read-only reviewer одобрили итог; проверены adversarial, edge-case и acceptance аспекты. Восемь fixture-сценариев passed; повторная сборка исправленным wrapper: exit 0, 0 ошибок, 5 upstream NU5100. [Свидетельства и ограничения](../../../docs/audits/2026-09-08-stride-source-foundation.md), [рабочий процесс](../../../docs/stride-source-workflow.md). Публикация fork/релиза не выполнялась. Следующий игровой шаг — адаптация существующей P1 к Stride/C#.
 
 ## Bugs found
 
-Пока не проверено.
+В ходе ревью исправлены относительные пути PowerShell, wildcard-обработка путей сборки/журналов и ложноположительные guard-тесты. Незакрытых ошибок этого среза: none.

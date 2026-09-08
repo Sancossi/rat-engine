@@ -113,3 +113,18 @@ baseline временной fixture и проверяют конкретное �
 Настоящая повторная сборка исправленным wrapper завершилась exit 0 за 48.75 s:
 0 ошибок, 5 прежних upstream NU5100, executable существует, версия `4.4.0-dev`.
 Логи и manifest: `C:/5_gamedev/stride/logs/rat-foundation/20260908-213636-378/`.
+
+## Итоговая приёмка
+
+Два независимых read-only reviewer одобрили исправленный срез `22b9cf3` после
+adversarial, edge-case и acceptance проверок. Замечания выше исправлены; открытых
+дефектов в принятом срезе нет. Карточка исходной основы закрыта ведущим агентом.
+
+После закрытия выполнен `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verify.ps1`:
+exit 0, vault check passed, 24 Python tests passed (включая восемь Stride wrappers),
+720 CTest passed и один symlink-сценарий skipped из-за доступности создания ссылок.
+Полный исторический Release editor сохранён и пересобран:
+`C:/5_gamedev/rat-engine/build/dev-release/apps/editor/rat-editor.exe`.
+Журнал: `C:/Users/bogor/AppData/Local/Temp/rat-stride-final-verify.log`.
+Эти CTest относятся к прежнему rat-engine, не к игровому проекту Stride.
+`python scripts/bmad_vault.py sync` / `check` успешны; исходное дерево Stride чистое.
