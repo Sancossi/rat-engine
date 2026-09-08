@@ -1,8 +1,11 @@
 # Architecture roadmap
 
-Updated 2026-09-07 against the current source tree. Sprint 7 established most
-runtime interfaces; Sprint 15 stabilizes their contracts. Historical sprint cards
-retain their original scope and acceptance evidence.
+Historical snapshot updated 2026-09-07. Sprint 7 established most runtime interfaces;
+Sprint 15 subsequently closed. The tables below retain that snapshot and its
+then-open boundaries, not a live queue. Current game direction and engine choice
+(2026-09-08): [Rat Expedition architecture](rat-expedition-architecture.md);
+current task/status: [engine decision](../vault/production/tasks/expedition-engine-decision.md).
+Historical sprint cards retain their original scope and acceptance evidence.
 
 ## Implemented and partial foundations
 
@@ -37,9 +40,9 @@ and link-isolation tests. Acceptance: runtime/authoring tests compile without
 platform/graphics headers; adapters expose ownership; no cycles, locator or singleton.
 Do not migrate gameplay into ECS or introduce RHI/job systems as part of this split.
 
-## Current implementation order
+## Historical implementation order (Sprint 15)
 
-The [Sprint 15 contract](superpowers/plans/2026-09-07-stabilization.md) is the active queue:
+The [Sprint 15 contract](superpowers/plans/2026-09-07-stabilization.md) was the stabilization queue:
 workflow/build foundation, safe storage, authoring lifecycle, runtime/replay,
 geometry/graph regressions, then GUI/CI/package acceptance. Format/API changes
 need ADRs and negative tests; docs must state actual limits while stages remain open.
