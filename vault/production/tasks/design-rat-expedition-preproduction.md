@@ -1,11 +1,11 @@
 ---
 type: task
 area: Game
-status: In progress
+status: In review
 task_type: Feature
 sprint: Sprint 16
 due:
-review: Pending
+review: In review
 tags: [task, gdd, preproduction]
 ---
 
@@ -23,7 +23,18 @@ Acceptance:
 
 Origin: [[chore-bmad-vault-integration]]; [[Sprint 16 — Rat expedition preproduction]].
 
-Follow-up: Future engine decision and prototype cards to be linked during implementation.
+Follow-up:
+- [[expedition-engine-decision]]
+- [[expedition-prototype-traversal]]
+- [[expedition-prototype-interactions]]
+- [[expedition-prototype-quest-dialogue]]
+- [[expedition-prototype-combat]]
+- [[expedition-prototype-save-load]]
+- [[expedition-prototype-integrated-scenario]]
+- [[expedition-prototype-playtest]]
+- [[expedition-vertical-slice]]
+- [[expedition-full-production]]
+- [[expedition-release-readiness]]
 
 ## Resolution
 
