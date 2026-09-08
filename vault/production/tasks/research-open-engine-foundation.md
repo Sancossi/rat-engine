@@ -1,10 +1,10 @@
 ---
 type: task
 area: Game
-status: In progress
+status: In review
 task_type: Research
 sprint: Sprint 19
-review: Pending
+review: In review
 baseline_commit: 0f5bf2f
 due:
 tags: [task, expedition, research, engine]
@@ -33,7 +33,7 @@ Follow-up: [[expedition-prototype-traversal]].
 
 ## Resolution
 
-В работе.
+Сравнение подготовлено; пользователь выбрал Stride. Решение закреплено в [[ADR-018 Rat expedition uses Stride]], а варианты MCP и сопутствующих инструментов — в [технической записке](../../../docs/stride-mcp-integration-research.md). Документационный срез `60c253d` направлен на независимое ревью. Установка MCP и перенос игры не выполнялись.
 
 Уточнение пользователя 2026-09-08: выбран **Stride**; исследование продолжается в части MCP, управления Game Studio, диагностики игрового процесса, сборки и тестирования. Сравнение пяти движков сохраняется как история. Следующий результат — зафиксированное решение и техническая записка о вариантах интеграции; установка MCP и перенос P1 не входят в это исследование.
 
