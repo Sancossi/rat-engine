@@ -1,11 +1,11 @@
 ---
 type: task
 area: Game
-status: In progress
+status: In review
 task_type: Research
 sprint: Sprint 18
 due:
-review: Pending
+review: In review
 tags: [task, expedition, design]
 ---
 
