@@ -21,6 +21,13 @@
 
 Native-resolution rendering допустим для этого среза; масштаб/640×360/движение без мерцания остаются A7 проверками полного P1. Не объявлять всю карточку P1 завершённой. Evidence — `docs/audits/2026-09-09-stride-first-game-slice.md`; тяжёлые artifacts под `build/stride-game/`. Независимый reviewer проверяет Core/loader/package paths и отличает реальные кадры от headless evidence.
 
+## Suggested Review Order
+
+1. [Вход приложения и ошибки](../games/rat-expedition/Rat.Expedition.Windows/Program.cs), [загрузка и валидация сцены](../games/rat-expedition/Rat.Expedition.Core/SceneDefinition.cs), [движение](../games/rat-expedition/Rat.Expedition.Core/TraversalMotor.cs).
+2. [Сцена, sprite/depth, focus callbacks и GPU capture](../games/rat-expedition/Rat.Expedition.Windows/ExpeditionGame.cs).
+3. [Закреплённые зависимости](../games/rat-expedition/NuGet.Config), [build/publish](../scripts/stride/build-game.ps1), [проверка извлечённого ZIP](../scripts/stride/verify-game.ps1).
+4. [Core regressions](../games/rat-expedition/Rat.Expedition.Core.Tests/Program.cs), [результаты и границы проверки](audits/2026-09-09-stride-first-game-slice.md).
+
 ## Source anchors
 
 На закреплённом upstream прочитаны `samples/NewGame/NewGame/MyTemplate.Game/MyTemplate.Game.csproj`, `sources/engine/Stride.Engine/Engine/Game.cs`, `Stride.Engine/Rendering/Compositing/GraphicsCompositorHelper.cs`, `Stride.Engine.Tests/EngineTestBase.cs`, `Stride.Engine.Tests/SpriteRenderer3DTests.cs`, `Stride.Rendering/Rendering/Sprites/SpriteFromTexture.cs`. Shader/publish contract: `Stride.AssetCompiler/build/Stride.AssetCompiler.targets`, `Stride.Core.Assets/PackageSession.BuildManifest.cs`. Static inspection направляет реализацию, но не заменяет первый запуск игры.
