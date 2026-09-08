@@ -1,11 +1,11 @@
 ---
 type: task
 area: Game
-status: In review
+status: Done
 task_type: Research
 sprint: Sprint 18
 due:
-review: In review
+review: Approved
 tags: [task, expedition, design]
 ---
 
@@ -13,7 +13,7 @@ tags: [task, expedition, design]
 
 Intent: Зафиксировать присланный пользователем ориентир итогового изображения карт и проработать мосты, по которым и под которыми можно ходить.
 
-Specification: сообщение пользователя с изображением 2026-09-08; [[GDD]]; [[rat-expedition-art-audio]]; [архитектура](../../../docs/rat-expedition-architecture.md); [P1](../../../docs/rat-expedition-traversal-spec.md).
+Specification: два сообщения пользователя с изображениями 2026-09-08; [[GDD]]; [[rat-expedition-art-audio]]; [[rat-expedition-layered-maps]]; [архитектура](../../../docs/rat-expedition-architecture.md); [P1](../../../docs/rat-expedition-traversal-spec.md).
 
 ## Acceptance
 
@@ -25,12 +25,14 @@ Specification: сообщение пользователя с изображен
 
 Origin: [[expedition-engine-decision]]; [[Sprint 18 — Layered map design]].
 Related: [[feat-walkable-bridges-over-open-ground]]; [[feat-voxel-3d-terrain-and-rotating-ramps]].
-Follow-up: [[expedition-prototype-traversal]]; [[expedition-vertical-slice]].
+Follow-up: [[expedition-prototype-traversal]]; [[expedition-prototype-interactions]]; [[expedition-vertical-slice]].
 
 ## Resolution
 
-Ожидается уточнение документов и независимое ревью.
+2026-09-08: оба референса согласованы с GDD, арт-направлением, схемой ярусов и архитектурой. Уточнены будущие P1/P2/E3: настоящие верх/низ моста, высота целей, локальные группы перекрытий и маршрут спутников. Runtime и ассеты не создавались; будущие карточки остаются Not started вне спринта.
+
+Независимое ревью коммита 8be7fee: Approved, замечаний нет. Vault/BMad checks, 29 локальных Markdown-ссылок и сохранность 47 пользовательских файлов проверены. Ведущий агент выполняет полную Release-проверку после закрытия; итог будет записан здесь.
 
 ## Bugs found
 
-Ожидается проверка.
+none. Ревью не выявило незакрытых находок; GUI/игровые сценарии этим этапом не проверены.

@@ -33,7 +33,7 @@ Dependencies: [[design-rat-expedition-preproduction]]. До закрытия з�
 Не разрабатывать бой, не мигрировать весь движок и не покупать пакеты. Установку/создание выбранного проекта делает P1 после решения.
 
 Origin: [[design-rat-expedition-preproduction]]; [[production/roadmap/rat-expedition-release-roadmap|План до релиза]]; [[Sprint 17 — Rat engine architecture]].
-Follow-up: [[expedition-prototype-traversal]].
+Follow-up: [[expedition-prototype-traversal]]; [[design-expedition-layered-maps]].
 
 ## Resolution
 

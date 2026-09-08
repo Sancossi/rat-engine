@@ -1,9 +1,9 @@
 ---
 type: sprint
-status: In Progress
+status: Done
 dates: 2026-09-08
 goal: Capture the map reference and specify playable upper and lower routes
-current: true
+current: false
 tags: [sprint, expedition, design]
 ---
 
@@ -17,8 +17,8 @@ tags: [sprint, expedition, design]
 
 ## Resolution
 
-Ожидается независимое ревью и Release-проверка при закрытии.
+2026-09-08: визуальный ориентир и многоуровневые маршруты зафиксированы, P1/P2/E3 уточнены. Независимое ревью 8be7fee: Approved. После закрытия ведущий агент выполняет полную Release-проверку; итог в [[design-expedition-layered-maps]]. Следующий игровой срез остаётся P1, вне спринта.
 
 ## Bugs found
 
-Ожидается проверка.
+none.
