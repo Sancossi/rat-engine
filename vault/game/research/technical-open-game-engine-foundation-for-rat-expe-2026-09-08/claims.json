@@ -1,0 +1,10 @@
+[
+  {"claim":"Godot 4.7.2 is the current stable line used by this comparison","class":"version","pub_date":"2026-08-18"},
+  {"claim":"Godot current documentation supports animated billboard sprites in 3D and Windows export","class":"compatibility","pub_date":"2026-09-08"},
+  {"claim":"Stride stable 4.3 and 4.4 beta are the current lines used by this comparison","class":"version","pub_date":"2026-09-08"},
+  {"claim":"Stride current documentation supports animated world-space billboard sprites","class":"compatibility","pub_date":"2026-09-08"},
+  {"claim":"Wicked Engine v0.72.113 is the current release used by this comparison","class":"version","pub_date":"2026-08-24"},
+  {"claim":"O3DE 26.05.0 is the current release used by this comparison","class":"version","pub_date":"2026-05-27"},
+  {"claim":"dhewm3 1.5.5 is an actively maintained id Tech 4 community route","class":"ecosystem","pub_date":"2026-06-08"},
+  {"claim":"Current license interpretations and bundled notices remain applicable","class":"license","pub_date":"2026-09-08"}
+]
