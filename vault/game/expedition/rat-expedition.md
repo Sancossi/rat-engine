@@ -13,6 +13,7 @@ tags: [game, expedition]
 | Правила и границы | [[GDD|Актуальный диздок]] |
 | История и диалоги | [[rat-expedition-narrative|Нарратив]] |
 | Изображение, звук и ассеты | [[rat-expedition-art-audio|Художественное направление]] |
+| Карты 3/4, мосты и проходы снизу | [[rat-expedition-layered-maps|Ярусы и два визуальных ориентира]] |
 | Этапы, эпики и порядок задач | [[production/roadmap/rat-expedition-release-roadmap|План до релиза]] |
 | Принятое, предложенное и заменённое | [[ADR-016 Rat expedition concept reset|Журнал решений]] |
 | Что делать со старой очередью | [[rat-expedition-legacy-reconciliation|Разбор прежних работ]] |
