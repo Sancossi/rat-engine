@@ -5,6 +5,8 @@ tags: [game]
 
 # Art Direction
 
+> Историческое направление прежней концепции. Для Rat Expedition с 2026-09-08 актуальны [[rat-expedition-art-audio]] и [[GDD]]: 2D-персонажи в 3D-мире. Оригинальные решения ниже сохранены; замену фиксирует [[ADR-016 Rat expedition concept reset]].
+
 > **Status:** Working (2026-09-03). Цель — stylized 3D под пиксель-арт, ortho 3/4, без ряби. Первый scene lock: двор `grey_yard` (секция Moodboard).
 
 ## Визуальный язык
