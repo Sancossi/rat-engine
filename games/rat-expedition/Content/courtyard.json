@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "id": "expedition_courtyard",
+  "floor": { "id": "floor", "min": { "x": -8, "y": -0.3, "z": -6 }, "max": { "x": 8, "y": 0, "z": 6 } },
+  "spawn": { "x": 1.5, "y": 0, "z": 3 },
+  "walls": [
+    { "id": "courtyard-wall", "min": { "x": -2, "y": 0, "z": -0.25 }, "max": { "x": 2, "y": 1.8, "z": 0.25 } },
+    { "id": "west-boundary", "min": { "x": -8, "y": 0, "z": -6 }, "max": { "x": -7.5, "y": 1.2, "z": 6 } },
+    { "id": "north-boundary", "min": { "x": -7.5, "y": 0, "z": -6 }, "max": { "x": 8, "y": 1.2, "z": -5.5 } },
+    { "id": "east-pillar", "min": { "x": 4, "y": 0, "z": 1 }, "max": { "x": 5, "y": 1.5, "z": 2 } }
+  ]
+}

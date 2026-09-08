@@ -1,0 +1,11 @@
+{
+  "assets": [
+    {
+      "exported_path": "Content/sprites/rat.png",
+      "source": "tools/rat_sprite.py",
+      "author_tool": "Codex, original procedural pixel artwork for this project",
+      "license_terms": "Project LICENSE; no third-party image inputs",
+      "modifications": "Copied original rat-engine prototype atlas unchanged; generator output redirected to game Content"
+    }
+  ]
+}

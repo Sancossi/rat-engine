@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <OutputType>WinExe</OutputType>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <StridePlatform>Windows</StridePlatform>
+    <StrideGraphicsApi>Direct3D11</StrideGraphicsApi>
+    <StrideRemoteEffectCompilerEnabled>false</StrideRemoteEffectCompilerEnabled>
+    <PublishAot>false</PublishAot>
+    <PublishTrimmed>false</PublishTrimmed>
+    <PublishSingleFile>false</PublishSingleFile>
+    <SelfContained>true</SelfContained>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Rat.Expedition.Core/Rat.Expedition.Core.csproj" />
+    <PackageReference Include="Stride.Engine" Version="[4.4.0-dev]" />
+    <PackageReference Include="Stride.AssetCompiler" Version="[4.4.0-dev]" IncludeAssets="build;buildTransitive" />
+    <Content Include="../Content/**/*" Link="Content/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>
