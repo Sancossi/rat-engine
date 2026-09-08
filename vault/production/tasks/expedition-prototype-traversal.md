@@ -1,7 +1,7 @@
 ---
 type: task
 area: Game
-status: In progress
+status: Blocked
 task_type: Feature
 sprint: Sprint 19
 review: Pending
@@ -17,6 +17,8 @@ Intent: Игрок проходит 3D-двор 2D-героем через об�
 Specification: [[GDD]] — Исследование; [[rat-expedition-art-audio]] — камера/перекрытия; [[ADR-017 Rat expedition uses rat-engine]]; [P1: интерфейсы, срезы, сценарии](../../../docs/rat-expedition-traversal-spec.md); [архитектура](../../../docs/rat-expedition-architecture.md).
 
 Dependencies: [[expedition-engine-decision]]. До закрытия зависимостей не брать в работу.
+
+Blocked by: [[research-open-engine-foundation]]. Продолжить после решения пользователя по результатам сравнения открытых движков.
 
 ## Acceptance
 
