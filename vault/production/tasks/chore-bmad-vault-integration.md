@@ -1,11 +1,11 @@
 ---
 type: task
 area: Production
-status: In review
+status: Done
 task_type: Chore
 sprint: Sprint 16
 due:
-review: In review
+review: Approved
 tags: [task, bmad, preproduction]
 ---
 
@@ -27,8 +27,18 @@ Follow-up: [[design-rat-expedition-preproduction]].
 
 ## Resolution
 
-Pending implementation and review.
+Implemented in commit `6ce8ec5`. BMad Core 6.12.0 and full GDS v0.7.2 provide
+41 project-local skills, pinned setup/reinstall, Russian configuration and a
+one-way projection of vault statuses. [Integration evidence](../../../docs/bmad/integration-smoke.md)
+records fresh and existing-project setup, real workflow resolvers and limitations.
+
+Independent read-only reviewer approved `6ce8ec5` on 2026-09-08 with no actionable
+findings: smoke, projection check, 16 Python tests and vault validation pass;
+40/40 pre-existing user files remain byte-identical and unstaged. Parent will
+rebuild the full Release editor at Sprint 16 stage closure. Interactive client
+reload, gameplay, GUI and remote CI were not verified by this documentation slice.
 
 ## Bugs found
 
-Pending verification.
+none remaining. Installation action handling and resolver shape discovered during
+local smoke were corrected before review; evidence records the tested adaptations.
