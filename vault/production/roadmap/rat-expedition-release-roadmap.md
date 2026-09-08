@@ -9,7 +9,7 @@ tags: [roadmap, expedition]
 
 # Rat Expedition — этапы и эпики до релиза
 
-Версия 0.1, 2026-09-08. Канонический план эпиков (роль native BMad epics); статусы выполнения читаются из карточек, а не из этой таблицы. Источники: [[GDD]], [[ADR-016 Rat expedition concept reset]], [[rat-expedition|хаб]]. Подготовка закрыта в Sprint 16; E1 оформляется в [[Sprint 17 — Rat engine architecture]] по выбору собственного rat-engine ([[ADR-017 Rat expedition uses rat-engine]]). Карточки P1 и далее пока без спринта, Not started; состояния читать из карточек. Следующий этап не начинается автоматически после этого документа.
+Версия 0.1, 2026-09-08. Канонический план эпиков (роль native BMad epics); статусы выполнения читаются из карточек, а не из этой таблицы. Источники: [[GDD]], [[ADR-016 Rat expedition concept reset]], [[rat-expedition|хаб]]. Подготовка закрыта в Sprint 16; E1 принят в закрытом [[Sprint 17 — Rat engine architecture]] по выбору собственного rat-engine ([[ADR-017 Rat expedition uses rat-engine]]). Карточки P1 и далее пока без спринта, Not started; состояния читать из карточек. Следующий этап не начинается автоматически после этого документа.
 
 ## Этапы и переходы
 

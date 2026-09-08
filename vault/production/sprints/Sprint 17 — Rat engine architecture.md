@@ -23,7 +23,7 @@ tags: [sprint, expedition, architecture]
 
 ## Resolution
 
-2026-09-08: E1 закрыт с Approved; выбран существующий rat-engine, записаны ADR-017, архитектура и спецификация первой сцены. Полная Release-проверка запускается ведущим агентом после закрытия. P1 остаётся Not started вне спринта.
+2026-09-08: E1 закрыт с Approved; выбран существующий rat-engine, записаны ADR-017, архитектура и спецификация первой сцены. После закрытия verify.ps1: exit 0, полный Release editor, 714/714 CTest и 16/16 Python. [Отчёт приёмки](../../../docs/audits/2026-09-08-rat-expedition-engine-architecture.md). P1 остаётся Not started вне спринта; current false и доска без активного спринта.
 
 ## Bugs found
 
