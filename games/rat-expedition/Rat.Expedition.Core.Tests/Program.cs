@@ -1,4 +1,6 @@
 using System.Numerics;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 using Rat.Expedition.Core;
 
 int passed = 0, failed = 0;
@@ -71,6 +73,19 @@ Check("malformed missing and unknown JSON fields rejected", () => {
             File.WriteAllText(path, json); Reject(() => SceneDefinition.Load(path));
         }
         File.Delete(path); Reject(() => SceneDefinition.Load(path));
+    } finally { if (File.Exists(path)) File.Delete(path); }
+});
+Check("missing nested spawn and bounds coordinates rejected", () => {
+    string path = Path.Combine(Path.GetTempPath(), "rat-scene-required-" + Guid.NewGuid() + ".json");
+    try {
+        foreach (var member in new[] { "X", "Y", "Z" }) {
+            foreach (var location in new[] { "Spawn", "FloorMin", "WallMax" }) {
+                var json = JsonSerializer.SerializeToNode(Scene(Box("wall", 2,2,3,3)))!;
+                var point = location == "Spawn" ? json["Spawn"] : location == "FloorMin" ? json["Floor"]!["Min"] : json["Walls"]![0]!["Max"];
+                point!.AsObject().Remove(member);
+                File.WriteAllText(path, json.ToJsonString()); Reject(() => SceneDefinition.Load(path));
+            }
+        }
     } finally { if (File.Exists(path)) File.Delete(path); }
 });
 Console.WriteLine($"Core scenarios: {passed} passed, {failed} failed.");

@@ -42,14 +42,14 @@ try {
         $name = "gpu-$($resolution[0])x$($resolution[1])"
         $results += Invoke-GameScenario $name @('--width', [string]$resolution[0], '--height', [string]$resolution[1]) $true
         $run = Get-Content -LiteralPath (Join-Path $root "$name/run.json") -Raw | ConvertFrom-Json
-        if ($run.width -ne $resolution[0] -or $run.height -ne $resolution[1] -or -not $run.adapter -or $run.finalPosition.z -ge 0) {
+        if ($run.width -ne $resolution[0] -or $run.height -ne $resolution[1] -or -not $run.adapter -or $run.finalPosition.z -ge 0 -or $run.focusProbePassed -ne $true) {
             throw "$name missing expected GPU dimensions/adapter/behind-wall route evidence."
         }
         foreach ($frame in @('frame-0030.png', 'frame-0180.png', 'frame-0360.png')) {
             if (-not (Test-Path -LiteralPath (Join-Path $root "$name/$frame"))) { throw "$name missing $frame" }
         }
     }
-    foreach ($failure in @('missing-png', 'corrupt-png', 'missing-json', 'malformed-json')) {
+    foreach ($failure in @('missing-png', 'corrupt-png', 'missing-json', 'malformed-json', 'missing-coordinate-json')) {
         $content = Join-Path $root "$failure-content"
         Copy-Item -LiteralPath (Join-Path $app 'Content') -Destination $content -Recurse
         switch ($failure) {
@@ -57,6 +57,11 @@ try {
             'corrupt-png' { [IO.File]::WriteAllBytes((Join-Path $content 'sprites/rat.png'), [byte[]](1,2,3,4,5)) }
             'missing-json' { Rename-Item -LiteralPath (Join-Path $content 'courtyard.json') -NewName 'courtyard.json.absent' }
             'malformed-json' { [IO.File]::WriteAllText((Join-Path $content 'courtyard.json'), '{ malformed JSON') }
+            'missing-coordinate-json' {
+                $document = Get-Content -LiteralPath (Join-Path $content 'courtyard.json') -Raw | ConvertFrom-Json
+                $document.spawn.PSObject.Properties.Remove('x')
+                $document | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath (Join-Path $content 'courtyard.json') -Encoding UTF8
+            }
         }
         $results += Invoke-GameScenario $failure @('--content-dir', $content) $false
     }

@@ -6,7 +6,7 @@ namespace Rat.Expedition.Core;
 
 public sealed record Point3(float X, float Y, float Z)
 {
-    public Vector3 Vector => new(X, Y, Z);
+    [JsonIgnore] public Vector3 Vector => new(X, Y, Z);
     [JsonIgnore] public bool IsFinite => float.IsFinite(X) && float.IsFinite(Y) && float.IsFinite(Z);
 }
 
@@ -24,7 +24,8 @@ public sealed record SceneDefinition(int SchemaVersion, string Id, WorldBox Floo
         try
         {
             var scene = JsonSerializer.Deserialize<SceneDefinition>(File.ReadAllText(path),
-                new JsonSerializerOptions { PropertyNameCaseInsensitive = true, UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow });
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true, UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow,
+                    RespectRequiredConstructorParameters = true });
             if (scene is null) throw new InvalidDataException("Scene document is null.");
             scene.Validate();
             return scene;

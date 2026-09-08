@@ -29,6 +29,8 @@ public sealed class ExpeditionGame : Game
     private SpriteFromSheet? provider;
     private int frames;
     private bool contentReady;
+    private bool discardInputOnNextUpdate;
+    private bool? focusProbePassed;
     public Exception? FatalError { get; private set; }
 
     public ExpeditionGame(GameOptions options, SceneDefinition definition)
@@ -55,6 +57,21 @@ public sealed class ExpeditionGame : Game
         base.Initialize();
     }
 
+    protected override void OnDeactivated(object sender, EventArgs args)
+    {
+        // Stride skips Update entirely while inactive, so the callback must flush the motor.
+        motor?.Advance(0, System.Numerics.Vector2.Zero, false);
+        discardInputOnNextUpdate = true;
+        base.OnDeactivated(sender, args);
+    }
+
+    protected override void OnActivated(object sender, EventArgs args)
+    {
+        ResetElapsedTime();
+        discardInputOnNextUpdate = true;
+        base.OnActivated(sender, args);
+    }
+
     private async Task LoadScene()
     {
         await base.LoadContent();
@@ -78,7 +95,8 @@ public sealed class ExpeditionGame : Game
             var primitive = new CubeProceduralModel { Size = new(box.Max.X - box.Min.X, box.Max.Y - box.Min.Y, box.Max.Z - box.Min.Z) };
             primitive.SetMaterial("Material", material);
             var entity = new Entity(box.Id) { new ModelComponent(primitive.Generate(Services)) };
-            entity.Transform.Position = new((box.Min.X + box.Max.X) / 2, (box.Min.Y + box.Max.Y) / 2, (box.Min.Z + box.Max.Z) / 2);
+            entity.Transform.Position = new(box.Min.X + (box.Max.X - box.Min.X) / 2,
+                box.Min.Y + (box.Max.Y - box.Min.Y) / 2, box.Min.Z + (box.Max.Z - box.Min.Z) / 2);
             scene.Entities.Add(entity);
         }
 
@@ -102,12 +120,19 @@ public sealed class ExpeditionGame : Game
     protected override void Update(GameTime gameTime)
     {
         if (!contentReady) { base.Update(gameTime); return; }
+        var beforeFocus = motor.Position;
+        long ticksBeforeFocus = motor.Ticks;
+        bool probeFocus = options.SmokeFrames > 120 && frames == 120;
+        if (probeFocus) { OnDeactivated(this, EventArgs.Empty); OnActivated(this, EventArgs.Empty); }
         var input = new System.Numerics.Vector2(
             (Input.IsKeyDown(Keys.D) ? 1 : 0) - (Input.IsKeyDown(Keys.A) ? 1 : 0),
             (Input.IsKeyDown(Keys.W) ? 1 : 0) - (Input.IsKeyDown(Keys.S) ? 1 : 0));
         if (options.SmokeFrames > 0)
             input = frames < 90 ? new(0, 1) : frames < 240 ? new(1, 0) : frames < 300 ? new(0, 1) : frames < 360 ? new(-1, 0) : System.Numerics.Vector2.Zero;
-        motor.Advance(options.SmokeFrames > 0 ? 1.0 / 60 : gameTime.Elapsed.TotalSeconds, input, options.SmokeFrames > 0 || IsActive);
+        double elapsed = options.SmokeFrames > 0 ? 1.0 / 60 : gameTime.Elapsed.TotalSeconds;
+        if (discardInputOnNextUpdate) { elapsed = 0; input = System.Numerics.Vector2.Zero; discardInputOnNextUpdate = false; }
+        motor.Advance(elapsed, input, options.SmokeFrames > 0 || IsActive);
+        if (probeFocus) focusProbePassed = motor.Position == beforeFocus && motor.Ticks == ticksBeforeFocus;
         if (hero is not null) hero.Transform.Position = new(motor.Position.X, motor.Position.Y, motor.Position.Z);
         if (provider is not null && input.LengthSquared() > 0) provider.CurrentFrame = frames / 12 % 2 + (Math.Abs(input.X) > Math.Abs(input.Y) ? (input.X > 0 ? 4 : 2) : input.Y > 0 ? 6 : 0);
         if (options.SmokeFrames > 0 && frames % 30 == 0) samples.Add(new { frame = frames, x = motor.Position.X, y = motor.Position.Y, z = motor.Position.Z, motor.Ticks });
@@ -133,6 +158,7 @@ public sealed class ExpeditionGame : Game
                 adapter = GraphicsDevice.Adapter.Description, backend = GraphicsDevice.Platform.ToString(), frames,
                 runtime = Environment.Version.ToString(), stride = typeof(Game).Assembly.GetName().Version?.ToString(), samples,
                 finalPosition = new { x = motor.Position.X, y = motor.Position.Y, z = motor.Position.Z }, build,
+                focusProbePassed, focusProbe = "Direct invocation of actual focus callbacks during the automated route; not OS focus input",
                 sourceBaseline = "e2c786a45f69917bf233793f6a097b150e2fe264", check = "automated GPU route, not manual playtest"
             }, new JsonSerializerOptions { WriteIndented = true }));
             Exit();
