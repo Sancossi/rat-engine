@@ -2,7 +2,7 @@
 type: sprint
 status: In Progress
 dates: 2026-09-08
-goal: Resolve Stride integration and revise the expedition traversal prototype plan
+goal: Implement the Stride expedition traversal prototype in verified slices
 current: true
 tags: [sprint, expedition, prototype]
 ---
@@ -19,7 +19,7 @@ tags: [sprint, expedition, prototype]
 
 ## Resolution
 
-В работе. Пользователь 2026-09-08 выбрал Stride; исследование MCP и подготовка исходной основы завершены с независимым ревью. Game Studio собран из закреплённого upstream и прошёл startup smoke. P1 остаётся заблокирован до адаптации архитектуры и плана к Stride/C#; прежние C++ срезы не продолжаются.
+В работе. Исследование MCP и исходная основа Stride завершены. Архитектура и P1 адаптированы к Stride/C#. P1.1 принят 2026-09-09: самостоятельная Windows-игра, серый двор/PNG, WASD/стены, ZIP, два GPU-разрешения и проверки отказов; независимое ревью Approved. Следующий срез P1.2 — объём тела, приседание/лаз, лестница/выходы после проверки collision adapter. Полная карточка P1 и спринт ещё не закрыты; прежняя C++ реализация сохраняется отдельно.
 
 ## Bugs found
 

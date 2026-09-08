@@ -1,10 +1,10 @@
 ---
 type: task
 area: Game
-status: In review
+status: In progress
 task_type: Feature
 sprint: Sprint 19
-review: In review
+review: Approved
 baseline_commit: 3862666
 due:
 tags: [task, expedition]
@@ -18,7 +18,7 @@ Specification: [[GDD]] — Исследование; [[rat-expedition-art-audio]
 
 Dependencies: [[feat-stride-source-foundation]] — закрыта. [[expedition-engine-decision]] сохранена как историческая приёмка прежней основы.
 
-Текущий этап: пользователь 2026-09-09 разрешил продолжение. Архитектура и срезы P1 адаптированы к Stride/C# в `26cd508`; выполняется P1.1. Исходная основа подготовлена и проверена в [[feat-stride-source-foundation]]. [Прежняя C++ спецификация](../../../docs/rat-expedition-traversal-spec-rat-engine-2026-09-08.md) сохранена как история; её реализация не продолжается.
+Текущий этап: P1.1 реализован и принят 2026-09-09. Архитектура и срезы P1 адаптированы к Stride/C# в `26cd508`; следующий срез P1.2 начинает с проверки collision adapter для объёма тела, потолков и выходов лестницы. Полная карточка P1 остаётся In progress: review Approved относится к P1.1, P1.2/P1.3 ещё не выполнены. Исходная основа подготовлена в [[feat-stride-source-foundation]]. [Прежняя C++ спецификация](../../../docs/rat-expedition-traversal-spec-rat-engine-2026-09-08.md) сохранена как история.
 
 ## Acceptance
 
@@ -37,19 +37,21 @@ Dependencies: [[feat-stride-source-foundation]] — закрыта. [[expedition
 
 ## Срезы реализации
 
-- [ ] P1.1: отдельная Windows-игра Stride, серая плоская сцена, PNG-спрайт, камера/WASD, ограничения стен/пола, данные/ошибки загрузки, проверенный самостоятельный ZIP.
+- [x] P1.1: отдельная Windows-игра Stride, серая плоская сцена, PNG-спрайт, камера/WASD, ограничения стен/пола, данные/ошибки загрузки, проверенный самостоятельный ZIP.
 - [ ] P1.2: высота тела/приседание, новый контракт команд/snapshot без совместимости C++ replay, контекстная лестница и безопасные выходы; направленные регрессии.
 - [ ] P1.3: две сцены/переходы/recovery/пауза, мост сверху/снизу, спутники, локальные перекрытия, визуальные сценарии и самостоятельный ZIP.
 
 Реализация начата по запросу пользователя 2026-09-08; этот порядок срезов конкретизирует спецификацию. Один исполнитель, независимое ревью каждого среза; P1 закрывается после общей приёмки. Статусами и отметками управляет ведущий агент. Текущий этап: [[Sprint 19 — Expedition traversal prototype]].
 
-Origin: [[expedition-engine-decision]]; [[ADR-017 Rat expedition uses rat-engine]]; [[design-rat-expedition-preproduction]]; [[design-expedition-layered-maps]]; [[rat-expedition-layered-maps]]; [[production/roadmap/rat-expedition-release-roadmap|План до релиза]].
+Origin: [[expedition-engine-decision]]; [[ADR-017 Rat expedition uses rat-engine]]; [[feat-stride-source-foundation]]; [[ADR-018 Rat expedition uses Stride]]; [[design-rat-expedition-preproduction]]; [[design-expedition-layered-maps]]; [[rat-expedition-layered-maps]]; [[production/roadmap/rat-expedition-release-roadmap|План до релиза]].
 Follow-up: [[expedition-prototype-interactions]].
 
 ## Resolution
 
-Ещё не выполнялась. При закрытии записать поведение, сборку/команды, результаты и ограничения проверки.
+P1.1: `bef3183`, исправления `d02c5bd`. Самостоятельная Stride/C# игра находится в `games/rat-expedition/`: фиксированная ортографическая камера, оригинальный PNG, WASD, нормированная скорость, ограничения пола/стен и скольжение. Вертикальный спрайт сохраняет глубину перед/за стеной. Загрузка отвергает отсутствующий/повреждённый контент и пропуски координат. Обработчики фокуса сбрасывают накопленное время и устаревший ввод.
+
+Два независимых read-only reviewer одобрили P1.1 после исправлений. 12 Core-сценариев passed; распакованный self-contained ZIP проверен вне checkout с другим cwd: два реальных GPU-разрешения 1280×720 и 1920×1080, пять ожидаемых отказов executable. Проверка focus callbacks автоматическая, без заявления о ручном Alt-Tab или чистой машине. [Проверка и артефакты](../../../docs/audits/2026-09-09-stride-first-game-slice.md). Полная приёмка P1, сложное перемещение и MCP ещё не выполнены.
 
 ## Bugs found
 
-Ещё не проверено. При выполнении записать найденные баги со ссылками или none.
+В P1.1 исправлены обрезание переднего спрайта полным billboard, перезапись размера окна настройками Stride, пропущенные координаты JSON, недостижимый сброс фокуса внутри Update и переполнение midpoint. Открытых дефектов принятого среза: none. Будущие механики P1.2/P1.3 ещё требуют проверки.

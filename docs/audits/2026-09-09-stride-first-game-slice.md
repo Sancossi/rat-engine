@@ -36,6 +36,8 @@ Stride пропускает Update у неактивного окна, поэт�
 
 ## Границы доказательства
 
+После приёмки P1.1 ведущий агент повторно собрал полный Game Studio через `scripts/stride/build.ps1`: exit 0, Release `4.4.0-dev`, 0 ошибок и 5 прежних upstream NU5100, 84,63 с. Редактор: `C:/5_gamedev/stride/sources/editor/Stride.GameStudio/bin/Release/net10.0-windows/Stride.GameStudio.exe`. Manifest и журналы: `C:/5_gamedev/stride/logs/rat-foundation/20260909-025713-274/`. Исходное дерево Stride осталось чистым.
+
 Родительский агент отдельно выполнил итоговый legacy `scripts/verify.ps1`: exit 0, 24 Python tests, 720 CTest passed и один symlink skip из 721. Старый Release editor сохранён по пути `C:/5_gamedev/rat-engine/build/dev-release/apps/editor/rat-editor.exe`; лог — `C:/Users/bogor/AppData/Local/Temp/stride-p11-final-legacy.log`. Это проверка сохранности исторической основы, а не тесты игровой сцены Stride.
 
 Это реальный GPU render и запуск полного ZIP с другим cwd на данном ПК разработчика. Автоматический маршрут использует тот же motor, но не заменяет ручной WASD плейтест. Процессы запускались скрыто и завершились; окна игры не оставлены открытыми. Чистая машина без SDK/editor не использовалась, сетевой доступ на уровне ОС не блокировался. Self-contained/runtime/content closure проверена, однако такая проверка не доказывает независимый запуск на любой Windows машине. Многоуровневая физика, pixel-stable 640×360 и остальные требования полного P1 здесь не заявлены.
