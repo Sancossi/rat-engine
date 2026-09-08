@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "upstreamUrl": "https://github.com/stride3d/stride.git",
+  "upstreamRemote": "upstream",
+  "upstreamCommit": "e2c786a45f69917bf233793f6a097b150e2fe264",
+  "baselineKind": "development-snapshot",
+  "baselineObserved": "2026-09-08",
+  "localBranch": "rat/expedition-foundation",
+  "defaultCheckout": "../../../stride",
+  "editorProject": "sources/editor/Stride.GameStudio/Stride.GameStudio.csproj",
+  "editorExecutable": "sources/editor/Stride.GameStudio/bin/Release/net10.0-windows/Stride.GameStudio.exe",
+  "configuration": "Release",
+  "platforms": "Windows",
+  "graphicsApis": "Direct3D11",
+  "windowsArm64Enabled": false
+}
