@@ -1,11 +1,11 @@
 ---
 type: task
 area: Production
-status: In progress
+status: In review
 task_type: Chore
 sprint: Sprint 16
 due:
-review: Pending
+review: In review
 tags: [task, bmad, preproduction]
 ---
 
