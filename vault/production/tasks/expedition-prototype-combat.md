@@ -39,4 +39,3 @@ Follow-up: [[expedition-prototype-save-load]].
 ## Bugs found
 
 Ещё не проверено. При выполнении записать найденные баги со ссылками или none.
-

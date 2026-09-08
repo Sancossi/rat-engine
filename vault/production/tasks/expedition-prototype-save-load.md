@@ -38,4 +38,3 @@ Follow-up: [[expedition-prototype-integrated-scenario]].
 ## Bugs found
 
 Ещё не проверено. При выполнении записать найденные баги со ссылками или none.
-

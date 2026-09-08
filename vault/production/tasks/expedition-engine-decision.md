@@ -37,4 +37,3 @@ Follow-up: [[expedition-prototype-traversal]].
 ## Bugs found
 
 Ещё не проверено. При выполнении записать найденные баги со ссылками или none.
-
