@@ -1,16 +1,21 @@
 ---
 type: task
 area: Game
-status: Not started
+status: In progress
 task_type: Research
-sprint:
+sprint: Sprint 17
 due:
+review: Pending
 tags: [task, expedition]
 ---
 
 # Выбрать движок и границы проекта экспедиции
 
 Intent: Превратить сравнение технологий в явное принятое решение до игрового кода.
+
+Решение пользователя 2026-09-08: использовать собственный движок. Продолжаем
+существующий rat-engine в этом репозитории. Текущий срез фиксирует ADR, минимальную
+архитектуру и конкретизирует P1; игровой код относится к следующему этапу.
 
 Specification: [[GDD]]; [[ADR-016 Rat expedition concept reset]]; [Сравнение движков](../../../docs/rat-expedition-engine-comparison.md).
 
@@ -27,7 +32,7 @@ Dependencies: [[design-rat-expedition-preproduction]]. До закрытия з�
 
 Не разрабатывать бой, не мигрировать весь движок и не покупать пакеты. Установку/создание выбранного проекта делает P1 после решения.
 
-Origin: [[design-rat-expedition-preproduction]]; [[production/roadmap/rat-expedition-release-roadmap|План до релиза]].
+Origin: [[design-rat-expedition-preproduction]]; [[production/roadmap/rat-expedition-release-roadmap|План до релиза]]; [[Sprint 17 — Rat engine architecture]].
 Follow-up: [[expedition-prototype-traversal]].
 
 ## Resolution
