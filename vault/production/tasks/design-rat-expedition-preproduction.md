@@ -52,7 +52,8 @@ Vault/projection checks and 16 Python tests pass. All 40 initial and 7 later
 external user files remain byte-identical; historical GDD content is preserved.
 
 Approval covers documentation and preparation, not gameplay or balance. The
-parent performs full Release editor verification at Sprint 16 closure.
+parent completed full Release editor verification at Sprint 16 closure: 714 C++
+tests and 16 Python tests passed. [Stage evidence](../../../docs/audits/2026-09-08-rat-expedition-preproduction.md).
 
 ## Bugs found
 

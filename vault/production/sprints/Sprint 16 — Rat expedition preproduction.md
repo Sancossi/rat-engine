@@ -1,9 +1,9 @@
 ---
 type: sprint
-status: In Progress
+status: Done
 dates: 2026-09-08
 goal: Install BMad and prepare the new rat RPG design and bounded release queue
-current: true
+current: false
 tags: [sprint, preproduction]
 ---
 
@@ -23,8 +23,20 @@ belong to subsequent stages. Do not resume historical sprint queues.
 
 ## Resolution
 
-Pending stage acceptance and full Release editor rebuild.
+Both ordered cards are Done with review Approved after independent read-only
+review. BMad Core 6.12.0 + GDS v0.7.2, canonical game design and 11 future cards
+are ready; engine choice and runtime implementation remain subsequent work.
+
+Full Windows Release configure/build/CTest completed with exit 0: 714 C++ tests,
+16 Python tests and vault checks passed. Editor:
+`C:/5_gamedev/rat-engine/build/dev-release/apps/editor/rat-editor.exe`.
+[Acceptance evidence and limits](../../../docs/audits/2026-09-08-rat-expedition-preproduction.md).
+
+All 40 initial and seven later external files preserved. No current sprint;
+board uses `__NO_ACTIVE_SPRINT__`. Next: [[expedition-engine-decision]].
 
 ## Bugs found
 
-Pending review.
+none remaining. Setup/resolver mismatches and a new empty duplicate roadmap
+navigation note were corrected before closure. No runtime fixes or GUI/playtest
+claims. See acceptance evidence for details.

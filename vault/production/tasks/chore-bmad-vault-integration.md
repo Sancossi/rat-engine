@@ -34,8 +34,9 @@ records fresh and existing-project setup, real workflow resolvers and limitation
 
 Independent read-only reviewer approved `6ce8ec5` on 2026-09-08 with no actionable
 findings: smoke, projection check, 16 Python tests and vault validation pass;
-40/40 pre-existing user files remain byte-identical and unstaged. Parent will
-rebuild the full Release editor at Sprint 16 stage closure. Interactive client
+40/40 pre-existing user files remain byte-identical and unstaged. Parent completed
+full Release verification at Sprint 16 closure: 714 C++ and 16 Python tests pass.
+[Stage evidence](../../../docs/audits/2026-09-08-rat-expedition-preproduction.md). Interactive client
 reload, gameplay, GUI and remote CI were not verified by this documentation slice.
 
 ## Bugs found
