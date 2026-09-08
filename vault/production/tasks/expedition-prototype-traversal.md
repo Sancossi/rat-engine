@@ -1,11 +1,11 @@
 ---
 type: task
 area: Game
-status: Blocked
+status: In progress
 task_type: Feature
 sprint: Sprint 19
 review: Pending
-baseline_commit: 0cfac74
+baseline_commit: 3862666
 due:
 tags: [task, expedition]
 ---
@@ -18,7 +18,7 @@ Specification: [[GDD]] — Исследование; [[rat-expedition-art-audio]
 
 Dependencies: [[expedition-engine-decision]]. До закрытия зависимостей не брать в работу.
 
-Blocked by: требуется адаптация архитектуры и срезов P1 к Stride/C#. Исходная основа подготовлена и проверена в [[feat-stride-source-foundation]]. Пользователь 2026-09-08 выбрал официальный upstream Stride; прежние CMake/rat-engine критерии ниже сохраняются как история и не разрешают автоматическое продолжение C++ реализации.
+Текущий этап: пользователь 2026-09-09 разрешил продолжение — адаптация архитектуры и срезов P1 к Stride/C#, затем первый срез P1.1. Исходная основа подготовлена и проверена в [[feat-stride-source-foundation]]. Пользователь 2026-09-08 выбрал официальный upstream Stride; прежние CMake/rat-engine критерии ниже сохраняются как история и не разрешают автоматическое продолжение C++ реализации.
 
 ## Acceptance
 
