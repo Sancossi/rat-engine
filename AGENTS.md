@@ -63,3 +63,16 @@ not a task status. Copy new-note templates from `vault/templates/`.
   documentation changes need the vault check, not new C++ tests.
 - Project skills in `.agents/skills/` cover build verification, vault maintenance,
   and runtime reproduction. They supplement this contract without broadening scope.
+
+## BMad game workflow
+
+- BMad Core and Game Dev Studio supplement this contract. Setup and real skill
+  names are in `docs/bmad/README.md`; load `docs/bmad/project-context.md` before
+  using them. Use the approved design inputs instead of repeating settled intake.
+- `vault/game/GDD.md` is the canonical design; companion documents live in
+  `vault/game/expedition/`. Engineering specifications and review evidence live
+  in `docs/`. Every new vault Markdown note needs valid scalar frontmatter.
+- Vault cards remain the only editable task/status source. Before native sprint
+  reporting run `python scripts/bmad_vault.py sync` then `check`. Never edit the
+  generated projection or create a parallel story queue; it does not authorize
+  pickup, mark blocked work ready, or replace independent review.

@@ -22,3 +22,10 @@ vault/.obsidian/workspace-mobile.json
 vault/.obsidian/graph.json
 vault/.obsidian/cache/
 vault/.obsidian/plugins/dataview/
+
+# BMad upstream packs are installed locally from tools/bmad/package-lock.json.
+/_bmad/
+/.agents/skills/bmad-*/
+/.agents/skills/gds-*/
+/tools/bmad/node_modules/
+/docs/bmad/generated/

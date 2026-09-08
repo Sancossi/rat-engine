@@ -1,0 +1,14 @@
+# Source of truth for generated _bmad/custom/config.toml.
+[core]
+project_name = "Rat Expedition"
+communication_language = "Russian"
+document_output_language = "Russian"
+output_folder = "vault"
+
+[modules.gds]
+project_name = "Rat Expedition"
+planning_artifacts = "vault/game"
+implementation_artifacts = "docs/bmad/generated"
+sprint_artifacts = "docs/bmad/generated"
+project_knowledge = "docs"
+primary_platform = ["unity", "unreal", "godot", "other"]

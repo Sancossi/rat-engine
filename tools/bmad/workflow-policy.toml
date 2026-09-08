@@ -1,0 +1,4 @@
+# Installed into each workflow's supported team override, not upstream SKILL.md.
+[workflow]
+activation_steps_prepend = ["Read AGENTS.md and docs/bmad/project-context.md. Apply the project routing and ownership contract before any native workflow action."]
+persistent_facts = ["file:docs/bmad/project-context.md"]
