@@ -55,3 +55,10 @@ context: [docs/bmad/project-context.md, docs/stride-mcp-integration-research.md]
 ## Verification
 
 Bootstrap и сборка должны проверяться реальным запуском; негативные filesystem сценарии — на временной fixture без destructive cleanup чужих каталогов. Документы проверяются `python scripts/check_vault.py`, карточки синхронизируются ведущим через `python scripts/bmad_vault.py sync` и `check`. Независимый reviewer проверяет scripts и evidence. Ведущий выполняет финальную Release-проверку после этапа. Сборка не считается GUI-проверкой.
+
+## Suggested Review Order
+
+1. [Engine lock](../tools/stride/engine.lock.json): исходный SHA, отдельный checkout и параметры Windows x64.
+2. [Общие проверки](../scripts/stride/common.ps1), [bootstrap](../scripts/stride/bootstrap.ps1) и [build](../scripts/stride/build.ps1): сохранение дерева, ancestry, LFS, ошибки и проверка executable.
+3. [Защитные сценарии](../scripts/tests/test_stride_checkout.py) и [свидетельства проверки](audits/2026-09-08-stride-source-foundation.md): воспроизведённые случаи, фактическая сборка и границы smoke-проверки.
+4. [Рабочий процесс](stride-source-workflow.md), [контекст](bmad/project-context.md) и [ADR-018](../vault/production/decisions/ADR-018%20Rat%20expedition%20uses%20Stride.md): собственные доработки, версии, лицензии и следующий игровой срез.
