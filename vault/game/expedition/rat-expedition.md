@@ -21,7 +21,7 @@ tags: [game, expedition]
 | История сравнения технологий | [Исследование до выбора](../../../docs/rat-expedition-engine-comparison.md) |
 | Работа с ИИ и BMad | [Контекст процесса](../../../docs/bmad/project-context.md) |
 
-[[expedition-engine-decision|Выбор rat-engine и архитектура]] приняты; [[Sprint 17 — Rat engine architecture]] закрыт с Approved и Release-проверкой. Следующая задача — [[expedition-prototype-traversal|P1: первая игровая сцена]], пока Not started вне спринта. Прототип не запускается автоматически вслед за документами. Единственная очередь и статусы находятся в карточках vault; таблицы дизайна и этапов не являются второй доской.
+[[expedition-engine-decision|Выбор rat-engine и архитектура]] приняты; [[Sprint 17 — Rat engine architecture]] и [[Sprint 18 — Layered map design]] закрыты. По запросу пользователя начат [[Sprint 19 — Expedition traversal prototype]]: [[expedition-prototype-traversal|P1: первая игровая сцена]] в реализации. Единственная очередь и статусы находятся в карточках vault; таблицы дизайна и этапов не являются второй доской.
 
 Старые [[Rat Project]], [[Narrative]] и [[Audio Direction]] сохраняют историю и пользовательские правки. Их незаполненные поля и старые ограничения не задают требования новой игре. Точная предыдущая версия GDD: [[legacy-gdd-2026-08-31|архив 2026-08-31]].
 

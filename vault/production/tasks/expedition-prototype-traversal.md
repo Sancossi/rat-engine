@@ -39,7 +39,7 @@ Dependencies: [[expedition-engine-decision]]. До закрытия зависи
 - [ ] P1.2: высота тела/приседание, совместимость replay/debug, контекстная лестница и безопасные выходы; направленные регрессии.
 - [ ] P1.3: две сцены/переходы/recovery/пауза, мост сверху/снизу, спутники, локальные перекрытия, визуальные сценарии и самостоятельный ZIP.
 
-Порядок принят пользователем запросом начать реализацию 2026-09-08. Один исполнитель, независимое ревью каждого среза; P1 закрывается после общей приёмки. Статусами и отметками управляет ведущий агент.
+Реализация начата по запросу пользователя 2026-09-08; этот порядок срезов конкретизирует спецификацию. Один исполнитель, независимое ревью каждого среза; P1 закрывается после общей приёмки. Статусами и отметками управляет ведущий агент. Текущий этап: [[Sprint 19 — Expedition traversal prototype]].
 
 Origin: [[expedition-engine-decision]]; [[ADR-017 Rat expedition uses rat-engine]]; [[design-rat-expedition-preproduction]]; [[design-expedition-layered-maps]]; [[rat-expedition-layered-maps]]; [[production/roadmap/rat-expedition-release-roadmap|План до релиза]].
 Follow-up: [[expedition-prototype-interactions]].
