@@ -21,7 +21,7 @@ function Get-StrideCheckoutPath {
     if (-not $Path) {
         $Path = Join-Path (Split-Path $script:StrideLockFile) $script:StrideLock.defaultCheckout
     }
-    return [IO.Path]::GetFullPath($Path).TrimEnd('\', '/')
+    return $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($Path).TrimEnd('\', '/')
 }
 
 function Assert-StrideCheckout {

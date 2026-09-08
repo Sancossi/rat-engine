@@ -7,7 +7,7 @@ try {
     $head = Assert-StrideCheckout $root
     Assert-StrideLfs $root
     Get-Command dotnet -ErrorAction Stop | Out-Null
-    Push-Location $root
+    Push-Location -LiteralPath $root
     try {
         $sdk = & dotnet --version
         if ($LASTEXITCODE -ne 0) { throw 'Install an SDK accepted by the locked upstream global.json.' }
@@ -23,7 +23,7 @@ try {
         $previousPreference = $ErrorActionPreference
         $ErrorActionPreference = 'Continue'
         try {
-            & dotnet @arguments *> $log
+            & dotnet @arguments *>&1 | Out-File -LiteralPath $log -Encoding UTF8
             $buildExit = $LASTEXITCODE
         } finally { $ErrorActionPreference = $previousPreference }
         $editor = Join-Path $root $script:StrideLock.editorExecutable

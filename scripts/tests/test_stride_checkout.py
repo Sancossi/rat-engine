@@ -72,7 +72,12 @@ class StrideCheckoutTests(unittest.TestCase):
     def test_wrong_remote_preserves_head_and_url(self):
         head = self.initialize()
         self.git("remote", "set-url", "upstream", "https://example.invalid/other.git")
-        self.assertNotEqual(self.bootstrap().returncode, 0)
+        result = self.guard(head)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn(b"Unexpected upstream URL: https://example.invalid/other.git", result.stdout)
+        wiring = self.bootstrap()
+        self.assertNotEqual(wiring.returncode, 0)
+        self.assertIn(b"Unexpected upstream URL", wiring.stdout + wiring.stderr)
         self.assertEqual(self.git("rev-parse", "HEAD"), head)
         self.assertEqual(self.git("remote", "get-url", "upstream"), "https://example.invalid/other.git")
 
@@ -82,7 +87,12 @@ class StrideCheckoutTests(unittest.TestCase):
         self.git("add", "staged.txt")
         (self.repo / "untracked.txt").write_bytes(b"untracked data")
         status = self.git("status", "--porcelain")
-        self.assertNotEqual(self.bootstrap().returncode, 0)
+        result = self.guard(head)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn(b"Stride checkout has uncommitted files.", result.stdout)
+        wiring = self.bootstrap()
+        self.assertNotEqual(wiring.returncode, 0)
+        self.assertIn(b"Stride checkout has uncommitted files.", wiring.stdout + wiring.stderr)
         self.assertEqual(self.git("status", "--porcelain"), status)
         self.assertEqual(self.git("rev-parse", "HEAD"), head)
         self.assertEqual((self.repo / "staged.txt").read_bytes(), b"staged data")
@@ -107,6 +117,42 @@ class StrideCheckoutTests(unittest.TestCase):
         baseline = self.initialize()
         self.assertNotEqual(self.guard("0" * 40).returncode, 0)
         self.assertEqual(self.git("rev-parse", "HEAD"), baseline)
+
+    def test_relative_checkout_follows_powershell_location(self):
+        # A PowerShell location change does not update .NET's process working directory.
+        result = self.run_ps(". " + ps_literal(ROOT / "scripts/stride/common.ps1") +
+                             "; [Environment]::CurrentDirectory = " + ps_literal(ROOT) +
+                             "; Push-Location -LiteralPath " + ps_literal(self.fixture) +
+                             "; try { Get-StrideCheckoutPath './checkout' } finally { Pop-Location }")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(Path(result.stdout.decode().strip()), self.repo)
+
+    def test_build_enters_literal_bracket_checkout_and_records_artifact(self):
+        self.repo = self.fixture / "checkout[rat]"
+        self.repo.mkdir()
+        baseline = self.initialize()
+        (self.repo / ".gitignore").write_text("logs/\neditor.exe\ninvoked-from.txt\n")
+        self.git("add", ".gitignore")
+        self.git("commit", "-m", "fixture build output exclusions")
+        harness = self.fixture / "harness"
+        shutil.copytree(ROOT / "scripts/stride", harness / "scripts/stride")
+        (harness / "tools/stride").mkdir(parents=True)
+        fixture_lock = dict(LOCK, upstreamCommit=baseline, editorExecutable="editor.exe")
+        (harness / "tools/stride/engine.lock.json").write_text(json.dumps(fixture_lock))
+        # Stub only the compiler: the real wrapper, Git/LFS guards, paths and result writing run.
+        result = self.run_ps("function dotnet { if ($args[0] -eq '--version') { '10.0.300' } "
+                             "else { [IO.File]::WriteAllText((Join-Path (Get-Location).Path 'editor.exe'), 'fixture'); "
+                             "[IO.File]::WriteAllText((Join-Path (Get-Location).Path 'invoked-from.txt'), (Get-Location).Path); "
+                             "'fixture compiler success' }; $global:LASTEXITCODE = 0 }; & " +
+                             ps_literal(harness / "scripts/stride/build.ps1") +
+                             " -CheckoutPath " + ps_literal(self.repo))
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertEqual(Path((self.repo / "invoked-from.txt").read_text()), self.repo)
+        manifest_path, = (self.repo / "logs/rat-foundation").glob("*/result.json")
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8-sig"))
+        self.assertTrue(manifest["editorExists"])
+        self.assertEqual(Path(manifest["editor"]), self.repo / "editor.exe")
+        self.assertEqual(self.git("status", "--porcelain"), "")
 
 
 if __name__ == "__main__":
