@@ -29,7 +29,7 @@ Specification: [[GDD]]; [[ADR-017 Rat expedition uses rat-engine]]; [преды�
 Не переносить P1 и не добавлять SDK движков. Не копировать проприетарный код или игровые данные. Исследование сравнивает возможность и цену перехода.
 
 Origin: [[expedition-prototype-traversal]]; [[ADR-017 Rat expedition uses rat-engine]].
-Follow-up: [[expedition-prototype-traversal]].
+Follow-up: [[feat-stride-source-foundation]]; [[expedition-prototype-traversal]].
 
 ## Resolution
 
