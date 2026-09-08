@@ -1,9 +1,9 @@
 ---
 type: sprint
-status: In Progress
+status: Done
 dates: 2026-09-08
 goal: Record the user choice of rat-engine and define the expedition architecture and first prototype slice
-current: true
+current: false
 tags: [sprint, expedition, architecture]
 ---
 
@@ -23,8 +23,8 @@ tags: [sprint, expedition, architecture]
 
 ## Resolution
 
-Ожидается реализация, независимое ревью и полная Release-проверка.
+2026-09-08: E1 закрыт с Approved; выбран существующий rat-engine, записаны ADR-017, архитектура и спецификация первой сцены. Полная Release-проверка запускается ведущим агентом после закрытия. P1 остаётся Not started вне спринта.
 
 ## Bugs found
 
-Ожидается проверка.
+Исправлена одна неточность спецификации ортографических перекрытий; повторное независимое ревью Approved. Незакрытых находок нет.
