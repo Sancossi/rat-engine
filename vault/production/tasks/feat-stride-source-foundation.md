@@ -1,10 +1,10 @@
 ---
 type: task
 area: Engine
-status: In review
+status: In progress
 task_type: Feature
 sprint: Sprint 19
-review: In review
+review: Needs fixes
 baseline_commit: 702cae4
 due:
 tags: [task, expedition, stride, infrastructure]
