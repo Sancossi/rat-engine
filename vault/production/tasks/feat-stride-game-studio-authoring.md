@@ -4,7 +4,7 @@ area: Game
 status: In progress
 task_type: Feature
 sprint: Sprint 19
-review: Needs fixes
+review: Approved
 due:
 tags: [task, expedition, stride, authoring]
 ---
@@ -30,6 +30,8 @@ Origin: [[design-stride-editor-asset-workflow]]; [[expedition-prototype-traversa
 Follow-up: [[expedition-prototype-interactions]]; [[feat-expedition-character-sprites]]; [[expedition-vertical-slice]]; [[feat-stride-editor-mcp]].
 
 ## Resolution
+
+Финальное review документации — Approved `ac4f88e`: README явно разделяет production ZIP и QA build/verifier. A1.2 полностью принят как срез; оба runtime P2 и ошибка команды устранены. Публикуется проверенная история до этого acceptance commit; A1.3/A1.4 остаются незавершёнными.
 
 Финальная проверка документации выявила неверный quick start: обычный production ZIP передаётся полному verifier, которому теперь нужны QA assets. До публикации исправить пример в README игры и повторить read-only проверку. Одобрение runtime `49a9923` и результаты всех финальных проверок сохраняются; мерж пока не выполнен.
 
