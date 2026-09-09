@@ -15,6 +15,8 @@ Intent: Открывать, размещать и настраивать кар�
 
 Specification: [План A1 и приёмка](../../../docs/stride-editor-asset-workflow-plan.md); [архитектура](../../../docs/rat-expedition-architecture.md); [[ADR-018 Rat expedition uses Stride]].
 
+A1.3 specification: [Native библиотека ресурсов](../../../docs/stride-native-resource-library-spec.md). Первый code/review срез — ограниченный asset API MCP для этой библиотеки; native runtime ресурсы переносятся после его квалификации.
+
 Dependencies: реализация и автоматическая приёмка [[expedition-prototype-traversal]], включая P1.3; [[feat-stride-source-foundation]]; [[design-stride-editor-asset-workflow]]. Пользователь 2026-09-09 явно разрешил начать A1, перенеся оставшуюся ручную приёмку P1 на позже. Это исключение из прежнего порядка «полностью закрытый P1 → A1», не утверждение о выполнении ручного теста. A1 включён в Sprint 19 перед P2, до массового контента E3.
 
 Acceptance:
