@@ -1,10 +1,10 @@
 ---
 type: task
 area: Game
-status: In review
+status: In progress
 task_type: Feature
 sprint: Sprint 19
-review: In review
+review: Pending
 baseline_commit: 3862666
 due:
 tags: [task, expedition]
