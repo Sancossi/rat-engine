@@ -27,6 +27,34 @@ internal static class PresentationTests
             require(Math.Abs(rear.Z)<.0001&&rear.X<2,"Rear actor cut corner diagonally");
             s.Trail.Reset(s.Leader);require(s.Trail.Companions.All(p=>p.Position==s.Leader.Position),"Reset left old scene history");
         });
+        check("trail preserves crouched incoming segments when leader stands at crawl exit",()=>{
+            var crawl=scene with {Spawn=new(-1.006f,0,0),Ramps=[],Structures=[new("roof",new(-.5f,.6f,-1),new(.5f,.8f,1))]};
+            var s=new ExpeditionSession(new("trail",[crawl]));var world=crawl.CreateWorld();
+            for(int i=0;i<150;i++)s.Advance(TraversalMotor.StepSeconds,new(Screen(Vector2.UnitX),CrouchHeld:true));
+            var old=s.Trail.AtDistance(.005f);
+            require(old.Stance==BodyStance.Crouched,"Fixture did not record crouch");
+            s.Advance(TraversalMotor.StepSeconds,new(Vector2.Zero));
+            require(s.Leader.Stance==BodyStance.Standing,"Fixture did not exit roof");
+            require(s.Trail.AtDistance(.005f).Stance==BodyStance.Crouched,"Stationary stand rewrote a travelled segment");
+            // Exercise both sides of the exact body-clearance edge, not only the
+            // fixed companion spacing, which can coincide with a sample endpoint.
+            var moving=new ExpeditionSession(new("trail",[crawl]));
+            for(int i=0;i<137;i++)moving.Advance(TraversalMotor.StepSeconds,new(Screen(Vector2.UnitX),CrouchHeld:true));
+            moving.Advance(TraversalMotor.StepSeconds,new(Screen(Vector2.UnitX)));
+            for(float distance=.026f;distance<.04f;distance+=.001f)
+            {
+                var pose=moving.Trail.AtDistance(distance);
+                require(world.HasClearance(pose.Position,.2f,pose.Stance==BodyStance.Crouched?.4f:.8f),$"Follower stood beneath roof at {pose.Position}");
+            }
+            for(int tick=0;tick<65;tick++)
+            {
+                moving.Advance(TraversalMotor.StepSeconds,new(Screen(Vector2.UnitX)));
+                foreach(var pose in moving.Trail.Companions)
+                    require(world.HasClearance(pose.Position,.2f,pose.Stance==BodyStance.Crouched?.4f:.8f),$"Actual companion stood beneath roof at {pose.Position}");
+            }
+            moving.Advance(TraversalMotor.StepSeconds,new(Vector2.Zero,CrouchHeld:true));
+            require(moving.Trail.AtDistance(.005f).Stance==BodyStance.Standing,"Stationary crouch rewrote a travelled standing segment");
+        });
         var occlusionScene=scene with {Decorations=[new("rail",new(4,1.6f,.9f),new(8,2,1))],
             OcclusionGroups=[new("deck-group",["deck"]),new("rail-group",["rail"],"deck-group")]};
         var leader=new TraversalMotor(occlusionScene).Snapshot;
