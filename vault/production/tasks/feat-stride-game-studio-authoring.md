@@ -26,7 +26,7 @@ Acceptance:
 - Сохранены FSM, полный P1, камера/feet Y/depth; адаптированы регрессии и инструкции. Независимое ревью и Release Game Studio сопровождаются точными доказательствами и границами GUI/изолированной проверки.
 
 Origin: [[design-stride-editor-asset-workflow]]; [[expedition-prototype-traversal]].
-Follow-up: [[expedition-prototype-interactions]]; [[expedition-vertical-slice]].
+Follow-up: [[expedition-prototype-interactions]]; [[feat-expedition-character-sprites]]; [[expedition-vertical-slice]].
 
 ## Resolution
 

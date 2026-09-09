@@ -20,6 +20,7 @@ Dependencies: [[expedition-prototype-playtest]]; [[feat-stride-game-studio-autho
 
 - После P7 эпик разбит на карточки сцены, ассетов, UI/доступности, звука и проверки; зависимости/Origin/Follow-up записаны до реализации.
 - До массового контента принят A1: Game Studio сохраняет карты и ресурсы, игра/ZIP используют тот же авторский источник; права на исходники и воспроизводимый импорт проверены.
+- До тиражирования персонажей завершена ограниченная квалификация [[feat-expedition-character-sprites]] после A1: один пилот, затем три отдельных облика по [[rat-expedition-character-reference]], измеренные трудозатраты и явное решение о кадрах относительно A7. Это подготовка арта, не новая зависимость P2; P7 и A1 остаются условиями начала E3.
 - 15–20 минут связывают целевые спрайты/окружение, разговор с последствиями, повторяемое взаимодействие, бой и сохранение без обязательных заглушек.
 - Проверены перекрытия/мерцание, кириллица/увеличенный текст/переназначение ввода, уровни звука; происхождение ассетов и credits записаны.
 - Измерены цели A7 на названном ПК/сборке и трудозатраты одного героя/пропа/сцены; внешний плейтест и список проблем приложены.
@@ -31,7 +32,7 @@ Dependencies: [[expedition-prototype-playtest]]; [[feat-stride-game-studio-autho
 
 Детализировать после прототипа, не расширять базовые системы без записи решения. Это один полированный фрагмент, не все три области.
 
-Origin: [[design-rat-expedition-preproduction]]; [[design-expedition-layered-maps]]; [[feat-stride-game-studio-authoring]]; [[production/roadmap/rat-expedition-release-roadmap|План до релиза]].
+Origin: [[design-rat-expedition-preproduction]]; [[design-expedition-layered-maps]]; [[feat-stride-game-studio-authoring]]; [[feat-expedition-character-sprites]]; [[production/roadmap/rat-expedition-release-roadmap|План до релиза]].
 Follow-up: [[expedition-full-production]].
 
 ## Resolution

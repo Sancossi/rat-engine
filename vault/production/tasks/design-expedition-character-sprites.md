@@ -13,7 +13,7 @@ tags: [task, expedition, art, design]
 
 Intent: По запросу пользователя 2026-09-09 запланировать добавление трёх различимых персонажей и направленной анимации ходьбы по приложенному изображению.
 
-Specification: [[GDD]]; [[rat-expedition-art-audio]]; [[feat-stride-game-studio-authoring]]; [план A1](../../../docs/stride-editor-asset-workflow-plan.md). Источник — вложение текущего разговора; локальный файл и готовый импорт не заявлены.
+Specification: [План трёх обликов и ходьбы](../../../docs/stride-character-sprite-plan.md); [[rat-expedition-character-reference]]; [[GDD]]; [[rat-expedition-art-audio]]; [[feat-stride-game-studio-authoring]]; [план A1](../../../docs/stride-editor-asset-workflow-plan.md). Источник — вложение текущего разговора; локальный файл и готовый импорт не заявлены.
 
 ## Acceptance
 
@@ -25,6 +25,7 @@ Specification: [[GDD]]; [[rat-expedition-art-audio]]; [[feat-stride-game-studio-
 - Документальное независимое ревью, vault check и требуемая Release-пересборка редактора записаны.
 
 Origin: [[design-stride-editor-asset-workflow]]; [[rat-expedition-art-audio]].
+Follow-up: [[feat-expedition-character-sprites]]; [[rat-expedition-character-reference]].
 
 ## Resolution
 
