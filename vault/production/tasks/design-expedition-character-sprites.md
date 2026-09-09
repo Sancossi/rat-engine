@@ -1,11 +1,11 @@
 ---
 type: task
 area: Game
-status: In review
+status: Done
 task_type: Research
 sprint: Sprint 19
 due:
-review: In review
+review: Approved
 tags: [task, expedition, art, design]
 ---
 
@@ -29,8 +29,12 @@ Follow-up: [[feat-expedition-character-sprites]]; [[rat-expedition-character-ref
 
 ## Resolution
 
-Планирование по новому запросу; игра и изображения пока не изменяются.
+Принято 2026-09-09. Коммит плана `fa72bf05dea8e5987d6e5be6e524eeb0cdd057c3`: три отдельных облика, пилот одного героя, подготовка alpha/pivot/кадров, анимация по движению/FSM и истории спутников, будущая GUI/ZIP приёмка через A1. Сохранены наблюдения по вложению и открытый выбор reference/direct import. [[feat-expedition-character-sprites]] остаётся Not started вне спринта, после A1 и до тиражирования персонажей E3; новая зависимость A1/P2 не введена. Игра и изображения не изменялись.
+
+Независимое read-only ревью `stride_blind_review` коммита `fa72bf0` на HEAD `8c33dc8`: Approved, блокирующих замечаний нет. Область — девять документационных файлов; реальные спрайты и GUI этим ревью не проверялись. `python scripts/check_vault.py` и `git diff --check` прошли; проекция sprint синхронизирована и проверена через `scripts/bmad_vault.py` при закрытии.
+
+Полная Release-пересборка: `powershell -ExecutionPolicy Bypass -File scripts/stride/build.ps1`, exit 0, 5 upstream NU5100 предупреждений / 0 ошибок. Evidence: `C:/5_gamedev/stride/logs/rat-foundation/20260909-064908-697/result.json`; upstream `e2c786a45f69917bf233793f6a097b150e2fe264`, SDK 10.0.300. Редактор 4.4.0-dev: `C:/5_gamedev/stride/sources/editor/Stride.GameStudio/bin/Release/net10.0-windows/Stride.GameStudio.exe`. Это проверка сборки, не GUI-импорта или новых игровых ассетов.
 
 ## Bugs found
 
-Не проверено — планирование в работе.
+none — блокирующих дефектов документов не найдено; игровой runtime в этом плановом срезе не проверялся.
