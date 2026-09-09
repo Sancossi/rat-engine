@@ -17,7 +17,9 @@ public sealed class TraversalMotor
     private LadderDefinition? ladder;
     private readonly Queue<Vector3> approach = new();
     private bool capturingEntry, departing;
-    public Vector3 Position { get; private set; }
+    private Vector3 position;
+    internal List<Vector3> TickPath {get;}=[];
+    public Vector3 Position { get=>position; private set {position=value;TickPath.Add(value);} }
     public long Ticks { get; private set; }
     public PlayerTraversalState State { get; private set; } = PlayerTraversalState.Standing;
     public BodyStance Stance => State is PlayerTraversalState.Crouched or PlayerTraversalState.FallingCrouched ? BodyStance.Crouched : BodyStance.Standing;
@@ -72,6 +74,7 @@ public sealed class TraversalMotor
     // Session owns the clock and action edge. Standalone Advance remains a fixture helper.
     internal PortalDefinition? Tick(TraversalInput input,bool interact)
     {
+        TickPath.Clear();TickPath.Add(Position);
         Ticks++;
         if (State == PlayerTraversalState.Climbing) { Climb(input.Move.Y); return null; }
         if (Mode==TraversalMode.Falling) {MoveAir(HorizontalDelta(input)); Fall(); return null;}
@@ -96,7 +99,7 @@ public sealed class TraversalMotor
     private void GroundAxis(Vector2 delta)
     {
         if(Mode==TraversalMode.Falling){MoveAir(delta);return;}
-        var move=world.MoveSupported(Position,delta,Radius,BodyHeight); Position=move.Position;
+        var move=world.MoveSupported(Position,delta,Radius,BodyHeight,path:TickPath); Position=move.Position;
         if(!move.LostSupport)return;
         State=Stance==BodyStance.Crouched?PlayerTraversalState.FallingCrouched:PlayerTraversalState.FallingStanding;
         VerticalVelocity=0; StandBlocked=false;
@@ -181,7 +184,7 @@ public sealed class TraversalMotor
             var entry=approach.Peek();
             bool moved=Position!=entry;
             var move=world.MoveSupported(Position,new(entry.X-Position.X,entry.Z-Position.Z),
-                Radius,StandingHeight,remaining);
+                Radius,StandingHeight,remaining,TickPath);
             if(move.Blocked || move.LostSupport)
                 throw new InvalidOperationException("Validated ladder entry approach lost its supported path.");
             Position=move.Position;

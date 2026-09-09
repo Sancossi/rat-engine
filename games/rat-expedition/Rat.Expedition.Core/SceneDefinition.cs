@@ -31,7 +31,7 @@ public sealed record PortalDefinition(string Id,Point3 Min,Point3 Max,Point3 Anc
 {
     public bool Contains(Vector3 p) => p.X>=Min.X && p.X<=Max.X && p.Y>=Min.Y && p.Y<=Max.Y && p.Z>=Min.Z && p.Z<=Max.Z;
 }
-public sealed record OccluderGroup(string Id,string[] Members);
+public sealed record OccluderGroup(string Id,string[] Members,string? HideWith=null);
 
 internal static class StrictJson
 {
@@ -127,6 +127,16 @@ public sealed record SceneDefinition(int SchemaVersion,string Id,WorldBox Floor,
             if(group is null)throw new InvalidDataException("Null occluder group."); UniqueId(group.Id);
             if(group.Members is null||group.Members.Length==0||group.Members.Any(m=>!geometry.Contains(m)||!members.Add(m)))
                 throw new InvalidDataException($"Occluder group '{group.Id}' needs existing exclusive members.");
+        }
+        var groups=OcclusionGroups.ToDictionary(g=>g.Id,StringComparer.Ordinal);
+        foreach(var group in OcclusionGroups)
+        {
+            var visited=new HashSet<string>(StringComparer.Ordinal){group.Id};var current=group;
+            while(current.HideWith is string parent)
+            {
+                if(!groups.TryGetValue(parent,out current!)||!visited.Add(parent))
+                    throw new InvalidDataException($"Occluder group '{group.Id}' has a missing/cyclic HideWith dependency.");
+            }
         }
     }
 }

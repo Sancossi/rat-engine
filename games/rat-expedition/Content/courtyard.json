@@ -279,6 +279,7 @@
     },
     {
       "id": "bridge-rail-cut",
+      "hideWith": "bridge-cut",
       "members": [
         "bridge-rail"
       ]

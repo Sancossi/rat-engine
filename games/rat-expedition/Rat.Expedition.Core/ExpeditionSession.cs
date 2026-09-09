@@ -28,6 +28,7 @@ public sealed class ExpeditionSession
     public Vector3 SafePoint {get;private set;}
     public string? LastError {get;private set;}
     public TraversalSnapshot Leader=>motor.Snapshot;
+    public PartyTrail Trail {get;private set;}
     public SessionSnapshot Snapshot=>new(Mode,Ticks,WorldRevision,Leader,SafePoint,
         Mode==SessionMode.Paused?"Пауза — Esc / Enter: продолжить":LastError??Leader.Hint);
 
@@ -35,6 +36,7 @@ public sealed class ExpeditionSession
     {
         this.project=project;this.prepare=prepare;
         Scene=project.LoadCandidate(project.StartScene); motor=new(Scene); SafePoint=motor.Position;
+        Trail=new(motor.Snapshot);
         using var candidate=prepare?.Invoke(new(Scene,motor.Snapshot,SceneChangeReason.Initial));
         candidate?.Activate();
     }
@@ -66,6 +68,7 @@ public sealed class ExpeditionSession
             bool interact=pendingInteract;pendingInteract=false;
             var previousMode=motor.Mode;
             var portal=motor.Tick(new(input.Move,input.CrouchHeld,input.InteractHeld),interact);
+            Trail.Record(motor.TickPath,motor.Snapshot);
             Ticks++; accumulator-=TraversalMotor.StepSeconds;
             if(portal is not null)
             {
@@ -98,7 +101,7 @@ public sealed class ExpeditionSession
             var nextMotor=new TraversalMotor(target,spawn);
             using var candidate=prepare?.Invoke(new(target,nextMotor.Snapshot,reason));
             candidate?.Activate();
-            Scene=target;motor=nextMotor;SafePoint=motor.Position;WorldRevision++;LastError=null;
+            Scene=target;motor=nextMotor;SafePoint=motor.Position;Trail.Reset(motor.Snapshot);WorldRevision++;LastError=null;
             return true;
         }
         catch(Exception error){LastError=$"Смена сцены отклонена: {error.Message}";return false;}

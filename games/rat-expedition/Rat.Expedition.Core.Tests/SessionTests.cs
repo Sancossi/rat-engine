@@ -45,6 +45,7 @@ internal static class SessionTests
                 Walk(s,new(1,0));Press(s);
                 require(s.Scene.Id==target&&s.Leader.State==PlayerTraversalState.Standing,"Wrong portal outcome");
                 require(s.SafePoint==s.Leader.Position&&s.Leader.Position==new Vector3(-1,0,0),"Portal did not reset safe spawn");
+                require(s.Trail.Companions.All(p=>p.Position==s.Leader.Position),"Portal retained old companion trail");
                 Frames(s,new(Vector2.Zero,InteractHeld:true),20);
                 require(s.Scene.Id==target,"Held interaction returned immediately");
             }

@@ -106,7 +106,7 @@ public sealed class LayeredCollisionWorld
     // reports the unconsumed fraction for falling. An optional distance budget follows
     // the actual piecewise-linear 3D support path, including ramp/flat crest corners.
     public SupportedMove MoveSupported(Vector3 start, Vector2 delta, float radius, float height,
-        float maximumDistance = float.PositiveInfinity)
+        float maximumDistance = float.PositiveInfinity, ICollection<Vector3>? path = null)
     {
         ValidateBody(start,radius,height);
         if (float.IsNaN(maximumDistance) || maximumDistance < 0)
@@ -158,8 +158,13 @@ public sealed class LayeredCollisionWorld
                 b=a+(b-a)*part;
             }
             float hit=SweepFraction(current,end,radius,height);
-            if(hit<1) return new(Vector3.Lerp(current,end,hit),(float)(a+(b-a)*hit),true,false);
+            if(hit<1)
+            {
+                var contact=Vector3.Lerp(current,end,hit);path?.Add(contact);
+                return new(contact,(float)(a+(b-a)*hit),true,false);
+            }
             current=end;
+            path?.Add(current);
             if(limited) return new(current,(float)b,false,false);
             remaining-=length;
         }
