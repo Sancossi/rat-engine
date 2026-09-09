@@ -14,7 +14,7 @@ tags: [task, expedition]
 
 Intent: Игрок проходит 3D-двор 2D-героем через обычный путь, низкий лаз и подъём.
 
-Specification: [[GDD]] — Исследование; [[rat-expedition-art-audio]] — камера/перекрытия; [[ADR-018 Rat expedition uses Stride]]; [P1: интерфейсы, срезы, сценарии](../../../docs/rat-expedition-traversal-spec.md); [архитектура](../../../docs/rat-expedition-architecture.md); [исполняемый P1.1](../../../docs/stride-first-game-slice-spec.md).
+Specification: [[GDD]] — Исследование; [[rat-expedition-art-audio]] — камера/перекрытия; [[ADR-018 Rat expedition uses Stride]]; [P1: интерфейсы, срезы, сценарии](../../../docs/rat-expedition-traversal-spec.md); [архитектура](../../../docs/rat-expedition-architecture.md); [исполняемый P1.1](../../../docs/stride-first-game-slice-spec.md); [исполняемый P1.2](../../../docs/stride-body-traversal-spec.md).
 
 Dependencies: [[feat-stride-source-foundation]] — закрыта. [[expedition-engine-decision]] сохранена как историческая приёмка прежней основы.
 
