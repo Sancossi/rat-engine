@@ -88,5 +88,6 @@ Check("missing nested spawn and bounds coordinates rejected", () => {
         }
     } finally { if (File.Exists(path)) File.Delete(path); }
 });
+BodyCollisionTests.Run(Check, Require);
 Console.WriteLine($"Core scenarios: {passed} passed, {failed} failed.");
 return failed == 0 ? 0 : 1;
