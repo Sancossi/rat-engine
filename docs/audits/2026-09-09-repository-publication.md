@@ -23,4 +23,8 @@ Scoped staged `git diff --check` и `python scripts/check_vault.py` прошли
 
 ## Передача на публикацию
 
-Независимое read-only ревью состава и фактический push/remote SHA записывает родительский агент после готовности снимка. Доступ к origin подтверждён его `git push --dry-run`. Remote main и локальная история расходятся; отдельная новая ветка сохраняет обе истории без merge, force push или переписывания main. Исполнитель подготовил локальные commits и не выполнял push/PR.
+Независимый read-only reviewer одобрил снимок `a6d4d96`: CMake ссылается на tracked исходники, helpers/ассеты/credits сохранены, документация и статусы согласованы; блокеров не найдено. Это ревью состава публикации, а не повторная приёмка всех исторических механик.
+
+Родительский агент выполнил `git push -u origin publish/stride-p11-editor-game-vault`. Публикация успешна: `git ls-remote --heads origin refs/heads/publish/stride-p11-editor-game-vault` вернул `a6d4d96969cc4b39f240a9ca364e11207b47fdb5`, совпадающий с локальным HEAD снимка. [Опубликованная ветка](https://github.com/Sancossi/rat-engine/tree/publish/stride-p11-editor-game-vault). Следующий документационный коммит фиксирует эту проверку и закрытие карточки; его remote HEAD также сверяется после отправки.
+
+Проверены новые достижимые Git objects до отправки: 1513 blobs, суммарно 11 695 096 bytes, крупнейший 825 628 bytes, объектов свыше 50 MiB нет. Remote main и локальная история расходятся; новая ветка сохраняет обе истории без merge, force push или переписывания main. Локальное рабочее дерево и отдельный source checkout Stride чистые. Remote CI не проверялся; результаты локальных сборок указаны выше.

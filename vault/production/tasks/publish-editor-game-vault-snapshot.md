@@ -1,10 +1,10 @@
 ---
 type: task
 area: Engine
-status: In review
+status: Done
 task_type: Feature
 sprint: Sprint 19
-review: In review
+review: Approved
 due:
 tags: [task, publication, expedition]
 ---
@@ -25,8 +25,10 @@ Origin: [[expedition-prototype-traversal]]; [[feat-stride-source-foundation]].
 
 ## Resolution
 
-В работе. Git push dry-run подтвердил доступ к существующему origin.
+Опубликован общий снимок в [ветке GitHub](https://github.com/Sancossi/rat-engine/tree/publish/stride-p11-editor-game-vault): исходники редактора, текущей Stride-игры, исторического C++ прототипа, оригинальные ассеты, инженерные документы и vault. Подготовка `af7041d` / `a6d4d96`; независимое ревью состава Approved. Первый push и `git ls-remote` подтвердили совпадение remote и локального SHA `a6d4d96969cc4b39f240a9ca364e11207b47fdb5`; заключительный документационный коммит также отправляется и проверяется.
+
+Полный C++ Release и 24 Python / 720 CTest прошли, один symlink-тест skipped; полный Stride GameStudio Release прошёл с 0 ошибок. Неизменённая игра сохраняет проверенный ZIP с 12 Core и 10 executable сценариями. Сборки/caches исключены из Git. [Полный отчёт](../../../docs/audits/2026-09-09-repository-publication.md). P1.2/P1.3 и Sprint 19 остаются открытыми; публикация не заявляет remote CI или ручной плейтест.
 
 ## Bugs found
 
-Пока не проверено.
+none — блокеров состава публикации не обнаружено.
