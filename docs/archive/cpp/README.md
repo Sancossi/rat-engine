@@ -1,5 +1,9 @@
 # Historical C++ iteration
 
+The [original Sprint 4 roadmap from main `7129902`](architecture-roadmap-main-7129902.md)
+is retained byte-for-byte separately from the [later architecture snapshot](architecture-roadmap.md).
+Its statements about main and the upcoming Sprint 5 describe that earlier period.
+
 Retired on 2026-09-09 after Rat Expedition moved to Stride/C#. This directory
 preserves specifications, plans, schemas, benchmark results, reviews, the previous
 game README and library graph. Relative document links follow their new locations.
