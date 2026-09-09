@@ -1,10 +1,10 @@
 ---
 type: task
 area: Game
-status: In progress
+status: In review
 task_type: Feature
 sprint: Sprint 19
-review: Pending
+review: In review
 due:
 tags: [task, expedition, stride, authoring]
 ---
@@ -32,6 +32,8 @@ Origin: [[design-stride-editor-asset-workflow]]; [[expedition-prototype-traversa
 Follow-up: [[expedition-prototype-interactions]]; [[feat-expedition-character-sprites]]; [[expedition-vertical-slice]]; [[feat-stride-editor-mcp]].
 
 ## Resolution
+
+Первый API milestone A1.3 передан на независимое review: проект `dacdfcb`, Stride `196759b` + `8227ac7` (новый точный pin). Четыре новые MCP команды (`asset_list`, `asset_inspect`, `asset_set_property`, `asset_set_reference`) прошли реальный SDK roundtrip: 76 вызовов / 16 tools / 8 ожидаемых отказов / 0 captures, `build/mcp/resource-api-20260909-134412-394/result.json`. Native reimport race, Save/Close, Undo/Redo/disk, ошибки/partial results и Destroy прошли; повторён прежний session regression. Исправлены только отсутствующая Core project edge в lock и native-generated запись проекта в historical Authoring.sln; NuGet content hashes/версии сохранены. Полный Release source `8227ac7` собран, exit 0, 6 warnings / 0 errors: `C:/5_gamedev/stride/logs/rat-foundation/20260909-134647-678/result.json`. Runtime библиотека и оставшиеся import/delete/prefab команды ещё не реализованы. Main пока сохраняют предыдущий принятый срез.
 
 Первый самостоятельный API milestone A1.3 ограничен catalog/inspect, типизированной правкой разрешённых asset properties/references и native reimport lifecycle guard с реальным race fixture. После его независимой приёмки и публикации продолжаются import/reimport/delete/prefab команды и сама библиотека. Это ранняя проверка новой границы API, не закрытие всей A1.3.
 
