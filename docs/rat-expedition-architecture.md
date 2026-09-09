@@ -1,7 +1,7 @@
 # Rat Expedition — архитектура Stride / C#
 
 Дата: 2026-09-09. Действующий контракт по [ADR-018](../vault/production/decisions/ADR-018%20Rat%20expedition%20uses%20Stride.md), [GDD](../vault/game/GDD.md) и [P1](rat-expedition-traversal-spec.md).
-[Архив C++ архитектуры](rat-expedition-architecture-rat-engine-2026-09-08.md) сохраняет прежний план и происхождение решений. Игровые системы ниже предстоит реализовать; сборка Game Studio не доказывает их готовность.
+[Архив C++ архитектуры](rat-expedition-architecture-rat-engine-2026-09-08.md) сохраняет прежний план и происхождение решений. Ниже описаны текущие интерфейсы и оставшиеся системы; точный статус ведётся в vault, сборка Game Studio не доказывает готовность игры.
 
 ## Основа и размещение
 
@@ -22,11 +22,13 @@
 
 ## Первый срез и поток данных
 
-[Исполнимый P1.1](stride-first-game-slice-spec.md) — один плоский двор, стены, PNG герой и WASD. Видимая геометрия и ограничения движения строятся из одной валидированной fixture. Небольшой C# motor по XZ проверяет пол/стены; это не готовая многоэтажная физика. Bepu и патчи Stride не нужны для плоского среза. Для P1.2 сначала подтвердить collision adapter для объёма тела/потолков/выходов, затем реализовать вертикальное движение.
+[Исполнимый P1.1](stride-first-game-slice-spec.md) ввёл плоский двор, стены, PNG героя и WASD. [P1.2](stride-body-traversal-spec.md) расширяет его конечными потолками/площадкой и лестницей после отдельной квалификации body queries (`1a2e7cd`). Видимая solid геометрия и ограничения строятся из одной валидированной scene schema 2. Rungs/rails лестницы — декоративное обозначение контекстного маршрута, не solid blockers. Bepu и патчи Stride не потребовались; это не универсальная многоэтажная физика.
 
 `Stride Input → TraversalInput → fixed-step Core → TraversalSnapshot → Entity/Transform/спрайт`.
 
 Core владеет позицией; представление применяет снимок. Camera right/forward проецируются на XZ, диагональ нормируется. Шаг 1/120 с, ограниченный catch-up; после потери фокуса нет накопленного скачка. P1.1 блокирует движение в неактивном окне; полная пауза/контекст — P1.3.
+
+P1.2 использует явный FSM игрока Standing/Crouched/Climbing. Одна state-переменная определяет stance/mode снимка; guarded переходы используют BodyCollisionWorld для полного объёма, нового взаимодействия и безопасного выхода. Внутри Climbing различаются подход, вертикальный участок и выход. Это локальная логика motor без универсального FSM framework; renderer не выбирает состояние. Квалифицированный adapter конечных 3D коробок проверяет explicit feet Y и полный footprint на одной опоре, swept clearance и путь лестницы; смена высоты разрешена только явным переходом.
 
 Подтверждённый source API: `Game.LoadContent`, `Scene/SceneInstance`, `Entity`, `CameraComponent`, `GraphicsCompositorHelper.CreateDefault(false, camera: ...)`, `ModelComponent`, `SpriteComponent`. `CubeProceduralModel.Generate(Services)` создаёт коробки с bounds для culling. PNG/atlas использует `Texture.Load` и `SpriteFromTexture/SpriteFromSheet`; `SpriteType.Billboard`, `SpriteSampler.PointClamp`, `IgnoreDepth=false`. Обычный straight-alpha PNG требует согласования с `PremultipliedAlpha`: default Texture.Load сохраняет alpha, default SpriteComponent предполагает premultiplied. Материал, shader database и publish closure проверяются запуском; перенос bgfx/GLFW не требуется.
 

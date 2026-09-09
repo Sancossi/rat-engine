@@ -7,9 +7,9 @@
 
 | Срез | Результат |
 | --- | --- |
-| P1.1 — текущий | [Отдельная Windows игра](stride-first-game-slice-spec.md), плоский серый двор/стены, PNG, камера, WASD, ошибки контента, ZIP |
-| P1.2 — будущий | Принятый объём тела, приседание/лаз, контекстная лестница и безопасные выходы; сначала подтвердить Stride collision adapter |
-| P1.3 — будущий | Две сцены, переходы/recovery/пауза, мост/рампа, спутники, локальные перекрытия и полная приёмка |
+| P1.1 | [Отдельная Windows игра](stride-first-game-slice-spec.md), плоский серый двор/стены, PNG, камера, WASD, ошибки контента, ZIP |
+| P1.2 | [Объём тела и FSM](stride-body-traversal-spec.md), приседание/лаз, контекстная лестница и безопасные выходы; отдельная квалификация collision adapter |
+| P1.3 | Две сцены, переходы/recovery/пауза, мост/рампа, спутники, локальные перекрытия и полная приёмка |
 
 Каждый срез отдельно проверяется/коммитится и проходит независимое ревью. P1.1 не закрывает P1 и не включает сложное вертикальное перемещение. Весь игровой код/контент находится в `games/rat-expedition/`.
 
@@ -19,7 +19,7 @@
 
 Предложения A4: одна единица — длина тела; скорости walk/crouch/climb 3/1,5/1 units/s; standing/crouched height 0,8/0,4, radius 0,2. Потолок лаза 0,6 над ровным полом. Отдельный мост: верх 1,6, толщина 0,2, низ 1,4; верхний подход по рампе, нижний путь под теми же XZ. Это высокий проход, не замена лаза. Опоры/перила не блокируют низ; настил — конечный объём, не ground column до верха. В одинаковых XZ существуют разные устойчивые Y: выбирать опору с учётом текущих ног/движения/clearance, не ближайшего этажа или одного 2D height lookup. Ступенчатый визуальный марш может иметь согласованный collider-пандус в E3.
 
-Game JSON версии 1 использует устойчивые scene/geometry ids. Project manifest содержит start scene и словарь metadata paths. Полные scene metadata содержат именованные spawns (обязательный entry), portal 3D bounds ног/допуск Y и target scene/spawn, ladder нижний/верхний вход и безопасные выходы, low-passage floor/ceiling, recovery threshold (fixture −2), occluder groups с существующими уникальными members/деталями без двойного членства. P1.1 вводит только необходимые ему поля.
+Game JSON использует устойчивые scene/geometry ids; текущая scene schema 2 P1.2 расширяет прежнюю schema 1 полями structures/ladders, без save/replay compatibility. Полный P1 добавит project manifest со start scene и metadata paths, именованные spawns (обязательный entry), portal 3D bounds ног/допуск Y и target scene/spawn, low-passage floor/ceiling, recovery threshold (fixture −2), occluder groups с существующими уникальными members/деталями без двойного членства.
 
 Все числа конечны, bounds min<max, floor<ceiling; пути относительные внутри Content без абсолютных/escaping путей. Проверить ссылки всех сцен до первого входа. Spawns/подходы стоят на устойчивой поверхности с полной standing clearance. Видимые объёмы согласованы с collision fixtures. Metadata не заменяют физический потолок. Новые форматы не называются совместимыми с legacy map/replay/save.
 

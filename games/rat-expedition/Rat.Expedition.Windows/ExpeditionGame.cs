@@ -37,6 +37,9 @@ public sealed class ExpeditionGame : Game
     private static readonly Vector3 CameraOffset = new(12, 14, 12);
     private static readonly float UprightScale = CameraOffset.Length() / new Vector2(CameraOffset.X, CameraOffset.Z).Length();
     private readonly List<object> cameraSamples = [];
+    private readonly BodySmokeRoute bodyRoute = new();
+    private SpriteFont? hudFont;
+    private SpriteBatch? hudBatch;
     public Exception? FatalError { get; private set; }
 
     public ExpeditionGame(GameOptions options, SceneDefinition definition)
@@ -66,7 +69,7 @@ public sealed class ExpeditionGame : Game
     protected override void OnDeactivated(object sender, EventArgs args)
     {
         // Stride skips Update entirely while inactive, so the callback must flush the motor.
-        motor?.Advance(0, System.Numerics.Vector2.Zero, false);
+        motor?.Advance(0, new(System.Numerics.Vector2.Zero), false);
         discardInputOnNextUpdate = true;
         base.OnDeactivated(sender, args);
     }
@@ -81,7 +84,11 @@ public sealed class ExpeditionGame : Game
     private async Task LoadScene()
     {
         await base.LoadContent();
-        Window.Title = "Rat Expedition — courtyard | WASD: move | Wheel: zoom";
+        Window.Title = "Rat Expedition | WASD: move | Ctrl: crouch | E: ladder | Wheel: zoom";
+        var fontSystem = (Stride.Graphics.Font.FontSystem)Font;
+        fontSystem.RuntimeFonts.RegisterFont("RatNoto",Path.Combine(options.ContentDirectory,"fonts","NotoSans-Regular.ttf"));
+        hudFont = fontSystem.LoadRuntimeFont("RatNoto",20f) ?? throw new InvalidDataException("Cannot load RatNoto font.");
+        hudBatch = new SpriteBatch(GraphicsDevice);
         var scene = new Scene();
         camera = new CameraComponent { Projection = CameraProjectionMode.Orthographic, OrthographicSize = options.CameraSize, NearClipPlane = 0.1f, FarClipPlane = 100 };
         cameraEntity = new Entity("Following orthographic camera") { camera };
@@ -94,9 +101,10 @@ public sealed class ExpeditionGame : Game
         var sunlight = new Entity("Courtyard light") { new LightComponent { Type = new LightDirectional { Color = new ColorRgbProvider(Color.White) }, Intensity = 0.65f } };
         sunlight.Transform.RotationEulerXYZ = new(-MathUtil.PiOverFour, -MathUtil.PiOverFour, 0);
         scene.Entities.Add(sunlight);
-        foreach (var box in definition.Walls.Prepend(definition.Floor))
+        foreach (var box in definition.AllSolids.Concat(LadderDecorations()))
         {
-            var color = box == definition.Floor ? new Color4(0.24f, 0.29f, 0.28f, 1) : new Color4(0.40f, 0.43f, 0.44f, 1);
+            var color = box.Id.StartsWith("ladder-decoration-") ? new Color4(.65f,.39f,.15f,1) :
+                box == definition.Floor ? new Color4(0.24f, 0.29f, 0.28f, 1) : new Color4(0.40f, 0.43f, 0.44f, 1);
             var material = Material.New(GraphicsDevice, new MaterialDescriptor { Attributes = { Diffuse = new MaterialDiffuseMapFeature(new ComputeColor(color)), DiffuseModel = new MaterialDiffuseLambertModelFeature() } }, Content);
             var primitive = new CubeProceduralModel { Size = new(box.Max.X - box.Min.X, box.Max.Y - box.Min.Y, box.Max.Z - box.Min.Z) };
             primitive.SetMaterial("Material", material);
@@ -137,6 +145,37 @@ public sealed class ExpeditionGame : Game
             ClampAim(motor.Position.Z, definition.Floor.Min.Z, definition.Floor.Max.Z));
     }
 
+    private IEnumerable<WorldBox> LadderDecorations()
+    {
+        // Rungs/rails mark the traversable ladder corridor; they are not solid blockers.
+        foreach(var ladder in definition.Ladders)
+        {
+            float visualZ = ladder.Bottom.Z - .25f; // Behind the upright hero, toward this field scene's platform.
+            foreach(float side in new[]{-.3f,.3f})
+                yield return new($"ladder-decoration-{ladder.Id}-{side}",new(ladder.Bottom.X+side-.025f,ladder.Bottom.Y,visualZ-.025f),new(ladder.Top.X+side+.025f,ladder.Top.Y+.25f,visualZ+.025f));
+            for(float y=ladder.Bottom.Y+.15f;y<=ladder.Top.Y;y+=.2f)
+                yield return new($"ladder-decoration-{ladder.Id}-rung-{y}",new(ladder.Bottom.X-.3f,y,visualZ-.025f),new(ladder.Top.X+.3f,y+.035f,visualZ+.025f));
+        }
+    }
+
+    protected override void Draw(GameTime gameTime)
+    {
+        base.Draw(gameTime);
+        if(!contentReady || hudBatch is null || hudFont is null) return;
+        GraphicsContext.CommandList.SetRenderTargetAndViewport(GraphicsDevice.Presenter.DepthStencilBuffer,GraphicsDevice.Presenter.BackBuffer);
+        hudBatch.Begin(GraphicsContext);
+        string text = motor.Snapshot.Hint;
+        hudBatch.DrawString(hudFont,text,new Vector2(25,25),Color.Black);
+        hudBatch.DrawString(hudFont,text,new Vector2(24,24),Color.White);
+        hudBatch.End();
+    }
+
+    protected override void Destroy()
+    {
+        hudBatch?.Dispose(); hudFont?.Dispose(); atlas?.Dispose();
+        base.Destroy();
+    }
+
     protected override void Update(GameTime gameTime)
     {
         if (!contentReady) { base.Update(gameTime); return; }
@@ -153,18 +192,22 @@ public sealed class ExpeditionGame : Game
         if (options.SmokeFrames > 0 && options.SmokeRoute == "edges")
             input = frames < 180 ? new(0, -1) : frames < 420 ? new(1, -1) : frames < 720 ? new(1, 1) : frames < 1080 ? new(-1, 1) : new(-1, -1);
         if (options.SmokeFrames > 0 && options.SmokeRoute == "zoom") input = System.Numerics.Vector2.Zero;
-        double elapsed = options.SmokeFrames > 0 ? (options.SmokeRoute == "edges" ? 1.0 / 30 : 1.0 / 60) : gameTime.Elapsed.TotalSeconds;
+        var command = new TraversalInput(input,Input.IsKeyDown(Keys.LeftCtrl)||Input.IsKeyDown(Keys.RightCtrl),Input.IsKeyDown(Keys.E)||Input.IsKeyDown(Keys.Enter));
+        if(options.SmokeFrames>0) command = options.SmokeRoute=="body" ? bodyRoute.Next(motor.Snapshot) : new(input);
+        double elapsed = options.SmokeFrames > 0 ? (options.SmokeRoute is "edges" or "body" ? 1.0 / 30 : 1.0 / 60) : gameTime.Elapsed.TotalSeconds;
         float wheel = Input.MouseWheelDelta;
         if (options.SmokeFrames > 0) wheel = options.SmokeRoute == "zoom" ? frames switch { 30 or 120 or 150 => 100, 90 or 210 => -100, 270 => 4, _ => 0 } : 0;
-        if (discardInputOnNextUpdate) { elapsed = 0; input = System.Numerics.Vector2.Zero; wheel = 0; discardInputOnNextUpdate = false; }
+        bool discard = discardInputOnNextUpdate;
+        if (discard) { elapsed = 0; command = command with {Move=System.Numerics.Vector2.Zero}; wheel = 0; discardInputOnNextUpdate = false; }
         if (IsActive || options.SmokeFrames > 0) camera.OrthographicSize = Math.Clamp(camera.OrthographicSize - wheel * .5f, 4.5f, 7f);
-        motor.Advance(elapsed, input, options.SmokeFrames > 0 || IsActive);
+        motor.Advance(elapsed, command, !discard && (options.SmokeFrames > 0 || IsActive));
         if (probeFocus) focusProbePassed = motor.Position == beforeFocus && motor.Ticks == ticksBeforeFocus;
         if (probeFocus) focusZoomProbePassed = camera.OrthographicSize == zoomBeforeFocus;
-        if (hero is not null) hero.Transform.Position = new(motor.Position.X, motor.Position.Y, motor.Position.Z);
+        if (hero is not null) { hero.Transform.Position = new(motor.Position.X, motor.Position.Y, motor.Position.Z); hero.Transform.Scale = new(1,UprightScale*(motor.Stance==BodyStance.Crouched?.5f:1),1); }
         FollowHero();
+        input = command.Move;
         if (provider is not null && input.LengthSquared() > 0) provider.CurrentFrame = frames / 12 % 2 + (Math.Abs(input.X) > Math.Abs(input.Y) ? (input.X > 0 ? 4 : 2) : input.Y > 0 ? 6 : 0);
-        if (options.SmokeFrames > 0 && frames % 30 == 0) samples.Add(new { frame = frames, x = motor.Position.X, y = motor.Position.Y, z = motor.Position.Z, motor.Ticks });
+        if (options.SmokeFrames > 0 && frames % 30 == 0) samples.Add(new { frame = frames, x = motor.Position.X, y = motor.Position.Y, z = motor.Position.Z, motor.Ticks, snapshot=motor.Snapshot });
         base.Update(gameTime);
     }
 
@@ -172,6 +215,14 @@ public sealed class ExpeditionGame : Game
     {
         if (!contentReady) { base.EndDraw(present); return; }
         frames++;
+        if(options.SmokeFrames>0 && options.SmokeRoute=="body" && bodyRoute.Capture is string milestone)
+        {
+            using var capture = File.Create(Path.Combine(options.EvidenceDirectory,$"body-{milestone}.png"));
+            GraphicsDevice.Presenter.BackBuffer.Save(GraphicsContext.CommandList,capture,ImageFileType.Png);
+            var snapshot=motor.Snapshot;
+            bodyRoute.Milestones.Add(new {name=milestone,frame=frames,x=snapshot.Position.X,y=snapshot.Position.Y,z=snapshot.Position.Z,state=snapshot.State.ToString(),height=snapshot.BodyHeight,snapshot.StandBlocked,snapshot.Hint});
+            bodyRoute.Capture=null;
+        }
         if (options.SmokeFrames > 0 && frames % 30 == 0)
         {
             var feet = Vector3.TransformCoordinate(new Vector3(motor.Position.X, motor.Position.Y, motor.Position.Z), camera.ViewProjectionMatrix);
@@ -189,7 +240,7 @@ public sealed class ExpeditionGame : Game
             using var stream = File.Create(Path.Combine(options.EvidenceDirectory, $"frame-{frames:D4}.png"));
             GraphicsDevice.Presenter.BackBuffer.Save(GraphicsContext.CommandList, stream, ImageFileType.Png);
         }
-        if (options.SmokeFrames > 0 && frames >= options.SmokeFrames)
+        if (options.SmokeFrames > 0 && (frames >= options.SmokeFrames || options.SmokeRoute=="body" && bodyRoute.Complete))
         {
             var manifestPath = Path.Combine(AppContext.BaseDirectory, "build-manifest.json");
             JsonElement? build = File.Exists(manifestPath) ? JsonSerializer.Deserialize<JsonElement>(File.ReadAllText(manifestPath)) : null;
@@ -200,9 +251,10 @@ public sealed class ExpeditionGame : Game
                 runtime = Environment.Version.ToString(), stride = typeof(Game).Assembly.GetName().Version?.ToString(), samples,
                 camera = new { size = camera.OrthographicSize, minSize = 4.5f, maxSize = 7f, uprightScale = UprightScale, pitchDegrees = MathF.Atan2(14, MathF.Sqrt(288)) * 180 / MathF.PI, aimHeight = .6f, edgeInset = 1.5f }, cameraSamples, route = options.SmokeRoute,
                 finalPosition = new { x = motor.Position.X, y = motor.Position.Y, z = motor.Position.Z }, build,
+                bodyComplete=bodyRoute.Complete, bodyMilestones=bodyRoute.Milestones, finalSnapshot=motor.Snapshot,
                 focusProbePassed, focusZoomProbePassed, focusProbe = "Direct invocation of actual focus callbacks during the automated route; zoom route injects wheel deltas through the same clamp/discard path, not OS input",
                 sourceBaseline = "e2c786a45f69917bf233793f6a097b150e2fe264", check = "automated GPU route, not manual playtest"
-            }, new JsonSerializerOptions { WriteIndented = true }));
+            }, new JsonSerializerOptions { WriteIndented = true, IncludeFields = true, Converters = { new System.Text.Json.Serialization.JsonStringEnumConverter() } }));
             Exit();
         }
         base.EndDraw(present);

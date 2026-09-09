@@ -1,12 +1,165 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "id": "expedition_courtyard",
-  "floor": { "id": "floor", "min": { "x": -8, "y": -0.3, "z": -6 }, "max": { "x": 8, "y": 0, "z": 6 } },
-  "spawn": { "x": 1.5, "y": 0, "z": 3 },
+  "floor": {
+    "id": "floor",
+    "min": {
+      "x": -8,
+      "y": -0.3,
+      "z": -6
+    },
+    "max": {
+      "x": 8,
+      "y": 0,
+      "z": 6
+    }
+  },
+  "spawn": {
+    "x": 1.5,
+    "y": 0,
+    "z": 3
+  },
   "walls": [
-    { "id": "courtyard-wall", "min": { "x": -2, "y": 0, "z": -0.25 }, "max": { "x": 2, "y": 1.8, "z": 0.25 } },
-    { "id": "west-boundary", "min": { "x": -8, "y": 0, "z": -6 }, "max": { "x": -7.5, "y": 1.2, "z": 6 } },
-    { "id": "north-boundary", "min": { "x": -7.5, "y": 0, "z": -6 }, "max": { "x": 8, "y": 1.2, "z": -5.5 } },
-    { "id": "east-pillar", "min": { "x": 4, "y": 0, "z": 1 }, "max": { "x": 5, "y": 1.5, "z": 2 } }
+    {
+      "id": "courtyard-wall",
+      "min": {
+        "x": -2,
+        "y": 0,
+        "z": -0.25
+      },
+      "max": {
+        "x": 2,
+        "y": 1.8,
+        "z": 0.25
+      }
+    },
+    {
+      "id": "west-boundary",
+      "min": {
+        "x": -8,
+        "y": 0,
+        "z": -6
+      },
+      "max": {
+        "x": -7.5,
+        "y": 1.2,
+        "z": 6
+      }
+    },
+    {
+      "id": "north-boundary",
+      "min": {
+        "x": -7.5,
+        "y": 0,
+        "z": -6
+      },
+      "max": {
+        "x": 8,
+        "y": 1.2,
+        "z": -5.5
+      }
+    },
+    {
+      "id": "east-pillar",
+      "min": {
+        "x": 4,
+        "y": 0,
+        "z": 1
+      },
+      "max": {
+        "x": 5,
+        "y": 1.5,
+        "z": 2
+      }
+    }
+  ],
+  "structures": [
+    {
+      "id": "low-ceiling",
+      "min": {
+        "x": -5,
+        "y": 0.6,
+        "z": 1.2
+      },
+      "max": {
+        "x": -3,
+        "y": 0.8,
+        "z": 1.7
+      }
+    },
+    {
+      "id": "passage-left-post",
+      "min": {
+        "x": -5.2,
+        "y": 0,
+        "z": 1.2
+      },
+      "max": {
+        "x": -5,
+        "y": 0.8,
+        "z": 1.7
+      }
+    },
+    {
+      "id": "passage-right-post",
+      "min": {
+        "x": -3,
+        "y": 0,
+        "z": 1.2
+      },
+      "max": {
+        "x": -2.8,
+        "y": 0.8,
+        "z": 1.7
+      }
+    },
+    {
+      "id": "upper-platform",
+      "min": {
+        "x": -5.8,
+        "y": 1.4,
+        "z": -4
+      },
+      "max": {
+        "x": -3,
+        "y": 1.6,
+        "z": -2
+      }
+    }
+  ],
+  "ladders": [
+    {
+      "id": "courtyard-ladder",
+      "bottom": {
+        "x": -4.4,
+        "y": 0,
+        "z": -1.65
+      },
+      "top": {
+        "x": -4.4,
+        "y": 1.6,
+        "z": -1.65
+      },
+      "bottomEntry": {
+        "x": -4.4,
+        "y": 0,
+        "z": -0.95
+      },
+      "topEntry": {
+        "x": -4.4,
+        "y": 1.6,
+        "z": -2.6
+      },
+      "bottomExit": {
+        "x": -4.4,
+        "y": 0,
+        "z": -0.95
+      },
+      "topExit": {
+        "x": -4.4,
+        "y": 1.6,
+        "z": -2.6
+      }
+    }
   ]
 }

@@ -64,16 +64,20 @@ public sealed class BodyCollisionWorld
         var delta = to - from;
         foreach (var box in solids)
         {
-            var min = new Vector3(box.Min.X - radius + Epsilon, box.Min.Y - height + Epsilon, box.Min.Z - radius + Epsilon);
-            var max = new Vector3(box.Max.X + radius - Epsilon, box.Max.Y - Epsilon, box.Max.Z + radius - Epsilon);
+            // Stop on the geometric face, leaving tolerance for roundoff instead of consuming it.
+            var min = new Vector3(box.Min.X - radius, box.Min.Y - height, box.Min.Z - radius);
+            var max = new Vector3(box.Max.X + radius, box.Max.Y, box.Max.Z + radius);
             float enter = 0, leave = 1;
             bool intersects = true;
             for (int axis = 0; axis < 3; axis++)
             {
                 if (delta[axis] == 0)
-                { if (from[axis] <= min[axis] || from[axis] >= max[axis]) { intersects = false; break; } }
+                { if (from[axis] <= min[axis]+Epsilon || from[axis] >= max[axis]-Epsilon) { intersects = false; break; } }
                 else
                 {
+                    // Tangent/away movement must stay possible at an already touching face.
+                    if(delta[axis]>0 && from[axis]>=max[axis]-Epsilon || delta[axis]<0 && from[axis]<=min[axis]+Epsilon)
+                    {intersects=false;break;}
                     float a = (min[axis] - from[axis]) / delta[axis], b = (max[axis] - from[axis]) / delta[axis];
                     enter = Math.Max(enter, Math.Min(a, b)); leave = Math.Min(leave, Math.Max(a, b));
                     if (enter >= leave) { intersects = false; break; }

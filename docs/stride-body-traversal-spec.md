@@ -23,6 +23,8 @@
 
 ## Файлы и порядок
 
+Уточнение пользователя 2026-09-09: переходами игрока управляет явный Finite State Machine с состояниями Standing, Crouched, Climbing. Guarded переходы проверяют standing clearance, новое E и допустимую лестницу, свободный устойчивый выход. Stance/mode в snapshot выводятся из одного состояния: сочетание Climbing+Crouched невозможно. Подход к лестнице, вертикальный участок и выход — внутренние фазы Climbing. FSM остаётся небольшим game-owned кодом motor; общий framework и будущие P1.3 состояния не добавляются.
+
 1. `games/rat-expedition/Rat.Expedition.Core/`: добавить чистый collision query adapter. Проверять полный footprint и высоту, опору на заданной feetY, Y-aware horizontal sweep, свободный путь захвата/выхода. Не выбирать другой ярус одним height lookup и не пропускать тонкие преграды при catch-up. Квалифицировать эти запросы сценариями до motor changes.
 2. `SceneDefinition.cs`, `Content/courtyard.json`: расширить валидируемые данные конечными потолками/площадкой и лестницей с нижним/верхним входом и выходом. Видимые solid boxes и collision data совпадают. Входы/выходы имеют полный support/standing clearance; валидировать маршрут лестницы, ids, конечность чисел и обязательные координаты. Согласовать версию формата; не обещать совместимость прежних save/replay.
 3. `TraversalMotor.cs` и новые input/snapshot типы: stance до sweep, blocked stand, grounded/Climbing, одноразовые команды через fixed-step очередь, доступный контекст. Выход не телепортирует сквозь преграду и не сбрасывает на нижний пол. Горизонтальное движение по верхней площадке сохраняет её Y и останавливается у края; свободное падение относится к P1.3.
@@ -39,3 +41,10 @@
 - Given завершённый срез, when проведены независимое ревью и Release-сборки редакторов, then evidence записано, а P1.2 отмечен отдельно от полного P1. Ручной плейтест не подменяется синтетическими командами.
 
 Проверки: `scripts/stride/build-game.ps1`, `scripts/stride/verify-game.ps1 -PackageZip <ZIP>`, `scripts/stride/build.ps1`, `scripts/verify.ps1`, `python scripts/check_vault.py`. Тяжёлые артефакты остаются вне Git.
+
+## Suggested Review Order
+
+1. [Body queries](../games/rat-expedition/Rat.Expedition.Core/BodyCollisionWorld.cs) и [квалификация](../games/rat-expedition/Rat.Expedition.Core.Tests/BodyCollisionTests.cs).
+2. [Scene schema 2 и guards](../games/rat-expedition/Rat.Expedition.Core/SceneDefinition.cs), [input/snapshot/FSM states](../games/rat-expedition/Rat.Expedition.Core/TraversalInput.cs), [guarded motor transitions](../games/rat-expedition/Rat.Expedition.Core/TraversalMotor.cs).
+3. [FSM sequences](../games/rat-expedition/Rat.Expedition.Core.Tests/BodyTraversalTests.cs), [исходный wall-route regression](../games/rat-expedition/Rat.Expedition.Core.Tests/Program.cs).
+4. [Представление/ввод/шрифт](../games/rat-expedition/Rat.Expedition.Windows/ExpeditionGame.cs), [GPU route без подмены положения](../games/rat-expedition/Rat.Expedition.Windows/BodySmokeRoute.cs), [package verification](../scripts/stride/verify-game.ps1).

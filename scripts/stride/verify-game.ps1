@@ -1,4 +1,4 @@
-[CmdletBinding()]
+﻿[CmdletBinding()]
 param([Parameter(Mandatory = $true)][string]$PackageZip)
 
 Set-StrictMode -Version Latest
@@ -26,7 +26,7 @@ try {
         $process = Start-Process -FilePath $exe -ArgumentList $quotedArguments -WorkingDirectory $unrelatedCwd -WindowStyle Hidden -PassThru
         # Stride throttles hidden/unfocused windows to 15 Hz: 1440 frames need 96 seconds.
         # Allow bounded startup/capture margin without disabling normal engine throttling.
-        $timeoutMs = if ($Arguments -contains 'edges') { 150000 } else { 30000 }
+        $timeoutMs = if ($Arguments -contains 'edges' -or $Arguments -contains 'body') { 150000 } else { 30000 }
         if (-not $process.WaitForExit($timeoutMs)) {
             Stop-Process -Id $process.Id -ErrorAction SilentlyContinue
             throw "$Name exceeded $($timeoutMs / 1000) seconds; only its spawned process was stopped."
@@ -76,7 +76,25 @@ try {
         if ($sample.Count -ne 1 -or $sample[0].size -ne $expected[1]) { throw "Wheel clamp/discard failed at frame $($expected[0])." }
     }
     if ($wheelRun.focusZoomProbePassed -ne $true) { throw 'Focus regain accepted a stale wheel delta.' }
-    foreach ($failure in @('missing-png', 'corrupt-png', 'missing-json', 'malformed-json', 'missing-coordinate-json')) {
+    foreach ($resolution in @(@(1280,720), @(1920,1080))) {
+        $name = "body-$($resolution[0])x$($resolution[1])"
+        $results += Invoke-GameScenario $name @('--width', [string]$resolution[0], '--height', [string]$resolution[1], '--smoke-route', 'body', '--smoke-frames', '1200') $true
+        $run = Get-Content -LiteralPath (Join-Path $root "$name/run.json") -Raw | ConvertFrom-Json
+        if (-not $run.bodyComplete -or $run.width -ne $resolution[0] -or $run.height -ne $resolution[1]) { throw "$name did not complete the real body route." }
+        foreach ($milestone in @('standing-blocked','crouched','blocked-stand','clear-standing','climb-up','upper-exit','held-interact-top','top-walking','climb-down','lower-exit')) {
+            $item = @($run.bodyMilestones | Where-Object name -eq $milestone)
+            if ($item.Count -ne 1 -or -not (Test-Path -LiteralPath (Join-Path $root "$name/body-$milestone.png"))) { throw "$name missing $milestone evidence." }
+            $item = $item[0]
+            $state = if ($milestone -in @('crouched','blocked-stand')) {'Crouched'} elseif ($milestone -in @('climb-up','climb-down')) {'Climbing'} else {'Standing'}
+            if ($item.state -ne $state) { throw "$name unexpected FSM state for $milestone." }
+            if ($state -eq 'Crouched' -and $item.height -ne .4) { throw "$name crouched body height mismatch." }
+            if ($state -ne 'Crouched' -and $item.height -ne .8) { throw "$name standing body height mismatch." }
+            if ($milestone -eq 'blocked-stand' -and (-not $item.StandBlocked -or $item.Hint -ne 'Здесь нельзя встать')) { throw "$name missing Cyrillic blocked-stand hint." }
+            if ($milestone -in @('upper-exit','held-interact-top','top-walking') -and $item.y -ne 1.6) { throw "$name lost upper support." }
+            if ($milestone -eq 'lower-exit' -and $item.y -ne 0) { throw "$name wrong lower exit." }
+        }
+    }
+    foreach ($failure in @('missing-png', 'corrupt-png', 'missing-json', 'malformed-json', 'missing-coordinate-json', 'missing-font', 'corrupt-font', 'blocked-ladder-exit', 'missing-ladder-coordinate')) {
         $content = Join-Path $root "$failure-content"
         Copy-Item -LiteralPath (Join-Path $app 'Content') -Destination $content -Recurse
         switch ($failure) {
@@ -88,6 +106,18 @@ try {
                 $document = Get-Content -LiteralPath (Join-Path $content 'courtyard.json') -Raw | ConvertFrom-Json
                 $document.spawn.PSObject.Properties.Remove('x')
                 $document | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath (Join-Path $content 'courtyard.json') -Encoding UTF8
+            }
+            'missing-font' { Rename-Item -LiteralPath (Join-Path $content 'fonts/NotoSans-Regular.ttf') -NewName 'NotoSans-Regular.ttf.absent' }
+            'corrupt-font' { [IO.File]::WriteAllBytes((Join-Path $content 'fonts/NotoSans-Regular.ttf'), [byte[]](1,2,3,4,5)) }
+            'blocked-ladder-exit' {
+                $document = Get-Content -LiteralPath (Join-Path $content 'courtyard.json') -Raw | ConvertFrom-Json
+                $document.ladders[0].topExit.x = 5
+                $document | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath (Join-Path $content 'courtyard.json') -Encoding UTF8
+            }
+            'missing-ladder-coordinate' {
+                $document = Get-Content -LiteralPath (Join-Path $content 'courtyard.json') -Raw | ConvertFrom-Json
+                $document.ladders[0].top.PSObject.Properties.Remove('y')
+                $document | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath (Join-Path $content 'courtyard.json') -Encoding UTF8
             }
         }
         $results += Invoke-GameScenario $failure @('--content-dir', $content) $false

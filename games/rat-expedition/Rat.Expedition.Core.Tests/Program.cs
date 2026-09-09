@@ -16,8 +16,8 @@ void Reject(Action action)
     throw new Exception("Invalid scene was accepted");
 }
 WorldBox Box(string id, float x1, float z1, float x2, float z2) => new(id, new(x1, 0, z1), new(x2, 2, z2));
-SceneDefinition Scene(params WorldBox[] walls) => new(1, "test", new("floor", new(-10, -1, -10), new(10, 0, 10)), new(0, 0, 3), walls);
-void Drive(TraversalMotor motor, Vector2 input, int frames) { for (int i = 0; i < frames; i++) motor.Advance(1.0 / 60, input); }
+SceneDefinition Scene(params WorldBox[] walls) => new(2, "test", new("floor", new(-10, -1, -10), new(10, 0, 10)), new(0, 0, 3), walls, [], []);
+void Drive(TraversalMotor motor, Vector2 input, int frames) { for (int i = 0; i < frames; i++) motor.Advance(1.0 / 60, new TraversalInput(input)); }
 
 Check("camera-relative W moves screen-up on XZ at 3 units per second", () => {
     var motor = new TraversalMotor(Scene()); Drive(motor, new(0, 1), 60);
@@ -41,16 +41,24 @@ Check("all floor edges retain complete footprint", () => {
         Drive(motor, direction, 1000); Require(scene.IsFree(motor.Position), "Left floor bounds");
     }
 });
+Check("original courtyard contact route slides along wall and reaches its far side",()=>{
+    var scene=Scene(Box("courtyard-wall",-2,-.25f,2,.25f)) with {Spawn=new(1.5f,0,3)};
+    var motor=new TraversalMotor(scene);
+    foreach(var segment in new[]{(new Vector2(0,1),90),(new Vector2(1,0),150),(new Vector2(0,1),60),(new Vector2(-1,0),60)}) {
+        Drive(motor,segment.Item1,segment.Item2); Require(scene.IsFree(motor.Position),"Swept contact left body penetrating wall");
+    }
+    Require(motor.Position.Z<0,"Contact froze the former working route");
+});
 Check("long frame caps catchup and cannot tunnel", () => {
     var scene = Scene(Box("wall", -9, 2, 9, 2.01f)); var motor = new TraversalMotor(scene);
-    motor.Advance(20, new(1,1));
+    motor.Advance(20, new(new(1,1)));
     Require(motor.Ticks == TraversalMotor.MaximumCatchUpSteps, "Unbounded catchup");
     Require(scene.IsFree(motor.Position) && motor.Position.Z > 2.21f, "Tunneled");
 });
 Check("focus loss clears pending fractional tick", () => {
-    var motor = new TraversalMotor(Scene()); motor.Advance(TraversalMotor.StepSeconds * 0.75, new(1,0));
-    motor.Advance(20, new(1,0), false); var paused = motor.Position;
-    motor.Advance(TraversalMotor.StepSeconds * 0.5, Vector2.Zero);
+    var motor = new TraversalMotor(Scene()); motor.Advance(TraversalMotor.StepSeconds * 0.75, new(new(1,0)));
+    motor.Advance(20, new(new(1,0)), false); var paused = motor.Position;
+    motor.Advance(TraversalMotor.StepSeconds * 0.5, new(Vector2.Zero));
     Require(motor.Ticks == 0 && motor.Position == paused, "Focus regain executed stale motion");
 });
 Check("spawn inside wall rejected", () => Reject(() => Scene(Box("wall", -1, 2, 1, 4)).Validate()));
@@ -89,5 +97,6 @@ Check("missing nested spawn and bounds coordinates rejected", () => {
     } finally { if (File.Exists(path)) File.Delete(path); }
 });
 BodyCollisionTests.Run(Check, Require);
+BodyTraversalTests.Run(Check, Require);
 Console.WriteLine($"Core scenarios: {passed} passed, {failed} failed.");
 return failed == 0 ? 0 : 1;

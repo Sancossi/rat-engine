@@ -53,7 +53,7 @@ try {
             '-p:PublishAot=false', '-p:PublishTrimmed=false', '-p:PublishSingleFile=false')
     } finally { Pop-Location }
 
-    foreach ($relative in @('Rat.Expedition.Windows.exe', 'coreclr.dll', 'Content/sprites/rat.png', 'Content/courtyard.json', 'Content/credits.json', 'data/db/bundles/default.bundle')) {
+    foreach ($relative in @('Rat.Expedition.Windows.exe', 'coreclr.dll', 'Content/sprites/rat.png', 'Content/courtyard.json', 'Content/credits.json', 'Content/fonts/NotoSans-Regular.ttf', 'Content/fonts/OFL.txt', 'data/db/bundles/default.bundle')) {
         if (-not (Test-Path -LiteralPath (Join-Path $publish $relative))) { throw "Publish closure missing $relative" }
     }
     $licenses = Join-Path $publish 'licenses'

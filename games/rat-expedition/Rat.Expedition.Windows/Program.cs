@@ -59,8 +59,8 @@ namespace Rat.Expedition.Windows
             }
             if (width < 640 || height < 360 || width > 3840 || height > 2160 || frames < 0 || (frames > 0 && frames < 60) || frames > 3600)
                 throw new ArgumentException("Window must be 640x360..3840x2160; smoke frames 0 or 60..3600.");
-            if (!float.IsFinite(cameraSize) || cameraSize < 4.5f || cameraSize > 7 || (route != "walls" && route != "edges" && route != "zoom"))
-                throw new ArgumentException("Camera size must be 4.5..7; smoke route walls, edges or zoom.");
+            if (!float.IsFinite(cameraSize) || cameraSize < 4.5f || cameraSize > 7 || (route != "walls" && route != "edges" && route != "zoom" && route != "body"))
+                throw new ArgumentException("Camera size must be 4.5..7; smoke route walls, edges, zoom or body.");
             return new(width, height, frames, evidence, content, cameraSize, route);
         }
     }
