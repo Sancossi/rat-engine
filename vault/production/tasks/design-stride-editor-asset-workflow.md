@@ -24,6 +24,9 @@ Specification: [[ADR-018 Rat expedition uses Stride]]; [[expedition-prototype-tr
 - Независимое документальное ревью, vault checks и требуемая Release-сборка редактора записаны с ограничениями доказательств.
 
 Origin: [[expedition-prototype-traversal]].
+Follow-up: [[feat-stride-game-studio-authoring]].
+
+Related: [План авторинга A1](../../../docs/stride-editor-asset-workflow-plan.md).
 
 ## Resolution
 

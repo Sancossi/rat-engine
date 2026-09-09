@@ -14,7 +14,7 @@ Intent: Игрок узнаёт правило и применяет его к �
 
 Specification: [[GDD]] — Предметы и окружение; [[rat-expedition-narrative]] — двор. Предшествующая идея [[feat-field-physics-puzzles]], оценка [[rat-expedition-legacy-reconciliation]].
 
-Dependencies: [[expedition-prototype-traversal]]. До закрытия зависимостей не брать в работу.
+Dependencies: [[expedition-prototype-traversal]]; [[feat-stride-game-studio-authoring]]. A1 добавлен как планируемая основа авторинга по запросу 2026-09-09; это не начало исполнения. До закрытия зависимостей не брать в работу.
 
 ## Acceptance
 
@@ -29,7 +29,7 @@ Dependencies: [[expedition-prototype-traversal]]. До закрытия зави
 
 Три ограниченных правила и общий инвентарь; без общей физики, бросания, крафта, пожаров по всей карте и старых задач про провалы/разбег.
 
-Origin: [[design-rat-expedition-preproduction]]; [[design-expedition-layered-maps]]; [[production/roadmap/rat-expedition-release-roadmap|План до релиза]].
+Origin: [[design-rat-expedition-preproduction]]; [[design-expedition-layered-maps]]; [[feat-stride-game-studio-authoring]]; [[production/roadmap/rat-expedition-release-roadmap|План до релиза]].
 Follow-up: [[expedition-prototype-quest-dialogue]].
 
 ## Resolution

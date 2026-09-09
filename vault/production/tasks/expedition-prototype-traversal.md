@@ -45,7 +45,7 @@ Dependencies: [[feat-stride-source-foundation]] — закрыта. [[expedition
 Реализация начата по запросу пользователя 2026-09-08; этот порядок срезов конкретизирует спецификацию. Один исполнитель, независимое ревью каждого среза; P1 закрывается после общей приёмки. Статусами и отметками управляет ведущий агент. Текущий этап: [[Sprint 19 — Expedition traversal prototype]].
 
 Origin: [[expedition-engine-decision]]; [[ADR-017 Rat expedition uses rat-engine]]; [[feat-stride-source-foundation]]; [[ADR-018 Rat expedition uses Stride]]; [[design-rat-expedition-preproduction]]; [[design-expedition-layered-maps]]; [[rat-expedition-layered-maps]]; [[production/roadmap/rat-expedition-release-roadmap|План до релиза]].
-Follow-up: [[expedition-prototype-interactions]]; [[publish-editor-game-vault-snapshot]]; [[design-stride-editor-asset-workflow]].
+Follow-up: [[expedition-prototype-interactions]]; [[publish-editor-game-vault-snapshot]]; [[design-stride-editor-asset-workflow]]; [[feat-stride-game-studio-authoring]].
 
 ## Resolution
 
