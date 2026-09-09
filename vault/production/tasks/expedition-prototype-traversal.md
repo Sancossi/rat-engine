@@ -4,7 +4,7 @@ area: Game
 status: In progress
 task_type: Feature
 sprint: Sprint 19
-review: Approved
+review: Pending
 baseline_commit: 3862666
 due:
 tags: [task, expedition]
@@ -21,6 +21,8 @@ Dependencies: [[feat-stride-source-foundation]] — закрыта. [[expedition
 Текущий этап: P1.1, коррекция камеры P1.1a и P1.2 приняты 2026-09-09. Архитектура и срезы P1 адаптированы к Stride/C# в `26cd508`; P1.2 добавил проверенный collision adapter, явную FSM игрока, приседание и лестницу с безопасными выходами. Полная карточка P1 остаётся In progress: review Approved относится к P1.1/P1.1a/P1.2; следующий срез P1.3 ещё не выполнен. Исходная основа подготовлена в [[feat-stride-source-foundation]]. [Прежняя C++ спецификация](../../../docs/archive/cpp/rat-expedition-traversal-spec-rat-engine-2026-09-08.md) сохранена как история.
 
 ## Acceptance
+
+P1.3 начат 2026-09-09 по запросу продолжить запланированную работу. Принятые P1.1/P1.1a/P1.2 сохраняют свои результаты ревью. Текущий порядок внутри P1.3: квалификация рампы/опоры, session и переходы/пауза/recovery, спутники/перекрытия, общая приёмка. Исполняемый контракт: [P1.3](../../../docs/stride-session-layered-traversal-spec.md). Авторинг A1 остаётся зависимым от полного P1.
 
 - Отдельная игра Stride/C# воспроизводимо собирается и поставляется self-contained Windows ZIP без зависимости от editor/SDK; записаны source SHA, версии пакетов, команда/настройки и путь артефакта.
 - WASD, приседание, контекстный подъём и безопасные выходы сверху/снизу работают по A4; спутники не блокируют проход.
