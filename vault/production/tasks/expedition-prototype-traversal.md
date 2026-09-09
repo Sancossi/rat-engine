@@ -4,7 +4,7 @@ area: Game
 status: In progress
 task_type: Feature
 sprint: Sprint 19
-review: Approved
+review: Pending
 baseline_commit: 3862666
 due:
 tags: [task, expedition]
@@ -18,7 +18,7 @@ Specification: [[GDD]] — Исследование; [[rat-expedition-art-audio]
 
 Dependencies: [[feat-stride-source-foundation]] — закрыта. [[expedition-engine-decision]] сохранена как историческая приёмка прежней основы.
 
-Текущий этап: P1.1 реализован и принят 2026-09-09; коррекция крупности и следования камеры P1.1a по замечанию пользователя также принята 2026-09-09, до начала P1.2. Архитектура и срезы P1 адаптированы к Stride/C# в `26cd508`; следующий срез P1.2 начинает с проверки collision adapter для объёма тела, потолков и выходов лестницы. Полная карточка P1 остаётся In progress: review Approved относится к P1.1/P1.1a, P1.2/P1.3 ещё не выполнены. Исходная основа подготовлена в [[feat-stride-source-foundation]]. [Прежняя C++ спецификация](../../../docs/rat-expedition-traversal-spec-rat-engine-2026-09-08.md) сохранена как история.
+Текущий этап: P1.1 реализован и принят 2026-09-09; коррекция крупности и следования камеры P1.1a по замечанию пользователя также принята 2026-09-09, до начала P1.2. Архитектура и срезы P1 адаптированы к Stride/C# в `26cd508`; P1.2 начат 2026-09-09 по запросу продолжить выполнение: сначала проверяется collision adapter для объёма тела, потолков и выходов лестницы. Полная карточка P1 остаётся In progress: review Approved относится к P1.1/P1.1a, P1.2/P1.3 ещё не выполнены. Исходная основа подготовлена в [[feat-stride-source-foundation]]. [Прежняя C++ спецификация](../../../docs/rat-expedition-traversal-spec-rat-engine-2026-09-08.md) сохранена как история.
 
 ## Acceptance
 
