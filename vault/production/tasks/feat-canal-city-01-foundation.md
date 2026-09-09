@@ -1,10 +1,10 @@
 ---
 type: task
 area: Game
-status: In review
+status: Blocked
 task_type: Feature
 sprint: Sprint 19
-review: In review
+review: Approved
 due:
 tags: [task, expedition, art, blender]
 ---
@@ -29,6 +29,8 @@ Follow-up: [[feat-canal-city-02-passages]]; [[feat-canal-city-03-architecture]];
 
 ## Resolution
 
+2026-09-09: независимое ревью native preview `913df0c..9d54ba7` — Approved двумя проверяющими, открытых замечаний нет. Проверены 97 native assets, ссылки/исходники, 14 FBX hashes, три runtime отчёта, реальные PNG, ZIP и совпадение его DLL/bundle с извлечённым запуском. Свежие GPU прогоны выполнил исполнитель; проверяющие изучали код и сохранённые реальные результаты. Первый source/preview набор готов в `feat/canal-city-catalog`, но карточка Blocked на незавершённых A1.3/A1.4: import/reimport, editor Save/reopen, production resource ownership и обычный game/ZIP. Повторная проверка основной рабочей копии на `eb483b6` подтвердила открытую зависимость. Review Approved относится к source и изолированному preview; вся стадия не закрыта, 123 оставшиеся модели и следующие зависимые карточки не начаты. Незавершённая стадия остаётся в feature branch без публикации в main и без заявления нового полного Release Game Studio.
+
 2026-09-09: изолированный native preview передан на независимое ревью: `9d54ba7`, исправление выборки одежды — `913df0c`. 97 native assets включают 12 моделей/prefab и два клипа; Release build, GPU 720p/1080p и запуск self-contained ZIP вне checkout прошли. Реальные углы петли 0/50/100° и обратно, неподвижная рама; credits/OFL/package notices включены. [Аудит preview](../../../docs/audits/2026-09-09-canal-city-native-preview.md). Это проверка отдельного preview, производственные A1/native reimport/game runtime остаются открытыми.
 
 2026-09-09: повторное независимое ревью `d00374f` — Approved для исходного среза; все три P2 закрыты. Проверяющий независимо подтвердил не менее 21,9988 мм отделения створки от рамы на всех кадрах source/обоих FBX и проход 3980 вершин тела вместе с одеждой. Осталась неблокирующая неточность отчёта: автоматическая выборка учитывала только body, хотя описание включало robe; выборка будет расширена. Начат изолированный native preview первого набора с теми же source assets и закреплёнными пакетами. Это квалификация модели/материалов/клипов в отдельной сцене, не обход A1 и не приёмка игрового runtime. Вся карточка остаётся открытой.
@@ -49,4 +51,4 @@ Follow-up: [[feat-canal-city-02-passages]]; [[feat-canal-city-03-architecture]];
 
 ## Bugs found
 
-Проверка ещё не завершена.
+Открытых дефектов принятого source/preview среза нет. В рамках этой карточки исправлены три P2 (поздний отказ report path, пересечение створки с косяком, недостаточный просвет для ушей) и P3 выборки одежды. Незавершённая A1 — существующая зависимость, а не новый дефект этого набора.
