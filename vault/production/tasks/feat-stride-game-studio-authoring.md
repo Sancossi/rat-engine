@@ -33,6 +33,8 @@ Follow-up: [[expedition-prototype-interactions]]; [[feat-expedition-character-sp
 
 ## Resolution
 
+A1.3 API квалификация выявила конкретную lifecycle зависимость в pinned Stride: native reimport ожидает background importer, затем изменяет graph, а Save/Close не видят эту незавершённую операцию. В рамках разрешённых пользователем доработок fork выполняется узкий source patch: session asset-operation lease/busy state, защита native Save/Close и terminal state, общий для native и MCP reimport. Это часть текущей A1.3 реализации, не дефект принятого scene-only MCP. Исходники, новый pin и результаты независимого review будут опубликованы в обе main после приёмки среза; до этого main остаются на принятых версиях.
+
 A1.2 опубликован в `rat-engine/main`: `ff24f314e3d5b3f08f955757b6516c301be65ff4`, remote SHA проверен; `Sancossi/stride/main` остаётся на принятом `88301e861149c48c8b408aac3030b190332d7f97`. Посторонние два vault EOL changes сохранены. Начат A1.3 по утверждённой таблице ресурсов: один представитель обязательной категории, native авторский источник, runtime/ZIP использование, API edit/save/reopen и import/reference qualification. Сначала исполнитель фиксирует конкретные assets/API и границы проверки в инженерной спецификации, затем реализует этот срез; A1.4 и ручной P1 остаются отдельными. Review Pending относится к A1.3, принятие A1.2 сохраняется.
 
 Работа MCP по умолчанию опирается на структурированные данные без viewport_capture; изображения нужны только отдельным визуальным критериям. Существующие 12 команд не объявляются API всего asset catalog/import: недостающая часть должна быть явно квалифицирована в A1.3.
