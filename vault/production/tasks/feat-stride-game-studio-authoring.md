@@ -1,10 +1,10 @@
 ---
 type: task
 area: Game
-status: In review
+status: In progress
 task_type: Feature
 sprint: Sprint 19
-review: In review
+review: Needs fixes
 due:
 tags: [task, expedition, stride, authoring]
 ---
@@ -31,6 +31,8 @@ Follow-up: [[expedition-prototype-interactions]]; [[feat-expedition-character-sp
 
 ## Resolution
 
+A1.2 review `857e3a1` — Needs fixes: допустимый общий parent Y=.1 даёт разные float wall bottom/floor top после centre/size-конверсии; GeometryPreviewProcessor.Draw может освобождать buffers после их включения ModelRenderProcessor в текущий кадр (оба Order=0). Исправить в этом срезе и повторить независимое review до мержа. Committed QA package `20260909-122553-348` прошёл все 36 executable сценариев (`C:/5_gamedev/rat-expedition-validation/20260909-122643-970/verification.json`); это не отменяет замечаний review. Полная A1 приёмка остаётся открытой.
+
 A1.2 передан на независимое review: `857e3a1`, native Courtyard/Sluice, GUID/Core adapter и compiled QA fixtures. Реальный MCP wall edit/Undo/Redo/Save/reopen выполнен без имитации ввода: 37 вызовов для сдвига и 32 для восстановления. Compiled Core sweeps меняют old/new collision и возвращаются после восстановления; parent сравнил 146 численных полей обеих восстановленных карт с историческим baseline, max delta 2e-7, errors[]. [Доказательства](../../../docs/audits/2026-09-09-stride-native-map-authoring.md). Core 63 / authoring 14 и узкие native gates прошли; полный committed-head verifier ещё выполняется. Статус In review относится к A1.2; вся карточка A1 и A1.3/A1.4 не закрыты.
 
 Возобновлено 2026-09-09 по «Давай продолжим выполнение задач». Следующий срез — завершение A1.2 по [спецификации native карт](../../../docs/stride-native-map-authoring-spec.md), используя принятый MCP. Новое постоянное поручение: после приёмки и закрытия каждого этапа/спринта мержить проверенный результат в main; при изменении исходников Stride также обновлять main собственного fork и точный pin. Правило записано в AGENTS/source workflow. Сохранённые A1.2 изменения продолжаются в feat/stride-native-authoring, посторонние изменения Task board.base и task template сохраняются отдельно.
@@ -48,5 +50,7 @@ A1.1 принят 2026-09-09: независимое read-only review `ffeab7a..
 Начат A1.2: перенос обеих игровых карт (courtyard/sluice), metadata и общей валидации/Core boundary. A1.1 Approved относится только к законченному срезу; review Pending относится к продолжающейся реализации A1.2. Ручной P1 по-прежнему отложен по решению пользователя.
 
 ## Bugs found
+
+A1.2: два P2 в конверсии Y и времени жизни editor preview buffers выявлены независимым review, исправляются до закрытия среза. Следующие игровые срезы не подбираются до положительного повторного review.
 
 A1.1: none; независимое ревью не выявило блокирующих дефектов. A1.2 ещё выполняется.
