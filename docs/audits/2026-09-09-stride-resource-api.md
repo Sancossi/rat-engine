@@ -150,3 +150,9 @@ Scoped editor build нового source PASS: `build/a13-editor-batch-build-fixe
 52.41 s, 2133 warnings, 0 errors. Первичная compile-попытка обнаружила неправильный
 аргумент LogKey, исправлена до live tests. Ранее описанный canonical full Release
 `8227ac7` относится к доисправленному срезу; новый final Release принадлежит parent.
+
+Parent canonical full Release исправленного `4d336dac` прошёл:
+`C:/5_gamedev/stride/logs/rat-foundation/20260909-140946-490/result.json`,
+exit 0, 50.12 s, 6 прежних warnings (5 NU5100, 1 CA1416), 0 errors.
+Editor executable существует по указанному выше Release пути. Это сборка на
+developer PC; новый ручной F5, чистая машина и remote CI не заявляются.
