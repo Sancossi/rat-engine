@@ -1,10 +1,10 @@
 ---
 type: task
 area: Game
-status: In review
+status: In progress
 task_type: Feature
 sprint: Sprint 19
-review: In review
+review: Pending
 baseline_commit: 3862666
 due:
 tags: [task, expedition]
@@ -23,6 +23,8 @@ Dependencies: [[feat-stride-source-foundation]] — закрыта. [[expedition
 ## Acceptance
 
 P1.3 начат 2026-09-09 по запросу продолжить запланированную работу. Принятые P1.1/P1.1a/P1.2 сохраняют свои результаты ревью. Текущий порядок внутри P1.3: квалификация рампы/опоры, session и переходы/пауза/recovery, спутники/перекрытия, общая приёмка. Исполняемый контракт: [P1.3](../../../docs/stride-session-layered-traversal-spec.md). Авторинг A1 остаётся зависимым от полного P1.
+
+Квалификация P1.3 принята: `2334561`, исправление округления внешней границы `d7b3b2e`; 42 Core сценария passed, два независимых reviewer Approved. Новые `WorldRamp`/`LayeredCollisionWorld` проверяют конечный наклонный объём, составную полную опору, swept collision и потерю опоры; внутренние щели не сглаживаются допуском. Следом выполняется интеграция motor/session. Полная приёмка P1.3 ещё не проведена.
 
 - Отдельная игра Stride/C# воспроизводимо собирается и поставляется self-contained Windows ZIP без зависимости от editor/SDK; записаны source SHA, версии пакетов, команда/настройки и путь артефакта.
 - WASD, приседание, контекстный подъём и безопасные выходы сверху/снизу работают по A4; спутники не блокируют проход.
