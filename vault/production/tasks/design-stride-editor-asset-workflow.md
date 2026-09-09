@@ -1,11 +1,11 @@
 ---
 type: task
 area: Game
-status: In review
+status: Done
 task_type: Research
 sprint: Sprint 19
 due:
-review: In review
+review: Approved
 tags: [task, expedition, stride, design]
 ---
 
@@ -30,8 +30,10 @@ Related: [План авторинга A1](../../../docs/stride-editor-asset-work
 
 ## Resolution
 
-Планирование начато; runtime и ассеты этим заданием не меняются.
+2026-09-09: план `f2a31ee` принят после независимого read-only ревью: Approved, документальных блокеров нет. Четыре среза описывают квалификацию native проекта, перенос карт с единым источником геометрии/коллизий, библиотеку ресурсов и проверку GUI/самостоятельной игры. Покрыты импорт и повторный импорт, сохранение/повторное открытие, undo/redo, ссылки/идентификаторы, ошибки и происхождение ресурсов. Создана [[feat-stride-game-studio-authoring]] со статусом Not started без спринта; плановый порядок — полный P1 → A1 → P2, до массового контента E3. Связанные архитектура, roadmap и зависимости согласованы. Реализация, карты и ассеты не менялись.
+
+Vault checks и `git diff --check` passed; BMad projection синхронизирована из vault. Полная Release-сборка Game Studio: `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/stride/build.ps1`, exit 0, 43.07 с, пять upstream NU5100 warnings / ноль ошибок. Evidence: `C:/5_gamedev/stride/logs/rat-foundation/20260909-044225-060/result.json` и `build.log`; editor: `C:/5_gamedev/stride/sources/editor/Stride.GameStudio/bin/Release/net10.0-windows/Stride.GameStudio.exe`. Закреплённый source HEAD `e2c786a45f69917bf233793f6a097b150e2fe264` остался чистым. Эта сборка подтверждает основу редактора; редактирование ресурсов, GUI-сценарии и новый ZIP этим документационным этапом не проверялись.
 
 ## Bugs found
 
-Пока не проверено.
+none — открытых замечаний документального ревью нет. Реальная совместимость asset pipeline и GUI подлежит квалификации в A1.1; готовность будущей функции не заявляется.
