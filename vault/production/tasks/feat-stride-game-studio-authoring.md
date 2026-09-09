@@ -1,10 +1,10 @@
 ---
 type: task
 area: Game
-status: In progress
+status: In review
 task_type: Feature
 sprint: Sprint 19
-review: Pending
+review: In review
 due:
 tags: [task, expedition, stride, authoring]
 ---
@@ -33,6 +33,8 @@ Follow-up: [[expedition-prototype-interactions]]; [[feat-expedition-character-sp
 
 Начато 2026-09-09 по явному разрешению пользователя. Порядок: A1.1 native project/compiler/GUI квалификация → A1.2 карты/Core → A1.3 библиотека ресурсов → A1.4 единый запуск/ZIP/общая приёмка. Один исполнитель, независимое read-only ревью каждого среза. Оставшийся ручной P1 перенесён на позже; его статус не закрывается автоматически.
 
+A1.1 передан на независимое ревью: `fcd1fd7`. Native scene/custom metadata прошли реальный GUI edit/undo/redo/save/close/reopen/F5; wrapper загрузил те же id, значение и изображение. [Контракт среза](../../../docs/stride-native-authoring-qualification-spec.md), [доказательства](../../../docs/audits/2026-09-09-stride-native-authoring-qualification.md). Это проверка основы; карты/Core и библиотека ресурсов ещё не перенесены. A1 целиком не закрыт.
+
 ## Bugs found
 
-Не проверено: это план будущей реализации, runtime и ресурсы не изменены.
+В A1.1 подтверждённых дефектов движка не обнаружено; независимое ревью ещё идёт.
