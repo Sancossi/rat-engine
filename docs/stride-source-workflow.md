@@ -108,6 +108,16 @@ git -C C:/5_gamedev/stride merge --ff-only 88301e861149c48c8b408aac3030b190332d7
 Не выбирать плавающий tip fork/master вместо lock. Зафиксированный игровой NuGet
 cohort остаётся прежним: editor-only patch не разрешает молча менять game locks.
 
+## Основные ветки
+
+С 2026-09-09 принятая версия проекта опубликована в
+[rat-engine/main](https://github.com/Sancossi/rat-engine/tree/main), редактора — в
+[Stride/main](https://github.com/Sancossi/stride/tree/main). В обоих репозиториях
+main назначена основной веткой. История прежнего main проекта сохранена слиянием;
+fork master сохранён отдельно. [Отчёт слияния](audits/2026-09-09-main-publication.md).
+Последующие доработки готовятся в рабочих ветках и после проверки вливаются в main;
+игра продолжает использовать точный engineCommit из lock, а не плавающий main.
+
 ## Подключение игры и собственные выпуски
 
 Upstream автоматически формирует пакеты в `stride/bin/packages` при обычной сборке.

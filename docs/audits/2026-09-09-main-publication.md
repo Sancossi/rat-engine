@@ -62,3 +62,24 @@ exit 0, 44.20 s, 5 upstream NU5100 warnings, 0 errors. Editor:
 `SpriteStudioAnimation.png`, удерживаемого owned editor PID 66276; parent проверил
 чистую сессию и штатно закрыл её перед повтором. Это окружение сборки, не изменение
 кода. GUI и remote CI этой сборкой не квалифицируются.
+
+## Публикация и финальная проверка parent
+
+Независимое read-only review одобрило merge `1c344ed` / HEAD `9b3f9ab` и план
+публикации. Parent подтвердил ancestor checks для старого main и `ad733e2`,
+равенство всех трёх trees из таблицы и повторный vault check.
+
+Обычный push обновил [rat-engine/main](https://github.com/Sancossi/rat-engine/tree/main)
+с `7129902` до `9b3f9ab7f17fefb0121ec619d55a03e3ac117eb0` перед этой документальной
+closure. [Stride/main](https://github.com/Sancossi/stride/tree/main) создан на
+`88301e861149c48c8b408aac3030b190332d7f97`; через GitHub API выставлен default main.
+API и `git ls-remote --symref origin HEAD refs/heads/main` подтвердили main и
+соответствующий точный SHA в обоих репозиториях. Fork master по-прежнему
+`8781609b6a2b8fe61397a7baa7a4aaa79ec24e91`. Force push, переписывание upstream,
+обновление engine pin или принятие новых upstream-коммитов не выполнялись.
+
+После сборки parent снова открыл исходный проект штатным MCP launcher:
+`C:/5_gamedev/rat-engine/build/stride-mcp/sessions/20260909-115129-222/connection.json`,
+PID40632, ready. SHA256 всех 24 сохранённых WIP файлов совпали с исходным снимком
+`build/mcp-parent-client/original-wip-before-merge.json`. Editor readiness не
+объявляется новой GUI/gameplay квалификацией. Оставшиеся A1/P1 acceptance не меняются.
