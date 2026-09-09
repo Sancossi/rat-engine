@@ -1,10 +1,10 @@
 ---
 type: task
 area: Game
-status: In review
+status: In progress
 task_type: Feature
 sprint: Sprint 19
-review: In review
+review: Needs fixes
 due:
 tags: [task, expedition, stride, authoring]
 ---
@@ -32,6 +32,8 @@ Origin: [[design-stride-editor-asset-workflow]]; [[expedition-prototype-traversa
 Follow-up: [[expedition-prototype-interactions]]; [[feat-expedition-character-sprites]]; [[expedition-vertical-slice]]; [[feat-stride-editor-mcp]].
 
 ## Resolution
+
+Независимое review основы creation (`6871672` / Stride `fddf82aa`) — Needs fixes, один P2: CompleteTransaction(parent) снимает poisoned child через Pop до проверки identity, после чего Core stack снова допускает записи. Native Save/MCP остаются заблокированы отдельным HasFailedTransaction; обход этих guards не утверждается. Исправить проверку Peek до изменения стека и добавить regression failed child → parent Dispose → дальнейшие записи запрещены. Остальные cleanup/qualification границы не получили блокеров. Main не изменены; после исправления нужны повторное review и Release.
 
 Основа отмены native creation передана на независимое review: проект `6871672`, Stride `fddf82aa16f547b037a246bcf5cf518a35ccdeee`. [Аудит](../../../docs/audits/2026-09-09-stride-native-creation-abort.md): 656 Core.Design tests, native три rollback сценария с сохранением graph/disk/dirty/Undo/Redo, subsequent create/Undo/Redo/Save/fresh reopen по тому же ID, отказ Save/MCP после failed rollback. Resource regression — 101 calls / 16 tools / 13 ожидаемых отказов / 0 captures; прежние session/readiness gates PASS. Полный Release выполняется. Это отдельная зависимость import API; следующие пять MCP команд и runtime библиотека пока не включены, main остаются на принятом предыдущем milestone.
 
