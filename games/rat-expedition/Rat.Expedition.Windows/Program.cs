@@ -32,11 +32,13 @@ namespace Rat.Expedition.Windows
         }
     }
 
-    public sealed record GameOptions(int Width, int Height, int SmokeFrames, string EvidenceDirectory, string ContentDirectory)
+    public sealed record GameOptions(int Width, int Height, int SmokeFrames, string EvidenceDirectory, string ContentDirectory, float CameraSize, string SmokeRoute)
     {
         public static GameOptions Parse(string[] args)
         {
             int width = 1280, height = 720, frames = 0;
+            float cameraSize = 5f;
+            string route = "walls";
             string evidence = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "RatExpedition", "logs");
             string content = Path.Combine(AppContext.BaseDirectory, "Content");
             for (int i = 0; i < args.Length; i++)
@@ -50,12 +52,16 @@ namespace Rat.Expedition.Windows
                     case "--smoke-frames": frames = int.Parse(value); break;
                     case "--evidence-dir": evidence = Path.GetFullPath(value); break;
                     case "--content-dir": content = Path.GetFullPath(value); break;
+                    case "--camera-size": cameraSize = float.Parse(value, System.Globalization.CultureInfo.InvariantCulture); break;
+                    case "--smoke-route": route = value; break;
                     default: throw new ArgumentException($"Unknown argument {key}");
                 }
             }
             if (width < 640 || height < 360 || width > 3840 || height > 2160 || frames < 0 || (frames > 0 && frames < 60) || frames > 3600)
                 throw new ArgumentException("Window must be 640x360..3840x2160; smoke frames 0 or 60..3600.");
-            return new(width, height, frames, evidence, content);
+            if (!float.IsFinite(cameraSize) || cameraSize < 4.5f || cameraSize > 7 || (route != "walls" && route != "edges" && route != "zoom"))
+                throw new ArgumentException("Camera size must be 4.5..7; smoke route walls, edges or zoom.");
+            return new(width, height, frames, evidence, content, cameraSize, route);
         }
     }
 }

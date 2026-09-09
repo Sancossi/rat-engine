@@ -48,7 +48,31 @@ try {
         foreach ($frame in @('frame-0030.png', 'frame-0180.png', 'frame-0360.png')) {
             if (-not (Test-Path -LiteralPath (Join-Path $root "$name/$frame"))) { throw "$name missing $frame" }
         }
+        foreach ($sample in $run.cameraSamples) {
+            if ($sample.quadLeft -lt 0 -or $sample.quadRight -gt 1 -or $sample.quadTop -lt 0 -or $sample.quadBottom -gt 1 -or $sample.spriteHeightFraction -lt .12) {
+                throw "$name hero framing is outside the screen or too small."
+            }
+        }
     }
+    foreach ($size in @('4.5', '7')) {
+        $name = "camera-edges-$size"
+        $results += Invoke-GameScenario $name @('--camera-size', $size, '--smoke-route', 'edges', '--smoke-frames', '1440') $true
+        $run = Get-Content -LiteralPath (Join-Path $root "$name/run.json") -Raw | ConvertFrom-Json
+        if ($run.camera.size -ne [double]::Parse($size, [Globalization.CultureInfo]::InvariantCulture) -or $run.cameraSamples.Count -lt 40) { throw "$name missing camera evidence." }
+        foreach ($sample in $run.cameraSamples) {
+            if ($sample.quadLeft -lt 0 -or $sample.quadRight -gt 1 -or $sample.quadTop -lt 0 -or $sample.quadBottom -gt 1) { throw "$name hero left screen at frame $($sample.frame)." }
+        }
+        $x = $run.cameraSamples | Measure-Object worldX -Minimum -Maximum
+        $z = $run.cameraSamples | Measure-Object worldZ -Minimum -Maximum
+        if ($x.Minimum -gt -7.2 -or $x.Maximum -lt 7.7 -or $z.Minimum -gt -5.2 -or $z.Maximum -lt 5.7) { throw "$name did not reach all map edges." }
+    }
+    $results += Invoke-GameScenario 'camera-wheel' @('--smoke-route', 'zoom') $true
+    $wheelRun = Get-Content -LiteralPath (Join-Path $root 'camera-wheel/run.json') -Raw | ConvertFrom-Json
+    foreach ($expected in @(@(60,4.5), @(120,7), @(150,7), @(180,4.5), @(240,7), @(300,5))) {
+        $sample = @($wheelRun.cameraSamples | Where-Object frame -eq $expected[0])
+        if ($sample.Count -ne 1 -or $sample[0].size -ne $expected[1]) { throw "Wheel clamp/discard failed at frame $($expected[0])." }
+    }
+    if ($wheelRun.focusZoomProbePassed -ne $true) { throw 'Focus regain accepted a stale wheel delta.' }
     foreach ($failure in @('missing-png', 'corrupt-png', 'missing-json', 'malformed-json', 'missing-coordinate-json')) {
         $content = Join-Path $root "$failure-content"
         Copy-Item -LiteralPath (Join-Path $app 'Content') -Destination $content -Recurse

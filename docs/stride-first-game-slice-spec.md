@@ -21,6 +21,12 @@
 
 Native-resolution rendering допустим для этого среза; масштаб/640×360/движение без мерцания остаются A7 проверками полного P1. Не объявлять всю карточку P1 завершённой. Evidence — `docs/audits/2026-09-09-stride-first-game-slice.md`; тяжёлые artifacts под `build/stride-game/`. Независимый reviewer проверяет Core/loader/package paths и отличает реальные кадры от headless evidence.
 
+## P1.1a — крупность полевой камеры
+
+По замечанию пользователя камера приближается с OrthographicSize 14 до 5.0 и следует за героем с прежними yaw/pitch. Первый preview 5.5 дал около 80 px видимого героя при 720p; выбран 5.0 с примерно 90 px (12.5%) для более крупной полевой подачи. Aim — герой + (0, .6, 0), XZ ограничены floor bounds с inset до 1.5 units (для маленького пола адаптивно). Колесо мыши меняет размер в пределах 4.5–7, без вращения; первый ввод после восстановления фокуса отбрасывается. `--camera-size` задаёт воспроизводимый масштаб диагностики.
+
+Upright sprite сохраняет ширину .533 и depth; scaleY = 1/cos(pitch) компенсирует проекционное сокращение вертикали. Цель — видимый герой около 12–14% высоты кадра при default размере с исходными пропорциями PNG. Геометрия, motor и контент не меняются. Проверки: реальный GPU default 720/1080, min/max zoom, движение к краям и углам с проекционными bounds героя, перед/за стеной; существующие Core/load-failure проверки и ZIP сохраняются. Это только P1.1a; A7 полного P1 и новые механики не закрываются. Evidence: [camera framing](audits/2026-09-09-stride-camera-framing.md).
+
 ## Suggested Review Order
 
 1. [Вход приложения и ошибки](../games/rat-expedition/Rat.Expedition.Windows/Program.cs), [загрузка и валидация сцены](../games/rat-expedition/Rat.Expedition.Core/SceneDefinition.cs), [движение](../games/rat-expedition/Rat.Expedition.Core/TraversalMotor.cs).
