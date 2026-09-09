@@ -19,7 +19,7 @@ async def main():
         async with Client(StdioServerParameters(command=args.server, args=['--connection', args.connection]), read_timeout_seconds=20) as client:
             evidence['protocol'] = client.protocol_version
             evidence['tools'] = [tool.name for tool in (await client.list_tools()).tools]
-            assert len(evidence['tools']) == 16
+            assert len(evidence['tools']) == 19
             async def call(name, arguments=None, error=False):
                 response = await client.call_tool(name, arguments or {})
                 value = json.loads(next(c.text for c in response.content if c.type == 'text'))

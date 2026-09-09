@@ -12,8 +12,8 @@
 `verify-creation-failure.ps1` проверяет native owned abort/creation cleanup,
 сохранность Undo/Redo/dirty/disk, ошибки конструктора и подписчика, затем Save и
 новый запуск с тем же asset ID. Неудачный rollback блокирует native Save и MCP
-изменения; status показывает `HasFailedTransaction` и busy. Набор остаётся **16 tools**:
-import/reimport, rename/delete и prefab placement ещё не опубликованы этим срезом.
+изменения; status показывает `HasFailedTransaction` и busy. Этот принятый milestone
+содержал 16 tools; следующий срез добавляет три asset actions (ниже), всего **19 tools**.
 Подробности: [creation abort audit](../../docs/audits/2026-09-09-stride-native-creation-abort.md).
 
 Из корня checkout:
@@ -78,7 +78,7 @@ Open/Save возвращают operation ID. `editor_operation` различае
 чтение результата → `save_session` и проверка operation. Управление использует
 структурированные данные, без фотографий viewport, мыши и клавиатуры. Capture
 нужен только при отдельной проверке визуального результата или работающего render.
-Всего доступны 16 команд: прежние 12 и четыре ограниченные команды ресурсов.
+Всего доступны 19 команд: прежние 12, четыре команды свойств ресурсов и три asset actions.
 `asset_list` перечисляет поддержанные editable assets выбранного проекта;
 `asset_inspect` возвращает native IDs, поля, зависимости и ссылки.
 `asset_set_property` изменяет только allowlist: параметры texture/model/sound,
@@ -91,9 +91,25 @@ Sprite/material элементы адресуются прочитанным `it
 UI/entity/component — собственными GUID. `packageKey` — относительный путь package
 в выбранной session: у native package нет отдельного сериализуемого GUID.
 Внешние packages, asset paths вне корня проекта и пути через reparse points не
-доступны для этих команд. Import/reimport, rename/delete, prefab placement и
+доступны для этих команд. Import/reimport и
 произвольный material/UI graph через MCP пока не реализованы. Реальный native
 reimport ниже проверяет защиту движка, а не наличие новой MCP-команды.
+
+`asset_rename(assetId, name, expectedRevision)` меняет имя native resource через
+native reference analysis и Undo. Разрешён один сегмент из 1–80 букв/цифр, пробелов,
+`_` и `-`; reserved Windows names, коллизии и изменение внешних ссылок отвергаются.
+`asset_delete(assetId, expectedRevision)` удаляет только unreferenced resource:
+обычные ссылки, Archetype и prefab base-part references дают отказ с dependent IDs.
+Native deletion не открывает modal dialogs и не очищает ссылки принудительно;
+одна session Undo восстанавливает asset, Redo снова удаляет.
+
+`prefab_place(sceneId, prefabId, position, expectedRevision)` принимает Scene и
+Prefab одного editable package. `position` с точными `X/Y/Z` — **смещение каждого
+исходного root position**, не абсолютная позиция. Проверяются конечность суммы,
+целостность дерева, ссылки и циклы; размер ограничен 256 parts и 16 roots.
+Native `CreatePrefabInstance(prefab.Url)` remap-ит entity/component IDs и сохраняет
+base-part/instance links. Native hierarchy graph и property override применяют
+результат в одной Undo transaction. Source C# и GameSettings не входят в allowlist.
 
 ## Воспроизводимость и проверки
 
@@ -118,6 +134,14 @@ timestamp descriptor собственного запуска; после зак�
 и sources в папке evidence. Исходные fixture folders должны отсутствовать до запуска.
 Это API/lifecycle qualification; импорт mesh настоящим backend, звук и визуальная
 библиотека A1.3 ещё требуют отдельной приёмки.
+
+`scripts/stride/verify-asset-actions.ps1 -McpPython <venv>/Scripts/python.exe`
+проверяет три asset actions через настоящий 19-tool MCP discovery, два экземпляра,
+shared model/material и отдельный local override, ссылки rename/delete, Undo/Redo,
+Save и новый editor process с теми же native IDs. URL сверяются с inspected target
+в каждой session; сравнение сохранённых данных учитывает native package prefixes.
+Runner сохраняет собственные fixtures в evidence, закрывает только свой Process,
+не использует captures или имитацию ввода. [Audit](../../docs/audits/2026-09-09-stride-native-asset-actions.md).
 
 `verify-resource-api.ps1 -FailedReadiness` отдельно проверяет отказ запуска: opt-in
 hook задерживает host Main, launcher достигает deadline, закрывает только свой

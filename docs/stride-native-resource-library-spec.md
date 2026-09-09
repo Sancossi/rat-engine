@@ -11,6 +11,11 @@ authoring 15, executable 36. Статусы остаются в vault. Этот 
 lifecycle. Остальные команды и runtime library ниже остаются последующими частями
 этого контракта; наличие source anchors не означает их реализации.
 
+Следующий ограниченный срез реализует три команды rename/delete/prefab placement;
+[API evidence и границы](audits/2026-09-09-stride-native-asset-actions.md).
+Import/reimport MCP и runtime library остаются дальнейшей работой; review и статус
+приёмки текущего среза ведутся в карточке A1.
+
 ## Результат и сохраняемые границы
 
 По одному собственному примеру prefab, imported mesh, texture/material, sprite

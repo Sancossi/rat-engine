@@ -44,4 +44,10 @@ public sealed class EditorTools(BridgeClient bridge)
     [McpServerTool(Name="asset_set_reference"), Description("Assign an existing same-package asset to an allowlisted typed native Model/Material/UI Page/Font reference. No arbitrary member paths. Optional entity/component, itemIndex or elementId addresses the inspected owner.")]
     public Task<CallToolResult> AssetReference(string assetId,string property,string targetAssetId,long expectedRevision,CancellationToken cancellationToken,string? entityId=null,string? componentId=null,int? itemIndex=null,string? elementId=null)
         =>bridge.Call("asset_reference",new {assetId,property,targetAssetId,expectedRevision,entityId,componentId,itemIndex,elementId},cancellationToken);
+    [McpServerTool(Name="asset_rename"), Description("Rename a same-project native asset through Undo and native reference analysis. One safe name segment, no move; rejects collisions and stale revision.")]
+    public Task<CallToolResult> RenameAsset(string assetId,string name,long expectedRevision,CancellationToken cancellationToken)=>bridge.Call("asset_rename",new{assetId,name,expectedRevision},cancellationToken);
+    [McpServerTool(Name="asset_delete"), Description("Delete one unreferenced editable asset using native session Undo. Referenced assets are rejected with dependent IDs; no forced reference clearing or modal dialogs.")]
+    public Task<CallToolResult> DeleteAsset(string assetId,long expectedRevision,CancellationToken cancellationToken)=>bridge.Call("asset_delete",new{assetId,expectedRevision},cancellationToken);
+    [McpServerTool(Name="prefab_place"), Description("Place a native prefab instance in an explicit same-package scene. Position is a finite offset added to every original root position. Preserves native base-part links and remaps identities. Undo is session-wide.")]
+    public Task<CallToolResult> PlacePrefab(string sceneId,string prefabId,JsonElement position,long expectedRevision,CancellationToken cancellationToken)=>bridge.Call("prefab_place",new{sceneId,prefabId,position,expectedRevision},cancellationToken);
 }

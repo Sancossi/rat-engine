@@ -84,15 +84,17 @@ internal sealed partial class EditorBridge
         references=References(asset),
         sprites=asset.Asset is SpriteSheetAsset sheet?sheet.Sprites.Select((s,i)=>new {itemIndex=i,s.Name,s.TextureRegion,s.Center,s.CenterFromMiddle,s.PixelsPerUnit}).ToArray():null,
         ui=asset.Asset is UIPageAsset page?page.Hierarchy.Parts.Values.Select(p=>new {id=p.UIElement.Id,type=p.UIElement.GetType().Name,text=(p.UIElement as TextBlock)?.Text}).ToArray():null,
-        entities=asset.Asset is EntityHierarchyAssetBase hierarchy?hierarchy.Hierarchy.Parts.Values.Select(p=>Describe(p.Entity)).ToArray():null};
+        entities=asset.Asset is EntityHierarchyAssetBase hierarchy?hierarchy.Hierarchy.Parts.Values.Select(p=>Describe(p.Entity)).ToArray():null,
+        parts=asset.Asset is EntityHierarchyAssetBase parts?parts.Hierarchy.Parts.Values.Select(p=>new{entityId=p.Entity.Id,parentId=p.Entity.Transform.Parent?.Entity.Id,baseAssetId=p.Base?.BasePartAsset.Id.ToString(),baseUrl=p.Base?.BasePartAsset.Location,basePartId=p.Base?.BasePartId,instanceId=p.Base?.InstanceId}).ToArray():null};
     private static object[] References(AssetViewModel asset)
     {
         var result=new List<object>();
         string? Id(object? value)=>value is null?null:AttachedReferenceManager.GetAttachedReference(value)?.Id.ToString();
-        if(asset.Asset is ModelAsset model)result.AddRange(model.Materials.Select((m,i)=>(object)new{property="Material",itemIndex=i,targetAssetId=Id(m.MaterialInstance?.Material)}));
+        string? Url(object? value)=>value is null?null:AttachedReferenceManager.GetAttachedReference(value)?.Url;
+        if(asset.Asset is ModelAsset model)result.AddRange(model.Materials.Select((m,i)=>(object)new{property="Material",itemIndex=i,targetAssetId=Id(m.MaterialInstance?.Material),targetUrl=Url(m.MaterialInstance?.Material)}));
         if(asset.Asset is EntityHierarchyAssetBase hierarchy)
             foreach(var e in hierarchy.Hierarchy.Parts.Values.Select(p=>p.Entity))foreach(var c in e.Components)
-                if(c is ModelComponent mc)result.Add(new{entityId=e.Id,componentId=c.Id,property="Model",targetAssetId=Id(mc.Model)});
+                if(c is ModelComponent mc)result.Add(new{entityId=e.Id,componentId=c.Id,property="Model",targetAssetId=Id(mc.Model),targetUrl=Url(mc.Model)});
                 else if(c is UIComponent ui)result.Add(new{entityId=e.Id,componentId=c.Id,property="Page",targetAssetId=Id(ui.Page)});
         if(asset.Asset is UIPageAsset page)result.AddRange(page.Hierarchy.Parts.Values.Where(p=>p.UIElement is TextBlock).Select(p=>(object)new{elementId=p.UIElement.Id,property="Font",targetAssetId=Id(((TextBlock)p.UIElement).Font)}));
         return result.ToArray();

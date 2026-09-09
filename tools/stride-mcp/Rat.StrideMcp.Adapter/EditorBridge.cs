@@ -153,7 +153,8 @@ internal sealed partial class EditorBridge
             errorsAndWarnings=problems.TakeLast(100).Select(m=>new {level=m.Type.ToString(),text=m.ToString()}).ToArray(),
             recentAssetLog=messages.TakeLast(20).Select(m=>new {level=m.Type.ToString(),text=m.ToString()}).ToArray(),
             capabilities=new[]{"native-scene-inspect","quantum-properties","session-undo-redo-save","viewport-backbuffer","local-resource-catalog","allowlisted-resource-fields","typed-native-references"},
-            unsupportedResourceOperations=new[]{"import","reimport","rename","delete","prefab-placement"},captureFallback="none",historyScope="entire session"};
+            supportedResourceActions=new[]{"rename-safe-name","delete-unreferenced","prefab-place-position-offset"},
+            unsupportedResourceOperations=new[]{"import","reimport"},captureFallback="none",historyScope="entire session"};
     }
     private async Task<JsonObject> Execute(JsonObject request,CancellationToken cancellation)
     {
@@ -187,6 +188,9 @@ internal sealed partial class EditorBridge
             case "asset_inspect":data=InspectAsset(OwnedAsset(args));break;
             case "asset_set":Guard(args,cancellation);data=SetAssetField(OwnedAsset(args),args);break;
             case "asset_reference":Guard(args,cancellation);data=SetAssetReference(OwnedAsset(args),args);break;
+            case "asset_rename":Guard(args,cancellation);data=RenameNativeAsset(OwnedAsset(args),args["name"]!.GetValue<string>());break;
+            case "asset_delete":Guard(args,cancellation);data=await DeleteNativeAsset(OwnedAsset(args));break;
+            case "prefab_place":Guard(args,cancellation);data=PlacePrefab(OwnedAsset(args,"sceneId"),OwnedAsset(args,"prefabId"),args);break;
             default:throw new InvalidOperationException("Unsupported editor command.");
         }
         return new JsonObject{{"ok",true},{"revision",Interlocked.Read(ref revision)},{"data",JsonSerializer.SerializeToNode(data,Json)}};
