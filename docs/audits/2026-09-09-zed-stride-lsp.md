@@ -30,6 +30,18 @@ hover в `Rat.Expedition.Windows/ExpeditionGame.cs` вернул `namespace Stri
 обходя дефект загрузки отдельных `csproj`. Игровой код, зависимости и установленный
 сервер не изменяются.
 
+## Проверка обхода
+
+Повторный запуск того же LSP с `--stdio --autoLoadProjects`, без `project/open`,
+обнаружил единственное `Rat.Expedition.slnx`, загрузил все три проекта за 1,38 секунды
+и отправил `workspace/projectInitializationComplete`. Hover вернул `namespace Stride`;
+`textDocument/diagnostic` вернул только `CA1869` severity 3, без CS0246 и severity 1.
+Контрольный запуск для `stride-projects/test/test/test.slnx` загрузил два проекта,
+вернул hover Stride и пустую диагностику `BasicCameraController.cs`.
+
+Локальные диагностические артефакты: `%TEMP%/zed-stride-lsp-check.py` и
+`%TEMP%/zed-stride-lsp-fixed.log`; временные файлы не входят в репозиторий.
+
 ## Границы проверки
 
 `dotnet sln Rat.Expedition.slnx list` успешно перечислил три ожидаемых проекта;
@@ -37,5 +49,4 @@ hover в `Rat.Expedition.Windows/ExpeditionGame.cs` вернул `namespace Stri
 
 Прямые LSP-запросы проверяют работу сервера, но не подтверждают обновление
 диагностики в уже открытом окне Zed. Для такого окна требуется перезапустить
-language server из C# файла. Проверка автоматической загрузки решения и итоговые
-результаты фиксируются отдельно после появления файла решения.
+language server из C# файла. Полная GUI-проверка подсказок и игровых сцен не заявляется.
