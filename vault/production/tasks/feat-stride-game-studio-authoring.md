@@ -1,7 +1,7 @@
 ---
 type: task
 area: Game
-status: In progress
+status: Blocked
 task_type: Feature
 sprint: Sprint 19
 review: Pending
@@ -27,9 +27,11 @@ Acceptance:
 - Сохранены FSM, полный P1, камера/feet Y/depth; адаптированы регрессии и инструкции. Независимое ревью и Release Game Studio сопровождаются точными доказательствами и границами GUI/изолированной проверки.
 
 Origin: [[design-stride-editor-asset-workflow]]; [[expedition-prototype-traversal]].
-Follow-up: [[expedition-prototype-interactions]]; [[feat-expedition-character-sprites]]; [[expedition-vertical-slice]].
+Follow-up: [[expedition-prototype-interactions]]; [[feat-expedition-character-sprites]]; [[expedition-vertical-slice]]; [[feat-stride-editor-mcp]].
 
 ## Resolution
+
+Обновление 2026-09-09: пользователь явно поручил [[feat-stride-editor-mcp]] для управления через API. A1.2 ожидает этот мост; его незакоммиченная реализация сохранена в основной рабочей копии. Пройдены Core 63, adapter 14, native build и layered GPU route, parent сравнил обе карты с прежними данными (146 численных полей, max delta 2e-7). Не завершены GUI/API wall edit/save/reopen/collision, адаптация verifier 33, итоговая упаковка и независимое ревью A1.2. Это не отмена A1 и не закрытие P1.
 
 Начато 2026-09-09 по явному разрешению пользователя. Порядок: A1.1 native project/compiler/GUI квалификация → A1.2 карты/Core → A1.3 библиотека ресурсов → A1.4 единый запуск/ZIP/общая приёмка. Один исполнитель, независимое read-only ревью каждого среза. Оставшийся ручной P1 перенесён на позже; его статус не закрывается автоматически.
 
