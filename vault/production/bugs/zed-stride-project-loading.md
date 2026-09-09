@@ -1,8 +1,8 @@
 ---
 type: bug
 area: Engine
-status: Investigating
-review: In review
+status: Fixed
+review: Approved
 severity: Medium
 sprint:
 tags: [bug, stride, tooling]
@@ -36,8 +36,15 @@ CLI и design-time MSBuild разрешают ссылки, а автомати�
 
 ## Resolution
 
-В работе.
+Добавлено единое `Rat.Expedition.slnx`; Roslyn автоматически загружает три проекта
+через решение. Коммиты реализации и проверки: `6fc3dd5`, `60fdc55`.
+Прямые LSP-запросы без `project/open` вернули hover `namespace Stride` и диагностику
+без CS0246/severity 1. Контрольный тестовый проект также разрешает Stride без ошибок.
+`dotnet sln list`, vault checker и diff check прошли; независимое read-only ревью
+Approved без замечаний. [Причина и доказательства](../../../docs/audits/2026-09-09-zed-stride-lsp.md).
+После перезапуска C#-сервера журнал Zed подтвердил завершение инициализации проектов.
 
 ## Bugs found
 
-Дефект времени жизни pooled ArrayBuilder в AutoLoadProjectsInitializer Roslyn; исправление upstream не входит в локальный обход.
+Новых дефектов локального обхода: none. Дефект upstream Roslyn обойдён загрузкой решения;
+изменение исходников установленного language server не выполнялось.

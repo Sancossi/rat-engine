@@ -42,6 +42,13 @@ hover в `Rat.Expedition.Windows/ExpeditionGame.cs` вернул `namespace Stri
 Локальные диагностические артефакты: `%TEMP%/zed-stride-lsp-check.py` и
 `%TEMP%/zed-stride-lsp-fixed.log`; временные файлы не входят в репозиторий.
 
+После перезапуска C#-серверов через временное отключение и восстановление их выбора
+в настройках Zed журнал `%LOCALAPPDATA%/Zed/logs/Zed.log` за
+2026-09-09 04:23:27–04:23:30 +03:00 подтвердил запуск Roslyn в папках обоих проектов
+и `workspace/projectInitializationComplete`. Итоговые настройки серверов сохранены.
+Независимое read-only ревью одобрило решение, README, соответствие карточке
+и протокольные доказательства; замечаний нет.
+
 ## Границы проверки
 
 `dotnet sln Rat.Expedition.slnx list` успешно перечислил три ожидаемых проекта;
