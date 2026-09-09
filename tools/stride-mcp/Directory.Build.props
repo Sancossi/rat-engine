@@ -1,0 +1,9 @@
+<Project>
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+    <StrideBin Condition="'$(StrideBin)' == ''">C:/5_gamedev/stride/sources/editor/Stride.GameStudio/bin/Release/net10.0-windows</StrideBin>
+  </PropertyGroup>
+</Project>

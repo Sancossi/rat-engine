@@ -1,0 +1,60 @@
+!SceneAsset
+Id: dae5083e-082b-548c-af6c-ee837f0f53ea
+SerializedVersion: {Stride: 3.1.0.1}
+Tags: []
+ChildrenIds: []
+Offset: {X: 0.0, Y: 0.0, Z: 0.0}
+Hierarchy:
+    RootParts:
+        - ref!! 21385b7f-122b-5862-8856-6feb8c5be52f
+        - ref!! d59279ab-b690-5dcc-8b1f-731cb66626dc
+        - ref!! 6c6fbf6a-111c-5631-bb22-ff2d79c89cda
+    Parts:
+        -   Entity:
+                Id: 21385b7f-122b-5862-8856-6feb8c5be52f
+                Name: Other qualification box
+                Components:
+                    65bce121b0c7453c8cfc4f5c6f831ceb: !TransformComponent
+                        Id: 3390259c-bc99-5865-aa13-6812550fb7c2
+                        Position: {X: 0.0, Y: 0.0, Z: 0.0}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
+                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
+                        Children: {}
+                    07b7a4a1277c4fbbab6b14b8f3fb62c0: !ModelComponent
+                        Id: ef0adeff-b27d-5000-a08b-b65652c0eaad
+                        Model: 50f3e840-0dc0-4617-8d30-37a872aac71e:QualificationBox
+                        Materials: {}
+                    b48694bd2b9c4a8d89fd3bd3b32a2a70: !ExpeditionIdentity
+                        Id: d62515fa-2bef-57d8-b509-a6c6a20f4e78
+                        GameId: qualification-box
+                        DisplayLabel: Second scene untouched
+        -   Entity:
+                Id: 6c6fbf6a-111c-5631-bb22-ff2d79c89cda
+                Name: Ambient light
+                Components:
+                    3c72436672284cfc8d25e68e71b14b76: !TransformComponent
+                        Id: 80f34412-e42c-5052-8d08-bc48f8b3ea1b
+                        Position: {X: 0.0, Y: 2.0, Z: 0.0}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
+                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
+                        Children: {}
+                    b9f291770d4845369c9d18843e377930: !LightComponent
+                        Id: 048e2b2f-b8a0-5706-ad47-374cc18dd696
+                        Type: !LightAmbient
+                            Color: !ColorRgbProvider
+                                Value: {R: 1.0, G: 1.0, B: 1.0}
+        -   Entity:
+                Id: d59279ab-b690-5dcc-8b1f-731cb66626dc
+                Name: Camera
+                Components:
+                    5be6cab497ef46d6a3916683687187f7: !TransformComponent
+                        Id: de81d008-03cc-5de7-a14d-74b7a9d11c30
+                        Position: {X: 0.0, Y: 0.0, Z: 5.0}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
+                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
+                        Children: {}
+                    1814a186c1614e8b977adcb59094b5cf: !CameraComponent
+                        Id: f5b9ab60-69a9-5b17-b94e-4d84a665160c
+                        Name: null
+                        Projection: Perspective
+                        Slot: bbfef2cb-8c63-4cab-9caf-6ae48f44a8ba

@@ -1,5 +1,15 @@
 # Первый MCP срез для Game Studio
 
+Реализация: [запуск и API](../tools/stride-mcp/README.md), [квалификация](audits/2026-09-09-stride-editor-mcp.md). Статусы остаются только в карточке. Дальнейший A1.2 wall test здесь не засчитывается.
+
+## Suggested Review Order
+
+1. [Startup hook](../tools/stride-mcp/Rat.StrideMcp.Hook/StartupHook.cs), [native plugin/pipe](../tools/stride-mcp/Rat.StrideMcp.Adapter/Bootstrap.cs).
+2. [Quantum/revision/operations/capture](../tools/stride-mcp/Rat.StrideMcp.Adapter/EditorBridge.cs), [UI cancellation boundary](../tools/stride-mcp/UiRequestQueue.cs).
+3. [MCP tools](../tools/stride-mcp/Rat.StrideMcp.Server/EditorTools.cs), [process-checked client](../tools/stride-mcp/Rat.StrideMcp.Server/BridgeClient.cs).
+4. [Live editor checks](../tools/stride-mcp/verify_live.py), [transport checks](../tools/stride-mcp/verify_transport.py), [dispatcher regression](../tools/stride-mcp/Rat.StrideMcp.Tests/Program.cs).
+5. [Build](../scripts/stride/build-mcp.ps1), [owned launch/preflight](../scripts/stride/start-mcp-editor.ps1), [exact package-cohort recovery](../scripts/stride/restore-authoring-cohort.ps1).
+
 Основание: пользователь 2026-09-09 попросил заменить координатный ввод управлением через API, затем явно разрешил реализацию. [Карточка](../vault/production/tasks/feat-stride-editor-mcp.md) — источник статуса. [Предварительное исследование](stride-mcp-integration-research.md) сохраняется; этот документ задаёт текущий узкий срез.
 
 ## Граница

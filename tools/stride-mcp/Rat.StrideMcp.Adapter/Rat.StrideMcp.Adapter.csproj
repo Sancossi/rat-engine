@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><TargetFramework>net10.0-windows</TargetFramework><UseWPF>true</UseWPF></PropertyGroup>
+  <ItemGroup>
+    <Reference Include="$(StrideBin)/Stride.Core.dll;$(StrideBin)/Stride.Core.Serialization.dll;$(StrideBin)/Stride.Foundation.dll;$(StrideBin)/Stride.Core.Mathematics.dll;$(StrideBin)/Stride.Core.Design.dll;$(StrideBin)/Stride.Core.Assets.dll;$(StrideBin)/Stride.Core.Assets.Quantum.dll;$(StrideBin)/Stride.Core.Quantum.dll;$(StrideBin)/Stride.Core.Presentation.dll;$(StrideBin)/Stride.Core.Presentation.Wpf.dll;$(StrideBin)/Stride.Core.Assets.Editor.dll;$(StrideBin)/Stride.Assets.dll;$(StrideBin)/Stride.Assets.Presentation.dll;$(StrideBin)/Stride.Engine.dll;$(StrideBin)/Direct3D11/Stride.Graphics.dll;$(StrideBin)/Stride.Rendering.dll;$(StrideBin)/Direct3D11/Stride.Games.dll;$(StrideBin)/Stride.Editor.dll;$(StrideBin)/Stride.Core.MicroThreading.dll"><Private>false</Private></Reference>
+    <Compile Include="../Wire.cs" Link="Wire.cs" />
+    <Compile Include="../UiRequestQueue.cs" Link="UiRequestQueue.cs" />
+  </ItemGroup>
+</Project>

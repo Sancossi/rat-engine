@@ -29,3 +29,4 @@ vault/.obsidian/plugins/dataview/
 /.agents/skills/gds-*/
 /tools/bmad/node_modules/
 /docs/bmad/generated/
+/.codex/config.toml

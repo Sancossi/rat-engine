@@ -42,7 +42,7 @@ Hierarchy:
                     b48694bd2b9c4a8d89fd3bd3b32a2a70: !ExpeditionIdentity
                         Id: 16336072-69ae-42c4-bd1b-fe219a8d52bb
                         GameId: qualification-box
-                        DisplayLabel: Edited in Game Studio
+                        DisplayLabel: 'Edited through MCP: qualified'
         -   Entity:
                 Id: e48e9869-1d37-41a7-ae36-c1a76dfc0ce4
                 Name: Ambient light

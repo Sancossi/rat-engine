@@ -1,0 +1,67 @@
+# Game Studio MCP
+
+Локальный stdio MCP server управляет отдельно запущенным Game Studio через нативный asset Quantum graph. Требуются Windows, .NET 10 и собранный locked Stride `e2c786a45f69917bf233793f6a097b150e2fe264`. Редактирование не использует мышь, клавиатуру или замену файлов сцены.
+
+## Запуск
+
+Из корня checkout:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/stride/build-mcp.ps1
+powershell -ExecutionPolicy Bypass -File scripts/stride/start-mcp-editor.ps1
+```
+
+Второй скрипт сначала выполняет locked Debug build native solution и только при успехе открывает собственный редактор. `-SolutionPath` задаёт другой native solution; по умолчанию используется A1.1 qualification project этого checkout. Существующие окна не подключаются автоматически. Hook включён только для нового процесса и удаляет свои переменные окружения до запуска compiler/game children. Никаких DLL в каталог движка не устанавливается.
+
+После readiness выбранное подключение находится в `build/stride-mcp/connection.json`; timestamp-копия сохраняется в `build/stride-mcp/sessions/`. Server читает descriptor один раз при старте. Перезапуск редактора требует перезапуска MCP server: старый клиент не переключается на новую сессию незаметно.
+
+Команда stdio для любого MCP host:
+
+```text
+<checkout>/build/stride-mcp/server/Rat.StrideMcp.Server.exe --connection <checkout>/build/stride-mcp/connection.json
+```
+
+Логи идут в stderr; stdout содержит протокол. Официальный C# SDK `2.2.0` согласует версию протокола. Проверены Python SDK `2.2.0` с `2026-07-28` discovery и legacy initialize `2025-11-25`. Подключение Codex выполняется отдельно конфигурацией проекта; изменение config не обновляет набор инструментов уже работающего чата.
+
+Пример локального `.codex/config.toml` (заменить `<checkout>` абсолютным путём; файл исключён из Git):
+
+```toml
+[mcp_servers.stride_editor]
+command = "<checkout>/build/stride-mcp/server/Rat.StrideMcp.Server.exe"
+args = ["--connection", "<checkout>/build/stride-mcp/connection.json"]
+cwd = "<checkout>"
+startup_timeout_sec = 20
+tool_timeout_sec = 30
+```
+
+Для вызовов в текущей сессии имеется настоящий MCP CLI `client.py`. Установить `mcp==2.2.0` в отдельный venv, затем:
+
+```powershell
+python tools/stride-mcp/client.py --server <absolute-server.exe> --connection <absolute-connection.json> --tool editor_status --output build/mcp/status.json
+```
+
+Без `--tool` CLI запрашивает tools/list. Аргументы сложного вызова передаются через `--arguments-file args.json`, чтобы PowerShell не изменил кавычки. Capture сохраняет ImageContent в отдельный PNG рядом с JSON.
+
+## Контракт команд
+
+`editor_status` возвращает PID/project/session, текущую revision, dirty assets и следующие Undo/Redo transaction IDs. `scene_list`, `scene_inspect`, `scene_open`, `scene_close` всегда адресуют native scene ID. `entity_set_property` дополнительно требует native entity/component IDs, имя одного сериализуемого свойства и `expectedRevision`. Transform поддерживает Position/Rotation/Scale; custom properties — явно помеченные DataMember простые значения. Векторы требуют точные X/Y/Z, quaternion также W; неизвестные поля, неполные координаты, неизвестные enum значения и нечисловые значения отклоняются.
+
+Quantum.Update выполняется в именованной Undo transaction на WPF dispatcher. **Undo/Redo и Save имеют scope всей session**, включая другие сцены. `editor_undo`/`editor_redo` требуют expected transaction ID и revision; `save_session` требует revision. Незавершённое ручное поле нативно подтверждается перед проверкой revision, поэтому его правка вызывает конфликт. Обновления native Undo history и asset properties увеличивают revision независимо от клиента. Нужно заново прочитать состояние после конфликта, затем осознанно повторить команду.
+
+Open/Save возвращают operation ID. `editor_operation` различает running и completed/success; начавшийся native Save не отменяется. Очередь UI проверяет cancellation непосредственно перед выполнением. MCP request имеет 12-секундный предел, включая очередь сервера, pipe request — до 10 секунд; connect — 3 секунды, запись ответа — 10 секунд. Входные MCP строки и pipe requests ограничены 64 KiB, отдельное property value — 4096 символами, pipe response — 24 MiB. Уже начавшаяся короткая синхронная транзакция завершается с результатом, а не объявляется отменённой задним числом.
+
+`viewport_capture` возвращает PNG только из backbuffer указанной открытой видимой вкладки. Отрисовка скрытой вкладки может отсутствовать: команда отказывает, desktop fallback отсутствует. `editor_diagnostics` показывает отдельные error/warning counts и последние сообщения native AssetLog, а также capabilities. Это не API управления сборочными заданиями.
+
+## Воспроизводимость и проверки
+
+Полная пересборка Stride может переупаковать `4.4.0-dev` с другим SHA512 при тех же DLL. Если NU1403 останавливает preflight, не обновлять lock вслепую. `restore-authoring-cohort.ps1 -VerifiedCache <cache>` проверяет исходные nupkg всех locked Stride packages по SHA512 и восстанавливает только isolated game cache. Несовпадающие старые каталоги перемещаются в scoped `build/mcp/cache-cohort-before-*`; глобальные caches не удаляются. В этой квалификации проверенный источник — исходный checkout `C:/5_gamedev/rat-engine/games/rat-expedition/.packages`.
+
+```powershell
+dotnet run --project tools/stride-mcp/Rat.StrideMcp.Tests -c Release -p:RestoreLockedMode=true
+python tools/stride-mcp/verify_live.py --server <absolute-server.exe> --connection <absolute-connection.json> --output build/mcp/live
+powershell -ExecutionPolicy Bypass -File scripts/stride/build-authoring.ps1
+```
+
+Live verifier предназначен только для двух собственных qualification scenes. Он действительно изменяет/saves DisplayLabel и Position первой сцены, проверяет вторую, минимизирует только свой editor на время API операций и восстанавливает окно без активации. Не запускать его против пользовательских карт. UI queue regression использует реальный WPF dispatcher с искусственным блокирующим тестовым действием; этого test command нет в MCP. P1 gameplay/verifier не изменены.
+
+См. [инженерный контракт](../../docs/stride-editor-mcp-spec.md), [evidence](../../docs/audits/2026-09-09-stride-editor-mcp.md), [NOTICE](NOTICE). Оригинальные незавершённые A1.2 карты остаются в другом checkout; их интеграция следует после review этого среза.

@@ -1,0 +1,19 @@
+Rat Stride editor MCP bridge
+
+StartupHook.cs registration/assembly-load routing and the asset-side Quantum
+mutation approach in EditorBridge.cs are adapted from AkerMCP:
+https://github.com/lorenzo-cambiaghi/AkerMCP
+commit 687d9e91c696b2157060bb95715ab92e2b098ffc
+Copyright 2026 Lorenzo Cambiaghi
+Apache License, Version 2.0; full text: LICENSE-AkerMCP.
+
+Modified for this project: explicit owned process/project/session identity,
+hook environment cleanup, no arbitrary evaluation, current-user named pipe,
+strict values/revisions, awaited operations and cancellation, exact scene
+selection, native backbuffer-only capture. The full AkerMCP server and plugins
+are not included.
+
+ModelContextProtocol C# SDK 2.2.0: MIT, contributors to the Model Context Protocol
+C# SDK, https://github.com/modelcontextprotocol/csharp-sdk.
+Stride engine/editor APIs: MIT, .NET Foundation and Contributors and Silicon
+Studio Corp. See the pinned engine's LICENSE.md and THIRD PARTY.md.
