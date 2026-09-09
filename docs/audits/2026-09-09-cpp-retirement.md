@@ -73,7 +73,10 @@ upstream. Первый запуск завершился ошибкой MSB3231:
 0 ошибок, 5 предупреждений upstream NU5100 об упаковке native template assets.
 SDK 10.0.300, движок `e2c786a45f69917bf233793f6a097b150e2fe264`, версия 4.4.0-dev.
 Редактор: [Stride.GameStudio.exe](../../../stride/sources/editor/Stride.GameStudio/bin/Release/net10.0-windows/Stride.GameStudio.exe).
-Финальная пересборка после закрытия карточки записывается дополнением ниже.
+После закрытия карточки финальная пересборка прошла успешно за 58 секунд:
+[result.json](../../../stride/logs/rat-foundation/20260909-044037-377/result.json),
+0 ошибок, те же 5 предупреждений NU5100. Путь редактора и закреплённый upstream
+остались прежними.
 
 ## Независимое ревью
 
