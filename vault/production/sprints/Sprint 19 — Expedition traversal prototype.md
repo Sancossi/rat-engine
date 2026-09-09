@@ -14,6 +14,7 @@ tags: [sprint, expedition, prototype]
 1. [[research-open-engine-foundation]]: сравнить пять открытых движков и получить решение пользователя по основе проекта.
 2. [[feat-stride-source-foundation]]: подготовить закреплённую исходную копию официального Stride и проверить сборку Game Studio.
 3. [[expedition-prototype-traversal]]: после исходной основы адаптировать архитектуру и критерии P1 к Stride; исторические C++ срезы не продолжать.
+4. [[publish-editor-game-vault-snapshot]]: по отдельному запросу пользователя опубликовать общий снимок после коррекции камеры P1.1a, до продолжения P1.2.
 
 Реализация по [спецификации](../../../docs/rat-expedition-traversal-spec.md) и [архитектуре](../../../docs/rat-expedition-architecture.md), включая оба визуальных ориентира и [[rat-expedition-layered-maps]]. Другие игровые карточки и закрытые задачи старого движка не входят в спринт.
 
