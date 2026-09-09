@@ -38,13 +38,14 @@ target_compile_definitions(imgui PUBLIC IMGUI_ENABLE_TEST_ENGINE)
 target_sources(imgui PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/gui_observer.cpp")
 
 add_library(rat_editor_app
+  ../platform/process.cpp
   platform/launch_environment.cpp
   platform/launch_environment.hpp
   editor_app.cpp
   editor_app.hpp
-  imgui_bgfx.cpp
+  ../platform/imgui_bgfx.cpp
   imgui_bgfx.hpp
-  platform/native_window.cpp
+  ../platform/native_window.cpp
   platform/native_window.hpp
   platform/miniaudio_sink.cpp
   platform/miniaudio_sink.hpp

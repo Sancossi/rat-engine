@@ -17,7 +17,8 @@
         "RAT_BUILD_TESTS": "ON",
         "RAT_BUILD_RENDERER": "ON",
         "RAT_BUILD_GUI_TESTS": "OFF",
-        "RAT_ENABLE_SANITIZERS": "OFF"
+        "RAT_ENABLE_SANITIZERS": "OFF",
+        "RAT_BUILD_GAME": "OFF"
       }
     },
     {
@@ -62,6 +63,17 @@
         "CMAKE_BUILD_TYPE": "Debug",
         "RAT_ENABLE_SANITIZERS": "ON"
       }
+    },
+    {
+      "name": "game-release",
+      "inherits": "dev-release",
+      "displayName": "Standalone Rat Expedition and headless tests",
+      "binaryDir": "${sourceDir}/build/game-release",
+      "cacheVariables": {
+        "RAT_BUILD_GAME": "ON",
+        "RAT_BUILD_EDITOR": "OFF",
+        "RAT_BUILD_GUI_TESTS": "OFF"
+      }
     }
   ],
   "buildPresets": [
@@ -84,6 +96,10 @@
     {
       "name": "headless-sanitizers",
       "configurePreset": "headless-sanitizers"
+    },
+    {
+      "name": "game-release",
+      "configurePreset": "game-release"
     }
   ],
   "testPresets": [
@@ -144,6 +160,17 @@
       "environment": {
         "ASAN_OPTIONS": "detect_leaks=1:halt_on_error=1",
         "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+      }
+    },
+    {
+      "name": "game-release",
+      "configurePreset": "game-release",
+      "output": {
+        "outputOnFailure": true
+      },
+      "execution": {
+        "timeout": 120,
+        "noTestsAction": "error"
       }
     }
   ]

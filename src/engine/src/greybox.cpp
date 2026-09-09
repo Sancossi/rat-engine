@@ -520,7 +520,7 @@ void GreyboxScene::draw(bgfx::ViewId view_id) {
     submit_lines(stem, 2);
   }
 
-  if (has_player_) {
+  if (has_player_ && player_visible_) {
     const float h = player_.half_extent;
     const float body_y = player_.y + 0.08f;
     const float head_y = player_.y + 1.6f;

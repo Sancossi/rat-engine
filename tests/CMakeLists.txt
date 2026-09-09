@@ -67,3 +67,13 @@ target_compile_definitions(rat_tests
 list(APPEND CMAKE_MODULE_PATH "${Catch2_SOURCE_DIR}/extras")
 include(Catch)
 catch_discover_tests(rat_tests PROPERTIES TIMEOUT 120)
+
+# Game rules remain independently testable without GLFW/bgfx/editor UI.
+add_executable(rat_expedition_tests expedition_test.cpp
+  ../src/game/expedition/scene.cpp ../src/game/expedition/session.cpp
+  ../apps/game/launch_options.cpp)
+rat_target_defaults(rat_expedition_tests)
+target_include_directories(rat_expedition_tests PRIVATE "${CMAKE_SOURCE_DIR}/src/game")
+target_link_libraries(rat_expedition_tests PRIVATE rat::core Catch2::Catch2WithMain)
+target_compile_definitions(rat_expedition_tests PRIVATE RAT_TEST_DATA_DIR="${CMAKE_SOURCE_DIR}/data")
+catch_discover_tests(rat_expedition_tests PROPERTIES TIMEOUT 120)

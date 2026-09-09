@@ -153,7 +153,7 @@ void for_each_sources(const InputBindings& bindings, Fn&& fn) {
 
 }  // namespace
 
-InputButtons EditorFrameInput::buttons(const InputBindings& bindings) const {
+InputButtons FrameInput::buttons(const InputBindings& bindings) const {
   KeyboardState keyboard;
   keyboard.ctrl = keys[GLFW_KEY_LEFT_CONTROL] || keys[GLFW_KEY_RIGHT_CONTROL];
   keyboard.shift = keys[GLFW_KEY_LEFT_SHIFT] || keys[GLFW_KEY_RIGHT_SHIFT];
@@ -166,8 +166,8 @@ InputButtons EditorFrameInput::buttons(const InputBindings& bindings) const {
   return merge_input_buttons(map_keyboard_buttons(keyboard, bindings), map_gamepad_buttons(gamepad, bindings));
 }
 
-EditorFrameInput NativeWindow::sample_frame_input() {
-  EditorFrameInput input;
+FrameInput NativeWindow::sample_frame_input() {
+  FrameInput input;
   if (!window_) return input;
   for (int key = GLFW_KEY_SPACE; key <= GLFW_KEY_LAST; ++key)
     input.keys[static_cast<std::size_t>(key)] = glfwGetKey(window_, key) == GLFW_PRESS;
@@ -213,28 +213,28 @@ bool NativeWindow::create(int width, int height, const char* title, bool hidden)
   glfwSetWindowUserPointer(window_, this);
   glfwSetFramebufferSizeCallback(window_, glfw_framebuffer_size);
   glfwSetCharCallback(window_, [](GLFWwindow* window, unsigned int codepoint) {
-    static_cast<NativeWindow*>(glfwGetWindowUserPointer(window))->events_.push_back({EditorInputEvent::Kind::Character, static_cast<int>(codepoint)});
+    static_cast<NativeWindow*>(glfwGetWindowUserPointer(window))->events_.push_back({InputEvent::Kind::Character, static_cast<int>(codepoint)});
   });
   glfwSetScrollCallback(window_, [](GLFWwindow* window, double x, double y) {
     auto* self = static_cast<NativeWindow*>(glfwGetWindowUserPointer(window));
-    self->events_.push_back({EditorInputEvent::Kind::Wheel, 0, false, static_cast<float>(x), static_cast<float>(y)});
+    self->events_.push_back({InputEvent::Kind::Wheel, 0, false, static_cast<float>(x), static_cast<float>(y)});
   });
   glfwSetKeyCallback(window_, [](GLFWwindow* window, int key, int, int action, int) {
     if (key >= 0 && action != GLFW_REPEAT)
       static_cast<NativeWindow*>(glfwGetWindowUserPointer(window))->events_.push_back(
-          {EditorInputEvent::Kind::Key, key, action == GLFW_PRESS});
+          {InputEvent::Kind::Key, key, action == GLFW_PRESS});
   });
   glfwSetMouseButtonCallback(window_, [](GLFWwindow* window, int button, int action, int) {
     static_cast<NativeWindow*>(glfwGetWindowUserPointer(window))->events_.push_back(
-        {EditorInputEvent::Kind::MouseButton, button, action == GLFW_PRESS});
+        {InputEvent::Kind::MouseButton, button, action == GLFW_PRESS});
   });
   glfwSetWindowFocusCallback(window_, [](GLFWwindow* window, int focused) {
     static_cast<NativeWindow*>(glfwGetWindowUserPointer(window))->events_.push_back(
-        {EditorInputEvent::Kind::Focus, 0, focused != 0});
+        {InputEvent::Kind::Focus, 0, focused != 0});
   });
   glfwSetCursorPosCallback(window_, [](GLFWwindow* window, double x, double y) {
     static_cast<NativeWindow*>(glfwGetWindowUserPointer(window))->events_.push_back(
-        {EditorInputEvent::Kind::Cursor, 0, false, static_cast<float>(x), static_cast<float>(y)});
+        {InputEvent::Kind::Cursor, 0, false, static_cast<float>(x), static_cast<float>(y)});
   });
   return true;
 }

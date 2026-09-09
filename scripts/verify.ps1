@@ -1,5 +1,5 @@
 param(
-    [ValidateSet('dev-release', 'dev-debug', 'headless-release', 'gui-release')][string]$Preset = 'dev-release',
+    [ValidateSet('dev-release', 'dev-debug', 'headless-release', 'gui-release', 'game-release')][string]$Preset = 'dev-release',
     [string]$Python,
     [switch]$ConfigureOnly,
     [switch]$CheckHeaderDependencies,
@@ -55,7 +55,8 @@ try {
         Invoke-Checked 'ctest' @('--preset', $Preset)
     }
     Write-Output "Build directory: $(Join-Path $repoRoot "build/$Preset")"
-    if (-not $ConfigureOnly -and $Preset -ne 'headless-release') { Write-Output "Editor: $(Join-Path $repoRoot "build/$Preset/apps/editor/rat-editor.exe")" }
+    if (-not $ConfigureOnly -and $Preset -eq 'game-release') { Write-Output "Game: $(Join-Path $repoRoot 'build/game-release/apps/game/rat-game.exe')" }
+    if (-not $ConfigureOnly -and $Preset -notin @('headless-release', 'game-release')) { Write-Output "Editor: $(Join-Path $repoRoot "build/$Preset/apps/editor/rat-editor.exe")" }
 } finally {
     Pop-Location
 }

@@ -2,7 +2,7 @@
 # source-tree shader path. Host shaderc is built only with the renderer enabled.
 set(_rat_surface_shader_dir "${CMAKE_CURRENT_SOURCE_DIR}/shaders")
 set(_rat_surface_shader_out "${CMAKE_CURRENT_BINARY_DIR}/generated_shaders")
-foreach(_shader IN ITEMS vs_surface fs_surface vs_contour fs_contour)
+foreach(_shader IN ITEMS vs_surface fs_surface vs_contour fs_contour vs_sprite fs_sprite)
   if(_shader MATCHES "^vs_")
     set(_stage vertex)
   else()

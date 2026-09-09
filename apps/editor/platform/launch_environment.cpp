@@ -1,4 +1,5 @@
 #include "launch_environment.hpp"
+#include "../../platform/process.hpp"
 
 #include <cstdlib>
 #include <filesystem>
@@ -43,27 +44,13 @@ std::optional<std::string> environment(const wchar_t* key) {
 
 EditorLaunchResult editor_launch_from_process(int argc, char** argv) {
   try {
-    std::vector<std::string> args;
-#ifdef _WIN32
-    (void)argc; (void)argv;
-    int count = 0;
-    auto** wide_args = CommandLineToArgvW(GetCommandLineW(), &count);
-    if (!wide_args) throw std::runtime_error("failed to read process arguments");
-    struct ArgsGuard { wchar_t** value; ~ArgsGuard() { LocalFree(value); } } guard{wide_args};
-    for (int i = 1; i < count; ++i) args.push_back(utf8(std::wstring_view(wide_args[i])));
-#else
-    for (int i = 1; i < argc; ++i) args.emplace_back(argv[i]);
-#endif
+    const auto args = process_arguments(argc, argv);
     const auto parsed = parse_editor_launch_arguments(args);
     if (!parsed.ok || parsed.help) return {parsed.ok, parsed.help, parsed.error, {}};
     EditorLaunchContext context;
     context.launch_directory = utf8(std::filesystem::current_path());
 #ifdef _WIN32
-    std::wstring executable(32768, L'\0');
-    const DWORD length = GetModuleFileNameW(nullptr, executable.data(), static_cast<DWORD>(executable.size()));
-    if (!length || length == executable.size()) throw std::runtime_error("failed to resolve executable path");
-    executable.resize(length);
-    context.executable_path = utf8(std::wstring_view(executable));
+    context.executable_path = utf8(executable_path());
     if (!parsed.arguments.user_data_dir) {
       PWSTR appdata = nullptr;
       if (FAILED(SHGetKnownFolderPath(FOLDERID_LocalAppData, 0, nullptr, &appdata)))
@@ -73,15 +60,7 @@ EditorLaunchResult editor_launch_from_process(int argc, char** argv) {
     }
     context.log_override = environment(L"RAT_LOG_PATH");
 #else
-    std::vector<char> executable(4096);
-    while (true) {
-      const auto length = readlink("/proc/self/exe", executable.data(), executable.size());
-      if (length < 0) throw std::runtime_error("failed to resolve /proc/self/exe");
-      if (static_cast<std::size_t>(length) < executable.size()) {
-        context.executable_path.assign(executable.data(), static_cast<std::size_t>(length)); break;
-      }
-      executable.resize(executable.size() * 2);
-    }
+    context.executable_path = utf8(executable_path());
     if (!parsed.arguments.user_data_dir) {
       const char* xdg = std::getenv("XDG_DATA_HOME");
       const char* home = std::getenv("HOME");

@@ -69,6 +69,7 @@ add_library(rat_engine
   src/engine.cpp
   src/greybox.cpp
   src/renderer.cpp
+  src/sprite_renderer.cpp
 )
 
 add_library(rat::engine ALIAS rat_engine)
@@ -96,6 +97,7 @@ target_link_libraries(rat_engine
     bgfx
     bx
     bimg
+  PRIVATE bimg_decode
 )
 
 target_compile_features(rat_engine PUBLIC cxx_std_20)

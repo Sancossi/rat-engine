@@ -37,6 +37,7 @@ class GreyboxScene {
   void set_focus(float x, float y, float z);
   void set_camera_mode(CameraMode mode);
   void set_camera_override(std::optional<ClimbCameraPose> pose);
+  void set_player_visible(bool visible) { player_visible_ = visible; }
   void set_player(const PlayerBody& player);
   void set_climb_lock(bool locked, float into_x, float into_z);
   void tick(float dt);
@@ -62,6 +63,7 @@ class GreyboxScene {
 
   bool initialized_ = false;
   bool has_player_ = false;
+  bool player_visible_ = true;
   bool climb_locked_ = false;
   bool has_display_ = false;
   float climb_into_x_ = 0.0f;

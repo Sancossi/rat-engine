@@ -24,7 +24,7 @@ set(RAT_BGFX_IMGUI_SHADER_DIR "${bgfx_cmake_SOURCE_DIR}/bgfx/examples/common/img
 set(RAT_BGFX_DEBUGDRAW_SHADER_DIR "${bgfx_cmake_SOURCE_DIR}/bgfx/examples/common/debugdraw" CACHE INTERNAL "bgfx debugdraw shader headers")
 endif()
 
-if(RAT_BUILD_EDITOR OR RAT_BUILD_GUI_TESTS)
+if(RAT_BUILD_EDITOR OR RAT_BUILD_GUI_TESTS OR RAT_BUILD_GAME)
 
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)

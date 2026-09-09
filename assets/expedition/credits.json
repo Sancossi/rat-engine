@@ -1,0 +1,18 @@
+{
+  "assets": [
+    {
+      "exported_path": "data/expedition/sprites/rat.png",
+      "source": "assets/expedition/rat_sprite.py",
+      "author_tool": "Codex, original procedural pixel artwork authored for rat-engine",
+      "license_terms": "Project LICENSE; no third-party image inputs",
+      "modifications": "None; deterministic original eight-frame prototype atlas, not final game art"
+    },
+    {
+      "exported_path": "data/fonts/NotoSans-Regular.ttf",
+      "source": "data/fonts/NotoSans-Regular.ttf",
+      "author_tool": "Noto Sans project (existing repository asset)",
+      "license_terms": "SIL Open Font License 1.1, data/fonts/OFL.txt",
+      "modifications": "None; shared existing font loaded from disk for Russian native-resolution UI"
+    }
+  ]
+}

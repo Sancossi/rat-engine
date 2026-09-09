@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "scene_id": "expedition_courtyard",
+  "map": "maps/courtyard.json",
+  "spawns": {
+    "entry": {
+      "x": -2,
+      "y": 0,
+      "z": 1
+    }
+  },
+  "camera_focus": {
+    "x": 0,
+    "y": 0,
+    "z": 0
+  },
+  "recovery_y": -2,
+  "portals": [],
+  "low_passages": [],
+  "occluder_groups": []
+}
