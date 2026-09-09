@@ -98,5 +98,6 @@ Check("missing nested spawn and bounds coordinates rejected", () => {
 });
 BodyCollisionTests.Run(Check, Require);
 BodyTraversalTests.Run(Check, Require);
+LayeredCollisionTests.Run(Check, Require);
 Console.WriteLine($"Core scenarios: {passed} passed, {failed} failed.");
 return failed == 0 ? 0 : 1;
