@@ -84,9 +84,12 @@ C:/5_gamedev/stride/sources/editor/Stride.GameStudio/bin/Release/net10.0-windows
 Интеграция `8227ac7402463b14546fc99a169adb14d72f62f0` сохраняет этот патч и добавляет
 native asset-operation lease: source update исключает конкурентный Save/Close,
 а disposed session и ошибочный importer result не изменяют graph/source hashes.
-Текущий pin `4d336dac55900c8f0836f04bffb0e985e9145e68` также сохраняет native
+Интеграция `4d336dac55900c8f0836f04bffb0e985e9145e68` также сохраняет native
 Selected/All batch: одна reservation/Undo transaction и независимые per-asset logs.
 См. [проверку resource API](audits/2026-09-09-stride-resource-api.md).
+Текущий pin `fddf82aa16f547b037a246bcf5cf518a35ccdeee` добавляет отмену собственной
+незавершённой transaction и очистку неудачного native asset creation, сохраняя
+прежние Undo/Redo и dirty snapshot. [Контракт и проверки](audits/2026-09-09-stride-native-creation-abort.md).
 
 По указанию пользователя от 2026-09-09 MCP, адаптер и дальнейшие проверенные доработки
 инструментов редактора вместе с документацией сохраняются отдельными коммитами и
@@ -106,7 +109,7 @@ Selected/All batch: одна reservation/Undo transaction и независим�
 ```powershell
 git -C C:/5_gamedev/stride remote add origin https://github.com/Sancossi/stride.git
 git -C C:/5_gamedev/stride fetch origin rat/expedition-foundation
-git -C C:/5_gamedev/stride merge --ff-only 4d336dac55900c8f0836f04bffb0e985e9145e68
+git -C C:/5_gamedev/stride merge --ff-only fddf82aa16f547b037a246bcf5cf518a35ccdeee
 ```
 
 Если `origin` уже существует, сначала проверить его URL, не добавлять повторно.

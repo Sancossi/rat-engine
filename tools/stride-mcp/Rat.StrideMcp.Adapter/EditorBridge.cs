@@ -38,6 +38,7 @@ internal sealed partial class EditorBridge
         undo.Done+=(_,_)=>Interlocked.Increment(ref revision);
         undo.Undone+=(_,_)=>Interlocked.Increment(ref revision);
         undo.Redone+=(_,_)=>Interlocked.Increment(ref revision);
+        undo.Aborted+=(_,_)=>Interlocked.Increment(ref revision);
         undo.Cleared+=(_,_)=>Interlocked.Increment(ref revision);
         undo.TransactionDiscarded+=(_,_)=>Interlocked.Increment(ref revision);
         // Includes asset reloads/external edits, even if they didn't use this bridge.
@@ -66,6 +67,7 @@ internal sealed partial class EditorBridge
         session.ServiceProvider.Get<IEditorDialogService>().ClearKeyboardFocus();
         cancellation.ThrowIfCancellationRequested();
         CheckNativeSession(true);
+        if(undo.HasFailedTransaction)throw new InvalidOperationException("Native rollback failed; session state is uncertain. Reload the project before editing.");
         if(undo.TransactionInProgress||undo.UndoRedoInProgress)throw new InvalidOperationException("Native editor transaction is in progress.");
         if(args["expectedRevision"]?.GetValue<long>()!=Interlocked.Read(ref revision))throw new InvalidOperationException("Stale session revision; refresh status and inspect before retrying.");
     }
@@ -80,7 +82,7 @@ internal sealed partial class EditorBridge
             throw new InvalidOperationException("Native asset source update is running; wait for completion before editing.");
     }
     private object Status()=>new {processId=Environment.ProcessId,projectId=ProjectId,sessionId=SessionId,projectPath=session.SessionFilePath.ToString(),revision=Interlocked.Read(ref revision),
-        scope="session",stride="4.4.0-dev",busy=session.IsSaving||session.IsAssetOperationInProgress||activeOperation is {IsCompleted:false},session.IsSaving,session.IsClosing,session.IsSessionDisposed,session.IsAssetOperationInProgress,undo.TransactionInProgress,undo.UndoRedoInProgress,
+        scope="session",stride="4.4.0-dev",busy=session.IsSaving||session.IsAssetOperationInProgress||undo.HasFailedTransaction||activeOperation is {IsCompleted:false},session.IsSaving,session.IsClosing,session.IsSessionDisposed,session.IsAssetOperationInProgress,undo.TransactionInProgress,undo.UndoRedoInProgress,undo.HasFailedTransaction,
         undoTransactionId=session.ActionHistory.Transactions.LastOrDefault(t=>t.IsDone)?.Id.ToString(),
         redoTransactionId=session.ActionHistory.Transactions.FirstOrDefault(t=>!t.IsDone)?.Id.ToString(),
         hookCleared=Environment.GetEnvironmentVariable("DOTNET_STARTUP_HOOKS") is null,

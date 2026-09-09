@@ -1,5 +1,5 @@
 function Stop-OwnedMcpProcess([hashtable]$Ownership){
-    if($null -eq $Ownership -or $null -eq $Ownership.OwnedProcess){return}
+    if($null -eq $Ownership -or -not $Ownership.ContainsKey('OwnedProcess') -or $null -eq $Ownership.OwnedProcess){return}
     $owned=$Ownership.OwnedProcess
     if($owned.HasExited){return}
     if(($Ownership.ContainsKey('StartTimeUtc') -and $owned.StartTime.ToUniversalTime() -ne $Ownership.StartTimeUtc) -or $owned.MainModule.FileName -ne $Ownership.ExecutablePath){throw 'Owned process identity changed; refusing termination.'}

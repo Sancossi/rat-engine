@@ -1,5 +1,5 @@
 [CmdletBinding()]
-param([string]$CheckoutPath)
+param([string]$CheckoutPath,[string]$ServerOutputPath)
 . (Join-Path $PSScriptRoot 'common.ps1')
 $engine=Get-StrideCheckoutPath $CheckoutPath
 $head=Assert-StrideCheckout $engine
@@ -17,7 +17,7 @@ $adapter=Join-Path $output 'adapter'
 New-Item -ItemType Directory -Force -Path $adapter | Out-Null
 Copy-Item -LiteralPath (Join-Path $repository 'tools/stride-mcp/Rat.StrideMcp.Hook/bin/Release/net10.0/Rat.StrideMcp.Hook.dll') -Destination $adapter
 Copy-Item -LiteralPath (Join-Path $repository 'tools/stride-mcp/Rat.StrideMcp.Adapter/bin/Release/net10.0-windows/Rat.StrideMcp.Adapter.dll') -Destination $adapter
-$server=Join-Path $output 'server'
+$server=if($ServerOutputPath){$ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($ServerOutputPath)}else{Join-Path $output 'server'}
 & dotnet publish (Join-Path $repository 'tools/stride-mcp/Rat.StrideMcp.Server/Rat.StrideMcp.Server.csproj') -c Release --no-restore -o $server
 if($LASTEXITCODE -ne 0){throw 'MCP server publish failed.'}
 Copy-Item -LiteralPath (Join-Path $repository 'tools/stride-mcp/NOTICE'),(Join-Path $repository 'tools/stride-mcp/LICENSE-AkerMCP') -Destination $output

@@ -1,8 +1,20 @@
 # Game Studio MCP
 
-Локальный stdio MCP server управляет отдельно запущенным Game Studio через нативный asset Quantum graph. Требуются Windows, .NET 10 и собранная интеграция Stride `4d336dac55900c8f0836f04bffb0e985e9145e68` поверх upstream `e2c786a45f69917bf233793f6a097b150e2fe264`. SHA и fork закреплены в engine lock. Редактирование не использует мышь, клавиатуру или замену файлов сцены.
+Локальный stdio MCP server управляет отдельно запущенным Game Studio через нативный asset Quantum graph. Требуются Windows, .NET 10 и собранная интеграция Stride `fddf82aa16f547b037a246bcf5cf518a35ccdeee` поверх upstream `e2c786a45f69917bf233793f6a097b150e2fe264`. SHA и fork закреплены в engine lock. Редактирование не использует мышь, клавиатуру или замену файлов сцены.
 
 ## Запуск
+
+Если прежний stdio host ещё работает, его DLL нельзя перезаписывать. Для отдельной
+проверки `build-mcp.ps1 -ServerOutputPath build/mcp/<run>/server` публикует новый host
+в другой каталог; клиенту передают этот executable явно. Resource/session runners
+используют собственный каталог запуска. Это не переключает уже подключённые clients.
+
+`verify-creation-failure.ps1` проверяет native owned abort/creation cleanup,
+сохранность Undo/Redo/dirty/disk, ошибки конструктора и подписчика, затем Save и
+новый запуск с тем же asset ID. Неудачный rollback блокирует native Save и MCP
+изменения; status показывает `HasFailedTransaction` и busy. Набор остаётся **16 tools**:
+import/reimport, rename/delete и prefab placement ещё не опубликованы этим срезом.
+Подробности: [creation abort audit](../../docs/audits/2026-09-09-stride-native-creation-abort.md).
 
 Из корня checkout:
 

@@ -11,7 +11,8 @@ foreach($path in $fixturePaths){if(Test-Path -LiteralPath $path){throw "Refusing
 $output=Join-Path $repository ('build/mcp/resource-api-'+(Get-Date -Format 'yyyyMMdd-HHmmss-fff'))
 New-Item -ItemType Directory -Path $output | Out-Null
 $result=Join-Path $output 'result.json'
-& (Join-Path $PSScriptRoot 'build-mcp.ps1') -CheckoutPath $CheckoutPath
+$serverOutput=Join-Path $output 'server'
+& (Join-Path $PSScriptRoot 'build-mcp.ps1') -CheckoutPath $CheckoutPath -ServerOutputPath $serverOutput
 if($LASTEXITCODE -ne 0){throw 'MCP build failed.'}
 & dotnet build (Join-Path $repository 'tools/stride-mcp/Rat.StrideMcp.Qualification') -c Release -p:RestoreLockedMode=true "-p:StrideBin=$editorBin" --nologo
 if($LASTEXITCODE -ne 0){throw 'Resource API qualification build failed.'}
@@ -45,7 +46,7 @@ try{
         if($owned.HasExited -or [DateTime]::UtcNow -ge $deadline){throw 'Resource fixture did not become ready within 60 seconds.'}
         Start-Sleep -Milliseconds 200
     }
-    & $McpPython (Join-Path $repository 'tools/stride-mcp/verify_resources.py') --server (Join-Path $repository 'build/stride-mcp/server/Rat.StrideMcp.Server.exe') --connection $connectionPath --fixture ($result+'.ready.json') --output ($result+'.client.json')
+    & $McpPython (Join-Path $repository 'tools/stride-mcp/verify_resources.py') --server (Join-Path $serverOutput 'Rat.StrideMcp.Server.exe') --connection $connectionPath --fixture ($result+'.ready.json') --output ($result+'.client.json')
     if($LASTEXITCODE -ne 0){throw "Official MCP client failed; see $result.client.json"}
     $deadline=[DateTime]::UtcNow.AddSeconds(40)
     while(-not(Test-Path -LiteralPath $result)){

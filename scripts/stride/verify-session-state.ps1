@@ -7,7 +7,7 @@ $repository=[IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../..'))
 $output=Join-Path $repository ('build/mcp/session-state-'+(Get-Date -Format 'yyyyMMdd-HHmmss-fff'))
 New-Item -ItemType Directory -Path $output | Out-Null
 $result=Join-Path $output 'result.json'
-& (Join-Path $PSScriptRoot 'build-mcp.ps1') -CheckoutPath $CheckoutPath
+& (Join-Path $PSScriptRoot 'build-mcp.ps1') -CheckoutPath $CheckoutPath -ServerOutputPath (Join-Path $output 'server')
 if($LASTEXITCODE -ne 0){throw 'MCP build failed.'}
 & dotnet build (Join-Path $repository 'tools/stride-mcp/Rat.StrideMcp.Qualification/Rat.StrideMcp.Qualification.csproj') -c Release -p:RestoreLockedMode=true "-p:StrideBin=$editorBin" --nologo
 if($LASTEXITCODE -ne 0){throw 'Native session-state qualification build failed.'}

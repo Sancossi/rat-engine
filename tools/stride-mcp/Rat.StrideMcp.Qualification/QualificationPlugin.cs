@@ -18,7 +18,7 @@ public sealed class QualificationPlugin:AssetsPlugin
 {
     public override void InitializePlugin(ILogger logger){}
     public override void RegisterPrimitiveTypes(ICollection<Type> primitiveTypes){}
-    public override void InitializeSession(SessionViewModel session){_=StartupHook.Mode=="resources"?ResourceQualification.Run(session):Run(session);}
+    public override void InitializeSession(SessionViewModel session){_=StartupHook.Mode switch{"resources"=>ResourceQualification.Run(session),"creation-failure" or "creation-reopen"=>CreationFailureQualification.Run(session),_=>Run(session)};}
     private static async Task Run(SessionViewModel session)
     {
         var evidence=new Dictionary<string,object>();

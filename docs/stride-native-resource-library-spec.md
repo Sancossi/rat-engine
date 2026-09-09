@@ -98,14 +98,26 @@ Import требует **явного target package/directory**, исходни�
 и allowlisted импортёра для fixture типов. `RunAssetTemplate` не использовать как
 скрытое адресование: он зависит от current selection (`AssetCollectionViewModel.cs:490`).
 Предпочтительный путь — native importer готовит AssetItems, затем public
-PackageViewModel.CreateAsset вставляет их в явно разрешённую directory в Undo
-transaction. Подготовка/валидация/cancel до commit не добавляют assets. Ошибка
-посередине native insertion требует проверенного Undo rollback/transaction discard;
+PackageViewModel.CreateAssetsAtomic вставляет их в явно разрешённую directory в
+собственной root Undo transaction. Это добавленная в fork граница: прежний
+Complete→Undo оставлял неудачный import в Redo и удалял предыдущее Redo.
+Подготовка/валидация/cancel до commit не добавляют assets. Ошибка
+посередине native insertion требует native AbortTransaction до Complete;
 частичный import нельзя объявлять атомарным успехом. Generated IDs и внутренние
 ссылки всего набора проверяются до вставки. Коллизия URL/ID не перезаписывает
 существующий asset. Source dependencies
 также проверяются, включая traversal, абсолютные внешние пути и reparse escapes;
 проверка повторяется перед фактическим import/reimport.
+
+Abort поддерживает текущую unshared transaction с default flags, включая обычного
+вложенного ребёнка; noncurrent/shared/KeepParentsAlive отклоняются до изменения.
+Отмена не удаляет прежнюю историю и save snapshot. Ошибка подписчика после
+завершённого rollback не отменяет факт IsAborted: cleanup всё равно освобождает
+только созданные этим вызовом VM/graphs. Ошибка самого rollback оставляет явное
+HasFailedTransaction, блокирует Save и MCP mutations до перезагрузки сессии.
+Revision после начавшейся и отменённой операции может возрастать; её нельзя
+сбрасывать к старому значению. [Квалификация этой основы](audits/2026-09-09-stride-native-creation-abort.md)
+не означает готовность остальных пяти resource MCP tools или runtime library.
 
 Reimport public method сам не открывает transaction: адаптер создаёт её, держит
 async busy operation и проверяет LoggerResult.HasErrors. Ошибка не считается успехом
