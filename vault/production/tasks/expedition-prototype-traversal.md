@@ -57,7 +57,7 @@ Follow-up: [[expedition-prototype-interactions]]; [[publish-editor-game-vault-sn
 
 ## Resolution
 
-Follow-up по замечанию пользователя 2026-09-09: [[bug-expedition-background-smoke-speed]] — одинаковый темп автотестов в активном/неактивном/свёрнутом окне с сохранением обычной игровой паузы.
+Follow-up по замечанию пользователя 2026-09-09: [[bug-expedition-background-smoke-speed]] исправлен / review Approved. В четырёх настоящих состояниях Windows smoke выполняется около 60 Hz и сохраняет одинаковый результат; обычный запуск не менялся. Текущий [ZIP для дальнейшего прогона](../../../build/stride-game/20260909-090102-491/rat-expedition-0.1.0-win-x64.zip) включает и компактные интервалы спутников: 63 Core, 33 executable и 22 Python passed, Release редактор пересобран. Полная ручная приёмка P1 остаётся открытой.
 
 Follow-up по ручному замечанию пользователя 2026-09-09: [[bug-expedition-rear-companion-distance]] исправлен и прошёл независимое ревью. Интервалы цепочки теперь равны 0.7, последний спутник в 1.4 от лидера. Для дальнейшего ручного прогона использовать обновлённый [ZIP](../../../build/stride-game/20260909-084326-721/rat-expedition-0.1.0-win-x64.zip): 63 Core, 29 executable и 22 Python passed, Release редактор пересобран. Старые результаты ниже сохраняют историю версий; результат остальных ручных сценариев пока не получен, полный P1 остаётся Blocked.
 

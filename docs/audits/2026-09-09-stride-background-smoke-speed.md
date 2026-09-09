@@ -48,6 +48,23 @@ pause/flush/resume ветку. Обычная игра не меняется. К
   Core: 63 passed / 0 failed; vault и diff checks прошли. Узкая Windows Release
   сборка успешна (одно предупреждение CS0162 во временном upstream build source).
 
-Preview не заменяет committed ZIP, полный verifier и финальную Release-сборку Game Studio.
-Эти артефакты и независимое ревью записывает ведущий при закрытии карточки.
+## Итоговая приёмка ведущим
+
+Runtime `17e9410` получил независимое read-only Approved (`stride_blind_review`).
+Committed ZIP: `build/stride-game/20260909-090102-491/rat-expedition-0.1.0-win-x64.zip`,
+manifest `3cec001024dcbe45ea5c76e6c6229762d4af4097`, gameWorkingTreeDirty=false.
+SHA256 `019E4EB50AD38310C9029460528901F14FA71ADB267A473C6B9151A5EE19DC1A` проверен.
+Build-game exit 0, 63 Core passed; publish имеет один CS0162 в generated source.
+
+Полный verifier: exit 0, 33/33 (20 успешных + 13 ожидаемых отказов),
+`C:/5_gamedev/rat-expedition-validation/20260909-090307-242/verification.json`.
+Четыре OS-состояния final ZIP: focused 59.46, unfocused 59.49, hidden 59.60,
+minimized 59.37 Hz. Во всех 472 ticks и одинаковая позиция; draw/непустые разные
+PNG проверены helper. Ведущий осмотрел финальный `window-states/minimized/frame-0180.png`.
+Прежние 29 сценариев сохранены и прошли, включая pause/focus probes и компактную партию.
+
+Полный Release Game Studio: exit 0, 5 NU5100 / 0 ошибок, 4.4.0-dev,
+`C:/5_gamedev/stride/logs/rat-foundation/20260909-090146-543/result.json`.
+Executable: `C:/5_gamedev/stride/sources/editor/Stride.GameStudio/bin/Release/net10.0-windows/Stride.GameStudio.exe`.
+Upstream чист. Repository Python: 22 passed; vault/projection/diff checks прошли.
 Ручной gameplay/Alt-Tab, чистая машина и remote CI этим исправлением не заявлены.

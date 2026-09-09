@@ -22,7 +22,7 @@ tags: [sprint, expedition, prototype]
 
 ## Resolution
 
-Текущее исправление тестового workflow: [[bug-expedition-background-smoke-speed]], по запросу пользователя устранить замедление фоновых и свёрнутых автопрогонов.
+Исправление тестового workflow [[bug-expedition-background-smoke-speed]] принято 2026-09-09: Fixed / review Approved. Smoke в активном/неактивном/скрытом/свёрнутом окне даёт 59.37–59.60 Hz, одинаковые ticks/позицию и свежие GPU-кадры. Новый ZIP прошёл 63 Core / 33 executable / 22 Python, Release редактор пересобран; артефакты в карточке. Остальная ручная приёмка P1 ожидается.
 
 Исправление по ручной проверке пользователя [[bug-expedition-rear-companion-distance]] принято 2026-09-09: Fixed / review Approved. Отставание последнего спутника уменьшено с 3.2 до 1.4, полный 3D след сохранён. Обновлённый ZIP, 63 Core / 29 executable / 22 Python passed и Release редактор записаны в карточке бага. Остальная ручная приёмка P1 ожидается; A1 не начат.
 
