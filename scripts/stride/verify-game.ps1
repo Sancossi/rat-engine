@@ -94,6 +94,25 @@ try {
             if ($milestone -eq 'lower-exit' -and $item.y -ne 0) { throw "$name wrong lower exit." }
         }
     }
+    # Accepted finite coordinates where float ULP exceeds rung spacing used to hang
+    # scene construction. Verify the actual renderer terminates, without promising
+    # large-world traversal or sub-unit visual precision at this coordinate scale.
+    $largeContent = Join-Path $root 'large-y-ladder-content'
+    Copy-Item -LiteralPath (Join-Path $app 'Content') -Destination $largeContent -Recurse
+    $largeScene = Get-Content -LiteralPath (Join-Path $largeContent 'courtyard.json') -Raw | ConvertFrom-Json
+    $largeScene.floor.min.y = 4194303
+    $largeScene.floor.max.y = 4194304
+    $largeScene.spawn.y = 4194304
+    $largeScene.walls = @()
+    $largeScene.structures = @($largeScene.structures | Where-Object id -eq 'upper-platform')
+    $largeScene.structures[0].min.y = 4194305
+    $largeScene.structures[0].max.y = 4194306
+    foreach ($point in @('bottom', 'bottomEntry', 'bottomExit')) { $largeScene.ladders[0].$point.y = 4194304 }
+    foreach ($point in @('top', 'topEntry', 'topExit')) { $largeScene.ladders[0].$point.y = 4194306 }
+    $largeScene | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath (Join-Path $largeContent 'courtyard.json') -Encoding UTF8
+    $results += Invoke-GameScenario 'large-y-ladder-startup' @('--content-dir', $largeContent, '--smoke-route', 'zoom', '--smoke-frames', '60') $true
+    if (-not (Test-Path -LiteralPath (Join-Path $root 'large-y-ladder-startup/frame-0030.png'))) { throw 'Large-Y ladder startup did not render a frame.' }
+
     foreach ($failure in @('missing-png', 'corrupt-png', 'missing-json', 'malformed-json', 'missing-coordinate-json', 'missing-font', 'corrupt-font', 'blocked-ladder-exit', 'missing-ladder-coordinate')) {
         $content = Join-Path $root "$failure-content"
         Copy-Item -LiteralPath (Join-Path $app 'Content') -Destination $content -Recurse

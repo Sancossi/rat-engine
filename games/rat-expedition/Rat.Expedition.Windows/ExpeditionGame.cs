@@ -153,8 +153,14 @@ public sealed class ExpeditionGame : Game
             float visualZ = ladder.Bottom.Z - .25f; // Behind the upright hero, toward this field scene's platform.
             foreach(float side in new[]{-.3f,.3f})
                 yield return new($"ladder-decoration-{ladder.Id}-{side}",new(ladder.Bottom.X+side-.025f,ladder.Bottom.Y,visualZ-.025f),new(ladder.Top.X+side+.025f,ladder.Top.Y+.25f,visualZ+.025f));
-            for(float y=ladder.Bottom.Y+.15f;y<=ladder.Top.Y;y+=.2f)
-                yield return new($"ladder-decoration-{ladder.Id}-rung-{y}",new(ladder.Bottom.X-.3f,y,visualZ-.025f),new(ladder.Top.X+.3f,y+.035f,visualZ+.025f));
+            // Validation limits ladder height to ten units. Indexing also terminates when
+            // world-coordinate float precision is coarser than the decorative spacing.
+            int rungCount = Math.Max(0, (int)Math.Floor(((double)ladder.Top.Y - ladder.Bottom.Y - .15) / .2) + 1);
+            for(int index=0;index<rungCount;index++)
+            {
+                float y = ladder.Bottom.Y + (float)(.15 + index * .2);
+                yield return new($"ladder-decoration-{ladder.Id}-rung-{index}",new(ladder.Bottom.X-.3f,y,visualZ-.025f),new(ladder.Top.X+.3f,y+.035f,visualZ+.025f));
+            }
         }
     }
 
