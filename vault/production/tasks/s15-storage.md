@@ -11,7 +11,7 @@ tags: [task, stabilization]
 # Safe storage and validation
 
 Origin: [[project-audit-followups]].
-Contract: [approved implementation plan](../../../docs/superpowers/plans/2026-09-07-stabilization.md), stage 2.
+Contract: [approved implementation plan](../../../docs/archive/cpp/superpowers/plans/2026-09-07-stabilization.md), stage 2.
 
 A02–A04: atomic writes with one backup, transactional strict save v2/legacy reader, finite map validation and regressions.
 

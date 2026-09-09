@@ -16,7 +16,7 @@ Acceptance: `start_page` требует graph (loader уже заполнил). 
 
 Depends: [[feat-reverse-compile-commands-to-graph|feat: Reverse-compile commands to graph]]. Origin: [[Sprint 12 — Graph is Play truth]]. Related: [[ADR-014 Play executes event graphs]]. Follow-up: [[chore-drop-event-page-commands|chore: Drop event page commands]], [[feat-event-graph-in-node-widgets|feat: Event graph in-node widgets]].
 
-Spec: `docs/superpowers/specs/2026-09-04-play-walks-event-graph-design.md`
+Spec: `docs/archive/cpp/superpowers/specs/2026-09-04-play-walks-event-graph-design.md`
 
 ## Resolution
 

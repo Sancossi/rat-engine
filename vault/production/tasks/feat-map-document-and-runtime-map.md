@@ -16,7 +16,7 @@ Acceptance: `EventRuntime` не меняет карту; битая карта �
 
 Depends: [[feat-replay-recording-and-checksum|feat: Replay recording and checksum]]. Next: [[jump-button-does-not-always-fire]].
 
-Origin: merged `docs/architecture-roadmap.md` (2026-09-01).
+Origin: merged `docs/archive/cpp/architecture-roadmap.md` (2026-09-01).
 
 ## Resolution
 

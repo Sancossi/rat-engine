@@ -125,7 +125,7 @@ O3DE предлагает самый глубокий automation stack: CTest, G
 | [21] | dhewm3 x64 build и maintenance | [dhewm3 project](https://github.com/dhewm/dhewm3/releases/tag/1.5.5) | 2026-06-08 | 2026-09-08 | высокая |
 | [22] | RBDOOM Win64 modernization | [RBDOOM project](https://github.com/RobertBeckebans/RBDOOM-3-BFG/releases) | 2025-05-10 | 2026-09-08 | высокая |
 | [23] | Current idTech4 mapping tools | [DarkRadiant](https://www.darkradiant.net/) | n.d. | 2026-09-08 | высокая |
-| [24] | Работающий P1.1 и результаты тестов | [Rat Expedition project](../../../../docs/audits/2026-09-08-rat-expedition-traversal.md) | 2026-09-08 | 2026-09-08 | высокая |
+| [24] | Работающий P1.1 и результаты тестов | [Rat Expedition project](../../../../docs/archive/cpp/audits/2026-09-08-rat-expedition-traversal.md) | 2026-09-08 | 2026-09-08 | высокая |
 | [25] | Текущая архитектурная база | [Rat Expedition project](../../../../docs/rat-expedition-architecture.md) | 2026-09-08 | 2026-09-08 | высокая |
 | [26] | Цена перехода и прежняя оценка | [Rat Expedition project](../../../../docs/rat-expedition-engine-comparison.md) | 2026-09-08 | 2026-09-08 | высокая |
 | [27] | MIT-лицензия Stride engine/editor | [Stride project](https://github.com/stride3d/stride/blob/master/LICENSE.md) | n.d. | 2026-09-08 | высокая |

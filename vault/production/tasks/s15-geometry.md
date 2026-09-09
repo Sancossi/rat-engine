@@ -11,7 +11,7 @@ tags: [task, stabilization]
 # Geometry and graph fixes
 
 Origin: [[project-audit-followups]].
-Contract: [approved implementation plan](../../../docs/superpowers/plans/2026-09-07-stabilization.md), stage 5.
+Contract: [approved implementation plan](../../../docs/archive/cpp/superpowers/plans/2026-09-07-stabilization.md), stage 5.
 
 Remaining Sprint 14 polish and graph self-pin defect, meaningful regression coverage.
 

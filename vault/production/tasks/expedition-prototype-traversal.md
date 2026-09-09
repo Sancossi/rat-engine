@@ -18,7 +18,7 @@ Specification: [[GDD]] — Исследование; [[rat-expedition-art-audio]
 
 Dependencies: [[feat-stride-source-foundation]] — закрыта. [[expedition-engine-decision]] сохранена как историческая приёмка прежней основы.
 
-Текущий этап: P1.1, коррекция камеры P1.1a и P1.2 приняты 2026-09-09. Архитектура и срезы P1 адаптированы к Stride/C# в `26cd508`; P1.2 добавил проверенный collision adapter, явную FSM игрока, приседание и лестницу с безопасными выходами. Полная карточка P1 остаётся In progress: review Approved относится к P1.1/P1.1a/P1.2; следующий срез P1.3 ещё не выполнен. Исходная основа подготовлена в [[feat-stride-source-foundation]]. [Прежняя C++ спецификация](../../../docs/rat-expedition-traversal-spec-rat-engine-2026-09-08.md) сохранена как история.
+Текущий этап: P1.1, коррекция камеры P1.1a и P1.2 приняты 2026-09-09. Архитектура и срезы P1 адаптированы к Stride/C# в `26cd508`; P1.2 добавил проверенный collision adapter, явную FSM игрока, приседание и лестницу с безопасными выходами. Полная карточка P1 остаётся In progress: review Approved относится к P1.1/P1.1a/P1.2; следующий срез P1.3 ещё не выполнен. Исходная основа подготовлена в [[feat-stride-source-foundation]]. [Прежняя C++ спецификация](../../../docs/archive/cpp/rat-expedition-traversal-spec-rat-engine-2026-09-08.md) сохранена как история.
 
 ## Acceptance
 

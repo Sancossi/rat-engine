@@ -16,7 +16,7 @@ Acceptance: `rat_core` / `SimulationSession` не видят HWND/Win32; editor 
 
 Depends: [[feat-render-world-packets|feat: RenderWorld packets and instrumentation]]. Next: [[feat-input-rebind-gamepad|feat: Input rebind and gamepad]].
 
-Origin: merged `docs/architecture-roadmap.md` (2026-09-01).
+Origin: merged `docs/archive/cpp/architecture-roadmap.md` (2026-09-01).
 
 ## Resolution
 

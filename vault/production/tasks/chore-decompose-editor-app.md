@@ -16,7 +16,7 @@ Acceptance: в `EditorApp` нет игровой физики; панели не
 
 Depends: [[feat-map-document-and-runtime-map|feat: MapDocument and RuntimeMap compile]]. Next: [[define-asset-folder-load-stub|feat: Asset registry and first load vertical]].
 
-Origin: merged `docs/architecture-roadmap.md` (2026-09-01).
+Origin: merged `docs/archive/cpp/architecture-roadmap.md` (2026-09-01).
 
 ## Resolution
 

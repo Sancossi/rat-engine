@@ -18,7 +18,7 @@ Acceptance: карты и gameplay ссылаются на стабильные 
 
 Depends: [[chore-decompose-editor-app|chore: Decompose EditorApp]]. Next: [[research-entity-model-ecs-vs-scene|research: Entity model ECS vs scene vs hybrid]].
 
-Origin: Sprint 0 stub + merged `docs/architecture-roadmap.md` (2026-09-01).
+Origin: Sprint 0 stub + merged `docs/archive/cpp/architecture-roadmap.md` (2026-09-01).
 
 ## Resolution
 

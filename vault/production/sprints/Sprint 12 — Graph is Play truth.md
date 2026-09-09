@@ -26,7 +26,7 @@ DoD:
 
 - [[feat-reverse-compile-commands-to-graph|feat: Reverse-compile commands to graph]] → [[feat-play-walks-event-graph|feat: Play walks event graph]] → [[chore-drop-event-page-commands|chore: Drop event page commands]] → [[feat-event-graph-in-node-widgets|feat: Event graph in-node widgets]] → [[feat-event-graph-rmb-copy-delete-and-wiring|feat: Event graph RMB add copy delete and wiring]] → [[feat-cyrillic-in-texts-and-comments|feat: Cyrillic in texts and comments]] → [[ramp-greybox-fill-breaks-cells|Ramp greybox fill breaks cells and hides the high side]] → [[event-on-ramp-not-clickable-in-edit|Event on ramp is not mouse-clickable in Edit]]
 
-Spec: `docs/superpowers/specs/2026-09-04-play-walks-event-graph-design.md`
+Spec: `docs/archive/cpp/superpowers/specs/2026-09-04-play-walks-event-graph-design.md`
 
 ADR: [[ADR-014 Play executes event graphs]]
 

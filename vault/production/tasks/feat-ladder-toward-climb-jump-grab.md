@@ -16,8 +16,8 @@ Acceptance: камера смотрит на лестницу → W вверх, 
 
 Origin: chat 2026-09-02 (переделка climb). Related: [[feat-stacked-surfaces-caves-and-basements|feat: Stacked surfaces caves and basements]], [[feat-step-off-ladder-onto-same-tile-floor|feat: Step off ladder onto same-tile floor]].
 
-Spec: `docs/superpowers/specs/2026-09-02-ladder-jump-off-design.md`
-Plan: `docs/superpowers/plans/2026-09-02-ladder-jump-off.md`
+Spec: `docs/archive/cpp/superpowers/specs/2026-09-02-ladder-jump-off-design.md`
+Plan: `docs/archive/cpp/superpowers/plans/2026-09-02-ladder-jump-off.md`
 Follow-up: [[feat-drive-player-physics-from-locomotion-fsm|feat: Drive player physics from locomotion FSM]], [[feat-mgs3-ladder-climb|feat: MGS3 ladder climb]]
 
 ## Resolution

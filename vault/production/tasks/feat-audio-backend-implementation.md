@@ -16,7 +16,7 @@ Acceptance: PlaySE слышен в editor; тесты подменяют sink б
 
 Depends: [[research-audio-backend-adr|research: Audio backend ADR]], [[define-asset-folder-load-stub|feat: Asset registry and first load vertical]]. Next: [[chore-engine-frame-metrics|chore: Engine frame metrics]].
 
-Origin: merged `docs/architecture-roadmap.md` (2026-09-01).
+Origin: merged `docs/archive/cpp/architecture-roadmap.md` (2026-09-01).
 
 ## Resolution
 

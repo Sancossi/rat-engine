@@ -11,7 +11,7 @@ tags: [task, stabilization]
 # Automated GUI and delivery
 
 Origin: [[project-audit-followups]].
-Contract: [approved implementation plan](../../../docs/superpowers/plans/2026-09-07-stabilization.md), stage 6.
+Contract: [approved implementation plan](../../../docs/archive/cpp/superpowers/plans/2026-09-07-stabilization.md), stage 6.
 
 A15–A16: full real-editor scripted GUI tests, paths/package, headless builds, CI/sanitizers/static checks and benchmarks.
 
@@ -21,7 +21,7 @@ Depends: [[s15-geometry]].
 
 ## Resolution
 
-Completed and independently Approved through b78b614 and README correction57726e7. All local acceptance passed: Release707, fresh headless707, full40 real GUI and installed ZIP, clang-tidy45/45, Python10, vault/actionlint and four-map benchmark. See [final evidence index](../../../docs/audits/2026-09-07-stabilization-evidence.md). Parent final stage-close full Release rebuild passed after the status update (exit 0); editor: build/dev-release/apps/editor/rat-editor.exe. Linux/ASan/UBSan/hosted CI and source-absent hosted execution are configured but unobserved. No unresolved local acceptance findings.
+Completed and independently Approved through b78b614 and README correction57726e7. All local acceptance passed: Release707, fresh headless707, full40 real GUI and installed ZIP, clang-tidy45/45, Python10, vault/actionlint and four-map benchmark. See [final evidence index](../../../docs/archive/cpp/audits/2026-09-07-stabilization-evidence.md). Parent final stage-close full Release rebuild passed after the status update (exit 0); editor: build/dev-release/apps/editor/rat-editor.exe. Linux/ASan/UBSan/hosted CI and source-absent hosted execution are configured but unobserved. No unresolved local acceptance findings.
 
 ## Implementation and review history
 

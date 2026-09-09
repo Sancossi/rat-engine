@@ -7,7 +7,7 @@ alwaysApply: true
 
 When a vault card hits **Done** / **Fixed**, or a written plan’s last task is closed after review **Approved**:
 
-1. Rebuild the **full** Release tree (not only `rat_tests`): VsDevCmd x64 + `cmake --build build --config Release`.
-2. Tell the human the editor exe path so they can playtest.
+1. Rebuild the **full** Stride Release Game Studio: `powershell -ExecutionPolicy Bypass -File scripts/stride/build.ps1`.
+2. Report the editor executable path and evidence printed by the wrapper. For game changes, also build and verify the new package using `scripts/stride/build-game.ps1` and `scripts/stride/verify-game.ps1 -PackageZip <ZIP>`; report the game executable path.
 
 Do this in the parent chat (no subagent). Do not wait for «пересобери».

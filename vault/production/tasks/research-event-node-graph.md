@@ -103,7 +103,7 @@ Compile — **детерминированный** обход от `entry` по 
 1. [[feat-event-graph-model-and-compile|feat: Event graph model and compile]] — типы `graph`, serialize/load, compile, golden round-trip, validation errors.
 2. [[feat-event-graph-editor-canvas|feat: Event graph editor canvas]] — ImGui/node canvas, compile on apply, inspector fallback.
 
-Epic: [[feat-event-node-graph-authoring|feat: Event node graph authoring]]. Schema doc update: `docs/schemas/map-event.schema.md` (поле `graph` + node kinds) — в scope compile task, не здесь.
+Epic: [[feat-event-node-graph-authoring|feat: Event node graph authoring]]. Schema doc update: `docs/archive/cpp/schemas/map-event.schema.md` (поле `graph` + node kinds) — в scope compile task, не здесь.
 
 ## Resolution
 

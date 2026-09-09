@@ -1,8 +1,0 @@
-{
-  "schema_version": 1,
-  "start_scene": "expedition_courtyard",
-  "sprite": "sprites/rat.png",
-  "scenes": {
-    "expedition_courtyard": "scenes/courtyard.json"
-  }
-}

@@ -16,11 +16,11 @@ Acceptance: CMake/CI падает, если `rat_core` тянет GLFW/ImGui/bgf
 
 Depends: [[chore-ci-windows-linux-and-grey-yard-smoke|chore: CI Windows/Linux and grey_yard smoke]]. Next: [[feat-simulation-session-unified-tick|feat: SimulationSession unified tick]].
 
-Origin: merged `docs/architecture-roadmap.md` (2026-09-01).
+Origin: merged `docs/archive/cpp/architecture-roadmap.md` (2026-09-01).
 
 ## Resolution
 
-Configure-time walk of `rat_core` `LINK_LIBRARIES` fails CMake if GLFW/ImGui/bgfx/`user32`/`gdi32` appear; CI builds `rat_core_link_check`; graph in `cmake/library-graph.md` + README. Verify: throwaway `target_link_libraries(rat_core PUBLIC glfw)` must FATAL_ERROR, then revert; `ctest -R rat_core_no_platform_graphics`. Review: Approved.
+Configure-time walk of `rat_core` `LINK_LIBRARIES` fails CMake if GLFW/ImGui/bgfx/`user32`/`gdi32` appear; CI builds `rat_core_link_check`; graph in `docs/archive/cpp/cmake/library-graph.md` + README. Verify: throwaway `target_link_libraries(rat_core PUBLIC glfw)` must FATAL_ERROR, then revert; `ctest -R rat_core_no_platform_graphics`. Review: Approved.
 
 ## Bugs found
 

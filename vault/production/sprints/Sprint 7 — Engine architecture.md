@@ -9,7 +9,7 @@ tags: [sprint]
 
 # Sprint 7 — Engine architecture
 
-Цель: нарезать вмерженный [architecture roadmap](../../../docs/architecture-roadmap.md) в одну очередь PR. Симуляция, authoring, render и платформа — отдельные слои; без ECS/RHI/job system до замера.
+Цель: нарезать вмерженный [architecture roadmap](../../../docs/archive/cpp/architecture-roadmap.md) в одну очередь PR. Симуляция, authoring, render и платформа — отдельные слои; без ECS/RHI/job system до замера.
 
 DoD:
 

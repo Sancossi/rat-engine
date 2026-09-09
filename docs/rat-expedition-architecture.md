@@ -1,13 +1,13 @@
 # Rat Expedition — архитектура Stride / C#
 
 Дата: 2026-09-09. Действующий контракт по [ADR-018](../vault/production/decisions/ADR-018%20Rat%20expedition%20uses%20Stride.md), [GDD](../vault/game/GDD.md) и [P1](rat-expedition-traversal-spec.md).
-[Архив C++ архитектуры](rat-expedition-architecture-rat-engine-2026-09-08.md) сохраняет прежний план и происхождение решений. Ниже описаны текущие интерфейсы и оставшиеся системы; точный статус ведётся в vault, сборка Game Studio не доказывает готовность игры.
+[Архив C++ архитектуры](archive/cpp/rat-expedition-architecture-rat-engine-2026-09-08.md) сохраняет прежний план и происхождение решений. Ниже описаны текущие интерфейсы и оставшиеся системы; точный статус ведётся в vault, сборка Game Studio не доказывает готовность игры.
 
 ## Основа и размещение
 
 [Engine lock](../tools/stride/engine.lock.json) закрепляет Stride upstream `e2c786a45f69917bf233793f6a097b150e2fe264`, проверенную сборку `4.4.0-dev`, .NET SDK `10.0.300`, Windows x64/Direct3D11. Это development snapshot 4.4, не stable. Движок остаётся в `C:/5_gamedev/stride`; [workflow](stride-source-workflow.md) описывает его сборку и собственные патчи.
 
-Игра размещается в `games/rat-expedition/` вне upstream. Старые `apps/game`, `src/game`, CMake, карты/replay/save и незавершённая C++ работа сохраняются отдельно и не компилируются новой игрой.
+Игра размещается в `games/rat-expedition/` вне upstream. Прежние C++ исходники, CMake и карты/replay/save удалены из рабочего дерева 2026-09-09; они доступны в Git по baseline из [архива](archive/cpp/README.md). Игра использует собственные ресурсы из `games/rat-expedition/Content/`.
 
 | Путь под games/rat-expedition | Ответственность |
 | --- | --- |

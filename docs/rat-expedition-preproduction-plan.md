@@ -72,5 +72,5 @@ commit only their explicitly scoped files. Closed historical sprints stay closed
 
 Run vault validation and Python checks, meaningful integration smoke checks, and
 independent read-only review. At stage closure rebuild the full Release editor
-using scripts/verify.ps1 and record exact executable path, command outcomes and
+using `scripts/stride/build.ps1` (current Stride workflow after the 2026-09-09 C++ retirement) and record exact executable path, command outcomes and
 limitations. No runtime changes, GUI claims or game asset generation are needed.

@@ -1,7 +1,7 @@
 # P1 — маршрут крысы на Stride
 
 Дата: 2026-09-09. Полный контракт [карточки P1](../vault/production/tasks/expedition-prototype-traversal.md), [GDD A4/A7](../vault/game/GDD.md), [архитектуры](rat-expedition-architecture.md) и [ADR-018](../vault/production/decisions/ADR-018%20Rat%20expedition%20uses%20Stride.md).
-[Прежний C++ контракт](rat-expedition-traversal-spec-rat-engine-2026-09-08.md) сохранён полностью. Статусы только в vault; прежние C++ проверки не доказывают Stride P1.
+[Прежний C++ контракт](archive/cpp/rat-expedition-traversal-spec-rat-engine-2026-09-08.md) сохранён полностью. Статусы только в vault; прежние C++ проверки не доказывают Stride P1.
 
 ## Порядок срезов
 

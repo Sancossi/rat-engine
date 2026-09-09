@@ -9,7 +9,7 @@ tags: [sprint]
 
 # Sprint 15 — Stabilization
 
-Approved implementation: [plan](../../../docs/superpowers/plans/2026-09-07-stabilization.md).
+Approved implementation: [plan](../../../docs/archive/cpp/superpowers/plans/2026-09-07-stabilization.md).
 Epic: [[project-audit-followups]].
 
 Order:
@@ -29,7 +29,7 @@ Approved implementation complete; all six stage cards independently approved.
 Local Windows Release and fresh headless each passed 707 tests; full GUI and
 installed ZIP each passed 40 scenarios on verified WARP. Clang Analyzer 45/45,
 Python 10/10, vault, actionlint and the four-map benchmark passed. Full Release
-editor rebuilt after each stage. [Final evidence and limitations](../../../docs/audits/2026-09-07-stabilization-evidence.md).
+editor rebuilt after each stage. [Final evidence and limitations](../../../docs/archive/cpp/audits/2026-09-07-stabilization-evidence.md).
 
 CI includes Linux, ASan/UBSan and source-absent downloaded-package jobs, whose
 execution remains unobserved; configuration is not reported as a passed run.

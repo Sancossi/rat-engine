@@ -51,16 +51,21 @@ not a task status. Copy new-note templates from `vault/templates/`.
 
 ## Verification and architecture
 
-- Windows: `powershell -ExecutionPolicy Bypass -File scripts/verify.ps1` discovers
-  the C++ toolchain and performs configure, build, tests, and vault checks.
-- Portable: `cmake --preset dev-release`, `cmake --build --preset dev-release`,
-  `ctest --preset dev-release`; Python 3: `python scripts/check_vault.py` and
+- Windows game: `powershell -ExecutionPolicy Bypass -File scripts/stride/build-game.ps1`
+  builds/tests/packages Release; verify the new ZIP with
+  `scripts/stride/verify-game.ps1 -PackageZip <path-to-ZIP>`.
+- Full Release editor: `powershell -ExecutionPolicy Bypass -File scripts/stride/build.ps1`.
+  Follow `docs/stride-source-workflow.md` and `tools/stride/engine.lock.json` for the
+  separate pinned upstream checkout and its native toolchain requirements.
+- Python 3 repository checks: `python scripts/check_vault.py` and
   `python -m unittest discover -s scripts/tests`.
-- Keep graphics/platform dependencies outside `rat_core` public interfaces;
-  preserve the CMake link-isolation check. Runtime and authoring currently share
-  `rat_core`; proposed target libraries in the roadmap are not implemented targets.
+- Keep Stride/graphics/platform dependencies outside `Rat.Expedition.Core` public
+  interfaces. Current source/content lives in `games/rat-expedition/`; architecture
+  and traversal contracts live in `docs/rat-expedition-architecture.md` and
+  `docs/rat-expedition-traversal-spec.md`. Retired C++ contracts are historical under
+  `docs/archive/cpp/`; recover old source from the archive's Git baseline.
 - Prefer regression scenarios that reproduce observable failures. Reversible
-  documentation changes need the vault check, not new C++ tests.
+  documentation changes need the vault check, not new runtime tests.
 - Project skills in `.agents/skills/` cover build verification, vault maintenance,
   and runtime reproduction. They supplement this contract without broadening scope.
 

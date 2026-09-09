@@ -18,8 +18,8 @@ Acceptance (позже): два пола в одной XZ; цилиндр сто
 
 Origin: chat (collider design) + chat 2026-09-02 (многоэтажный дом). Depends: [[edge-walls-passable-from-adjacent-side]], [[feat-bake-height-grid-and-ramps-to-collision-solids|feat: Bake height-grid and ramps to collision solids]]. Related: [[feat-field-physics-puzzles|feat: Field physics puzzles]], [[s3-height-grid-map-schema-and-ground-query|S3: Height-grid map schema and ground query]], [[feat-grid-edge-barriers|feat: Grid edge barriers]].
 
-Spec: `docs/superpowers/specs/2026-09-02-stacked-floors-colliders-design.md`
-Plan: `docs/superpowers/plans/2026-09-02-stacked-floors-colliders.md`
+Spec: `docs/archive/cpp/superpowers/specs/2026-09-02-stacked-floors-colliders-design.md`
+Plan: `docs/archive/cpp/superpowers/plans/2026-09-02-stacked-floors-colliders.md`
 Follow-up: [[feat-step-off-ladder-onto-same-tile-floor|feat: Step off ladder onto same-tile floor]], [[feat-ladder-toward-climb-jump-grab|feat: Ladder toward-climb, jump grab, jump off]], [[events-match-ground-while-on-slab]], [[walk-off-slab-teleports-to-ground]], [[feat-voxel-3d-terrain-and-rotating-ramps|feat: Voxel 3D terrain and rotating ramps]] (пересмотр «не воксельный мир»).
 
 ## Resolution

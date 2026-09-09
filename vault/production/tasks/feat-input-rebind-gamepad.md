@@ -16,7 +16,7 @@ Acceptance: те же `InputFrame` actions с другой раскладки и
 
 Depends: [[chore-native-window-platform-adapters|chore: NativeWindow platform adapters]]. Next: [[research-audio-backend-adr|research: Audio backend ADR]]. Взято в [[Sprint 7 — Engine architecture]].
 
-Origin: [[feat-input-action-mapping|feat: Input action mapping]] + merged `docs/architecture-roadmap.md` (2026-09-01).
+Origin: [[feat-input-action-mapping|feat: Input action mapping]] + merged `docs/archive/cpp/architecture-roadmap.md` (2026-09-01).
 
 ## Resolution
 

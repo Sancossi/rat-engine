@@ -10,7 +10,7 @@ tags: [task]
 
 # chore: Document set_move_route in map schema
 
-Intent: `docs/schemas/map-event.schema.md` enumerates commands (`play_se` is there); `set_move_route` + nested `route[]` нет.
+Intent: `docs/archive/cpp/schemas/map-event.schema.md` enumerates commands (`play_se` is there); `set_move_route` + nested `route[]` нет.
 
 Acceptance: одна строка в таблице Commands: `op`, `through`, `route[]` (`move`/`wait`/`turn`). Не второй research.
 
@@ -18,7 +18,7 @@ Origin: [[feat-set-move-route-basic|feat: Set Move Route (basic)]] (review Minor
 
 ## Resolution
 
-Строка `set_move_route` в таблице Commands: `through`, `route[]` (`move`/`wait`/`turn`). Wiki-only, без ревьюера. Verify: `docs/schemas/map-event.schema.md`.
+Строка `set_move_route` в таблице Commands: `through`, `route[]` (`move`/`wait`/`turn`). Wiki-only, без ревьюера. Verify: `docs/archive/cpp/schemas/map-event.schema.md`.
 
 ## Bugs found
 

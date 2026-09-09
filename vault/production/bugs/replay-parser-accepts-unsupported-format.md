@@ -11,7 +11,7 @@ tags: [bug, audit]
 # Replay parser accepts unsupported format
 
 Origin: [[project-audit-followups]] — ревизия 2026-09-07, A08.
-Подробности и источники: [отчёт](../../../docs/audits/2026-09-07-project-review.md).
+Подробности и источники: [отчёт](../../../docs/archive/cpp/audits/2026-09-07-project-review.md).
 
 ## Repro / evidence
 

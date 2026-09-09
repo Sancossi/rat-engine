@@ -1,21 +1,31 @@
 ---
 name: rat-build-verify
-description: Configure, build, and verify rat-engine on Windows or Linux and report precise test and editor artifacts. Use for rat-engine build failures and stage acceptance.
+description: Build and verify Rat Expedition and its pinned Stride Game Studio on Windows, reporting precise test and editor artifacts. Use for build failures and stage acceptance.
 ---
 
-# Build and verify rat-engine
+# Build and verify Rat Expedition
 
-Read the repository `AGENTS.md`. Run `scripts/verify.ps1` on Windows; it discovers
-Visual Studio through vswhere and imports its x64 environment without hardcoded
-installation versions. `-Preset dev-debug` selects Debug; default is dev-release.
-The wrapper prints its binary directory and editor executable after successful checks.
+Read `AGENTS.md`, the affected card and `docs/stride-source-workflow.md`.
+`tools/stride/engine.lock.json` pins the upstream checkout, editor configuration
+and native requirements. Preserve the game package cache, local feed and upstream
+native tools; do not upgrade dependencies or clear caches to fix ordinary builds.
 
-On Linux, use the matching configure/build/test presets and run
-`python3 scripts/check_vault.py` and `python3 -m unittest discover -s scripts/tests`.
-Install dependencies listed in README before configure. First configure needs network.
+From the repository root on Windows run
+`powershell -ExecutionPolicy Bypass -File scripts/stride/build-game.ps1`.
+It checks the pinned source/feed, restores/builds, runs Core scenarios and publishes
+a self-contained Release ZIP under a new `build/stride-game/<timestamp>/` directory.
+Run `scripts/stride/verify-game.ps1 -PackageZip <new-ZIP>` for executable acceptance
+outside the checkout, resource failures, both window sizes, camera and body traversal.
+For narrow Core iteration use
+`dotnet run --project games/rat-expedition/Rat.Expedition.Core.Tests -c Release`.
 
-Existing `build/` may use a different generator or toolchain. Presets isolate outputs
-under `build/dev-release` and `build/dev-debug`; never clear another build to fix this.
-For narrow iteration use the relevant existing Catch2 tags, then run full Release
-verification at stage close. Record commands, exit codes, test count, executable path,
-and anything not run. A successful build does not prove interactive GUI behavior.
+Run `python scripts/check_vault.py` and
+`python -m unittest discover -s scripts/tests` for repository checks.
+The parent rebuilds full Release Game Studio at stage close with
+`powershell -ExecutionPolicy Bypass -File scripts/stride/build.ps1`.
+
+Record commands, exit codes, scenario count, package/executable paths and actual
+manifest/log locations. Separate Core tests, real executable captures, manual
+playtests and editor builds. Neither headless success nor an editor build proves
+interactive GUI behavior. Do not claim remote CI or a clean-machine test without
+observing it. Retired C++ build instructions live in `docs/archive/cpp/` only.

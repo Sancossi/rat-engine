@@ -11,7 +11,7 @@ tags: [task, stabilization]
 # Foundation and workflow
 
 Origin: [[project-audit-followups]].
-Contract: [approved implementation plan](../../../docs/superpowers/plans/2026-09-07-stabilization.md), stage 1.
+Contract: [approved implementation plan](../../../docs/archive/cpp/superpowers/plans/2026-09-07-stabilization.md), stage 1.
 
 A11–A14: shared instructions, project skills, vault links/status checker and board, actual docs, reproducible build wrapper/presets.
 

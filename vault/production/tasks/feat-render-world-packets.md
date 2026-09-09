@@ -16,7 +16,7 @@ Acceptance: renderer не принимает `GameState` / `EventRuntime` / edit
 
 Depends: [[research-entity-model-ecs-vs-scene|research: Entity model ECS vs scene vs hybrid]]. Next: [[chore-native-window-platform-adapters|chore: NativeWindow platform adapters]].
 
-Origin: merged `docs/architecture-roadmap.md` (2026-09-01).
+Origin: merged `docs/archive/cpp/architecture-roadmap.md` (2026-09-01).
 
 ## Resolution
 

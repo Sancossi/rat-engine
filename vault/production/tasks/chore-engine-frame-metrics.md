@@ -16,7 +16,7 @@ Acceptance: цифры доступны в debug snapshot или логе без
 
 Depends: [[feat-audio-backend-implementation|feat: Audio backend implementation]]. Next: none (конец очереди Sprint 7).
 
-Origin: merged `docs/architecture-roadmap.md` (2026-09-01).
+Origin: merged `docs/archive/cpp/architecture-roadmap.md` (2026-09-01).
 
 ## Resolution
 

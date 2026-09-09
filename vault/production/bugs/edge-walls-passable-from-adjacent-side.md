@@ -38,7 +38,7 @@ Agreed for the fix: **cylinder** radius **0.4** (diameter 0.8, fits a 1-tile cor
 
 This bug slice: `CollisionWorld` API + fence solids + player cylinder vs fences. Cubes/ramps stay on `SurfaceQuery` until [[feat-bake-height-grid-and-ramps-to-collision-solids|feat: Bake height-grid and ramps to collision solids]]. No crates, caves, or ECS.
 
-Spec: `docs/superpowers/specs/2026-09-01-collision-world-fence-solids-design.md`
+Spec: `docs/archive/cpp/superpowers/specs/2026-09-01-collision-world-fence-solids-design.md`
 
 ## Resolution
 

@@ -16,7 +16,7 @@ Acceptance: editor и headless зовут одну реализацию tick; р
 
 Depends: [[chore-rat-core-isolation-from-platform-graphics|chore: rat_core isolation from platform graphics]]. Next: [[feat-replay-recording-and-checksum|feat: Replay recording and checksum]].
 
-Origin: merged `docs/architecture-roadmap.md` (2026-09-01).
+Origin: merged `docs/archive/cpp/architecture-roadmap.md` (2026-09-01).
 
 ## Resolution
 

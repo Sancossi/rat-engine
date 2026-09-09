@@ -16,8 +16,8 @@ Acceptance: `map_input_frame` с живым eye/focus: W даёт `move` вдо�
 
 Origin: chat 2026-09-02. Prerequisite for [[feat-mgs3-ladder-climb|feat: MGS3 ladder climb]]. Supersedes Play half of [[camera-switch-changes-wasd-world-directions]].
 
-Spec: `docs/superpowers/specs/2026-09-02-camera-aligned-walk-design.md`
-Plan: `docs/superpowers/plans/2026-09-02-camera-aligned-walk.md`
+Spec: `docs/archive/cpp/superpowers/specs/2026-09-02-camera-aligned-walk-design.md`
+Plan: `docs/archive/cpp/superpowers/plans/2026-09-02-camera-aligned-walk.md`
 
 ## Resolution
 

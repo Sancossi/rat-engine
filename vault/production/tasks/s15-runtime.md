@@ -11,7 +11,7 @@ tags: [task, stabilization]
 # Runtime contracts and replay
 
 Origin: [[project-audit-followups]].
-Contract: [approved implementation plan](../../../docs/superpowers/plans/2026-09-07-stabilization.md), stage 4.
+Contract: [approved implementation plan](../../../docs/archive/cpp/superpowers/plans/2026-09-07-stabilization.md), stage 4.
 
 A06–A08/A10: unsupported event diagnostics and defenses, complete versioned replay contracts/checksum.
 

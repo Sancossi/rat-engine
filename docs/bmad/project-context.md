@@ -11,7 +11,7 @@
 системные взаимодействия, диалоги с последствиями, меню пошагового боя без сетки,
 2D-персонажи в 3D-мире. Один разработчик с ИИ, несколько часов в день, минимум денег.
 Не повторять закрытое интервью. Новые авторские детали обозначать как предложения
-или гипотезы прототипа. Пользователь 2026-09-08 выбрал Stride / C#: `vault/production/decisions/ADR-018 Rat expedition uses Stride.md`, заменив ADR-017. Исходная основа закреплена в `tools/stride/engine.lock.json`: официальный upstream SHA `e2c786a45f69917bf233793f6a097b150e2fe264`, отдельный checkout `C:/5_gamedev/stride`; подготовка и собственные сборки описаны в `docs/stride-source-workflow.md`. Это development snapshot 4.4, проверенный с .NET SDK 10.0.300, а не стабильный релиз. MCP-адаптер пока не закреплён; варианты описаны в `docs/stride-mcp-integration-research.md`. Действующие `docs/rat-expedition-architecture.md` и `docs/rat-expedition-traversal-spec.md` адаптированы к Stride 2026-09-09; прежние версии сохранены рядом с суффиксом `-rat-engine-2026-09-08`. Текущий ограниченный срез `docs/stride-first-game-slice-spec.md` создаёт игру в `games/rat-expedition/`, вне upstream и старых dirty C++ каталогов. P1.1 не включает лаз/лестницу/мост/спутников и не закрывает полный P1. Закрытый E1 и сравнительные рекомендации сохраняются как история, не разрешение продолжать старую реализацию.
+или гипотезы прототипа. Пользователь 2026-09-08 выбрал Stride / C#: `vault/production/decisions/ADR-018 Rat expedition uses Stride.md`, заменив ADR-017. Исходная основа закреплена в `tools/stride/engine.lock.json`: официальный upstream SHA `e2c786a45f69917bf233793f6a097b150e2fe264`, отдельный checkout `C:/5_gamedev/stride`; подготовка и собственные сборки описаны в `docs/stride-source-workflow.md`. Это development snapshot 4.4, проверенный с .NET SDK 10.0.300, а не стабильный релиз. MCP-адаптер пока не закреплён; варианты описаны в `docs/stride-mcp-integration-research.md`. Действующие `docs/rat-expedition-architecture.md` и `docs/rat-expedition-traversal-spec.md` адаптированы к Stride 2026-09-09; прежние версии сохранены в `docs/archive/cpp/` с суффиксом `-rat-engine-2026-09-08`. Текущий ограниченный срез `docs/stride-first-game-slice-spec.md` создаёт игру в `games/rat-expedition/`, вне upstream (C++ retired 2026-09-09; Git baseline: `docs/archive/cpp/README.md`). P1.1 не включает лаз/лестницу/мост/спутников и не закрывает полный P1. Закрытый E1 и сравнительные рекомендации сохраняются как история, не разрешение продолжать старую реализацию.
 
 ## Единственные источники и маршруты
 
@@ -56,7 +56,7 @@ standalone story. Generated IDs могут меняться после вста�
 принимает результат независимого read-only reviewer. Один исполнитель пишет.
 Несколько независимых read-only проверок могут выполняться параллельно.
 
-Для документационного этапа не запускать прототипирование, не создавать тесты C++
+Для документационного этапа не запускать прототипирование, не создавать runtime-тесты
 и не открывать игровую разработку из-за native автоматического next-action.
 Проверки: vault checker, Python adapter tests, документальный trace design → task →
 review; финальная Release-сборка редактора выполняется ведущим агентом при закрытии.

@@ -14,8 +14,8 @@ Intent: камерный climb (проекция WASD на грань) ощущ�
 
 Acceptance: Interact лицом к лестнице (снизу или сверху) — mount, проход мимо не цепляет. Пока Climb: камера сзади, лестница вверх экрана, вперёд/W = вверх, назад/S = вниз, A/D не двигают. Jump игнорируется. С `y_hi`+вверх — шаг на пол той же клетки; с `y_lo`+вниз — сход на подход. Ходьба в Play — camera-aligned ([[feat-camera-aligned-walk|feat: Camera-aligned walk]]); на Climb камера локается так, что вперёд = вверх.
 
-Spec: `docs/superpowers/specs/2026-09-02-mgs3-ladder-climb-design.md`
-Plan: `docs/superpowers/plans/2026-09-02-mgs3-ladder-climb.md`
+Spec: `docs/archive/cpp/superpowers/specs/2026-09-02-mgs3-ladder-climb-design.md`
+Plan: `docs/archive/cpp/superpowers/plans/2026-09-02-mgs3-ladder-climb.md`
 Depends: [[feat-camera-aligned-walk|feat: Camera-aligned walk]]
 Origin: chat 2026-09-02 (камера-climb плохо). Replaces feel of [[feat-ladder-toward-climb-jump-grab|feat: Ladder toward-climb, jump grab, jump off]]. Absorbs [[feat-step-off-ladder-onto-same-tile-floor|feat: Step off ladder onto same-tile floor]].
 Follow-up: [[feat-step-off-ladder-onto-same-tile-floor|feat: Step off ladder onto same-tile floor]] (closed here — top + up onto same-tile slab).

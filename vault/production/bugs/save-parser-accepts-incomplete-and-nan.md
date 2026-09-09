@@ -11,7 +11,7 @@ tags: [bug, audit]
 # Save parser accepts incomplete and NaN
 
 Origin: [[project-audit-followups]] — ревизия 2026-09-07, A03.
-Подробности и источники: [отчёт](../../../docs/audits/2026-09-07-project-review.md).
+Подробности и источники: [отчёт](../../../docs/archive/cpp/audits/2026-09-07-project-review.md).
 
 ## Repro / evidence
 

@@ -24,4 +24,4 @@ Origin: [[Sprint 12 — Graph is Play truth]]. Related: [[ADR-014 Play executes 
 
 none.
 
-Spec: `docs/superpowers/specs/2026-09-04-play-walks-event-graph-design.md`
+Spec: `docs/archive/cpp/superpowers/specs/2026-09-04-play-walks-event-graph-design.md`

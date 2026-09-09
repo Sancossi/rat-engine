@@ -14,7 +14,7 @@ tags: [adr]
 
 Триггер переписывания — **не** коллизии и не [[feat-field-physics-puzzles|feat: Field physics puzzles]]. Имеет смысл менять модель, когда разнородных акторов с разными наборами компонент станет много, или когда сцена-граф начнёт дублировать Transform/Renderable/Collider в трёх местах.
 
-Сравнение (этап 6 [architecture roadmap](../../../docs/architecture-roadmap.md)):
+Сравнение (этап 6 [architecture roadmap](../../../docs/archive/cpp/architecture-roadmap.md)):
 
 | Вариант | Сильные стороны | Цена сейчас |
 | --- | --- | --- |

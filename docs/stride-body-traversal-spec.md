@@ -40,7 +40,7 @@
 - Given self-contained ZIP из committed game HEAD, when распакован вне checkout с другим cwd, then Core/проверки отказов проходят, GPU-маршрут в 720p/1080p подтверждает приседание и оба направления лестницы. Положение и стойка в журнале согласованы с реальными кадрами.
 - Given завершённый срез, when проведены независимое ревью и Release-сборки редакторов, then evidence записано, а P1.2 отмечен отдельно от полного P1. Ручной плейтест не подменяется синтетическими командами.
 
-Проверки: `scripts/stride/build-game.ps1`, `scripts/stride/verify-game.ps1 -PackageZip <ZIP>`, `scripts/stride/build.ps1`, `scripts/verify.ps1`, `python scripts/check_vault.py`. Тяжёлые артефакты остаются вне Git.
+Проверки: `scripts/stride/build-game.ps1`, `scripts/stride/verify-game.ps1 -PackageZip <ZIP>`, `scripts/stride/build.ps1`, `python scripts/check_vault.py`, `python -m unittest discover -s scripts/tests`. Тяжёлые артефакты остаются вне Git.
 
 ## Suggested Review Order
 

@@ -11,7 +11,7 @@ tags: [task, stabilization]
 # Safe authoring loop
 
 Origin: [[project-audit-followups]].
-Contract: [approved implementation plan](../../../docs/superpowers/plans/2026-09-07-stabilization.md), stage 3.
+Contract: [approved implementation plan](../../../docs/archive/cpp/superpowers/plans/2026-09-07-stabilization.md), stage 3.
 
 A01/A05/A09 and empty-voxel followup: dirty checkpoints, ok/changed commands, modal controller, unique IDs, explicit backup restore.
 

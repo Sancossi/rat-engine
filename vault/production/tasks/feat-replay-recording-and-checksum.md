@@ -16,7 +16,7 @@ Acceptance: повтор одной записи даёт тот же checksum �
 
 Depends: [[feat-simulation-session-unified-tick|feat: SimulationSession unified tick]]. Next: [[feat-map-document-and-runtime-map|feat: MapDocument and RuntimeMap compile]].
 
-Origin: merged `docs/architecture-roadmap.md` (2026-09-01).
+Origin: merged `docs/archive/cpp/architecture-roadmap.md` (2026-09-01).
 
 ## Resolution
 

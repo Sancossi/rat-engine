@@ -20,7 +20,7 @@ notion_id: 3cdf3827-36cc-81eb-a4d8-c20263a2b6f2
 
 ## Status (2026-08-31)
 
-Passed against branch `cursor/glfw-imgui-editor-shell`. Full write-up: repo `docs/sprint1-acceptance.md`.
+Passed against branch `cursor/glfw-imgui-editor-shell`. Full write-up: repo `docs/archive/cpp/sprint1-acceptance.md`.
 
 ## Demo path
 

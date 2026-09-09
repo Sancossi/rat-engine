@@ -21,4 +21,4 @@ notion_id: 3cdf3827-36cc-814c-b8c0-f4f0a5b7fac3
 
 Depends: none (foundation).
 
-Spec: `docs/superpowers/specs/2026-08-31-play-edit-mode-design.md`
+Spec: `docs/archive/cpp/superpowers/specs/2026-08-31-play-edit-mode-design.md`

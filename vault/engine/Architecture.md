@@ -37,7 +37,7 @@ flowchart TB
 
 Сверка игровых паттернов (цикл, ввод, звук, event VM) — [[Game Programming Patterns]].
 
-Целевая нарезка библиотек и этапы — [architecture roadmap](../../docs/architecture-roadmap.md), очередь в [[Sprint 7 — Engine architecture]].
+Целевая нарезка библиотек и этапы — [architecture roadmap](../../docs/archive/cpp/architecture-roadmap.md), очередь в [[Sprint 7 — Engine architecture]].
 
 ## Entity model
 
@@ -53,4 +53,4 @@ CMake builds `rat_core`, `rat_engine`, `rat_editor_logic`, and `rat-editor`. Run
 authoring, asset descriptors and entity scaffolding still share `rat_core`.
 `rat_engine` adds bgfx; `rat_editor_logic` remains headless; the executable owns GLFW,
 ImGui and audio adapters. The layer diagram above describes intended separation,
-not independent targets already available. See [current roadmap](../../docs/architecture-roadmap.md).
+not independent targets already available. See [current roadmap](../../docs/archive/cpp/architecture-roadmap.md).

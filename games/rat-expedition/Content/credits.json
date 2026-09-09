@@ -5,11 +5,11 @@
       "source": "tools/rat_sprite.py",
       "author_tool": "Codex, original procedural pixel artwork for this project",
       "license_terms": "Project LICENSE; no third-party image inputs",
-      "modifications": "Copied original rat-engine prototype atlas unchanged; generator output redirected to game Content"
+      "modifications": "Original rat-engine prototype atlas copied unchanged; maintained generator is tools/rat_sprite.py and writes game Content"
     },
     {
       "exported_path": "Content/fonts/NotoSans-Regular.ttf",
-      "source": "data/fonts/NotoSans-Regular.ttf (existing repository asset)",
+      "source": "Noto Sans repository asset, formerly data/fonts/NotoSans-Regular.ttf at Git 60fdc55f19889304fc29957fd2124624077aefcd; retained as Content/fonts/NotoSans-Regular.ttf",
       "author_tool": "Noto Sans project",
       "license_terms": "SIL Open Font License 1.1, Content/fonts/OFL.txt",
       "modifications": "None; copied for runtime Cyrillic traversal hints"
