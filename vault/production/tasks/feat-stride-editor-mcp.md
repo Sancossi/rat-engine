@@ -1,10 +1,10 @@
 ---
 type: task
 area: Engine
-status: In progress
+status: In review
 task_type: Feature
 sprint: Sprint 19
-review: Pending
+review: In review
 due:
 tags: [task, stride, mcp, authoring]
 ---
@@ -30,6 +30,8 @@ Origin: [[feat-stride-game-studio-authoring]]; [[research-open-engine-foundation
 Follow-up: [[feat-stride-game-studio-authoring]].
 
 ## Resolution
+
+Реализация `fcc73f6` передана на независимое read-only review. Пользователь дополнительно поручил сохранить MCP на GitHub и фиксировать там дальнейшие доработки редактора: MCP/адаптер/инструменты/документация — в `sancossi/rat-engine`; изменения исходников Stride при необходимости — отдельными проверенными коммитами в собственном fork, со ссылкой и pinned SHA в этом репозитории. Текущая публикация выполняется после review и итоговой проверки; upstream в этом срезе не изменялся.
 
 Начато 2026-09-09 по явному «Давай делать MCP». Это согласованное изменение порядка: сначала MCP для редактора, затем возобновление A1.2 через проверенный API. Реализация в отдельной рабочей копии `C:/5_gamedev/rat-engine-mcp`, ветка `feat/stride-editor-mcp`; незакоммиченные карты в `C:/5_gamedev/rat-engine` сохранены. Один исполнитель, затем независимый reviewer; статусы ведёт parent.
 
