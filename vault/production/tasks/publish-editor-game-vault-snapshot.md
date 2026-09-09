@@ -1,10 +1,10 @@
 ---
 type: task
 area: Engine
-status: In progress
+status: In review
 task_type: Feature
 sprint: Sprint 19
-review: Pending
+review: In review
 due:
 tags: [task, publication, expedition]
 ---
