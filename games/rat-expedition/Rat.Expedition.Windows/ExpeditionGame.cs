@@ -34,6 +34,9 @@ public sealed class ExpeditionGame : Game
     private SpriteFromSheet provider => bundle.Providers[0];
     private int frames;
     private bool contentReady;
+    private SmokeWindowEvidence? smokeWindowEvidence;
+    private int drawnFrames;
+    private bool deliberateFocusProbe;
     private bool discardInputOnNextUpdate;
     private bool? focusProbePassed;
     private bool? focusZoomProbePassed;
@@ -59,13 +62,19 @@ public sealed class ExpeditionGame : Game
         AutoLoadDefaultSettings = false;
         GraphicsDeviceManager.PreferredBackBufferWidth = options.Width;
         GraphicsDeviceManager.PreferredBackBufferHeight = options.Height;
-        GraphicsDeviceManager.SynchronizeWithVerticalRetrace = true;
+        GraphicsDeviceManager.SynchronizeWithVerticalRetrace = options.SmokeFrames == 0;
+        if (options.SmokeFrames > 0)
+        {
+            WindowMinimumUpdateRate.SetMaxFrequency(60);
+            MinimizedMinimumUpdateRate.SetMaxFrequency(60);
+            DrawWhileMinimized = true;
+        }
         IsMouseVisible = true;
     }
 
     protected override async Task LoadContent()
     {
-        try { await LoadScene(); contentReady = true; }
+        try { await LoadScene(); contentReady = true; if(options.SmokeFrames>0)smokeWindowEvidence=new(); }
         catch (Exception error) { FatalError = error; Exit(); }
     }
 
@@ -77,6 +86,7 @@ public sealed class ExpeditionGame : Game
 
     protected override void OnDeactivated(object sender, EventArgs args)
     {
+        if(options.SmokeFrames>0&&!deliberateFocusProbe){base.OnDeactivated(sender,args);return;}
         // Stride skips Update while inactive; pause/flush the session in the callback.
         session?.Advance(0, new(System.Numerics.Vector2.Zero), false);
         discardInputOnNextUpdate = true;
@@ -85,6 +95,7 @@ public sealed class ExpeditionGame : Game
 
     protected override void OnActivated(object sender, EventArgs args)
     {
+        if(options.SmokeFrames>0&&!deliberateFocusProbe){base.OnActivated(sender,args);return;}
         ResetElapsedTime();
         discardInputOnNextUpdate = true;
         base.OnActivated(sender, args);
@@ -184,6 +195,7 @@ public sealed class ExpeditionGame : Game
     {
         base.Draw(gameTime);
         if(!contentReady || hudBatch is null || hudFont is null) return;
+        drawnFrames++;
         GraphicsContext.CommandList.SetRenderTargetAndViewport(GraphicsDevice.Presenter.DepthStencilBuffer,GraphicsDevice.Presenter.BackBuffer);
         hudBatch.Begin(GraphicsContext,depthStencilState:DepthStencilStates.None);
         string text = session.Snapshot.Hint;
@@ -208,7 +220,12 @@ public sealed class ExpeditionGame : Game
         float zoomBeforeFocus = camera.OrthographicSize;
         long ticksBeforeFocus = session.Ticks;
         bool probeFocus = options.SmokeFrames > 120 && frames == 120;
-        if (probeFocus) { OnDeactivated(this, EventArgs.Empty); OnActivated(this, EventArgs.Empty); }
+        if (probeFocus)
+        {
+            deliberateFocusProbe=true;
+            try { OnDeactivated(this, EventArgs.Empty); OnActivated(this, EventArgs.Empty); }
+            finally { deliberateFocusProbe=false; }
+        }
         var input = new System.Numerics.Vector2(
             (Input.IsKeyDown(Keys.D) ? 1 : 0) - (Input.IsKeyDown(Keys.A) ? 1 : 0),
             (Input.IsKeyDown(Keys.W) ? 1 : 0) - (Input.IsKeyDown(Keys.S) ? 1 : 0));
@@ -219,7 +236,7 @@ public sealed class ExpeditionGame : Game
         if (options.SmokeFrames > 0 && options.SmokeRoute == "zoom") input = System.Numerics.Vector2.Zero;
         var command = new TraversalInput(input,Input.IsKeyDown(Keys.LeftCtrl)||Input.IsKeyDown(Keys.RightCtrl),Input.IsKeyDown(Keys.E)||Input.IsKeyDown(Keys.Enter));
         if(options.SmokeFrames>0) command = options.SmokeRoute=="body" && session.Mode==SessionMode.Explore ? bodyRoute.Next(session.Leader) : new(input);
-        double elapsed = options.SmokeFrames > 0 ? (options.SmokeRoute is "walls" or "zoom" ? 1.0 / 60 : 1.0 / 30) : gameTime.Elapsed.TotalSeconds;
+        double elapsed = options.SmokeFrames > 0 ? (options.SmokeRoute is "walls" or "zoom" or "window-states" ? 1.0 / 60 : 1.0 / 30) : gameTime.Elapsed.TotalSeconds;
         float wheel = Input.MouseWheelDelta;
         if (options.SmokeFrames > 0) wheel = options.SmokeRoute == "zoom" ? frames switch { 30 or 120 or 150 => 100, 90 or 210 => -100, 270 => 4, _ => 0 } : 0;
         bool discard = discardInputOnNextUpdate;
@@ -256,8 +273,12 @@ public sealed class ExpeditionGame : Game
 
     protected override void EndDraw(bool present)
     {
+        // Minimized/hidden smoke still draws/captures the backbuffer; an occluded
+        // desktop swap-chain Present must not become a second timing policy.
+        if(options.SmokeFrames>0&&(Window.IsMinimized||!Window.Visible))present=false;
         if (!contentReady) { base.EndDraw(present); return; }
         frames++;
+        if(options.SmokeFrames>0&&frames%30==0)smokeWindowEvidence!.Record(this,frames,drawnFrames,session.Ticks,options.EvidenceDirectory);
         if(options.SmokeFrames>0 && sessionRoute.Capture is string sessionMilestone)
         {
             using var capture=File.Create(Path.Combine(options.EvidenceDirectory,$"session-{sessionMilestone}.png"));
@@ -286,7 +307,7 @@ public sealed class ExpeditionGame : Game
                 quadTop = (1 - corners.Max(p => p.Y)) / 2, quadBottom = (1 - corners.Min(p => p.Y)) / 2,
                 spriteHeightFraction = (corners.Max(p => p.Y) - corners.Min(p => p.Y)) / 2, worldX = session.Leader.Position.X, worldZ = session.Leader.Position.Z });
         }
-        if (options.SmokeFrames > 0 && (frames == 30 || frames == 180 || frames == options.SmokeFrames || (options.SmokeRoute == "edges" && (frames % 360 == 0 || frames == 420))))
+        if (options.SmokeFrames > 0 && (frames == 30 || frames == 180 || frames == options.SmokeFrames || (options.SmokeRoute=="window-states"&&frames%60==0) || (options.SmokeRoute == "edges" && (frames % 360 == 0 || frames == 420))))
         {
             using var stream = File.Create(Path.Combine(options.EvidenceDirectory, $"frame-{frames:D4}.png"));
             GraphicsDevice.Presenter.BackBuffer.Save(GraphicsContext.CommandList, stream, ImageFileType.Png);
@@ -299,6 +320,7 @@ public sealed class ExpeditionGame : Game
             {
                 scene = definition.Id, width = GraphicsDevice.Presenter.BackBuffer.Width, height = GraphicsDevice.Presenter.BackBuffer.Height,
                 adapter = GraphicsDevice.Adapter.Description, backend = GraphicsDevice.Platform.ToString(), frames,
+                smokeTiming = new { limitHz=60, drawWhileMinimized=DrawWhileMinimized, vsync=GraphicsDeviceManager.SynchronizeWithVerticalRetrace, samples=smokeWindowEvidence?.Samples },
                 runtime = Environment.Version.ToString(), stride = typeof(Game).Assembly.GetName().Version?.ToString(), samples,
                 camera = new { size = camera.OrthographicSize, minSize = 4.5f, maxSize = 7f, uprightScale = UprightScale, pitchDegrees = MathF.Atan2(14, MathF.Sqrt(288)) * 180 / MathF.PI, aimHeight = .6f, edgeInset = 1.5f }, cameraSamples, route = options.SmokeRoute,
                 finalPosition = new { x = session.Leader.Position.X, y = session.Leader.Position.Y, z = session.Leader.Position.Z }, build,

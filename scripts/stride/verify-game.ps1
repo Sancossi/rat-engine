@@ -15,6 +15,7 @@ try {
     $unrelatedCwd = Join-Path $root 'unrelated-working-directory'
     [IO.Directory]::CreateDirectory($unrelatedCwd) | Out-Null
     $results = @()
+    $results += & (Join-Path $PSScriptRoot 'verify-smoke-window-states.ps1') -Executable $exe -EvidenceDirectory (Join-Path $root 'window-states') -WorkingDirectory $unrelatedCwd
 
     function Invoke-GameScenario {
         param([string]$Name, [string[]]$Arguments, [bool]$ExpectSuccess)
@@ -25,8 +26,8 @@ try {
         $commandArguments = @('--smoke-frames', '360', '--evidence-dir', $evidence) + $Arguments
         $quotedArguments = @($commandArguments | ForEach-Object { '"' + $_ + '"' })
         $process = Start-Process -FilePath $exe -ArgumentList $quotedArguments -WorkingDirectory $unrelatedCwd -WindowStyle Hidden -PassThru
-        # Stride throttles hidden/unfocused windows to 15 Hz: 1440 frames need 96 seconds.
-        # Allow bounded startup/capture margin without disabling normal engine throttling.
+        # Smoke caps all window states at 60 Hz. Retain bounded headroom for slow
+        # GPU/startup/captures; normal gameplay retains the engine's idle policy.
         $timeoutMs = if (@('edges','body','layered','mixed','portals') | Where-Object { $Arguments -contains $_ }) { 180000 } else { 30000 }
         if (-not $process.WaitForExit($timeoutMs)) {
             Stop-Process -Id $process.Id -ErrorAction SilentlyContinue

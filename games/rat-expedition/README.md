@@ -56,6 +56,29 @@ telemetry фиксируют фактические снимки/группы. �
 кодом и `error.log`; отказ кандидата перехода сохраняет текущую сцену и выводит подсказку.
 Обычные диагностические записи расположены в `%LOCALAPPDATA%/RatExpedition/logs`.
 
+Smoke (`--smoke-frames > 0`) ограничен одинаковыми 60 Hz в активном, неактивном,
+скрытом и свёрнутом окне. Vsync отключён; при hidden/minimized пропускается только
+desktop Present, сам draw/backbuffer capture выполняется. Значения elapsed маршрутов
+и физика не меняются: обычные walls/zoom используют 1/60, прежние длинные маршруты
+1/30 на update. Это одинаковый темп автоматизации между состояниями окна, не обещание
+60 FPS на любом GPU или реального времени для каждого диагностического маршрута.
+
+`verify-game.ps1` включает четыре коротких `window-states` прогона. Helper
+`scripts/stride/verify-smoke-window-states.ps1` активирует своё окно на несколько
+секунд, затем отдельными запусками проверяет unfocused, hidden и настоящий minimize
+через Windows API. В `run.json/smokeTiming` записываются Stopwatch после загрузки
+контента, кадры/draws/ticks, root HWND, OS foreground/visibility/IsIconic и backend.
+Сравниваются темп, конечная позиция/ticks и разные непустые GPU-кадры.
+`smoke-progress.json` служит готовностью для внешнего helper; старые каталоги
+доказательств не переиспользуются. Синтетическая pause/focus/wheel проверка отдельно
+выполняет прежние callbacks, она не заменяет наблюдение OS-состояния.
+
+Политика квалифицирована на закреплённом Windows backend: реальный запуск использует
+DesktopWinForms, его focus/minimize не меняет GameBase.IsActive (upstream callbacks
+не подключены). Обычный запуск и обработчики pause/flush/resume этим исправлением
+не меняются; новый ручной Alt-Tab тест обычной игры не заявлен. Другой backend,
+который действительно сбрасывает IsActive, требует отдельной квалификации.
+
 ## Работа в Zed
 
 Откройте каталог `games/rat-expedition` как папку проекта Zed. C# language server
