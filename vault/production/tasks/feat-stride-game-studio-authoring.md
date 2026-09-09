@@ -4,7 +4,7 @@ area: Game
 status: In progress
 task_type: Feature
 sprint: Sprint 19
-review: Approved
+review: Pending
 due:
 tags: [task, expedition, stride, authoring]
 ---
@@ -32,6 +32,8 @@ Origin: [[design-stride-editor-asset-workflow]]; [[expedition-prototype-traversa
 Follow-up: [[expedition-prototype-interactions]]; [[feat-expedition-character-sprites]]; [[expedition-vertical-slice]]; [[feat-stride-editor-mcp]].
 
 ## Resolution
+
+Первый API milestone опубликован: `rat-engine/main` — `5b206bf3627af37d16f8664d34ec6e7e2e425f4c`; `Sancossi/stride/main` — `4d336dac55900c8f0836f04bffb0e985e9145e68`. Оба remote SHA проверены, точный integration pin включён в проект, две посторонние vault EOL правки сохранены. Следующий ограниченный срез A1.3 — MCP import/reimport, rename/delete references и native prefab placement по той же resource specification, до runtime миграции. Review Pending относится к новому срезу, одобрение опубликованного API сохраняется.
 
 Первый API milestone A1.3 принят: независимое повторное review `bcd63d6` / Stride `4d336dac` — Approved, все три P2 закрыты, новых блокеров нет. Приняты catalog/inspect, типизированные properties/references и native source-update lifecycle. Итоговая квалификация: 101 MCP calls / 16 tools / 13 ожидаемых отказов / 0 captures, batch success/mixed + single Undo, failed readiness и прежний Save/Close PASS. Полный Release `20260909-140946-490` — 0 errors / 6 прежних warnings; Python 25, vault/projection PASS. Публикация в обе main разрешена постоянным поручением пользователя. Review Approved относится только к этому срезу; вся A1 остаётся In progress, import/reimport/delete/prefab и runtime библиотека ещё не приняты.
 
