@@ -1,10 +1,10 @@
 ---
 type: task
 area: Game
-status: In progress
+status: In review
 task_type: Feature
 sprint: Sprint 19
-review: Needs fixes
+review: In review
 due:
 tags: [task, expedition, stride, authoring]
 ---
@@ -30,6 +30,8 @@ Origin: [[design-stride-editor-asset-workflow]]; [[expedition-prototype-traversa
 Follow-up: [[expedition-prototype-interactions]]; [[feat-expedition-character-sprites]]; [[expedition-vertical-slice]]; [[feat-stride-editor-mcp]].
 
 ## Resolution
+
+A1.2 исправления переданы на повторное review: `49a9923`. Parent translation и границы считаются с wider intermediates, float округляется на конечной границе; Core exact contact не ослаблен. Новый тест воспроизвёл отказ до исправления, затем authoring 15 passed, включая отрицательный Y и отказ реально висящей стены. Preview выполняется до Transform/ModelRender processors. В свежем редакторе прошли 85 MCP вызовов Size/Role/Undo/Redo/Save/reopen и 17 проверок готового непустого кадра, diagnostics 0/0; PNG не сохранялись и не использовались для управления. Исходные параметры стены восстановлены. Ожидаются повторное review и итоговые проверки исправленной версии.
 
 A1.2 review `857e3a1` — Needs fixes: допустимый общий parent Y=.1 даёт разные float wall bottom/floor top после centre/size-конверсии; GeometryPreviewProcessor.Draw может освобождать buffers после их включения ModelRenderProcessor в текущий кадр (оба Order=0). Исправить в этом срезе и повторить независимое review до мержа. Committed QA package `20260909-122553-348` прошёл все 36 executable сценариев (`C:/5_gamedev/rat-expedition-validation/20260909-122643-970/verification.json`); это не отменяет замечаний review. Полная A1 приёмка остаётся открытой.
 
