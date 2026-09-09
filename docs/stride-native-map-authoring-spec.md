@@ -22,3 +22,36 @@ Core остаётся без Stride references. Native adapter проверяе�
 Квалификация обнаружила: pinned runtime `Prefab.Instantiate()` сохраняет entity GUID. Для runtime экземпляров добавлен `NativePrefabInstances.Instantiate`: сначала штатный clone с remapping объектных ссылок, затем новые GUID каждому entity. Editor duplicate использует свой GenerateNewIds. Portal.TargetSpawnId обозначает внешний spawn и не переназначается при копировании портала. Полная библиотека prefab/instances остаётся A1.3.
 
 Fresh ContentManager устраняет cache загруженных объектов, но не обещает hot reload уже открытого compiled database/bundle. Сохранённые GUI изменения применяются после compile и нового запуска; каждый transition заново загружает и валидирует данные текущего build.
+
+## Проверочный пакет и границы
+
+Обычный build упаковывает только production assets. `build-game.ps1 -IncludeQualificationAssets`
+добавляет derived native fixtures в отдельный игнорируемый package под `obj/native-qualification`;
+исходные sdscene не меняются. Генератор адресует объекты по GUID и сохраняет native RootParts,
+не требует неизменных display names. QA manifest выбирается только явным smoke аргументом;
+обычный запуск не переключается на тестовые данные. Полный verifier требует этот проверочный ZIP.
+
+33 прежних сценария адаптированы: четыре OS window states, два walls GPU, два edge zoom,
+wheel, два body, large-Y, четыре PNG/font отказа, девять native отказов вместо JSON-era
+fixtures, два layered, mixed, portals, renderer failure и три recovery. JSON missing/malformed/
+missing coordinate/project заменены native missing asset/invalid size/missing DefaultSpawn/
+missing StartScene; ladder/ramp missing coordinate — отсутствующей Entity reference и
+вырожденным native размером. Bad target/occlusion и blocked exit сохранены. Дополнительно
+проверяются rotation, scale и native source candidate failure: итого ожидается 36 executable
+сценариев. Это native compile/load/validation tests, не утверждение о проверке прежнего JSON parser.
+
+Стенной эксперимент через MCP использует старую полосу `(−3,0,0)→(3,0,0)` и новую
+`(−3,0,−1.5)→(3,0,−1.5)`; runtime экспортирует реальные Core SweepFraction/clearance
+после compile. После проверки стена возвращается через API в исходную Position `(0,.9,0)`.
+
+## Suggested Review Order
+
+1. [Native компоненты](../games/rat-expedition/Rat.Expedition.Authoring/TraversalComponents.cs),
+   [карты](../games/rat-expedition/Rat.Expedition.Authoring/Assets/ExpeditionProject.sdscene).
+2. [Конверсия и валидация](../games/rat-expedition/Rat.Expedition.Authoring/NativeSceneAdapter.cs),
+   [загрузка кандидата](../games/rat-expedition/Rat.Expedition.Authoring/NativeProjectLoader.cs).
+3. [Editor preview](../games/rat-expedition/Rat.Expedition.Authoring/GeometryPreviewProcessor.cs),
+   [runtime](../games/rat-expedition/Rat.Expedition.Windows/ExpeditionGame.cs).
+4. [Adapter tests](../games/rat-expedition/Rat.Expedition.Authoring.Tests/Program.cs),
+   [native fixtures](../games/rat-expedition/tools/build_native_fixtures.py),
+   [build](../scripts/stride/build-game.ps1), [verifier](../scripts/stride/verify-game.ps1).

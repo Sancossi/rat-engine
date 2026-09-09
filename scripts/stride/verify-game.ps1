@@ -12,6 +12,8 @@ try {
     $app = Join-Path $root 'extracted'
     [IO.Compression.ZipFile]::ExtractToDirectory($zip, $app)
     $exe = Join-Path $app 'Rat.Expedition.Windows.exe'
+    $manifest = Get-Content -LiteralPath (Join-Path $app 'build-manifest.json') -Raw | ConvertFrom-Json
+    if (-not $manifest.qualificationAssets) { throw 'Full verifier requires build-game.ps1 -IncludeQualificationAssets; ordinary packages contain only production assets.' }
     $unrelatedCwd = Join-Path $root 'unrelated-working-directory'
     [IO.Directory]::CreateDirectory($unrelatedCwd) | Out-Null
     $results = @()
@@ -62,17 +64,9 @@ try {
     }
     # Preserve the previous bounded-edge camera acceptance with authored blockers;
     # the default P1.3 map now intentionally permits falling and recovery.
-    $edgeContent = Join-Path $root 'bounded-edge-content'
-    Copy-Item -LiteralPath (Join-Path $app 'Content') -Destination $edgeContent -Recurse
-    $edgeScene = Get-Content -LiteralPath (Join-Path $edgeContent 'courtyard.json') -Raw | ConvertFrom-Json
-    $edgeScene.walls += @(
-        @{id='edge-test-east';min=@{x=8;y=0;z=-6};max=@{x=8.5;y=2;z=6.5}},
-        @{id='edge-test-south';min=@{x=-8;y=0;z=6};max=@{x=8.5;y=2;z=6.5}}
-    )
-    $edgeScene | ConvertTo-Json -Depth 12 | Set-Content -LiteralPath (Join-Path $edgeContent 'courtyard.json') -Encoding UTF8
     foreach ($size in @('4.5', '7')) {
         $name = "camera-edges-$size"
-        $results += Invoke-GameScenario $name @('--camera-size', $size, '--smoke-route', 'edges', '--smoke-frames', '1440', '--content-dir', $edgeContent) $true
+        $results += Invoke-GameScenario $name @('--camera-size', $size, '--smoke-route', 'edges', '--smoke-frames', '1440', '--native-project', 'QA/edges') $true
         $run = Get-Content -LiteralPath (Join-Path $root "$name/run.json") -Raw | ConvertFrom-Json
         if ($run.camera.size -ne [double]::Parse($size, [Globalization.CultureInfo]::InvariantCulture) -or $run.cameraSamples.Count -lt 40) { throw "$name missing camera evidence." }
         foreach ($sample in $run.cameraSamples) {
@@ -114,68 +108,38 @@ try {
     # Accepted finite coordinates where float ULP exceeds rung spacing used to hang
     # scene construction. Verify the actual renderer terminates, without promising
     # large-world traversal or sub-unit visual precision at this coordinate scale.
-    $largeContent = Join-Path $root 'large-y-ladder-content'
-    Copy-Item -LiteralPath (Join-Path $app 'Content') -Destination $largeContent -Recurse
-    $largeScene = Get-Content -LiteralPath (Join-Path $largeContent 'courtyard.json') -Raw | ConvertFrom-Json
-    $largeScene.floor.min.y = 4194303
-    $largeScene.floor.max.y = 4194304
-    $largeScene.spawns = @($largeScene.spawns | Where-Object id -eq 'entry')
-    $largeScene.spawns[0].position.y = 4194304
-    $largeScene.ramps = @(); $largeScene.portals = @(); $largeScene.decorations = @(); $largeScene.occlusionGroups = @()
-    $largeScene.walls = @()
-    $largeScene.structures = @($largeScene.structures | Where-Object id -eq 'upper-platform')
-    $largeScene.structures[0].min.y = 4194305
-    $largeScene.structures[0].max.y = 4194306
-    foreach ($point in @('bottom', 'bottomEntry', 'bottomExit')) { $largeScene.ladders[0].$point.y = 4194304 }
-    foreach ($point in @('top', 'topEntry', 'topExit')) { $largeScene.ladders[0].$point.y = 4194306 }
-    $largeScene | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath (Join-Path $largeContent 'courtyard.json') -Encoding UTF8
-    @{schemaVersion=1;startScene=$largeScene.id;scenes=@(@{id=$largeScene.id;path='courtyard.json'})} | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath (Join-Path $largeContent 'project.json') -Encoding UTF8
-    $results += Invoke-GameScenario 'large-y-ladder-startup' @('--content-dir', $largeContent, '--smoke-route', 'zoom', '--smoke-frames', '60') $true
-    if (-not (Test-Path -LiteralPath (Join-Path $root 'large-y-ladder-startup/frame-0030.png'))) { throw 'Large-Y ladder startup did not render a frame.' }
+    $results += Invoke-GameScenario 'large-y-ladder-startup' @('--native-project', 'QA/large-y', '--smoke-route', 'zoom', '--smoke-frames', '60') $true
+    if (-not (Test-Path -LiteralPath (Join-Path $root 'large-y-ladder-startup/frame-0030.png'))) { throw 'Large-Y native ladder startup did not render.' }
 
-    foreach ($failure in @('missing-png', 'corrupt-png', 'missing-json', 'malformed-json', 'missing-coordinate-json', 'missing-font', 'corrupt-font', 'blocked-ladder-exit', 'missing-ladder-coordinate', 'missing-ramp-coordinate', 'missing-project', 'bad-portal-target', 'bad-occlusion-parent')) {
+    foreach ($failure in @('missing-png','corrupt-png','missing-font','corrupt-font')) {
         $content = Join-Path $root "$failure-content"
         Copy-Item -LiteralPath (Join-Path $app 'Content') -Destination $content -Recurse
-        switch ($failure) {
-            'missing-png' { Rename-Item -LiteralPath (Join-Path $content 'sprites/rat.png') -NewName 'rat.png.absent' }
-            'corrupt-png' { [IO.File]::WriteAllBytes((Join-Path $content 'sprites/rat.png'), [byte[]](1,2,3,4,5)) }
-            'missing-json' { Rename-Item -LiteralPath (Join-Path $content 'courtyard.json') -NewName 'courtyard.json.absent' }
-            'malformed-json' { [IO.File]::WriteAllText((Join-Path $content 'courtyard.json'), '{ malformed JSON') }
-            'missing-coordinate-json' {
-                $document = Get-Content -LiteralPath (Join-Path $content 'courtyard.json') -Raw | ConvertFrom-Json
-                $document.spawns[0].position.PSObject.Properties.Remove('x')
-                $document | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath (Join-Path $content 'courtyard.json') -Encoding UTF8
-            }
-            'missing-font' { Rename-Item -LiteralPath (Join-Path $content 'fonts/NotoSans-Regular.ttf') -NewName 'NotoSans-Regular.ttf.absent' }
-            'corrupt-font' { [IO.File]::WriteAllBytes((Join-Path $content 'fonts/NotoSans-Regular.ttf'), [byte[]](1,2,3,4,5)) }
-            'blocked-ladder-exit' {
-                $document = Get-Content -LiteralPath (Join-Path $content 'courtyard.json') -Raw | ConvertFrom-Json
-                $document.ladders[0].topExit.x = 5
-                $document | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath (Join-Path $content 'courtyard.json') -Encoding UTF8
-            }
-            'missing-ladder-coordinate' {
-                $document = Get-Content -LiteralPath (Join-Path $content 'courtyard.json') -Raw | ConvertFrom-Json
-                $document.ladders[0].top.PSObject.Properties.Remove('y')
-                $document | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath (Join-Path $content 'courtyard.json') -Encoding UTF8
-            }
-            'missing-ramp-coordinate' {
-                $document = Get-Content -LiteralPath (Join-Path $content 'courtyard.json') -Raw | ConvertFrom-Json
-                $document.ramps[0].min.PSObject.Properties.Remove('x')
-                $document | ConvertTo-Json -Depth 12 | Set-Content -LiteralPath (Join-Path $content 'courtyard.json') -Encoding UTF8
-            }
-            'missing-project' { Rename-Item -LiteralPath (Join-Path $content 'project.json') -NewName 'project.json.absent' }
-            'bad-portal-target' {
-                $document = Get-Content -LiteralPath (Join-Path $content 'courtyard.json') -Raw | ConvertFrom-Json
-                $document.portals[0].targetSpawn = 'missing-spawn'
-                $document | ConvertTo-Json -Depth 12 | Set-Content -LiteralPath (Join-Path $content 'courtyard.json') -Encoding UTF8
-            }
-            'bad-occlusion-parent' {
-                $document = Get-Content -LiteralPath (Join-Path $content 'courtyard.json') -Raw | ConvertFrom-Json
-                ($document.occlusionGroups | Where-Object id -eq 'bridge-rail-cut').hideWith = 'missing-parent'
-                $document | ConvertTo-Json -Depth 12 | Set-Content -LiteralPath (Join-Path $content 'courtyard.json') -Encoding UTF8
-            }
-        }
-        $results += Invoke-GameScenario $failure @('--content-dir', $content) $false
+        $relative = if ($failure -match 'png') { 'sprites/rat.png' } else { 'fonts/NotoSans-Regular.ttf' }
+        $target = Join-Path $content $relative
+        if ($failure -match '^missing') { Rename-Item -LiteralPath $target -NewName ([IO.Path]::GetFileName($target)+'.absent') }
+        else { [IO.File]::WriteAllBytes($target,[byte[]](1,2,3,4,5)) }
+        $results += Invoke-GameScenario $failure @('--content-dir',$content) $false
+    }
+    # Native compiler data replaces JSON-era parser fixtures. These failures must
+    # originate in the real compiled source, with no fallback to old JSON files.
+    $nativeFailures = [ordered]@{
+        'missing-native-project' = @('absent','Content')
+        'invalid-native-size' = @('invalid-size','Size')
+        'missing-native-spawn' = @('missing-spawn','DefaultSpawn')
+        'blocked-ladder-exit' = @('blocked-ladder-exit','ladder')
+        'missing-ladder-point' = @('missing-ladder-point','Top')
+        'invalid-native-ramp' = @('invalid-ramp','Size')
+        'missing-start-scene' = @('missing-start-scene','StartScene')
+        'bad-portal-target' = @('bad-portal-target','TargetSpawnId')
+        'bad-occlusion-parent' = @('bad-occlusion-parent','HideWith')
+        'invalid-native-rotation' = @('invalid-rotation','Transform')
+        'invalid-native-scale' = @('invalid-scale','Transform')
+    }
+    foreach ($failure in $nativeFailures.Keys) {
+        $fixture=$nativeFailures[$failure]
+        $results += Invoke-GameScenario $failure @('--native-project',('QA/'+$fixture[0])) $false
+        $errorText=Get-Content -LiteralPath (Join-Path $root "$failure/error.log") -Raw
+        if ($errorText -notmatch $fixture[1]) { throw "$failure missing actionable native diagnostic." }
     }
     foreach ($resolution in @(@(1280,720), @(1920,1080))) {
         $name = "layered-$($resolution[0])x$($resolution[1])"
@@ -235,22 +199,15 @@ try {
     $results += Invoke-GameScenario 'renderer-candidate-failure' @('--smoke-route','portal-failure') $true
     $run = Get-Content -LiteralPath (Join-Path $root 'renderer-candidate-failure/run.json') -Raw | ConvertFrom-Json
     if (-not $run.sessionComplete -or $run.session.WorldRevision -ne 0 -or $run.scene -ne 'expedition_courtyard' -or $run.session.Hint -notmatch 'Diagnostic renderer candidate rejected') { throw 'Renderer candidate failure replaced old scene or lost diagnostic.' }
+    $results += Invoke-GameScenario 'native-candidate-failure' @('--smoke-route','native-candidate-failure') $true
+    $nativeFailure = Get-Content -LiteralPath (Join-Path $root 'native-candidate-failure/run.json') -Raw | ConvertFrom-Json
+    if (-not $nativeFailure.sessionComplete -or $nativeFailure.session.WorldRevision -ne 0 -or $nativeFailure.scene -ne 'expedition_courtyard' -or $nativeFailure.session.Hint -notmatch 'TargetSpawnId') {
+        throw 'Invalid compiled native candidate replaced the active world or lost its diagnostic.'
+    }
     foreach ($fixture in @('courtyard','sluice','upper-void')) {
-        $content = Join-Path $root "recovery-$fixture-content"
-        Copy-Item -LiteralPath (Join-Path $app 'Content') -Destination $content -Recurse
-        $sceneFile = if ($fixture -eq 'sluice') { 'sluice.json' } else { 'courtyard.json' }
-        $document = Get-Content -LiteralPath (Join-Path $content $sceneFile) -Raw | ConvertFrom-Json
-        $document.portals = @(); $document.spawns = @($document.spawns | Where-Object id -eq 'entry')
-        if ($fixture -eq 'upper-void') {
-            $document.floor.min.x=-4; $document.floor.max.x=0
-            $document.walls=@(); $document.ladders=@(); $document.ramps=@(); $document.decorations=@(); $document.occlusionGroups=@()
-            $document.structures=@(@{id='upper-void-deck';min=@{x=1;y=1.4;z=1};max=@{x=4;y=1.6;z=3}})
-            $document.spawns[0].position=@{x=2.5;y=1.6;z=2}
-        }
-        $document | ConvertTo-Json -Depth 12 | Set-Content -LiteralPath (Join-Path $content $sceneFile) -Encoding UTF8
-        @{schemaVersion=1;startScene=$document.id;scenes=@(@{id=$document.id;path=$sceneFile})} | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath (Join-Path $content 'project.json') -Encoding UTF8
         $name = "recovery-$fixture"
-        $results += Invoke-GameScenario $name @('--content-dir',$content,'--smoke-route','recovery') $true
+        $project = if ($fixture -eq 'upper-void') {'QA/upper-void'} else {'QA/recovery-'+$fixture}
+        $results += Invoke-GameScenario $name @('--native-project',$project,'--smoke-route','recovery') $true
         $run = Get-Content -LiteralPath (Join-Path $root "$name/run.json") -Raw | ConvertFrom-Json
         $expectedY = if ($fixture -eq 'upper-void') {1.6} else {0}
         if (-not $run.sessionComplete -or $run.session.WorldRevision -ne 1 -or $run.finalPosition.y -ne $expectedY -or $run.finalSnapshot.State -ne 'Standing' -or $run.hiddenGroups.Count -ne 0) { throw "$name did not restore correct safe layer." }

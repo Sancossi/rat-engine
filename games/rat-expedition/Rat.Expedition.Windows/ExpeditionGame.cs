@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Rat.Expedition.Authoring;
 using Rat.Expedition.Core;
 using Stride.Core.Mathematics;
 using Stride.Engine;
@@ -21,7 +22,7 @@ namespace Rat.Expedition.Windows;
 public sealed class ExpeditionGame : Game
 {
     private readonly GameOptions options;
-    private readonly ExpeditionProject project;
+    private ExpeditionProject project = null!;
     private ExpeditionSession session = null!;
     private SceneDefinition definition => session.Scene;
     private ScenePresentation bundle = null!;
@@ -54,11 +55,10 @@ public sealed class ExpeditionGame : Game
     private SpriteBatch? hudBatch;
     public Exception? FatalError { get; private set; }
 
-    public ExpeditionGame(GameOptions options, ExpeditionProject project)
+    public ExpeditionGame(GameOptions options)
     {
         this.options = options;
-        this.project = project;
-        sessionRoute=new(options.SmokeRoute);
+        sessionRoute=new(options.SmokeRoute=="native-candidate-failure"?"portal-failure":options.SmokeRoute);
         AutoLoadDefaultSettings = false;
         GraphicsDeviceManager.PreferredBackBufferWidth = options.Width;
         GraphicsDeviceManager.PreferredBackBufferHeight = options.Height;
@@ -104,6 +104,26 @@ public sealed class ExpeditionGame : Game
     private async Task LoadScene()
     {
         await base.LoadContent();
+        project = new NativeProjectLoader(Services,options.NativeProject).Load();
+        if(options.SmokeFrames>0&&options.SmokeRoute=="native-candidate-failure")
+        {
+            // The initial world uses the production assets. A later real portal
+            // requests a separately compiled invalid native candidate, exercising
+            // loader/validation failure before any presentation replacement.
+            var initial=project;int reads=0;
+            project=ExpeditionProject.FromSource(initial.StartScene,initial.Scenes.Values,id=>
+                ++reads==1?initial.LoadCandidate(id):new NativeProjectLoader(Services,"QA/bad-portal-target").Load().LoadCandidate(id));
+        }
+        if(options.SmokeFrames>0)
+            File.WriteAllText(Path.Combine(options.EvidenceDirectory,"native-world.json"),JsonSerializer.Serialize(new {
+                source="compiled native assets",asset=options.NativeProject,project.StartScene,scenes=project.Scenes.Values,
+                names=project.Scenes.Values.ToDictionary(s=>s.Id,s=>s.DisplayNames),
+                wallProbes=project.Scenes.Values.ToDictionary(s=>s.Id,s=>new {
+                    oldPositionFree=s.CreateWorld().HasClearance(new(0,0,0),.2f,.8f),
+                    shiftedPositionFree=s.CreateWorld().HasClearance(new(0,0,-1.5f),.2f,.8f),
+                    oldSweep=s.CreateWorld().SweepFraction(new(-3,0,0),new(3,0,0),.2f,.8f),
+                    shiftedSweep=s.CreateWorld().SweepFraction(new(-3,0,-1.5f),new(3,0,-1.5f),.2f,.8f)})
+            },new JsonSerializerOptions{WriteIndented=true}));
         Window.Title = "Rat Expedition | WASD | Ctrl | E / Enter | Esc: pause | Wheel: zoom";
         var fontSystem = (Stride.Graphics.Font.FontSystem)Font;
         fontSystem.RuntimeFonts.RegisterFont("RatNoto",Path.Combine(options.ContentDirectory,"fonts","NotoSans-Regular.ttf"));
@@ -243,7 +263,7 @@ public sealed class ExpeditionGame : Game
         if (discard) { elapsed = 0; command = command with {Move=System.Numerics.Vector2.Zero}; wheel = 0; discardInputOnNextUpdate = false; }
         if (IsActive || options.SmokeFrames > 0) camera.OrthographicSize = Math.Clamp(camera.OrthographicSize - wheel * .5f, 4.5f, 7f);
         var sessionCommand = new SessionInput(command.Move,command.CrouchHeld,command.InteractHeld,Input.IsKeyDown(Keys.Escape));
-        if(options.SmokeFrames>0 && options.SmokeRoute is "layered" or "mixed" or "portals" or "portal-failure" or "recovery" && !discard && session.Mode==SessionMode.Explore)
+        if(options.SmokeFrames>0 && options.SmokeRoute is "layered" or "mixed" or "portals" or "portal-failure" or "native-candidate-failure" or "recovery" && !discard && session.Mode==SessionMode.Explore)
             sessionCommand=sessionRoute.Next(session);
         if(options.SmokeFrames>0 && frames is 121 or 123)sessionCommand=new(System.Numerics.Vector2.Zero);
         if(options.SmokeFrames>0 && frames==122)sessionCommand=new(System.Numerics.Vector2.Zero,PauseHeld:true);
@@ -284,7 +304,7 @@ public sealed class ExpeditionGame : Game
             using var capture=File.Create(Path.Combine(options.EvidenceDirectory,$"session-{sessionMilestone}.png"));
             GraphicsDevice.Presenter.BackBuffer.Save(GraphicsContext.CommandList,capture,ImageFileType.Png);
             sessionRoute.Milestones.Add(new {name=sessionMilestone,frame=frames,session=session.Snapshot,companions=session.Trail.Companions,
-                hidden=bundle.Occlusion.Hidden.ToArray(),actorVisible=bundle.Actors.Select(a=>a.Get<SpriteComponent>().Enabled).ToArray(),leaderAnimationFrame=provider.CurrentFrame,ownedBuffers=bundle.BufferCount});
+                hidden=bundle.Occlusion.Hidden.Select(id=>definition.DisplayNames.GetValueOrDefault(id,id)).ToArray(),actorVisible=bundle.Actors.Select(a=>a.Get<SpriteComponent>().Enabled).ToArray(),leaderAnimationFrame=provider.CurrentFrame,ownedBuffers=bundle.BufferCount});
             sessionRoute.Capture=null;
         }
         if(options.SmokeFrames>0 && options.SmokeRoute=="body" && bodyRoute.Capture is string milestone)
@@ -318,7 +338,7 @@ public sealed class ExpeditionGame : Game
             JsonElement? build = File.Exists(manifestPath) ? JsonSerializer.Deserialize<JsonElement>(File.ReadAllText(manifestPath)) : null;
             File.WriteAllText(Path.Combine(options.EvidenceDirectory, "run.json"), JsonSerializer.Serialize(new
             {
-                scene = definition.Id, width = GraphicsDevice.Presenter.BackBuffer.Width, height = GraphicsDevice.Presenter.BackBuffer.Height,
+                scene = definition.DisplayNames.GetValueOrDefault(definition.Id,definition.Id), sceneId=definition.Id, width = GraphicsDevice.Presenter.BackBuffer.Width, height = GraphicsDevice.Presenter.BackBuffer.Height,
                 adapter = GraphicsDevice.Adapter.Description, backend = GraphicsDevice.Platform.ToString(), frames,
                 smokeTiming = new { limitHz=60, drawWhileMinimized=DrawWhileMinimized, vsync=GraphicsDeviceManager.SynchronizeWithVerticalRetrace, samples=smokeWindowEvidence?.Samples },
                 runtime = Environment.Version.ToString(), stride = typeof(Game).Assembly.GetName().Version?.ToString(), samples,

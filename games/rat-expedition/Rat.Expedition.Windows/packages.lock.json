@@ -1188,6 +1188,14 @@
         "resolved": "1.0.240308001",
         "contentHash": "ZpVzMVEbtpoS8u/V3XHUSYNm3POblHQNCute3XAoK57fj61p7ALElpoiXw0Zw0KZTYYGkckQrKdBRy9tLk5dVQ=="
       },
+      "rat.expedition.authoring": {
+        "type": "Project",
+        "dependencies": {
+          "Rat.Expedition.Core": "[0.1.0, )",
+          "Stride.AssetCompiler": "[4.4.0-dev, 4.4.0-dev]",
+          "Stride.Engine": "[4.4.0-dev, 4.4.0-dev]"
+        }
+      },
       "rat.expedition.core": {
         "type": "Project"
       }

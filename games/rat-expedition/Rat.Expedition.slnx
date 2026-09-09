@@ -1,5 +1,7 @@
 <Solution>
   <Project Path="Rat.Expedition.Core/Rat.Expedition.Core.csproj" />
   <Project Path="Rat.Expedition.Core.Tests/Rat.Expedition.Core.Tests.csproj" />
+  <Project Path="Rat.Expedition.Authoring/Rat.Expedition.Authoring.csproj" />
+  <Project Path="Rat.Expedition.Authoring.Tests/Rat.Expedition.Authoring.Tests.csproj" />
   <Project Path="Rat.Expedition.Windows/Rat.Expedition.Windows.csproj" DefaultStartup="true" />
 </Solution>

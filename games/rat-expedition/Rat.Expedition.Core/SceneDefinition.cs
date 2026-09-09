@@ -66,7 +66,9 @@ public sealed record SceneDefinition(int SchemaVersion,string Id,WorldBox Floor,
     // Convenience for pure-code fixtures. Serialized schema 3 always requires all fields.
     public SceneDefinition(int schemaVersion,string id,WorldBox floor,Point3 spawn,WorldBox[] walls,WorldBox[] structures,LadderDefinition[] ladders)
         :this(schemaVersion,id,floor,[new("entry",spawn)],walls,structures,ladders,[],[],-2,[],[]) {}
-    [JsonIgnore] public Point3 Spawn {get=>GetSpawn("entry"); init=>Spawns=[new("entry",value)];}
+    public string DefaultSpawnId {get;init;}="entry";
+    [JsonIgnore] public IReadOnlyDictionary<string,string> DisplayNames {get;init;}=new Dictionary<string,string>();
+    [JsonIgnore] public Point3 Spawn {get=>GetSpawn(DefaultSpawnId); init=>Spawns=[new(DefaultSpawnId,value)];}
     [JsonIgnore] public IEnumerable<WorldBox> AllSolids=>Walls.Concat(Structures).Prepend(Floor);
     public LayeredCollisionWorld CreateWorld()=>new(AllSolids,Ramps.Select(r=>r.ToWorld()));
     public Point3 GetSpawn(string id)=>Spawns.SingleOrDefault(s=>s.Id==id)?.Position ?? throw new InvalidDataException($"Scene '{Id}' has no spawn '{id}'.");
@@ -92,7 +94,7 @@ public sealed record SceneDefinition(int SchemaVersion,string Id,WorldBox Floor,
             if(!Safe(spawn.Position)||spawn.Position.Y<=RecoveryThreshold)
                 throw new InvalidDataException($"Spawn '{spawn.Id}' needs standing support/clearance above the recovery threshold.");
         }
-        _=GetSpawn("entry");
+        _=GetSpawn(DefaultSpawnId);
         foreach(var ladder in Ladders)
         {
             if(ladder is null)throw new InvalidDataException("Null ladder."); UniqueId(ladder.Id);

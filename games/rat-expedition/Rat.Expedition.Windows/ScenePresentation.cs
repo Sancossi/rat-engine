@@ -1,4 +1,5 @@
 using Rat.Expedition.Core;
+using Rat.Expedition.Authoring;
 using Stride.Core;
 using Stride.Core.Mathematics;
 using Stride.Engine;
@@ -62,7 +63,7 @@ internal sealed class ScenePresentation : IDisposable
             var size=new Vector3(box.Max.X-box.Min.X,box.Max.Y-box.Min.Y,box.Max.Z-box.Min.Z);
             Add(box.Id,new CubeProceduralModel{Size=size},new Vector3(box.Min.X,box.Min.Y,box.Min.Z)+size/2,color);
         }
-        foreach(var ramp in definition.Ramps)Add(ramp.Id,new RampPrimitive(ramp.ToWorld()),Vector3.Zero,new(.34f,.38f,.39f,1));
+        foreach(var ramp in definition.Ramps)Add(ramp.Id,new FiniteRampPrimitive(ramp.ToWorld()),Vector3.Zero,new(.34f,.38f,.39f,1));
         foreach(var portal in definition.Portals)
             Add("portal-marker-"+portal.Id,new CubeProceduralModel{Size=new(.65f,.025f,.65f)},new(portal.Anchor.X,portal.Anchor.Y+.013f,portal.Anchor.Z),new(.25f,.48f,.62f,1));
         Color4[] tints=[new(1,1,1,1),new(.55f,.85f,1,1),new(1,.68f,.48f,1)];
@@ -89,28 +90,6 @@ internal sealed class ScenePresentation : IDisposable
             foreach(float side in new[]{-.3f,.3f})yield return new($"ladder-decoration-{ladder.Id}-{side}",new(ladder.Bottom.X+side-.025f,ladder.Bottom.Y,z-.025f),new(ladder.Top.X+side+.025f,ladder.Top.Y+.25f,z+.025f));
             int count=Math.Max(0,(int)Math.Floor(((double)ladder.Top.Y-ladder.Bottom.Y-.15)/.2)+1);
             for(int i=0;i<count;i++){float y=ladder.Bottom.Y+(float)(.15+i*.2);yield return new($"ladder-decoration-{ladder.Id}-rung-{i}",new(ladder.Bottom.X-.3f,y,z-.025f),new(ladder.Top.X+.3f,y+.035f,z+.025f));}
-        }
-    }
-    private sealed class RampPrimitive(WorldRamp ramp):PrimitiveProceduralModelBase
-    {
-        protected override GeometricMeshData<VertexPositionNormalTexture> CreatePrimitiveMeshData()
-        {
-            // Eight geometric corners; split into 24 vertices for flat face normals.
-            Vector3 Top(float x,float z)=>new(x,(float)ramp.TopAt(x,z),z);
-            Vector3[] p=[Top(ramp.Min.X,ramp.Min.Y),Top(ramp.Max.X,ramp.Min.Y),Top(ramp.Max.X,ramp.Max.Y),Top(ramp.Min.X,ramp.Max.Y)];
-            p=p.Concat(p.Select(v=>v-new Vector3(0,ramp.Thickness,0))).ToArray();
-            int[][] faces=[[0,3,2,1],[4,5,6,7],[0,1,5,4],[1,2,6,5],[2,3,7,6],[3,0,4,7]];
-            var vertices=new List<VertexPositionNormalTexture>();var indices=new List<int>();
-            foreach(var f in faces)
-            {
-                int start=vertices.Count;var normal=Vector3.Normalize(Vector3.Cross(p[f[1]]-p[f[0]],p[f[2]]-p[f[0]]));
-                Vector2[] uv=[new(0,0),new(1,0),new(1,1),new(0,1)];
-                for(int i=0;i<4;i++)vertices.Add(new(p[f[i]],normal,uv[i]));
-                // Stride's right-handed primitive front-face winding is opposite
-                // the outward cross-product normal (same convention as Cube.New).
-                indices.AddRange(new[]{start,start+2,start+1,start,start+3,start+2});
-            }
-            return new(vertices.ToArray(),indices.ToArray(),false);
         }
     }
 }

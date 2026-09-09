@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <StrideCompilerSkipBuild>true</StrideCompilerSkipBuild>
+  </PropertyGroup>
+  <ItemGroup><ProjectReference Include="../Rat.Expedition.Authoring/Rat.Expedition.Authoring.csproj" /></ItemGroup>
+</Project>

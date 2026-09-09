@@ -10,3 +10,5 @@ AssetFolders:
     - Path: !dir Assets
 ResourceFolders:
     - !dir Resources
+RootAssets:
+    - 2ecc6dd7-3fc3-592d-8abe-8bac6974f435:ExpeditionProject

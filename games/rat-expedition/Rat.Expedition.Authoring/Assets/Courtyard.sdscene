@@ -1,0 +1,473 @@
+!SceneAsset
+Id: a6d301f9-3171-5137-b3c7-4622618bebc5
+SerializedVersion: {Stride: 3.1.0.1}
+Tags: []
+ChildrenIds: []
+Offset: {X: 0.0, Y: 0.0, Z: 0.0}
+Hierarchy:
+    RootParts:
+        - ref!! 83513e47-0a32-54e1-8a67-a95efe621e55
+        - ref!! dc4e6f8a-3556-5b89-ac7c-3787bbb970b0
+        - ref!! 64e053ae-e44a-530f-a63a-824bf7c62343
+        - ref!! 9564bfa5-106f-51e6-aeb5-b8fd38706f77
+        - ref!! 1c4f9d9a-9eed-54a2-957d-151a3a003a14
+        - ref!! 2fea8448-3e23-553a-ac37-da9577b3ba31
+        - ref!! 6e37c5dc-0cff-5b49-9f8e-02863e3a4c05
+        - ref!! 6c0d0478-b954-57df-89f5-14987619fb24
+        - ref!! ae7c65cc-8c83-5b87-b39f-2696e7462f9e
+        - ref!! fd7ad7bd-eb6c-55aa-b761-c6680030b30e
+        - ref!! 3b3d2c74-248c-5224-919d-983065577ecf
+        - ref!! 08f1d20a-6502-5fae-9e76-a399dfba8b4c
+        - ref!! 3fa26a33-f109-5b38-919b-48d1c84f68de
+        - ref!! 6e2c9e86-46e4-58c1-9058-d0cb8dcbe3dc
+        - ref!! 0afba030-34f8-5fa1-9173-1135966f8e68
+        - ref!! d185ae4a-8177-59e0-9b03-49a9ad2148d5
+        - ref!! fffd4a8c-c072-53b9-ae43-85448ab0d402
+        - ref!! bd7af0df-a21d-5ad6-bfaf-63a54eeb1598
+        - ref!! a8250111-fca8-51e2-a7fd-6e0f19532fd5
+        - ref!! 219c6e1f-22b8-517c-aa36-b1fc39ce22f1
+        - ref!! f86aea0d-a87f-5a12-82cb-3b9fdc44bded
+        - ref!! eb00935f-8ca8-576c-a543-8227d377515f
+        - ref!! 078b3f27-4068-505d-b113-086456b15be4
+        - ref!! 66d92055-563c-5756-ac4a-41063622cc9b
+        - ref!! 8fb5a79f-3fb4-5a3e-955f-319cb346520a
+        - ref!! 1de46740-6e43-53b4-bab2-f0d51f81fb35
+        - ref!! 997abfe4-ee73-54e6-92f9-f2021a18d804
+        - ref!! d1ab8473-07bf-573d-9c4b-23342392c4c5
+        - ref!! c35eba36-1f36-5155-b98c-ca376f45d359
+        - ref!! 018dce00-7665-5a24-9203-7c74d00fd5d6
+    Parts:
+        -   Entity:
+                Id: 018dce00-7665-5a24-9203-7c74d00fd5d6
+                Name: Editor ambient
+                Components:
+                    1ae82d68dc905b95bc4376bf418a49ae: !TransformComponent
+                        Id: fe3a271f-c6c7-524d-892d-e23602922e4a
+                        Position: {X: 0.0, Y: 0.0, Z: 0.0}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
+                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
+                        Children: {}
+                    4a51b1afa0e75bffa4831fa8d0c17cc2: !LightComponent
+                        Id: 6f00be19-0e28-581d-b760-cf1010abbb7b
+                        Type: !LightAmbient
+                            Color: !ColorRgbProvider
+                                Value: {R: 1.0, G: 1.0, B: 1.0}
+                        Intensity: 0.55
+        -   Entity:
+                Id: 078b3f27-4068-505d-b113-086456b15be4
+                Name: courtyard-ladder/topExit
+                Components:
+                    32c0c841b41857e89fd0de682fc56758: !TransformComponent
+                        Id: 80ff3fc1-01cb-590b-982e-8923e72dea71
+                        Position: {X: -4.4, Y: 1.6, Z: -2.6}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
+                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
+                        Children: {}
+        -   Entity:
+                Id: 08f1d20a-6502-5fae-9e76-a399dfba8b4c
+                Name: bridge-post
+                Components:
+                    591480a466585da6b19f7d6a364d51fd: !TransformComponent
+                        Id: 4c063825-4d37-57da-a992-0cb37d75bd55
+                        Position: {X: 1.2, Y: 0.7, Z: -3.925}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
+                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
+                        Children: {}
+                    662a740db67b59a1a8aa01c4d2410736: !ExpeditionGeometry
+                        Id: 4f012029-0b25-57c9-8aa6-a9f2cd52f523
+                        Role: Structure
+                        Size: {X: 0.2, Y: 1.4, Z: 0.15}
+                        Axis: X
+                        Rise: 1.0
+        -   Entity:
+                Id: 0afba030-34f8-5fa1-9173-1135966f8e68
+                Name: entry
+                Components:
+                    1618cda90ccd54aa9a61f3a1871aad0d: !TransformComponent
+                        Id: 02cce771-0b5a-5edf-9096-0870d5c44352
+                        Position: {X: 1.5, Y: 0.0, Z: 3.0}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
+                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
+                        Children: {}
+                    6ec70275bcc956d39bea41019f99ae74: !ExpeditionSpawn
+                        Id: 8009f83a-cbed-5b14-97b8-e8c6476bab51
+        -   Entity:
+                Id: 1c4f9d9a-9eed-54a2-957d-151a3a003a14
+                Name: north-boundary
+                Components:
+                    dda7971da3e45f8d99dfd2a48538b4f1: !TransformComponent
+                        Id: c8c09d77-fa0f-54bb-8d51-e334c942909f
+                        Position: {X: 0.25, Y: 0.6, Z: -5.75}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
+                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
+                        Children: {}
+                    fc50e9d57ef85bc7b295aba080e1eb9d: !ExpeditionGeometry
+                        Id: 9eca5b79-0bf2-59d5-8656-c7eebc262de7
+                        Role: Wall
+                        Size: {X: 15.5, Y: 1.2, Z: 0.5}
+                        Axis: X
+                        Rise: 1.0
+        -   Entity:
+                Id: 1de46740-6e43-53b4-bab2-f0d51f81fb35
+                Name: arch-cut
+                Components:
+                    d278f09598975c4f9570e35a951d5449: !TransformComponent
+                        Id: bd9589d8-d7e2-5503-b630-053bd0167ae6
+                        Position: {X: 0.0, Y: 0.0, Z: 0.0}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
+                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
+                        Children: {}
+                    b8a996629338586bb77bf8e5b0953e5e: !ExpeditionOcclusion
+                        Id: 78a6457f-5aa3-595d-a7ce-d3d9dbcb3807
+                        Members:
+                            f0075bf8a57951d1ace3aadffa2e89f4: ref!! 6e37c5dc-0cff-5b49-9f8e-02863e3a4c05
+                            9b48110b1a045ae680702928117a1c86: ref!! 6c0d0478-b954-57df-89f5-14987619fb24
+                            8578c1e21c485b2f9ca38be6de549a87: ref!! ae7c65cc-8c83-5b87-b39f-2696e7462f9e
+                        HideWith: null
+        -   Entity:
+                Id: 219c6e1f-22b8-517c-aa36-b1fc39ce22f1
+                Name: courtyard-ladder/bottomEntry
+                Components:
+                    b4542bed8ab459ac8ee1db3668061bd3: !TransformComponent
+                        Id: 57d800a2-8d8e-56c2-a611-d3ecc968e71f
+                        Position: {X: -4.4, Y: 0.0, Z: -0.95}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
+                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
+                        Children: {}
+        -   Entity:
+                Id: 2fea8448-3e23-553a-ac37-da9577b3ba31
+                Name: east-pillar
+                Components:
+                    9565b9bd0cad589e9d85641b513e4030: !TransformComponent
+                        Id: d311e37a-232f-5218-bd52-a51ddf40b38c
+                        Position: {X: 4.5, Y: 0.75, Z: 1.5}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
+                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
+                        Children: {}
+                    5011fde2c19b5865b808f89804b1f0dd: !ExpeditionGeometry
+                        Id: 08aa2250-9add-5135-9b46-8ff779c5af16
+                        Role: Wall
+                        Size: {X: 1.0, Y: 1.5, Z: 1.0}
+                        Axis: X
+                        Rise: 1.0
+        -   Entity:
+                Id: 3b3d2c74-248c-5224-919d-983065577ecf
+                Name: bridge-deck
+                Components:
+                    fb7b9b72df9b5f16a4f0a3eae49e1214: !TransformComponent
+                        Id: 03c9e03f-f070-578e-961a-e7e8df8b3a82
+                        Position: {X: 3.0, Y: 1.5, Z: -3.4}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
+                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
+                        Children: {}
+                    d9402477941b56d7b1d5d4a5661e8167: !ExpeditionGeometry
+                        Id: 9056f1b4-1671-5c57-a97f-e8d9d61de6fe
+                        Role: Structure
+                        Size: {X: 4.0, Y: 0.2, Z: 1.2}
+                        Axis: X
+                        Rise: 1.0
+        -   Entity:
+                Id: 3fa26a33-f109-5b38-919b-48d1c84f68de
+                Name: bridge-rail
+                Components:
+                    94dc25e6441253fdb0b0ea31d75baa66: !TransformComponent
+                        Id: a2500cde-9473-52b8-9737-670726386354
+                        Position: {X: 3.0, Y: 1.8, Z: -2.75}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
+                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
+                        Children: {}
+                    a08452b9fce35ec09d333a9b8391192c: !ExpeditionGeometry
+                        Id: ca89d0eb-5b7c-51dd-8a5c-86812aa88d46
+                        Role: Structure
+                        Size: {X: 4.0, Y: 0.4, Z: 0.1}
+                        Axis: X
+                        Rise: 1.0
+        -   Entity:
+                Id: 64e053ae-e44a-530f-a63a-824bf7c62343
+                Name: courtyard-wall
+                Components:
+                    51096ae922c25fc8a441e91008defc0d: !TransformComponent
+                        Id: 6923d20e-7169-53b6-9d69-775824e72e98
+                        Position: {X: 0.0, Y: 0.9, Z: 0.0}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
+                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
+                        Children: {}
+                    2ee685ae8bee54ccb7a17d318e864f6e: !ExpeditionGeometry
+                        Id: 2583caa3-81f8-5dba-8733-dd1481710ff9
+                        Role: Wall
+                        Size: {X: 4.0, Y: 1.8, Z: 0.5}
+                        Axis: X
+                        Rise: 1.0
+        -   Entity:
+                Id: 66d92055-563c-5756-ac4a-41063622cc9b
+                Name: courtyard-ladder
+                Components:
+                    f38ed5b38919536d96f1d765d456ad41: !TransformComponent
+                        Id: f0fba496-2f27-5749-9a8b-f81039fc02e6
+                        Position: {X: 0.0, Y: 0.0, Z: 0.0}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
+                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
+                        Children: {}
+                    1ce9aca910995f2db712bc4a2144b424: !ExpeditionLadder
+                        Id: 87c7fd5d-13b3-5a40-bf16-96a37fc81c68
+                        Bottom: ref!! bd7af0df-a21d-5ad6-bfaf-63a54eeb1598
+                        Top: ref!! a8250111-fca8-51e2-a7fd-6e0f19532fd5
+                        BottomEntry: ref!! 219c6e1f-22b8-517c-aa36-b1fc39ce22f1
+                        TopEntry: ref!! f86aea0d-a87f-5a12-82cb-3b9fdc44bded
+                        BottomExit: ref!! eb00935f-8ca8-576c-a543-8227d377515f
+                        TopExit: ref!! 078b3f27-4068-505d-b113-086456b15be4
+        -   Entity:
+                Id: 6c0d0478-b954-57df-89f5-14987619fb24
+                Name: passage-left-post
+                Components:
+                    35309eb43d7d53eb80a1322b321a13d4: !TransformComponent
+                        Id: 532340cd-de78-517f-b199-6acbc997c89f
+                        Position: {X: -5.1, Y: 0.4, Z: 1.45}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
+                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
+                        Children: {}
+                    edac5a71e34f53b0a94775a0aa6e97e1: !ExpeditionGeometry
+                        Id: 13f54914-8619-5745-8614-5b8fa458ecca
+                        Role: Structure
+                        Size: {X: 0.2, Y: 0.8, Z: 0.5}
+                        Axis: X
+                        Rise: 1.0
+        -   Entity:
+                Id: 6e2c9e86-46e4-58c1-9058-d0cb8dcbe3dc
+                Name: bridge-crate
+                Components:
+                    89be04c61bb8547d93d47ac96a20bfab: !TransformComponent
+                        Id: c0c3f127-bfd9-5c60-8474-714241147280
+                        Position: {X: 3.15, Y: 1.75, Z: -3.65}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
+                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
+                        Children: {}
+                    a802308016635fed89679982ad4b9d42: !ExpeditionGeometry
+                        Id: 832427f7-c54c-5565-bdff-4f9014a3b21c
+                        Role: Decoration
+                        Size: {X: 0.3, Y: 0.3, Z: 0.3}
+                        Axis: X
+                        Rise: 1.0
+        -   Entity:
+                Id: 6e37c5dc-0cff-5b49-9f8e-02863e3a4c05
+                Name: low-ceiling
+                Components:
+                    e37561791b0a5314b8d81d11ceb14794: !TransformComponent
+                        Id: c110ade2-4c27-5be2-b30f-b32723a8631c
+                        Position: {X: -4.0, Y: 0.7, Z: 1.45}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
+                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
+                        Children: {}
+                    6feacfe089b656009b07539f8db22b19: !ExpeditionGeometry
+                        Id: b4995683-589f-59f8-a117-418376d9bbf4
+                        Role: Structure
+                        Size: {X: 2.0, Y: 0.2, Z: 0.5}
+                        Axis: X
+                        Rise: 1.0
+        -   Entity:
+                Id: 83513e47-0a32-54e1-8a67-a95efe621e55
+                Name: expedition_courtyard
+                Components:
+                    9b9e9a1f1b215109a8b30b6f2d2f8da4: !TransformComponent
+                        Id: d6207e56-9828-552d-a111-abaaf4f4fedb
+                        Position: {X: 0.0, Y: 0.0, Z: 0.0}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
+                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
+                        Children: {}
+                    adedfc5808055a5bbc879c61d8b96291: !ExpeditionScene
+                        Id: 7822225b-50de-5540-9044-625b55e3b4f0
+                        DefaultSpawn: ref!! 0afba030-34f8-5fa1-9173-1135966f8e68
+                        RecoveryThreshold: -2.0
+        -   Entity:
+                Id: 8fb5a79f-3fb4-5a3e-955f-319cb346520a
+                Name: to-sluice
+                Components:
+                    9d4d7899264b5f2ebc9a072a69382f9d: !TransformComponent
+                        Id: 6f55be9d-ffba-58b7-ba26-40bf2a43d5f2
+                        Position: {X: 6.7, Y: 0.0, Z: 4.0}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
+                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
+                        Children: {}
+                    c50aa03f77af5c9ab769e46c4ed594f1: !ExpeditionPortal
+                        Id: 0bf42d08-b2e1-5a95-a0e9-218797a15f23
+                        Size: {X: 1.0, Y: 0.1, Z: 1.0}
+                        TargetScene: 70789606-338b-58d8-88ef-86bf53250749:Sluice
+                        TargetSpawnId: 7da1e56d-f030-5649-a49d-81cd712f7f97
+        -   Entity:
+                Id: 9564bfa5-106f-51e6-aeb5-b8fd38706f77
+                Name: west-boundary
+                Components:
+                    213fa9a85246524d962dfc53358e01f2: !TransformComponent
+                        Id: a401ec1d-0d58-5065-a890-6f7fbc613ccd
+                        Position: {X: -7.75, Y: 0.6, Z: 0.0}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
+                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
+                        Children: {}
+                    e6cba9cdba145cd98624df94a8a071a8: !ExpeditionGeometry
+                        Id: a87851df-3dca-535f-a83e-c1644973a9e4
+                        Role: Wall
+                        Size: {X: 0.5, Y: 1.2, Z: 12.0}
+                        Axis: X
+                        Rise: 1.0
+        -   Entity:
+                Id: 997abfe4-ee73-54e6-92f9-f2021a18d804
+                Name: north-independent
+                Components:
+                    774a35325a065386b7d25116d776b01d: !TransformComponent
+                        Id: f95cfb70-ec9b-531b-a350-5b0f292628b5
+                        Position: {X: 0.0, Y: 0.0, Z: 0.0}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
+                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
+                        Children: {}
+                    176be989509557869ed9700f92c7bd5f: !ExpeditionOcclusion
+                        Id: 654ddaf1-af87-5d1f-8e89-7a2974eacf83
+                        Members:
+                            6b06034054735838a8b2e52ebe6607dd: ref!! 1c4f9d9a-9eed-54a2-957d-151a3a003a14
+                        HideWith: null
+        -   Entity:
+                Id: a8250111-fca8-51e2-a7fd-6e0f19532fd5
+                Name: courtyard-ladder/top
+                Components:
+                    aaa739717c80570d859e1ab55b0469cc: !TransformComponent
+                        Id: 0e210fe3-880a-5abb-90f3-15a66122bb5e
+                        Position: {X: -4.4, Y: 1.6, Z: -1.65}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
+                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
+                        Children: {}
+        -   Entity:
+                Id: ae7c65cc-8c83-5b87-b39f-2696e7462f9e
+                Name: passage-right-post
+                Components:
+                    5f53cfd921e25249a8f98ab6bbff27cb: !TransformComponent
+                        Id: 1b0e8805-3b6f-551f-9024-4b1ab4a0ba48
+                        Position: {X: -2.9, Y: 0.4, Z: 1.45}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
+                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
+                        Children: {}
+                    b335d6fe7d6a5fe78092403b2f38a649: !ExpeditionGeometry
+                        Id: 66ff2a4f-d9a2-51b8-b4df-b1d690bd1cc4
+                        Role: Structure
+                        Size: {X: 0.2, Y: 0.8, Z: 0.5}
+                        Axis: X
+                        Rise: 1.0
+        -   Entity:
+                Id: bd7af0df-a21d-5ad6-bfaf-63a54eeb1598
+                Name: courtyard-ladder/bottom
+                Components:
+                    f1285aaa62225bb0988e06441bdb4e1d: !TransformComponent
+                        Id: a5f150e2-593c-5f81-9a81-d2d93cc69ff8
+                        Position: {X: -4.4, Y: 0.0, Z: -1.65}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
+                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
+                        Children: {}
+        -   Entity:
+                Id: c35eba36-1f36-5155-b98c-ca376f45d359
+                Name: bridge-rail-cut
+                Components:
+                    7ce6348fcd2e5cd29064108206aede55: !TransformComponent
+                        Id: f2348c0e-827e-5742-9bea-de57a7fba904
+                        Position: {X: 0.0, Y: 0.0, Z: 0.0}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
+                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
+                        Children: {}
+                    a3d91192d4bc52bab52df2b02a7acdc4: !ExpeditionOcclusion
+                        Id: 1faabeec-7a47-5124-b93f-88423672ea74
+                        Members:
+                            6564341a7bd15273bd02b9b05344e6c0: ref!! 3fa26a33-f109-5b38-919b-48d1c84f68de
+                        HideWith: ref!! d1ab8473-07bf-573d-9c4b-23342392c4c5
+        -   Entity:
+                Id: d185ae4a-8177-59e0-9b03-49a9ad2148d5
+                Name: from-sluice
+                Components:
+                    efe1dcdc0aa85764b4b22cccdf33140b: !TransformComponent
+                        Id: ebed6c26-f818-54de-a29b-2938485658a5
+                        Position: {X: 5.5, Y: 0.0, Z: 4.0}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
+                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
+                        Children: {}
+                    8b5187f269e9553e9f8b8f25e3029fd4: !ExpeditionSpawn
+                        Id: 03fed868-89bb-515f-89ec-0e82137941e4
+        -   Entity:
+                Id: d1ab8473-07bf-573d-9c4b-23342392c4c5
+                Name: bridge-cut
+                Components:
+                    6c625175067e51de92f973899304c056: !TransformComponent
+                        Id: 91cc9b03-cbe2-5000-a73c-d5868e529654
+                        Position: {X: 0.0, Y: 0.0, Z: 0.0}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
+                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
+                        Children: {}
+                    f628288e3ef85d6b9a22b3c1326ad552: !ExpeditionOcclusion
+                        Id: 9a61fff9-a8c9-58aa-a887-6b5cb01557e2
+                        Members:
+                            46c8f77bbea257f6bb68fa592d062e82: ref!! 3b3d2c74-248c-5224-919d-983065577ecf
+                            66c4e479936c57b7af083270d049bff4: ref!! 6e2c9e86-46e4-58c1-9058-d0cb8dcbe3dc
+                        HideWith: null
+        -   Entity:
+                Id: dc4e6f8a-3556-5b89-ac7c-3787bbb970b0
+                Name: floor
+                Components:
+                    8b76dce6b6b45fceb7ca5885c6a3ed50: !TransformComponent
+                        Id: f0ce2c17-be3c-51da-9df3-64c1fcb61c72
+                        Position: {X: 0.0, Y: -0.15, Z: 0.0}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
+                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
+                        Children: {}
+                    69a3f0fb1b985a3e98dc7d0a58aa8a79: !ExpeditionGeometry
+                        Id: 95aff770-c19c-5435-82ce-ddda32edca80
+                        Role: Floor
+                        Size: {X: 16.0, Y: 0.3, Z: 12.0}
+                        Axis: X
+                        Rise: 1.0
+        -   Entity:
+                Id: eb00935f-8ca8-576c-a543-8227d377515f
+                Name: courtyard-ladder/bottomExit
+                Components:
+                    aed844aa3e7059438062ae7abd1c6ee4: !TransformComponent
+                        Id: 8228d8f3-6db7-5c9e-8906-6df8fb66a88d
+                        Position: {X: -4.4, Y: 0.0, Z: -0.95}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
+                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
+                        Children: {}
+        -   Entity:
+                Id: f86aea0d-a87f-5a12-82cb-3b9fdc44bded
+                Name: courtyard-ladder/topEntry
+                Components:
+                    2a1362cdc18452009ea7167fb02b64a1: !TransformComponent
+                        Id: b7424df3-115f-5c04-9dad-ffcadbf0c82d
+                        Position: {X: -4.4, Y: 1.6, Z: -2.6}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
+                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
+                        Children: {}
+        -   Entity:
+                Id: fd7ad7bd-eb6c-55aa-b761-c6680030b30e
+                Name: upper-platform
+                Components:
+                    484cf076383c59c6bb76e4f1a8f4bee1: !TransformComponent
+                        Id: 4553c6f1-c320-5001-9a73-b17edd8ba8c4
+                        Position: {X: -4.4, Y: 1.5, Z: -3.0}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
+                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
+                        Children: {}
+                    fdbceca2d163583092a3bd56182235d7: !ExpeditionGeometry
+                        Id: f6e8e3af-f393-557e-94c0-40193ae69a01
+                        Role: Structure
+                        Size: {X: 2.8, Y: 0.2, Z: 2.0}
+                        Axis: X
+                        Rise: 1.0
+        -   Entity:
+                Id: fffd4a8c-c072-53b9-ae43-85448ab0d402
+                Name: bridge-ramp
+                Components:
+                    327756fa1c0d5537b58a2baec3044ba1: !TransformComponent
+                        Id: 7b9fa0ab-1d7b-58e6-92d0-78bad4eeff86
+                        Position: {X: -3.0, Y: 0.0, Z: -4.0}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
+                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
+                        Children: {}
+                    18b4deb5a3a15f6d8702de1204c022d6: !ExpeditionGeometry
+                        Id: 8b2cbd7d-2ea4-5273-bc7d-e9013a1d2266
+                        Role: Ramp
+                        Size: {X: 4.0, Y: 0.2, Z: 1.2}
+                        Axis: X
+                        Rise: 1.6

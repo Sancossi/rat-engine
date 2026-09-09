@@ -2,38 +2,6 @@
   "version": 1,
   "dependencies": {
     "net10.0": {
-      "Stride.AssetCompiler": {
-        "type": "Direct",
-        "requested": "[4.4.0-dev, 4.4.0-dev]",
-        "resolved": "4.4.0-dev",
-        "contentHash": "8MnM1EgjlnMlEp+B9v5R5sDGBo51shaR7LFtqMFeSuS37La1ZflPQ1Sz+5UlEXlc6XFgPJdUZCb4uTFWrB9M5A==",
-        "dependencies": {
-          "Mono.Options": "6.12.0.148",
-          "Stride.Assets.Models": "4.4.0-dev",
-          "Stride.BepuPhysics": "4.4.0-dev",
-          "Stride.Core.Assets.Quantum": "4.4.0-dev",
-          "Stride.Core.MicroThreading": "4.4.0-dev",
-          "Stride.CrashReport": "4.4.0-dev",
-          "Stride.CrashReporter": "4.4.0-dev",
-          "Stride.Particles": "4.4.0-dev",
-          "Stride.Physics": "4.4.0-dev",
-          "Stride.SpriteStudio.Offline": "4.4.0-dev",
-          "Stride.UI": "4.4.0-dev"
-        }
-      },
-      "Stride.Engine": {
-        "type": "Direct",
-        "requested": "[4.4.0-dev, 4.4.0-dev]",
-        "resolved": "4.4.0-dev",
-        "contentHash": "ETDKRd5yhlW0D9QDkavZVXD2WblMfLVDgOoPVOsZa237EsAagL6ui/9ijHRl/6WDUvro45o+4RsX+YiM5ZkdiQ==",
-        "dependencies": {
-          "Stride.Audio": "4.4.0-dev",
-          "Stride.Core.MicroThreading": "4.4.0-dev",
-          "Stride.Rendering": "4.4.0-dev",
-          "Stride.Shaders.Compilers": "4.4.0-dev",
-          "Stride.VirtualReality": "4.4.0-dev"
-        }
-      },
       "BepuPhysics": {
         "type": "Transitive",
         "resolved": "2.5.0-beta.28",
@@ -631,6 +599,24 @@
           "Microsoft.Extensions.Logging.Abstractions": "8.0.3"
         }
       },
+      "Stride.AssetCompiler": {
+        "type": "Transitive",
+        "resolved": "4.4.0-dev",
+        "contentHash": "8MnM1EgjlnMlEp+B9v5R5sDGBo51shaR7LFtqMFeSuS37La1ZflPQ1Sz+5UlEXlc6XFgPJdUZCb4uTFWrB9M5A==",
+        "dependencies": {
+          "Mono.Options": "6.12.0.148",
+          "Stride.Assets.Models": "4.4.0-dev",
+          "Stride.BepuPhysics": "4.4.0-dev",
+          "Stride.Core.Assets.Quantum": "4.4.0-dev",
+          "Stride.Core.MicroThreading": "4.4.0-dev",
+          "Stride.CrashReport": "4.4.0-dev",
+          "Stride.CrashReporter": "4.4.0-dev",
+          "Stride.Particles": "4.4.0-dev",
+          "Stride.Physics": "4.4.0-dev",
+          "Stride.SpriteStudio.Offline": "4.4.0-dev",
+          "Stride.UI": "4.4.0-dev"
+        }
+      },
       "Stride.Assets": {
         "type": "Transitive",
         "resolved": "4.4.0-dev",
@@ -827,6 +813,18 @@
         "type": "Transitive",
         "resolved": "2026.6.3",
         "contentHash": "UCSoIhwISy7ETrLtXKVBL0W12Vc90/48HlJoczYqsWsKipZiX0UcrIGK/M8ghPra19NBC5BA0j/IpCXzD+3cgg=="
+      },
+      "Stride.Engine": {
+        "type": "Transitive",
+        "resolved": "4.4.0-dev",
+        "contentHash": "ETDKRd5yhlW0D9QDkavZVXD2WblMfLVDgOoPVOsZa237EsAagL6ui/9ijHRl/6WDUvro45o+4RsX+YiM5ZkdiQ==",
+        "dependencies": {
+          "Stride.Audio": "4.4.0-dev",
+          "Stride.Core.MicroThreading": "4.4.0-dev",
+          "Stride.Rendering": "4.4.0-dev",
+          "Stride.Shaders.Compilers": "4.4.0-dev",
+          "Stride.VirtualReality": "4.4.0-dev"
+        }
       },
       "Stride.Foundation": {
         "type": "Transitive",
@@ -1146,6 +1144,14 @@
         "type": "Transitive",
         "resolved": "1.0.240308001",
         "contentHash": "ZpVzMVEbtpoS8u/V3XHUSYNm3POblHQNCute3XAoK57fj61p7ALElpoiXw0Zw0KZTYYGkckQrKdBRy9tLk5dVQ=="
+      },
+      "rat.expedition.authoring": {
+        "type": "Project",
+        "dependencies": {
+          "Rat.Expedition.Core": "[0.1.0, )",
+          "Stride.AssetCompiler": "[4.4.0-dev, 4.4.0-dev]",
+          "Stride.Engine": "[4.4.0-dev, 4.4.0-dev]"
+        }
       },
       "rat.expedition.core": {
         "type": "Project"

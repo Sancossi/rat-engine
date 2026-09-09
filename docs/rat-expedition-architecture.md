@@ -14,7 +14,8 @@
 | Rat.Expedition.Core/ | Чистые C# правила, команды, снимки, валидация; без Stride/GPU |
 | Rat.Expedition.Windows/ | net10.0-windows executable, Stride Game, ввод, сцена, камера, спрайты, диагностика |
 | Rat.Expedition.Core.Tests/ | Наблюдаемые сценарии правил без окна |
-| Content/ | Игровые JSON/PNG, credits.json, нужные fonts/notices |
+| Rat.Expedition.Authoring/ | Native карты/components, editor preview, validated Stride → Core adapter |
+| Content/ | PNG, credits.json, fonts/notices; прежний JSON только для исторических Core fixtures |
 | tools/ | Исходник собственного временного PNG |
 | NuGet.Config, Directory.Build.props, проектные packages.lock.json | Общие настройки и закреплённые зависимости |
 
@@ -44,7 +45,7 @@ P1.2 использует явный FSM игрока Standing/Crouched/Climbing
 
 `ScenePresentation` подготавливает camera с тем же compositor Slot, entities, материалы и конечный ramp mesh до Activate. Activate меняет указатели и переносит прежний bundle в заранее зарезервированный список; после Advance освобождаются старый SceneInstance и зарегистрированные procedural vertex/index buffers. Atlas/font имеют время жизни игры. `SceneInstance` сам не освобождает generated model buffers. HUD использует собственный SpriteBatch без depth test; upright world sprites сохраняют depth и straight-alpha. Это не отключение глубины персонажей.
 
-P1 authoring начинается с game JSON и code-first сцены. [План A1](stride-editor-asset-workflow-plan.md) предлагает после полного P1, перед P2, перенести карты и категории игровых ресурсов в native проект Game Studio. Scene/prefab, устойчивые игровые ids и свойства объёмов становятся одним авторским источником для представления и валидированных данных Core; ручной JSON-дубль не сохраняется. Пределы transforms явны: текущие axis-aligned solids допускают трансляцию/положительные размеры, но не произвольные rotation/scale или преобразования родителей; остальные объёмы полного P1 квалифицируются отдельно. Импорт/размещение/native свойства отличаются от создания mesh, пикселей и аудио во внешних инструментах. Точные editor/compiler API и parity обычного запуска с самостоятельным ZIP ещё предстоит проверить на locked source. Это основа до массового контента E3, не реализованный авторинг и не универсальный RPG editor; карточка A1 задаёт зависимости и приёмку.
+P1 начинался с JSON/code-first карты. [A1.2](stride-native-map-authoring-spec.md) переводит Courtyard/Sluice в native SceneAsset: типизированные компоненты и Entity.Id задают один авторский источник для editor preview и валидированного Core. Box/ramp geometry общая, физика не получает Stride dependencies. Разрешены finite translation/positive Size, identity rotation/unit scale, включая родителей; неподдерживаемый transform отклоняется. DefaultSpawn и локальные связи используют Entity references, портал — UrlReference сцены и GUID spawn. Native loader заново читает/валидирует candidate и освобождает native данные до owned runtime presentation; ошибка сохраняет активный мир. JSON fallback отсутствует. [План A1](stride-editor-asset-workflow-plan.md) продолжает библиотеку ресурсов A1.3 и общую приёмку A1.4 до массового E3; pixel/mesh/audio source editing остаётся внешним. Статусы и перенесённая ручная приёмка P1 находятся в vault.
 
 Occlusion — presentation adapter с локальными группами model entities и прикреплённых деталей. Настоящие пересечения ортографических лучей до глубины героя определяют скрытие; bounds лишь broad phase. Коллизии/цели не меняются. Опорный настил лидера видим; его перекрывающие стены/перила при необходимости отдельны. Вырез верхнего участка скрывает связанный декор и изображение верхнего спутника локально, но не нижнего. Геометрические условия и исключения заданы полным P1.
 
@@ -58,7 +59,7 @@ P5 хранит всю экспедицию в `%LOCALAPPDATA%/RatExpedition/` �
 
 Self-contained win-x64 publish запускается без editor, SDK, NuGet, сети и source checkout. ZIP содержит app/runtime/native libraries, нужные shaders/content, credits, проектную лицензию и notices фактически включённых зависимостей. Проверять извлечённый пакет из другого cwd. Данные читаются от `AppContext.BaseDirectory`; диагностические записи идут в явно заданный каталог.
 
-Валидатор отвергает отсутствующие/повреждённые PNG/JSON, бесконечные числа, неверные bounds и escaping paths. Стартовый отказ — читаемая ошибка/ненулевой exit; переходный отказ полного P1 сохраняет текущую сцену.
+Валидатор отвергает отсутствующие/повреждённые native assets, PNG/fonts, бесконечные числа, неверные bounds/references/transforms. Стартовый отказ — читаемая ошибка/ненулевой exit; переходный отказ полного P1 сохраняет текущую сцену. Прежний strict JSON loader остаётся Core fixture, не production fallback.
 
 Evidence разделяет Core tests, сборку, реальный GPU/adapter, автоматический запуск и ручную проверку. PNG 1280×720/1920×1080 снимаются с настоящего backbuffer; диаграмма и тест без GPU не заменяют кадр. A7 бюджеты не объявляются выполненными до измерений; историческая инвентаризация ПК сохранена в архиве архитектуры.
 

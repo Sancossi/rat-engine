@@ -4,6 +4,7 @@
     <OutputType>WinExe</OutputType>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <StridePlatform>Windows</StridePlatform>
+    <StrideCurrentPackagePath>$(MSBuildThisFileDirectory)../Rat.Expedition.Authoring/Rat.Expedition.Authoring.sdpkg</StrideCurrentPackagePath>
     <StrideGraphicsApi>Direct3D11</StrideGraphicsApi>
     <StrideRemoteEffectCompilerEnabled>false</StrideRemoteEffectCompilerEnabled>
     <PublishAot>false</PublishAot>
@@ -13,8 +14,9 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../Rat.Expedition.Core/Rat.Expedition.Core.csproj" />
+    <ProjectReference Include="../Rat.Expedition.Authoring/Rat.Expedition.Authoring.csproj" />
     <PackageReference Include="Stride.Engine" Version="[4.4.0-dev]" />
     <PackageReference Include="Stride.AssetCompiler" Version="[4.4.0-dev]" IncludeAssets="build;buildTransitive" />
-    <Content Include="../Content/**/*" Link="Content/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="../Content/**/*" Exclude="../Content/courtyard.json;../Content/sluice.json;../Content/project.json" Link="Content/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

@@ -1,0 +1,26 @@
+!SceneAsset
+Id: 2ecc6dd7-3fc3-592d-8abe-8bac6974f435
+SerializedVersion: {Stride: 3.1.0.1}
+Tags: []
+ChildrenIds: []
+Offset: {X: 0.0, Y: 0.0, Z: 0.0}
+Hierarchy:
+    RootParts:
+        - ref!! 907bef3f-3703-589d-9b90-cab275276f7a
+    Parts:
+        -   Entity:
+                Id: 907bef3f-3703-589d-9b90-cab275276f7a
+                Name: Rat Expedition project
+                Components:
+                    a726885ba16c5c2db1423d35531679b9: !TransformComponent
+                        Id: 8bfcc81f-80f6-5e57-ba00-ea44726d3e96
+                        Position: {X: 0.0, Y: 0.0, Z: 0.0}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
+                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
+                        Children: {}
+                    b7be4e2233e554dd875cb3873417465f: !ExpeditionProject
+                        Id: 5d06f282-78d4-5818-a243-36609160cbc4
+                        StartScene: a6d301f9-3171-5137-b3c7-4622618bebc5:Courtyard
+                        Scenes:
+                            b73a893e9ae45c999bb1b1cb878ebab6: a6d301f9-3171-5137-b3c7-4622618bebc5:Courtyard
+                            e93b8b8b8a445e3a9bfa0e36988615ed: 70789606-338b-58d8-88ef-86bf53250749:Sluice

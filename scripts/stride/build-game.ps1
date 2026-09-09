@@ -1,5 +1,5 @@
 [CmdletBinding()]
-param([string]$CheckoutPath)
+param([string]$CheckoutPath,[switch]$IncludeQualificationAssets)
 
 . (Join-Path $PSScriptRoot 'common.ps1')
 try {
@@ -46,14 +46,27 @@ try {
         if ($LASTEXITCODE -ne 0) { throw 'Install the SDK in games/rat-expedition/global.json.' }
         $app = 'Rat.Expedition.Windows/Rat.Expedition.Windows.csproj'
         $tests = 'Rat.Expedition.Core.Tests/Rat.Expedition.Core.Tests.csproj'
+        $authoringTests = 'Rat.Expedition.Authoring.Tests/Rat.Expedition.Authoring.Tests.csproj'
         Invoke-GameDotnet 'restore' @('restore', $app, '--configfile', $configPath, '--locked-mode')
         Invoke-GameDotnet 'restore-tests' @('restore', $tests, '--configfile', $configPath, '--locked-mode')
         Invoke-GameDotnet 'core-tests' @('run', '--project', $tests, '-c', 'Release', '--no-restore')
-        Invoke-GameDotnet 'publish' @('publish', $app, '-c', 'Release', '-r', 'win-x64', '--self-contained', 'true', '--no-restore', '-o', $publish,
-            '-p:PublishAot=false', '-p:PublishTrimmed=false', '-p:PublishSingleFile=false')
+        Invoke-GameDotnet 'restore-authoring-tests' @('restore', $authoringTests, '--configfile', $configPath, '--locked-mode')
+        Invoke-GameDotnet 'authoring-tests' @('run', '--project', $authoringTests, '-c', 'Release', '--no-restore')
+        # Derived native fixtures use the same compiler as production maps, in an
+        # isolated package; no QA assets or second metadata source in the editor project.
+        $assetArguments = @()
+        if ($IncludeQualificationAssets) {
+            $qaOutput = Join-Path $game 'obj/native-qualification/QA'
+            & python tools/build_native_fixtures.py --output $qaOutput
+            if ($LASTEXITCODE -ne 0) { throw 'Native QA fixture generation failed.' }
+            $qaPackage = Join-Path (Split-Path $qaOutput) 'Rat.Expedition.Qualification.sdpkg'
+            $assetArguments = @("-p:StrideCurrentPackagePath=$qaPackage")
+        }
+        Invoke-GameDotnet 'publish' (@('publish', $app, '-c', 'Release', '-r', 'win-x64', '--self-contained', 'true', '--no-restore', '-o', $publish,
+            '-p:PublishAot=false', '-p:PublishTrimmed=false', '-p:PublishSingleFile=false') + $assetArguments)
     } finally { Pop-Location }
 
-    foreach ($relative in @('Rat.Expedition.Windows.exe', 'coreclr.dll', 'Content/sprites/rat.png', 'Content/courtyard.json', 'Content/credits.json', 'Content/fonts/NotoSans-Regular.ttf', 'Content/fonts/OFL.txt', 'data/db/bundles/default.bundle')) {
+    foreach ($relative in @('Rat.Expedition.Windows.exe', 'Rat.Expedition.Authoring.dll', 'coreclr.dll', 'Content/sprites/rat.png', 'Content/credits.json', 'Content/fonts/NotoSans-Regular.ttf', 'Content/fonts/OFL.txt', 'data/db/bundles/default.bundle')) {
         if (-not (Test-Path -LiteralPath (Join-Path $publish $relative))) { throw "Publish closure missing $relative" }
     }
     $licenses = Join-Path $publish 'licenses'
@@ -86,6 +99,7 @@ try {
         gameWorkingTreeDirty = [bool](Invoke-StrideGit $repository @('status', '--porcelain', '--', 'games/rat-expedition', 'scripts/stride/build-game.ps1'))
         sdk = [string]$sdk; stridePackageVersion = '4.4.0-dev'; configuration = 'Release'; runtimeIdentifier = 'win-x64'
         selfContained = $true; effectCompiler = 'Local; remote feature switch disabled'; packageFeed = $feed
+        authoredProject = 'Rat.Expedition.Authoring/Assets/ExpeditionProject.sdscene'; qualificationAssets = [bool]$IncludeQualificationAssets
         locks = @($lockPaths | ForEach-Object { [ordered]@{ path = $_.FullName.Substring($game.Length); sha256 = (Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash } })
     }
     $manifest | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath (Join-Path $publish 'build-manifest.json') -Encoding UTF8

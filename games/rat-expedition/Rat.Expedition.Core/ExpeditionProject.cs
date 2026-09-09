@@ -10,6 +10,7 @@ public sealed class ExpeditionProject
     private readonly Dictionary<string,SceneDefinition> scenes;
     private readonly Dictionary<string,string>? paths;
     private readonly string? contentRoot;
+    private Func<string,SceneDefinition>? reload;
     public string StartScene {get;}
     public IReadOnlyDictionary<string,SceneDefinition> Scenes {get;}
     public ExpeditionProject(string startScene,IEnumerable<SceneDefinition> definitions)
@@ -26,6 +27,9 @@ public sealed class ExpeditionProject
     }
     private ExpeditionProject(string startScene,IEnumerable<SceneDefinition> definitions,string contentRoot,Dictionary<string,string> paths):this(startScene,definitions)
     {this.contentRoot=contentRoot;this.paths=paths;}
+    // Native/content adapters own their resources. Only validated pure values cross this boundary.
+    public static ExpeditionProject FromSource(string startScene,IEnumerable<SceneDefinition> definitions,Func<string,SceneDefinition> reload)
+        =>new(startScene,definitions){reload=reload??throw new ArgumentNullException(nameof(reload))};
     public static ExpeditionProject Load(string contentDirectory)
     {
         string root=Path.GetFullPath(contentDirectory);
@@ -47,6 +51,7 @@ public sealed class ExpeditionProject
     {
         if(!scenes.TryGetValue(id,out var scene))throw new InvalidDataException($"Unknown scene '{id}'.");
         if(paths is not null)scene=SceneDefinition.Load(ContentPath(contentRoot!,paths[id]));
+        if(reload is not null)scene=reload(id);
         if(scene.Id!=id)throw new InvalidDataException($"Candidate scene id changed: '{id}'.");
         scene.Validate(); ValidateReferences(scene); return scene;
     }

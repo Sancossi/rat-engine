@@ -35,23 +35,26 @@ callbacks. Это синтетические команды в реальном 
 поднимается на площадку, ходит по ней и спускается. Сохраняются именованные
 `body-*.png` и FSM milestones. Маршрут подаёт обычные команды; координаты не подменяются.
 Русские подсказки загружаются из поставляемого Noto Sans с OFL.
-Project schema 1 связывает scene schema 3: обязательные named spawns, конечные
-solids/ramps, лестницы, portals и локальные occlusion groups. `HideWith` явно
-связывает детали выреза с основной группой. JSON — один источник видимой геометрии
-и Core-ограничений; scene schema 1/2 и legacy C++ save/replay не поддерживаются.
+Карты находятся в `Rat.Expedition.Authoring/Assets`: `ExpeditionProject.sdscene`
+связывает `Courtyard` и `Sluice`. Native components задают solids/ramps, spawns,
+лестницы, portals и occlusion; `HideWith` связывает детали выреза. Native Entity.Id
+служит игровым id, DefaultSpawn — явная ссылка. Вид и Core получают геометрию из
+одного authored источника. Старый JSON остаётся только историческим Core fixture
+и не входит в новый ZIP; runtime не использует его как fallback.
 
 `--smoke-route layered --smoke-frames 1800` проверяет рампу в обе стороны,
 одинаковые XZ сверху/снизу, арку, перила и дальнюю стену; `mixed` — спутников на
 разных ярусах; `portals` — десять круговых переходов. `recovery` использует обычное
 падение, `portal-failure` диагностически отклоняет уже подготовленного renderer
 кандидата и проверяет сохранение старой сцены. Именованные `session-*.png` и
-telemetry фиксируют фактические снимки/группы. Это не редактор карт: native
-авторинг в Game Studio остаётся [планом A1](../../docs/stride-editor-asset-workflow-plan.md).
+telemetry фиксируют фактические снимки/группы. Карты редактируются в Game Studio
+по [контракту A1.2](../../docs/stride-native-map-authoring-spec.md); библиотека
+моделей, звука, UI и native sprite sheet остаётся следующим срезом A1.3.
 
 `--smoke-frames 360 --evidence-dir <каталог>` выполняет фиксированный ввод по тому
 же motor, снимает настоящий backbuffer до стены/перед ней/за ней и завершает игру.
 Это автоматизированная проверка, не ручной плейтест. `--content-dir` нужен для
-изолированных проверок отказов PNG/JSON; по умолчанию Content читается рядом с exe,
+изолированных проверок отказов PNG/шрифта; по умолчанию Content читается рядом с exe,
 независимо от working directory. Стартовые ошибки контента завершаются ненулевым
 кодом и `error.log`; отказ кандидата перехода сохраняет текущую сцену и выводит подсказку.
 Обычные диагностические записи расположены в `%LOCALAPPDATA%/RatExpedition/logs`.
@@ -79,10 +82,30 @@ DesktopWinForms, его focus/minimize не меняет GameBase.IsActive (upst
 не меняются; новый ручной Alt-Tab тест обычной игры не заявлен. Другой backend,
 который действительно сбрасывает IsActive, требует отдельной квалификации.
 
+## Native карты и квалификация
+
+В Game Studio открыть `Rat.Expedition.sln`, затем asset `Courtyard` или `Sluice`.
+У `Expedition geometry` менять `Size`, у Transform — `Position`; для текущей
+физики Rotation должна быть identity, Scale — `(1,1,1)`, включая родителей.
+Размеры задают одновременно editor preview и runtime collision. Ошибки содержат
+asset/entity/property. Компилировать и заново запускать игру после Save; hot reload
+открытого database bundle не обещается. [MCP](../../tools/stride-mcp/README.md)
+позволяет inspect/edit/undo/redo/save по native ids без ввода мышью/клавиатурой.
+
+Обычный `scripts/stride/build-game.ps1` упаковывает production assets. Для полного
+executable verifier построить пакет с `-IncludeQualificationAssets`, затем вызвать
+`scripts/stride/verify-game.ps1 -PackageZip <ZIP>`. Эта опция добавляет отдельные
+native QA assets, производные от authored карт, через тот же Stride compiler.
+`--native-project QA/<fixture>` доступен только при `--smoke-frames > 0`;
+обычный запуск всегда загружает `ExpeditionProject`. Никакого JSON override нет.
+`native-candidate-failure` подаёт реальному переходу отдельно скомпилированный
+невалидный native candidate; active scene и presentation должны сохраниться.
+`native-world.json` — выходной диагностический экспорт, не авторский файл.
+
 ## Работа в Zed
 
 Откройте каталог `games/rat-expedition` как папку проекта Zed. C# language server
-автоматически загрузит `Rat.Expedition.slnx` со всеми тремя проектами и ссылками Stride.
+может загрузить `Rat.Expedition.slnx` с игровыми проектами и ссылками Stride.
 Если окно уже было открыто до добавления решения, выполните в палитре команд
 `editor: restart language server` из открытого C# файла.
 

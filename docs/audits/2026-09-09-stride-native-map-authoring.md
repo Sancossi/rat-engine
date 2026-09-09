@@ -1,0 +1,107 @@
+# A1.2 — native карты, Core и MCP
+
+[Контракт](../stride-native-map-authoring-spec.md), [карточка A1](../../vault/production/tasks/feat-stride-game-studio-authoring.md).
+Работа продолжена в `C:/5_gamedev/rat-engine`, `feat/stride-native-authoring`, после
+принятого MCP и baseline `28ef65d`. Этот срез переносит две карты, не библиотеку
+ресурсов A1.3 и не отложенную ручную приёмку P1. Engine integration остаётся
+`88301e861149c48c8b408aac3030b190332d7f97`, пакеты `4.4.0-dev` из прежнего locked cohort.
+
+## Реализация
+
+`Rat.Expedition.sln` открывает игровой Windows проект и Authoring assembly.
+`ExpeditionProject.sdscene` с native UrlReference связывает Courtyard/Sluice.
+Типизированные компоненты задают box/ramp, default/named spawns, ladder points,
+portals, recovery и occlusion. Identity — Entity.Id, подпись — только display name.
+Core остаётся без Stride dependency; `DefaultSpawnId` заменяет обязательное имя
+`entry` для native карт, сохраняя прежний default для исторических JSON tests.
+
+Один NativeSceneAdapter валидирует authored transforms/geometry/references и
+создаёт чистые Core values. GeometryPreviewProcessor работает только в editor
+ExecutionMode.Editor, обновляя generated mesh из тех же размеров. Ramp mesh
+вынесен из runtime в общий FiniteRampPrimitive без изменения геометрии/winding.
+Native данные каждого кандидата загружаются через отдельный ContentManager и
+выгружаются после конверсии; активный renderer по-прежнему владеет своими ресурсами.
+Пересборка уже открытого bundle не является обещанным hot reload.
+
+Фактический pinned `Prefab.Instantiate()` сохраняет GUID; узкий game-owned wrapper
+назначает новые entity ids после штатного clone. Проверены непересекающиеся id
+двух экземпляров и remapped внутренние Entity references. Библиотека prefab и
+редакторское редактирование instance overrides остаются A1.3.
+
+## Настоящая правка стены через MCP
+
+Owned editor PID 40632, `build/stride-mcp/connection.json`. Использован официальный
+Python MCP SDK 2.2 через stdio server; запросы записаны в JSON. Mouse/keyboard input
+не использовался. Scene `a6d301f9-3171-5137-b3c7-4622618bebc5`, wall entity
+`64e053ae-e44a-530f-a63a-824bf7c62343`, Transform component
+`6923d20e-7169-53b6-9d69-775824e72e98`.
+
+| Шаг | Доказательство под `build/a12-wall-mcp/` |
+| --- | --- |
+| Position `(0,.9,0)` → `(0,.9,-1.5)`, Undo/Redo, Save, close/reopen, inspect | `shift/calls.json`, `shift/result.json`, 37 вызовов |
+| Вид сдвинутой стены в editor | `shift/viewport-37.png` |
+| Compile и actual runtime, exit 0 | `shift/runtime/native-world.json`, `shift/runtime/frame-0030.png` |
+| Возврат `(0,.9,0)` через API с Undo/Redo/Save/reopen | `restore/calls.json`, `restore/result.json`, 32 вызова |
+| Восстановленный вид editor/runtime | `restore/viewport-32.png`, `restore/runtime/frame-0030.png` |
+| Восстановленный compiled Core | `restore/runtime/native-world.json`, exit 0 |
+
+Core SweepFraction для полос X −3→3, radius .2, height .8: после сдвига старая
+полоса Z=0 свободна (`1`), новая Z=−1.5 блокирует (`0.13333333`). После восстановления
+результаты обратные. HasClearance в центрах полос также меняется true/false →
+false/true. Это реальные запросы к compiled native world, не вычисление из PNG.
+Wall GUID сохраняется. Финальная исходная карта содержит восстановленную геометрию.
+
+Команды этого эксперимента: Python helper `build/a12-wall-api.py` (`--restore` для
+возврата), `dotnet build games/rat-expedition/Rat.Expedition.Windows -c Release
+--no-restore`, затем actual exe `--smoke-route zoom --smoke-frames 60 --evidence-dir
+<каталог>`, cwd `%TEMP%`. Helper и записи — локальные evidence artifacts; публичный
+универсальный клиент находится в `tools/stride-mcp/client.py`.
+Первый `shift/viewport-5.png` снят до готового кадра и оказался чёрным: он исключён
+из визуальной приёмки. Parent осмотрел shift37 и restore32, а также runtime frame30.
+
+Parent независимо сравнил восстановленный native export с исторической JSON
+геометрией: обе сцены, ссылки/списки и 146 численных полей, max abs delta `2e-7`,
+errors `[]`: `build/a12-parent/restored-native-parity.json`. JSON использован только
+как сравнительный baseline; новый runtime и ZIP его не читают.
+
+## Проверки перед runtime commit
+
+- Core 63 passed; Authoring 14 passed. Последний adapter log —
+  `build/a12-adapter-tests.log`. Session regression выполняет обычное движение к
+  порталу и E, затем наблюдает source failure: прежние Scene/position/stance/
+  safe point/party, revision 0 и единственный initial renderer prepare/activate.
+- Python 25 passed, `build/a12-python-tests.log`; vault/diff checks passed.
+  Два новых Python случая покрывают harmless entity rename в генераторе и
+  сохранение authored root list вместо превращения каждого child в root.
+- Preview package `build/stride-game/20260909-121457-086`: Core/adapter/publish
+  прошли. Это WIP, manifest честно отмечает dirty; не финальный пакет.
+- Preview verifier `C:/5_gamedev/rat-expedition-validation/20260909-121618-241`
+  прошёл 4 OS states (~59–60 Hz), walls 720/1080, edge zoom 4.5/7, wheel, body
+  720/1080. Затем выявил ошибку QA setup: large-Y platform имела неверные XZ при
+  сохранённых исходных ladder points. Исправлен только fixture, physics не менялась.
+- Узкий повтор после исправления: `build/a12-native-preview2/results.json`,
+  16 expected outcomes — large-Y, три recovery, одиннадцать native startup failures
+  и portal→invalid compiled native candidate. Все прошли. Recovery/native failure
+  завершили реальный маршрут, а не только старт приложения.
+
+Стартовый новый session test сначала корректно отвергал fixture со spawn внутри
+портала; setup исправлен движением к отдельно стоящему порталу. Первый rename test
+поймал зависимость QA box cloning от старой подписи; генератор исправлен на GUID.
+
+## Пакеты и границы
+
+Обычный build включает production native assets. Полная проверка использует
+`scripts/stride/build-game.ps1 -IncludeQualificationAssets`: отдельный derived
+native package в `obj/native-qualification`, тот же compiler/root production maps.
+QA fixtures не редактируют исходные карты и не являются вторым manual JSON.
+Обычная сборка не зависит от тестовых имён/геометрии. Полный verifier требует
+проверочный ZIP; `--native-project QA/...` запрещён в обычном запуске.
+Mapping старых 33 сценариев и трёх добавленных описан в контракте; ожидается 36.
+Финальные committed-head artifact/review результаты добавляются отдельно после
+этой предварительной квалификации.
+
+Не заявлены: clean-machine запуск, ручной ввод/ощущение движения, новый F5 playtest
+в этом срезе, live bundle hot reload, полный native asset catalog, mesh collision,
+GUI rename/delete всех категорий. Legacy JSON остаётся в исходниках для Core tests,
+но исключён из publish. Статусы, финальную Release editor сборку и публикацию
+принятого среза в main ведёт parent; незавершённые A1.3/A1.4 этим отчётом не закрываются.
