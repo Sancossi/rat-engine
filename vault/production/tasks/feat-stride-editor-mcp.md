@@ -1,10 +1,10 @@
 ---
 type: task
 area: Engine
-status: In progress
+status: In review
 task_type: Feature
 sprint: Sprint 19
-review: Needs fixes
+review: In review
 due:
 tags: [task, stride, mcp, authoring]
 ---
@@ -30,6 +30,8 @@ Origin: [[feat-stride-game-studio-authoring]]; [[research-open-engine-foundation
 Follow-up: [[feat-stride-game-studio-authoring]].
 
 ## Resolution
+
+Исправления двух P2 переданы на повторное review: `rat-engine` `122adde5`, Stride `88301e8` поверх upstream `e2c786a`. Добавлен native API состояния Save/Close/Dispose, адаптер проверяет его перед выполнением queued-команд. Реальные native session regressions, 73 MCP-вызова, транспорт и compiled parity прошли; fork создан, публикация патча и MCP ожидает независимого одобрения и parent gates.
 
 Реализация `fcc73f6` передана на независимое read-only review. Пользователь дополнительно поручил сохранить MCP на GitHub и фиксировать там дальнейшие доработки редактора: MCP/адаптер/инструменты/документация — в `sancossi/rat-engine`; изменения исходников Stride при необходимости — отдельными проверенными коммитами в собственном fork, со ссылкой и pinned SHA в этом репозитории. Текущая публикация выполняется после review и итоговой проверки; upstream в этом срезе не изменялся.
 
