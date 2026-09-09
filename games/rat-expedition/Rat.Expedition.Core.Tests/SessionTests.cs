@@ -179,6 +179,26 @@ internal static class SessionTests
             require(s.Leader.ContextId=="ramp-ladder","Continuous rising ladder approach rejected");
             Press(s);require(s.Leader.Mode==TraversalMode.Climbing,"Ramp ladder did not capture");
         });
+        check("ladder entry follows ramp crest support in both directions at each tick",()=>{
+            foreach(var route in new[]{(StartX:3.6f,StartY:1.52f,EntryX:4f,EntryY:1.6f),(StartX:4f,StartY:1.6f,EntryX:3.6f,EntryY:1.52f)})
+            {
+                var ladder=new LadderDefinition("crest-ladder",new(route.EntryX,route.EntryY,.6f),new(route.EntryX,3.2f,.6f),
+                    new(route.EntryX,route.EntryY,0),new(route.EntryX,3.2f,1.6f),new(route.EntryX,route.EntryY,0),new(route.EntryX,3.2f,1.6f));
+                var scene=new SceneDefinition(3,"crest",new("floor",new(-5,-.3f,-3),new(10,0,3)),new(route.StartX,route.StartY,0),[],
+                    [new("deck",new(4,1.4f,-1),new(8,1.6f,1)),new("platform",new(3,3,1.2f),new(5,3.2f,2.4f))],[ladder])
+                    {Ramps=[new("ramp",new(0,-1),new(4,1),RampAxis.X,0,1.6f,.2f)]};
+                var m=new TraversalMotor(scene);var world=scene.CreateWorld();
+                require(m.Context?.Id=="crest-ladder","Crest entry not offered");
+                m.Advance(0,new(Vector2.Zero,InteractHeld:true));
+                for(int i=0;i<100&&(m.Mode!=TraversalMode.Climbing||Math.Abs(m.Position.X-route.EntryX)>.00001f);i++)
+                {
+                    var before=m.Position;m.Advance(TraversalMotor.StepSeconds,new(Vector2.Zero));
+                    require(world.HasClearance(m.Position,.2f,.8f)&&world.HasSupport(m.Position,.2f),$"Crest approach penetrated/lost support at {m.Position}");
+                    require(Vector3.Distance(before,m.Position)<=TraversalMotor.ClimbSpeed*TraversalMotor.StepSeconds+.00001,"Crest capture exceeded climb speed");
+                }
+                require(m.Mode==TraversalMode.Climbing&&Vector3.Distance(m.Position,ladder.BottomEntry.Vector)<.00001f,"Crest approach did not reach entry");
+            }
+        });
         check("candidate reload rejects parent reparse replacement and keeps active session",()=>{
             string temp=Path.GetFullPath(Path.GetTempPath());
             string root=Path.GetFullPath(Path.Combine(temp,"rat-reparse-"+Guid.NewGuid()));

@@ -4,7 +4,7 @@ namespace Rat.Expedition.Core;
 
 public readonly record struct SupportedMove(Vector3 Position, float Fraction, bool Blocked, bool LostSupport);
 
-// Qualification adapter. The P1.2 motor deliberately continues using BodyCollisionWorld.
+// Game-owned finite box/ramp adapter shared by motor movement and context guards.
 public sealed class LayeredCollisionWorld
 {
     private const double Epsilon = BodyCollisionWorld.Epsilon;
@@ -103,15 +103,20 @@ public sealed class LayeredCollisionWorld
 
     // Straight horizontal displacement with continuous supported Y. A caller may use
     // two axis moves for sliding. LostSupport stops at the first footprint edge and
-    // reports the unconsumed fraction so a future falling motor need not teleport.
-    public SupportedMove MoveSupported(Vector3 start, Vector2 delta, float radius, float height)
+    // reports the unconsumed fraction for falling. An optional distance budget follows
+    // the actual piecewise-linear 3D support path, including ramp/flat crest corners.
+    public SupportedMove MoveSupported(Vector3 start, Vector2 delta, float radius, float height,
+        float maximumDistance = float.PositiveInfinity)
     {
         ValidateBody(start,radius,height);
+        if (float.IsNaN(maximumDistance) || maximumDistance < 0)
+            throw new ArgumentOutOfRangeException(nameof(maximumDistance));
         if (!float.IsFinite(delta.X) || !float.IsFinite(delta.Y) || !float.IsFinite(start.X+delta.X) || !float.IsFinite(start.Z+delta.Y))
             throw new ArgumentException("Movement must be finite.");
         if (!HasClearance(start,radius,height)) return new(start,0,true,false);
         if (!HasSupport(start,radius)) return new(start,0,false,true);
         if (delta == Vector2.Zero) return new(start,1,false,false);
+        if (maximumDistance == 0) return new(start,0,false,false);
         Vector3 At(double t) => new((float)(start.X+delta.X*t),0,(float)(start.Z+delta.Y*t));
         var events = new SortedSet<double> {0,1};
         void Event(double distance, double speed)
@@ -135,7 +140,7 @@ public sealed class LayeredCollisionWorld
                 if(da*db<0) events.Add(a+(b-a)*da/(da-db));
             }
         }
-        var ordered=events.ToArray(); Vector3 current=start;
+        var ordered=events.ToArray(); Vector3 current=start; double remaining=maximumDistance;
         for(int i=1;i<ordered.Length;i++)
         {
             double a=ordered[i-1], b=ordered[i]; var begin=At(a); var end=At(b);
@@ -144,9 +149,19 @@ public sealed class LayeredCollisionWorld
                 .OrderBy(c=>c.Min(s=>s.Id),StringComparer.Ordinal).FirstOrDefault();
             if(candidate is null) return new(current,(float)a,false,true);
             end.Y=(float)Height(candidate,end,radius);
+            double length=Vector3.Distance(current,end);
+            bool limited=length>remaining;
+            if(limited)
+            {
+                double part=remaining/length;
+                end=Vector3.Lerp(current,end,(float)part);
+                b=a+(b-a)*part;
+            }
             float hit=SweepFraction(current,end,radius,height);
             if(hit<1) return new(Vector3.Lerp(current,end,hit),(float)(a+(b-a)*hit),true,false);
             current=end;
+            if(limited) return new(current,(float)b,false,false);
+            remaining-=length;
         }
         return new(current,1,false,false);
     }

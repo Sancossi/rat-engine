@@ -16,7 +16,7 @@ public sealed class TraversalMotor
     private bool interactWasHeld, pendingInteract;
     private LadderDefinition? ladder;
     private readonly Queue<Vector3> approach = new();
-    private bool departing;
+    private bool capturingEntry, departing;
     public Vector3 Position { get; private set; }
     public long Ticks { get; private set; }
     public PlayerTraversalState State { get; private set; } = PlayerTraversalState.Standing;
@@ -142,7 +142,7 @@ public sealed class TraversalMotor
         ladder = target.Ladder!; State = PlayerTraversalState.Climbing; StandBlocked = false;
         approach.Enqueue(target.Top ? ladder.TopEntry.Vector : ladder.BottomEntry.Vector);
         approach.Enqueue(target.Top ? ladder.Top.Vector : ladder.Bottom.Vector);
-        departing = false; return true;
+        capturingEntry = true; departing = false; return true;
     }
 
     private void FinishClimb()
@@ -176,6 +176,21 @@ public sealed class TraversalMotor
     {
         if (State != PlayerTraversalState.Climbing || ladder is null) throw new InvalidOperationException("Climbing requires a captured ladder.");
         float remaining = ClimbSpeed * (float)StepSeconds;
+        if (capturingEntry)
+        {
+            var entry=approach.Peek();
+            bool moved=Position!=entry;
+            var move=world.MoveSupported(Position,new(entry.X-Position.X,entry.Z-Position.Z),
+                Radius,StandingHeight,remaining);
+            if(move.Blocked || move.LostSupport)
+                throw new InvalidOperationException("Validated ladder entry approach lost its supported path.");
+            Position=move.Position;
+            if(move.Fraction<1) return;
+            approach.Dequeue(); capturingEntry=false;
+            // Expose the grounded entry boundary before entering the separately validated
+            // ladder corridor. Never cut the ramp crest with a player-to-entry chord.
+            if(moved) return;
+        }
         while (approach.Count > 0)
         {
             var target = approach.Peek(); float distance = Vector3.Distance(Position,target);
