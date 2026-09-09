@@ -399,7 +399,9 @@ def door(width=1.6,height=3,depth=.4):
     global ROOT
     # Captioned dimension denotes leaf opening. The removable stone surround is
     # explicit additional envelope, recorded separately in the generated manifest.
-    spring=height*.64
+    # Higher shoulders leave head/ear clearance for the centered 2.8m resident
+    # while retaining the named 1.6m wide / 3m tall pointed opening.
+    spring=height*.70
     inner=gothic_points(width,height,spring)
     frame=.28
     for x in (-width/2-frame/2,width/2+frame/2):
@@ -416,7 +418,9 @@ def door(width=1.6,height=3,depth=.4):
     hinge=bpy.data.objects.new("door_hinge",None)
     CURRENT.objects.link(hinge)
     hinge.parent=ROOT
-    hinge.location=(-width/2,-.035,0)
+    # The outward-opening pivot sits ahead of the deepest jamb moulding. A
+    # recessed pivot would swing the leaf's hinge edge through the masonry.
+    hinge.location=(-width/2,-depth/2-.14,0)
     hinge["hinge_axis"]="local +Z"
     oldroot=ROOT
     ROOT=hinge
@@ -434,7 +438,7 @@ def door(width=1.6,height=3,depth=.4):
         box("Strap hinge",(.52,-.15,level),(1.08,.05,.07),"iron",.012,"leaf")
         for x in (.12,.42,.72,.98):
             rod("Brass rivet",(x,-.18,level),(x,-.20,level),.025,"brass",sides=8,group="leaf")
-        rod("Hinge barrel",(.03,-.05,level-.1),(.03,-.05,level+.1),.045,"brass",group="leaf")
+        rod("Hinge barrel",(0,0,level-.1),(0,0,level+.1),.045,"brass",group="leaf")
     ring("Door pull",(width-.3,-.2,1.2),.09,.018,group="leaf")
     for cx in (width*.25,width*.5,width*.75):
         wire("Door gothic tracery",[(cx-.16,-.145,1.7),(cx-.16,-.145,2.3),(cx,-.145,2.65),(cx+.16,-.145,2.3),(cx+.16,-.145,1.7)],.018,"brass","leaf")

@@ -13,6 +13,7 @@ import sys
 
 import bpy
 from mathutils import Vector
+from mathutils.bvhtree import BVHTree
 
 PILOTS={"canal_wall","bridge_arch","stairs_medium","railing_iron","lantern_amber","door_standard",
         "scale_rat_small","scale_rat_medium","scale_rat_adult","scale_rat_high","railing_high","stairs_paired"}
@@ -56,6 +57,75 @@ def ray_clear(objects,origin,direction,distance):
         assert not hit,"Clearance ray blocked by "+obj.name
 
 
+def world_mesh(objects):
+    """Observe evaluated geometry, including source bevels and current animation."""
+    vertices=[]
+    faces=[]
+    graph=bpy.context.evaluated_depsgraph_get()
+    for obj in objects:
+        evaluated=obj.evaluated_get(graph)
+        data=evaluated.to_mesh()
+        offset=len(vertices)
+        vertices.extend(evaluated.matrix_world@v.co for v in data.vertices)
+        faces.extend(tuple(offset+i for i in p.vertices) for p in data.polygons)
+        evaluated.to_mesh_clear()
+    return vertices,faces
+
+
+def door_sweep(scene,frame_objects,leaf_objects):
+    """Reject masonry crossings throughout a complete baked door animation.
+
+    BVH overlap detects intersecting surfaces rather than just a pivot or a
+    single test point. A ray parity check also detects leaf vertices contained
+    wholly inside the closed frame. All moving hardware is included.
+    """
+    assert frame_objects and leaf_objects,"Door frame or moving leaf missing"
+    scene.frame_set(0)
+    vertices,faces=world_mesh(frame_objects)
+    frame_tree=BVHTree.FromPolygons(vertices,faces)
+    low=Vector(tuple(min(v[i] for v in vertices) for i in range(3)))
+    high=Vector(tuple(max(v[i] for v in vertices) for i in range(3)))
+    direction=Vector((1,.137,.071)).normalized()
+    for frame_number in range(61):
+        scene.frame_set(frame_number)
+        moving,moving_faces=world_mesh(leaf_objects)
+        leaf_tree=BVHTree.FromPolygons(moving,moving_faces)
+        assert not frame_tree.overlap(leaf_tree),f"Door leaf intersects masonry at frame {frame_number}"
+        for point in moving:
+            if not all(low[i]<point[i]<high[i] for i in range(3)):
+                continue
+            origin=point.copy()
+            hits=0
+            while True:
+                location,_,index,_=frame_tree.ray_cast(origin,direction)
+                if index is None:
+                    break
+                hits+=1
+                origin=location+direction*1e-5
+                assert hits<256,"Unstable door containment ray"
+            assert hits%2==0,f"Door leaf is inside masonry at frame {frame_number}"
+    scene.frame_set(0)
+    return {"sample_frames":list(range(61)),"surface_intersections":0,"contained_leaf_vertices":0,"geometry":"evaluated world meshes; moving hardware included"}
+
+
+def resident_passage(frame_objects,body_objects):
+    """Sweep every evaluated body vertex through the opening along its normal.
+
+    The supplied body includes head, ears, robe and feet; optional staff/tail
+    groups are deliberately excluded from the standing resident fit contract.
+    """
+    vertices,faces=world_mesh(frame_objects)
+    tree=BVHTree.FromPolygons(vertices,faces)
+    front=min(v.y for v in vertices)-.1
+    distance=max(v.y for v in vertices)-front+.1
+    body,_=world_mesh(body_objects)
+    assert body,"No ordinary adult geometry for door fit"
+    for point in body:
+        hit=tree.ray_cast(Vector((point.x,front,point.z)),Vector((0,1,0)),distance)
+        assert hit[2] is None,f"Ordinary adult cannot pass the door at x={point.x}, z={point.z}"
+    return {"standing_height_m":max(p.z for p in body)-min(p.z for p in body),"swept_body_vertices":len(body),"masonry_hits":0,"alignment":"centered X=0, standing Z=0, movement along Y; body/robe included, tail/staff excluded"}
+
+
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--input",type=Path,required=True)
@@ -63,6 +133,12 @@ def main():
     parser.add_argument("--record-catalog",action="store_true",help="After all checks pass, record this source qualification in catalog.json")
     args=parser.parse_args(sys.argv[sys.argv.index("--")+1:])
     root=args.input.resolve()
+    catalog_report=None
+    if args.record_catalog:
+        try:
+            catalog_report=args.report.resolve().relative_to(root).as_posix()
+        except ValueError:
+            parser.error("--record-catalog requires --report inside --input so the catalog reference remains portable")
     assert not args.report.exists(),"Choose a new report path"
     manifest=json.loads((root/"catalog.json").read_text(encoding="utf-8"))
     ids=[asset["id"] for asset in manifest["assets"]]
@@ -135,9 +211,14 @@ def main():
     ray_clear(frame,(0,0,.001),(0,0,1),2.998)
     arch_vertices=[obj.matrix_world@v.co for obj in frame if obj.name.startswith("Pointed archivolt") for v in obj.data.vertices]
     opening_top=min(v.z for v in arch_vertices if abs(v.x)<1e-5)
-    spring_width=2*min(abs(v.x) for v in arch_vertices if abs(v.z-1.92)<1e-5)
+    spring_height=min(v.z for v in arch_vertices)
+    spring_width=2*min(abs(v.x) for v in arch_vertices if abs(v.z-spring_height)<1e-5)
     assert abs(opening_top-3)<1e-5 and abs(spring_width-1.6)<1e-5,(opening_top,spring_width)
     report["door_clear_aperture_m"]={"spring_width":spring_width,"center_height":opening_top,"clearance_samples_height_m":[.12,1,1.75]}
+    leaf=[obj for obj in bpy.data.collections["door_standard"].objects if obj.type=="MESH" and obj.get("export_group")=="leaf"]
+    report["source_door_sweep"]=door_sweep(scene,frame,leaf)
+    body=[obj for obj in bpy.data.collections["scale_rat_adult"].objects if obj.type=="MESH" and obj.get("export_group")=="body"]
+    report["ordinary_adult_door_passage"]=resident_passage(frame,body)
     for key in sorted(PILOTS):
         bpy.ops.wm.read_factory_settings(use_empty=True)
         bpy.context.scene.render.fps=30
@@ -157,6 +238,8 @@ def main():
         candidates=[obj for obj in scene.objects if obj.type=="EMPTY" and obj.name.startswith("door_hinge")]
         assert len(candidates)==1,"Door hinge lost in FBX"
         hinge=candidates[0]
+        leaf=[obj for obj in hinge.children_recursive if obj.type=="MESH"]
+        frame_objects=[obj for obj in scene.objects if obj.type=="MESH" and obj not in leaf]
         samples=[]
         for frame in (0,15,30,45,60):
             scene.frame_set(frame)
@@ -168,6 +251,7 @@ def main():
         scene.frame_set(0 if clip=="door_open" else 60)
         check_meshes(scene.objects)
         report["animations"][clip]={"fps":30,"frames":[0,60],"duration_seconds":2,"sample_frames":[0,15,30,45,60],"local_hinge_angles_deg":samples}
+        report["animations"][clip]["masonry_sweep"]=door_sweep(scene,frame_objects,leaf)
     materials=json.loads((root/"materials.json").read_text())
     for material in materials.values():
         assert {"basecolor","normal","roughness","metallic"}<=set(material["textures"])
@@ -182,7 +266,7 @@ def main():
         for asset in manifest["assets"]:
             if asset["id"] in PILOTS:
                 asset["source_status"]="validated_blender_fbx"
-        manifest["source_validation_report"]=str(args.report.resolve().relative_to(root)).replace("\\","/")
+        manifest["source_validation_report"]=catalog_report
         (root/"catalog.json").write_text(json.dumps(manifest,indent=2)+"\n",encoding="utf-8")
     print("CANAL_CITY_VALIDATION_PASSED",args.report)
 

@@ -841,18 +841,18 @@
       "measured_geometry": {
         "bounds_min_m": [
           -1.2000000476837158,
-          -0.27000001072883606,
+          -0.5555884838104248,
           0.0
         ],
         "bounds_max_m": [
           1.2000000476837158,
           0.20999999344348907,
-          3.276793956756592
+          3.2783877849578857
         ],
         "dimensions_m": [
           2.4000000953674316,
-          0.48000000417232513,
-          3.276793956756592
+          0.7655884772539139,
+          3.2783877849578857
         ],
         "editable_mesh_objects": 85,
         "base_triangles": 2296
@@ -3941,6 +3941,12 @@
       ],
       "animations": [],
       "planned_clips": [],
+      "reference_dimensions_m": [
+        null,
+        null,
+        2.8
+      ],
+      "dimension_extent": "standing feet to uppermost head/ear; accessories excluded",
       "measured_geometry": {
         "bounds_min_m": [
           -0.5879999995231628,
@@ -3965,13 +3971,7 @@
         1.0808000564575195,
         1.1199999898672104,
         2.799999952316284
-      ],
-      "reference_dimensions_m": [
-        null,
-        null,
-        2.8
-      ],
-      "dimension_extent": "standing feet to uppermost head/ear; accessories excluded"
+      ]
     },
     {
       "id": "railing_high",
@@ -4045,6 +4045,7 @@
       ],
       "animations": [],
       "planned_clips": [],
+      "dimension_extent": "walking structure; railings add height and project beyond the walking width",
       "measured_geometry": {
         "bounds_min_m": [
           -1.2599999904632568,
@@ -4075,8 +4076,7 @@
         "total_run_m": 4.48,
         "overlay_total_width_m": 0.8,
         "overlay_useful_width_m": 0.6
-      },
-      "dimension_extent": "walking structure; railings add height and project beyond the walking width"
+      }
     },
     {
       "id": "house_vertical_family",
