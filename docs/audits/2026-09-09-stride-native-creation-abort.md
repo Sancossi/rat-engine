@@ -91,3 +91,36 @@ source files предупреждения есть только у прежни�
 Editor: `C:/5_gamedev/stride/sources/editor/Stride.GameStudio/bin/Release/net10.0-windows/Stride.GameStudio.exe`.
 Parent также повторил Python 25 tests и vault check — PASS. Сборка на developer PC
 не является проверкой чистой машины, ручного F5 или remote CI.
+
+## Исправление после независимого review: poisoned child
+
+Review нашёл один P2 в первоначальном source candidate: CompleteTransaction
+извлекал Pop до проверки идентичности. После parent→child→ошибка child rollback
+вызов parent.Complete или parent.Dispose выбрасывал исключение, но уже удалял
+poisoned child. Чистый Core stack снова позволял CreateTransaction/PushOperation.
+Отдельный HasFailedTransaction в native Save/MCP продолжал блокировать их;
+обход этих защит не воспроизводился и не заявляется.
+
+Source fix `c0b9065d6e902b45d4d3a5c656318c70df53a6f3` меняет только
+TransactionStack и его регрессию. Проверки Count/Peek выполняются до Pop и до
+try/finally завершения, поэтому ошибочный parent completion не меняет стек и
+не вызывает completion side effects. Тест проверяет оба Complete/Dispose,
+сохранность child flag, parent operation и предыдущей history, затем запрет
+новых transactions/operations и повторного завершения.
+
+До исправления оба новых случая упали на разрешённом CreateTransaction:
+`build/a13-abort-parent-fix/before.trx`, `build/a13-abort-parent-before.log`.
+После исправления весь Transactions subset — **32 passed**, включая два новых
+случая: `build/a13-abort-parent-fix/after.trx`, `build/a13-abort-parent-after.log`.
+Предыдущие 656 Core.Design / 101 MCP calls и canonical Release fddf выше относятся
+к foundation prefix; они не переименовываются в результаты нового SHA.
+
+Scoped Release editor на новом pin прошёл: exit0, 52.82s, 2133 warnings,
+0 errors; `build/a13-abort-parent-editor.log`, `StrideSkipAutoPack=true`.
+Native creation gate повторён на этом pin: runner exit0,
+`build/mcp/creation-failure-20260909-150743-953/result.json` и `reopen.json`.
+Все три rollback/history/dirty/disk cases, nested completion, create/Undo/Redo/Save
+и fresh reopen ID `8d039bd6-2acd-408b-9357-16df71b51c53` прошли; native Save/MCP
+poison guards также прошли. Owned PID64796/22780 закрыты, source checkout clean.
+Vault/diff checks passed. Final canonical Release и узкое re-review нового pin
+остаются отдельными parent gates.

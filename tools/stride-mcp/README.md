@@ -1,6 +1,6 @@
 # Game Studio MCP
 
-Локальный stdio MCP server управляет отдельно запущенным Game Studio через нативный asset Quantum graph. Требуются Windows, .NET 10 и собранная интеграция Stride `fddf82aa16f547b037a246bcf5cf518a35ccdeee` поверх upstream `e2c786a45f69917bf233793f6a097b150e2fe264`. SHA и fork закреплены в engine lock. Редактирование не использует мышь, клавиатуру или замену файлов сцены.
+Локальный stdio MCP server управляет отдельно запущенным Game Studio через нативный asset Quantum graph. Требуются Windows, .NET 10 и собранная интеграция Stride `c0b9065d6e902b45d4d3a5c656318c70df53a6f3` поверх upstream `e2c786a45f69917bf233793f6a097b150e2fe264`. SHA и fork закреплены в engine lock. Редактирование не использует мышь, клавиатуру или замену файлов сцены.
 
 ## Запуск
 
