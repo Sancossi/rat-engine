@@ -81,3 +81,13 @@ preflight; обнаруженное маскирование ошибки пус
 Независимое review и canonical full Release stage rebuild выполняются родителем
 после этого implementation milestone. Скриншоты, ручное редактирование, фактический
 import/decode/audio/runtime-resource acceptance в этой основе не выполнялись.
+
+Parent canonical full Release точного `fddf82aa` прошёл:
+`C:/5_gamedev/stride/logs/rat-foundation/20260909-145802-761/result.json`,
+exit 0, 1m29.42s, 2143 warnings, 0 errors. Это полный wrapper с упаковкой, а не
+повтор предыдущего инкрементального результата с 6 warnings. Среди изменённых
+source files предупреждения есть только у прежних не-await вызовов SessionViewModel
+(CS4014, строки 726/1606); в новых строках этого среза warnings не обнаружены.
+Editor: `C:/5_gamedev/stride/sources/editor/Stride.GameStudio/bin/Release/net10.0-windows/Stride.GameStudio.exe`.
+Parent также повторил Python 25 tests и vault check — PASS. Сборка на developer PC
+не является проверкой чистой машины, ручного F5 или remote CI.
