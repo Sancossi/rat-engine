@@ -1,10 +1,10 @@
 ---
 type: task
 area: Game
-status: In progress
+status: In review
 task_type: Feature
 sprint: Sprint 19
-review: Needs fixes
+review: In review
 due:
 tags: [task, expedition, art, blender]
 ---
@@ -28,6 +28,8 @@ Origin: [[rat-expedition-art-audio]].
 Follow-up: [[feat-canal-city-02-passages]]; [[feat-canal-city-03-architecture]]; [[feat-canal-city-04-mechanisms]]; [[feat-canal-city-05-decoration]]; [[feat-canal-city-06-library]].
 
 ## Resolution
+
+2026-09-09: три P2 исправлены в `d00374f` и переданы на повторное независимое ревью. Source и оба клипа проверены на всех 61 кадрах, 2746 вершин тела/одежды жителя 2,8 м проходят арку. Внешний report path отвергается без записи; внутренний режим работает. Обновлённые 66 SHA256, vault, 25 Python tests и diff check прошли. Native-приёмка остаётся открытой.
 
 2026-09-09: независимое ревью выявило три P2: поздний отказ внешнего report path при `validate.py --record-catalog`, проникновение открывающейся створки в каменный косяк до 5 см и слишком узкий верх средней арки для ушей жителя 2,8 м. Исправляются предварительная проверка аргументов, положение петли и профиль арки с проверкой движения и прохода фактической фигуры. Следующие этапы не подбираются. Из-за лимита потоков проведены три прохода двумя независимыми проверяющими: blind, edge-case и отдельный acceptance после blind; автор изменений не был проверяющим.
 
