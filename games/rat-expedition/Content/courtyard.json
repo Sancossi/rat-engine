@@ -271,6 +271,14 @@
   ],
   "occlusionGroups": [
     {
+      "id": "arch-cut",
+      "members": ["low-ceiling", "passage-left-post", "passage-right-post"]
+    },
+    {
+      "id": "north-independent",
+      "members": ["north-boundary"]
+    },
+    {
       "id": "bridge-cut",
       "members": [
         "bridge-deck",
