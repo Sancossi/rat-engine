@@ -10,17 +10,25 @@ E/Enter у голубой метки переводит между двором 
 Esc/Enter продолжает игру. Потеря фокуса оставляет игру на паузе до явного продолжения.
 Повторное контекстное действие требует отпускания клавиши.
 
-Из корня репозитория после подготовки закреплённого Stride:
+Обычный пакет игры, из корня репозитория после подготовки закреплённого Stride:
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts/stride/build-game.ps1
-powershell -NoProfile -ExecutionPolicy Bypass -File scripts/stride/verify-game.ps1 -PackageZip <путь-к-полученному-ZIP>
 ```
 
 Build создаёт отдельный timestamp-каталог `build/stride-game/` с publish, ZIP,
 manifest и логами, сохраняя предыдущие результаты. Запустить извлечённый
 `Rat.Expedition.Windows.exe`; Game Studio для игры не требуется. Окно закрывается
 обычной кнопкой X. `--width 1920 --height 1080` выбирают второй проверяемый размер.
+
+Для полного executable verifier отдельно собрать пакет с QA-сценами. В следующей
+команде заменить путь на ZIP, выведенный именно этой сборкой; обычный production
+ZIP полный verifier отклоняет, поскольку в нём нет проверочных assets.
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/stride/build-game.ps1 -IncludeQualificationAssets
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/stride/verify-game.ps1 -PackageZip "<путь-к-QA-ZIP>"
+```
 
 Камера следует за героем без вращения. Колесо мыши приближает/отдаляет сцену:
 OrthographicSize 4.5–7, по умолчанию 5.0. `--camera-size 4.5` задаёт начальный zoom.
@@ -94,7 +102,7 @@ asset/entity/property. Компилировать и заново запуска
 
 Обычный `scripts/stride/build-game.ps1` упаковывает production assets. Для полного
 executable verifier построить пакет с `-IncludeQualificationAssets`, затем вызвать
-`scripts/stride/verify-game.ps1 -PackageZip <ZIP>`. Эта опция добавляет отдельные
+`scripts/stride/verify-game.ps1 -PackageZip "<путь-к-QA-ZIP>"`. Эта опция добавляет отдельные
 native QA assets, производные от authored карт, через тот же Stride compiler.
 `--native-project QA/<fixture>` доступен только при `--smoke-frames > 0`;
 обычный запуск всегда загружает `ExpeditionProject`. Никакого JSON override нет.
