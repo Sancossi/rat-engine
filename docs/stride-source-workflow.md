@@ -81,6 +81,10 @@ C:/5_gamedev/stride/sources/editor/Stride.GameStudio/bin/Release/net10.0-windows
 основу, а `engineCommit` фиксирует точную интеграцию с нашими патчами. Первый патч
 `88301e861149c48c8b408aac3030b190332d7f97` добавляет native session save/close lifecycle
 для MCP; [контракт и квалификация](audits/2026-09-09-stride-editor-mcp.md).
+Интеграция `8227ac7402463b14546fc99a169adb14d72f62f0` сохраняет этот патч и добавляет
+native asset-operation lease: source update исключает конкурентный Save/Close,
+а disposed session и ошибочный importer result не изменяют graph/source hashes.
+См. [проверку resource API](audits/2026-09-09-stride-resource-api.md).
 
 По указанию пользователя от 2026-09-09 MCP, адаптер и дальнейшие проверенные доработки
 инструментов редактора вместе с документацией сохраняются отдельными коммитами и
@@ -100,7 +104,7 @@ C:/5_gamedev/stride/sources/editor/Stride.GameStudio/bin/Release/net10.0-windows
 ```powershell
 git -C C:/5_gamedev/stride remote add origin https://github.com/Sancossi/stride.git
 git -C C:/5_gamedev/stride fetch origin rat/expedition-foundation
-git -C C:/5_gamedev/stride merge --ff-only 88301e861149c48c8b408aac3030b190332d7f97
+git -C C:/5_gamedev/stride merge --ff-only 8227ac7402463b14546fc99a169adb14d72f62f0
 ```
 
 Если `origin` уже существует, сначала проверить его URL, не добавлять повторно.

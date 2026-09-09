@@ -20,7 +20,7 @@ using Stride.Graphics;
 
 namespace Rat.StrideMcp.Adapter;
 
-internal sealed class EditorBridge
+internal sealed partial class EditorBridge
 {
     private readonly SessionViewModel session;
     private readonly Dispatcher dispatcher;
@@ -76,9 +76,11 @@ internal sealed class EditorBridge
             throw new InvalidOperationException("Native editor session is closing or disposed.");
         if(requireIdle&&session.IsSaving)
             throw new InvalidOperationException("Native session save is running; wait for completion before editing.");
+        if(requireIdle&&session.IsAssetOperationInProgress)
+            throw new InvalidOperationException("Native asset source update is running; wait for completion before editing.");
     }
     private object Status()=>new {processId=Environment.ProcessId,projectId=ProjectId,sessionId=SessionId,projectPath=session.SessionFilePath.ToString(),revision=Interlocked.Read(ref revision),
-        scope="session",stride="4.4.0-dev",busy=session.IsSaving||activeOperation is {IsCompleted:false},session.IsSaving,session.IsClosing,session.IsSessionDisposed,undo.TransactionInProgress,undo.UndoRedoInProgress,
+        scope="session",stride="4.4.0-dev",busy=session.IsSaving||session.IsAssetOperationInProgress||activeOperation is {IsCompleted:false},session.IsSaving,session.IsClosing,session.IsSessionDisposed,session.IsAssetOperationInProgress,undo.TransactionInProgress,undo.UndoRedoInProgress,
         undoTransactionId=session.ActionHistory.Transactions.LastOrDefault(t=>t.IsDone)?.Id.ToString(),
         redoTransactionId=session.ActionHistory.Transactions.FirstOrDefault(t=>!t.IsDone)?.Id.ToString(),
         hookCleared=Environment.GetEnvironmentVariable("DOTNET_STARTUP_HOOKS") is null,
@@ -148,7 +150,8 @@ internal sealed class EditorBridge
             warningCount=messages.Count(m=>m.Type==Stride.Core.Diagnostics.LogMessageType.Warning),
             errorsAndWarnings=problems.TakeLast(100).Select(m=>new {level=m.Type.ToString(),text=m.ToString()}).ToArray(),
             recentAssetLog=messages.TakeLast(20).Select(m=>new {level=m.Type.ToString(),text=m.ToString()}).ToArray(),
-            capabilities=new[]{"native-scene-inspect","quantum-properties","session-undo-redo-save","viewport-backbuffer"},captureFallback="none",historyScope="entire session"};
+            capabilities=new[]{"native-scene-inspect","quantum-properties","session-undo-redo-save","viewport-backbuffer","local-resource-catalog","allowlisted-resource-fields","typed-native-references"},
+            unsupportedResourceOperations=new[]{"import","reimport","rename","delete","prefab-placement"},captureFallback="none",historyScope="entire session"};
     }
     private async Task<JsonObject> Execute(JsonObject request,CancellationToken cancellation)
     {
@@ -178,6 +181,10 @@ internal sealed class EditorBridge
                 data=new {state=task.IsCompleted?"completed":"running",success=task.IsCompletedSuccessfully&&task.Result,error=task.Exception?.GetBaseException().Message};break;
             case "capture":data=await Capture(Scene(args),manager,cancellation);break;
             case "diagnostics":data=Diagnostics();break;
+            case "assets":data=AssetCatalog();break;
+            case "asset_inspect":data=InspectAsset(OwnedAsset(args));break;
+            case "asset_set":Guard(args,cancellation);data=SetAssetField(OwnedAsset(args),args);break;
+            case "asset_reference":Guard(args,cancellation);data=SetAssetReference(OwnedAsset(args),args);break;
             default:throw new InvalidOperationException("Unsupported editor command.");
         }
         return new JsonObject{{"ok",true},{"revision",Interlocked.Read(ref revision)},{"data",JsonSerializer.SerializeToNode(data,Json)}};

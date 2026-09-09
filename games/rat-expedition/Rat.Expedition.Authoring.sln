@@ -6,6 +6,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rat.Expedition.Authoring", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rat.Expedition.Authoring.Windows", "Rat.Expedition.Authoring.Windows\Rat.Expedition.Authoring.Windows.csproj", "{BC100BAB-5E48-40BD-8383-D36168316C64}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Rat.Expedition.Core", "Rat.Expedition.Core/Rat.Expedition.Core.csproj", "{BFF663C2-C77C-4362-8B8F-FE8E521874B7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -40,6 +42,18 @@ Global
 		{BC100BAB-5E48-40BD-8383-D36168316C64}.Release|x64.Build.0 = Release|Any CPU
 		{BC100BAB-5E48-40BD-8383-D36168316C64}.Release|x86.ActiveCfg = Release|Any CPU
 		{BC100BAB-5E48-40BD-8383-D36168316C64}.Release|x86.Build.0 = Release|Any CPU
+		{BFF663C2-C77C-4362-8B8F-FE8E521874B7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BFF663C2-C77C-4362-8B8F-FE8E521874B7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BFF663C2-C77C-4362-8B8F-FE8E521874B7}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{BFF663C2-C77C-4362-8B8F-FE8E521874B7}.Debug|x64.Build.0 = Debug|Any CPU
+		{BFF663C2-C77C-4362-8B8F-FE8E521874B7}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{BFF663C2-C77C-4362-8B8F-FE8E521874B7}.Debug|x86.Build.0 = Debug|Any CPU
+		{BFF663C2-C77C-4362-8B8F-FE8E521874B7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BFF663C2-C77C-4362-8B8F-FE8E521874B7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BFF663C2-C77C-4362-8B8F-FE8E521874B7}.Release|x64.ActiveCfg = Release|Any CPU
+		{BFF663C2-C77C-4362-8B8F-FE8E521874B7}.Release|x64.Build.0 = Release|Any CPU
+		{BFF663C2-C77C-4362-8B8F-FE8E521874B7}.Release|x86.ActiveCfg = Release|Any CPU
+		{BFF663C2-C77C-4362-8B8F-FE8E521874B7}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

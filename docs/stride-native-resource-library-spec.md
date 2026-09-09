@@ -6,6 +6,11 @@
 authoring 15, executable 36. Статусы остаются в vault. Этот документ описывает
 следующую реализацию, а source inspection ниже не считается live qualification.
 
+Первый ограниченный API-срез: [фактическая квалификация](audits/2026-09-09-stride-resource-api.md).
+Он включает catalog/inspect, typed scalar/reference edits и native source-update
+lifecycle. Остальные команды и runtime library ниже остаются последующими частями
+этого контракта; наличие source anchors не означает их реализации.
+
 ## Результат и сохраняемые границы
 
 По одному собственному примеру prefab, imported mesh, texture/material, sprite

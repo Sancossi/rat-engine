@@ -1,6 +1,6 @@
 # Game Studio MCP
 
-Локальный stdio MCP server управляет отдельно запущенным Game Studio через нативный asset Quantum graph. Требуются Windows, .NET 10 и собранная интеграция Stride `88301e861149c48c8b408aac3030b190332d7f97` поверх upstream `e2c786a45f69917bf233793f6a097b150e2fe264`. SHA и fork закреплены в engine lock. Редактирование не использует мышь, клавиатуру или замену файлов сцены.
+Локальный stdio MCP server управляет отдельно запущенным Game Studio через нативный asset Quantum graph. Требуются Windows, .NET 10 и собранная интеграция Stride `8227ac7402463b14546fc99a169adb14d72f62f0` поверх upstream `e2c786a45f69917bf233793f6a097b150e2fe264`. SHA и fork закреплены в engine lock. Редактирование не использует мышь, клавиатуру или замену файлов сцены.
 
 ## Запуск
 
@@ -50,6 +50,11 @@ Quantum.Update выполняется в именованной Undo transaction
 
 Native `IsSaving` блокирует MCP-изменения на всём протяжении Save, включая сериализацию и Undo save point, независимо от инициатора (GUI, F5 или MCP). `IsClosing` охватывает prompt и вложенный Save, снимается при Cancel/ошибке и остаётся терминальным после успешного Close. `IsSessionDisposed` устанавливается до уничтожения сервисов. Эти сигналы проверяются в самом queued callback; lifecycle также отменяет pipe listener. Старого upstream API без этого патча недостаточно.
 
+`IsAssetOperationInProgress` резервирует session на всё время native source update,
+включая ожидание importer. Native Save/Close возвращают false с диагностикой, а
+MCP-мутации отклоняются до завершения операции. После Destroy importer не сливает
+результат в graph и не принимает source hashes; ошибки importer также не принимаются.
+
 Open/Save возвращают operation ID. `editor_operation` различает running и completed/success; начавшийся native Save не отменяется. Очередь UI проверяет cancellation непосредственно перед выполнением. MCP request имеет 12-секундный предел, включая очередь сервера, pipe request — до 10 секунд; connect — 3 секунды, запись ответа — 10 секунд. Входные MCP строки и pipe requests ограничены 64 KiB, отдельное property value — 4096 символами, pipe response — 24 MiB. Уже начавшаяся короткая синхронная транзакция завершается с результатом, а не объявляется отменённой задним числом.
 
 `viewport_capture` возвращает PNG только из backbuffer указанной открытой видимой вкладки. Отрисовка скрытой вкладки может отсутствовать: команда отказывает, desktop fallback отсутствует. `editor_diagnostics` показывает отдельные error/warning counts и последние сообщения native AssetLog, а также capabilities. Это не API управления сборочными заданиями.
@@ -59,8 +64,21 @@ Open/Save возвращают operation ID. `editor_operation` различае
 чтение результата → `save_session` и проверка operation. Управление использует
 структурированные данные, без фотографий viewport, мыши и клавиатуры. Capture
 нужен только при отдельной проверке визуального результата или работающего render.
-Текущие команды охватывают сцены и сериализуемые простые свойства; общий каталог
-ресурсов, import и редактирование всех типов assets ещё не реализованы этим API.
+Всего доступны 16 команд: прежние 12 и четыре ограниченные команды ресурсов.
+`asset_list` перечисляет поддержанные editable assets выбранного проекта;
+`asset_inspect` возвращает native IDs, поля, зависимости и ссылки.
+`asset_set_property` изменяет только allowlist: параметры texture/model/sound,
+sprite-sheet и отдельного кадра, постоянный diffuse color, размер font и TextBlock.
+`asset_set_reference` связывает model→material, entity ModelComponent→model,
+UIComponent→page и TextBlock→font в том же editable package. Оно проверяет native
+типы и IDs владельцев. Все изменения требуют `expectedRevision` и участвуют в Undo.
+Sprite/material элементы адресуются прочитанным `itemIndex` плюс session revision;
+UI/entity/component — собственными GUID. `packageKey` — относительный путь package
+в выбранной session: у native package нет отдельного сериализуемого GUID.
+Внешние packages, asset paths вне корня проекта и пути через reparse points не
+доступны для этих команд. Import/reimport, rename/delete, prefab placement и
+произвольный material/UI graph через MCP пока не реализованы. Реальный native
+reimport ниже проверяет защиту движка, а не наличие новой MCP-команды.
 
 ## Воспроизводимость и проверки
 
@@ -75,6 +93,16 @@ powershell -ExecutionPolicy Bypass -File scripts/stride/build-authoring.ps1
 Live verifier предназначен только для двух собственных qualification scenes. Он действительно изменяет/saves DisplayLabel и Position первой сцены, проверяет вторую, минимизирует только свой editor на время API операций и восстанавливает окно без активации. Не запускать его против пользовательских карт. UI queue regression использует реальный WPF dispatcher с искусственным блокирующим тестовым действием; этого test command нет в MCP. P1 gameplay/verifier не изменены.
 
 `scripts/stride/verify-session-state.ps1` отдельно собирает opt-in qualification assembly и запускает собственный editor с дополнительным test startup hook. Он проверяет прямой native Save, конкурентную queued MCP-правку, disk/dirty/Undo, Cancel/ошибку Close, Close→Save и queued callback после Destroy. Ответы Close prompt подставляет временный dialog-service proxy в тестовой сессии; production services и набор MCP tools не меняются. В конце runner завершает только свой PID после намеренного native Destroy. `-QualificationResult` у launcher предназначен исключительно этому тесту.
+
+`scripts/stride/verify-resource-api.ps1 -McpPython <venv>/Scripts/python.exe`
+создаёт временные native fixtures, проверяет четыре resource tools через официальный
+Python MCP SDK, затем native source update с управляемым test importer. Проверяются
+disk/dirty/Undo/Redo, Save/Close и MCP во время await, ошибка/частичный результат и
+Destroy. Test hook не добавляет execute/eval MCP tool. Runner использует Process и
+timestamp descriptor собственного запуска; после закрытия сохраняет fixture assets
+и sources в папке evidence. Исходные fixture folders должны отсутствовать до запуска.
+Это API/lifecycle qualification; импорт mesh настоящим backend, звук и визуальная
+библиотека A1.3 ещё требуют отдельной приёмки.
 
 На проверенной Codex CLI `0.153.4` project config подготовлен, но checkout пока не имеет сохранённого trust record, поэтому CLI его не загрузила. Нативный набор MCP tools Codex требует trusted project и перезапуска подключения; рабочий официальный MCP CLI выше доступен уже сейчас. Глобальные настройки доверия и другие MCP connections не изменялись.
 

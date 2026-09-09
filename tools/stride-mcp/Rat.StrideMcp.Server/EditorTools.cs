@@ -33,4 +33,15 @@ public sealed class EditorTools(BridgeClient bridge)
     public Task<CallToolResult> Capture(string sceneId,CancellationToken cancellationToken) => bridge.Call("capture",new {sceneId},cancellationToken);
     [McpServerTool(Name="editor_diagnostics"), Description("Read bridge capabilities and selected editor session diagnostics.")]
     public Task<CallToolResult> Diagnostics(CancellationToken cancellationToken) => bridge.Call("diagnostics",new {},cancellationToken);
+
+    [McpServerTool(Name="asset_list"), Description("List supported editable resource asset IDs and explicit package keys within the selected solution. No UI selection or filesystem search.")]
+    public Task<CallToolResult> Assets(CancellationToken cancellationToken)=>bridge.Call("assets",new {},cancellationToken);
+    [McpServerTool(Name="asset_inspect"), Description("Inspect allowlisted native resource fields, item/entity IDs and dependencies. Does not dump arbitrary CLR graphs.")]
+    public Task<CallToolResult> AssetInspect(string assetId,CancellationToken cancellationToken)=>bridge.Call("asset_inspect",new {assetId},cancellationToken);
+    [McpServerTool(Name="asset_set_property"), Description("Change one allowlisted native resource property through Quantum Undo. Optional itemIndex selects an inspected sprite; elementId selects a UI TextBlock. Exact expectedRevision is required.")]
+    public Task<CallToolResult> AssetSet(string assetId,string property,JsonElement value,long expectedRevision,CancellationToken cancellationToken,int? itemIndex=null,string? elementId=null)
+        =>bridge.Call("asset_set",new {assetId,property,value,expectedRevision,itemIndex,elementId},cancellationToken);
+    [McpServerTool(Name="asset_set_reference"), Description("Assign an existing same-package asset to an allowlisted typed native Model/Material/UI Page/Font reference. No arbitrary member paths. Optional entity/component, itemIndex or elementId addresses the inspected owner.")]
+    public Task<CallToolResult> AssetReference(string assetId,string property,string targetAssetId,long expectedRevision,CancellationToken cancellationToken,string? entityId=null,string? componentId=null,int? itemIndex=null,string? elementId=null)
+        =>bridge.Call("asset_reference",new {assetId,property,targetAssetId,expectedRevision,entityId,componentId,itemIndex,elementId},cancellationToken);
 }

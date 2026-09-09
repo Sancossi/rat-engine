@@ -1189,9 +1189,13 @@
       "rat.expedition.authoring": {
         "type": "Project",
         "dependencies": {
+          "Rat.Expedition.Core": "[0.1.0, )",
           "Stride.AssetCompiler": "[4.4.0-dev, 4.4.0-dev]",
           "Stride.Engine": "[4.4.0-dev, 4.4.0-dev]"
         }
+      },
+      "rat.expedition.core": {
+        "type": "Project"
       }
     },
     "net10.0-windows7.0/win-x64": {

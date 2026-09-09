@@ -3,7 +3,7 @@
   "upstreamUrl": "https://github.com/stride3d/stride.git",
   "upstreamRemote": "upstream",
   "upstreamCommit": "e2c786a45f69917bf233793f6a097b150e2fe264",
-  "engineCommit": "88301e861149c48c8b408aac3030b190332d7f97",
+  "engineCommit": "8227ac7402463b14546fc99a169adb14d72f62f0",
   "forkUrl": "https://github.com/Sancossi/stride.git",
   "forkRemote": "origin",
   "baselineKind": "development-snapshot",

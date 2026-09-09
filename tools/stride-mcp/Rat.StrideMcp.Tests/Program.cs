@@ -2,6 +2,35 @@ using System.IO;
 using System.Text.Json.Nodes;
 using System.Windows.Threading;
 using Rat.StrideMcp;
+using Rat.StrideMcp.Adapter;
+
+// A real directory replacement must not turn an inspected local asset into
+// an editable external asset on the next command.
+var pathFixture=Path.Combine(Path.GetTempPath(),"rat-mcp-path-"+Guid.NewGuid().ToString("N"));
+var project=Path.Combine(pathFixture,"project");var outside=Path.Combine(pathFixture,"project-other");
+var assets=Path.Combine(project,"Assets");
+Directory.CreateDirectory(assets);Directory.CreateDirectory(outside);
+File.WriteAllText(Path.Combine(outside,"sample.sdtex"),"owned path fixture");
+bool linked=false;
+try
+{
+    if(!AssetPaths.Inside(project,Path.Combine(assets,"new.sdtex"))||AssetPaths.Inside(project,Path.Combine(outside,"sample.sdtex"))||AssetPaths.Inside(project,Path.Combine(project,"..","project-other","sample.sdtex")))throw new Exception("Project path boundary failed.");
+    Directory.Delete(assets);
+    // Junction creation does not require the symlink privilege on Windows.
+    var linkStart=new System.Diagnostics.ProcessStartInfo("cmd.exe",$"/d /c mklink /J \"{assets}\" \"{outside}\""){UseShellExecute=false,CreateNoWindow=true,RedirectStandardOutput=true,RedirectStandardError=true};
+    using(var linkProcess=System.Diagnostics.Process.Start(linkStart)??throw new Exception("Cannot start junction fixture"))
+    {
+        if(!linkProcess.WaitForExit(5000)||linkProcess.ExitCode!=0)throw new Exception("Cannot create owned junction fixture: "+linkProcess.StandardError.ReadToEnd());
+        linked=true;
+    }
+    if(AssetPaths.Inside(project,Path.Combine(assets,"sample.sdtex")))throw new Exception("Post-inspection reparse replacement escaped the project root.");
+}
+finally
+{
+    if(linked)Directory.Delete(assets);else if(Directory.Exists(assets))Directory.Delete(assets);
+    File.Delete(Path.Combine(outside,"sample.sdtex"));Directory.Delete(outside);Directory.Delete(project);Directory.Delete(pathFixture);
+}
+Console.WriteLine("PASS: sibling/traversal paths and actual post-inspection directory junction replacement rejected.");
 
 var ready=new TaskCompletionSource<Dispatcher>(TaskCreationOptions.RunContinuationsAsynchronously);
 var thread=new Thread(()=>{ready.SetResult(Dispatcher.CurrentDispatcher);Dispatcher.Run();});
