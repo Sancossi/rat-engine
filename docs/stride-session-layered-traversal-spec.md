@@ -27,6 +27,13 @@
 
 ## Проверки
 
+### Suggested Review Order
+
+1. [Project loader](../games/rat-expedition/Rat.Expedition.Core/ExpeditionProject.cs), [scene schema](../games/rat-expedition/Rat.Expedition.Core/SceneDefinition.cs), [session](../games/rat-expedition/Rat.Expedition.Core/ExpeditionSession.cs).
+2. [Motor](../games/rat-expedition/Rat.Expedition.Core/TraversalMotor.cs), [layered collision](../games/rat-expedition/Rat.Expedition.Core/LayeredCollisionWorld.cs), [trail](../games/rat-expedition/Rat.Expedition.Core/PartyTrail.cs), [local occlusion](../games/rat-expedition/Rat.Expedition.Core/LocalOcclusion.cs).
+3. [Windows entry](../games/rat-expedition/Rat.Expedition.Windows/Program.cs), [game/input](../games/rat-expedition/Rat.Expedition.Windows/ExpeditionGame.cs), [owned renderer bundle](../games/rat-expedition/Rat.Expedition.Windows/ScenePresentation.cs), [command routes](../games/rat-expedition/Rat.Expedition.Windows/SessionSmokeRoute.cs).
+4. [Core session tests](../games/rat-expedition/Rat.Expedition.Core.Tests/SessionTests.cs), [presentation tests](../games/rat-expedition/Rat.Expedition.Core.Tests/PresentationTests.cs), [package builder](../scripts/stride/build-game.ps1), [executable verifier](../scripts/stride/verify-game.ps1), [audit](audits/2026-09-09-stride-expedition-traversal.md).
+
 ### Представление: Core-основа
 
 `PartyTrail` сохраняет ограниченный по расстоянию полный 3D путь на каждом fixed tick, включая промежуточные границы опоры и отдельных осевых перемещений motor. Два tint-спутника отстают на 0.7/3.2 units; это параметры прототипа. Пауза не добавляет путь; portal/recovery сбрасывает обоих на новый безопасный spawn. `LocalOcclusion` проверяет конечные box/slab поверхности от реальной near-точки до глубины героя. Необязательный `HideWith` связывает зависимую группу деталей с основной; отсутствующие ссылки/циклы запрещены. Настил под лидером защищён, верхний спутник скрывается только на действительно скрытой опоре, возврат после 0.15 с без пересечения. 61 Core-сценарий проверяет, среди прочего, catch-up через crest, углы, reset, локальность спутников и пустоту под наклонной рампой; GPU-приёмка следует отдельно.
@@ -38,6 +45,8 @@
 Дистанция заднего спутника 3.2 вместо первоначальных 1.4 позволяет настоящему маршруту через срыв с моста 1.6 показать нижних лидера/первого спутника одновременно с верхним задним. История ограничена 3.7 units плюс один сегмент. Это настройка представления, не телепорт или расширение физики. `layered`, `mixed`, `portals`, `recovery` подают обычные команды и сохраняют кадры/telemetry. В mixed-маршруте партия сходит с северного края, приземляется и возвращается под настил; верхний спутник скрывается только вместе с локальным cut. `HideWith` связывает перила с deck, отдельные arch/north группы дают отрицательные проверки. Occlusion delay отсчитывается по реально выполненным session ticks.
 
 Прежние 17 executable scenarios сохраняются: schema fixtures теперь содержат project/named spawns; camera-edge fixture получает конечные бортики, потому что обычный мир P1.3 разрешает срыв. Default/upper-void recovery проверяется отдельно. Focus probe явно проходит pause/release/resume, body route дополнительно держит паузу на лестнице. Новые проверки охватывают layered720/1080, 20 portal legs, смешанные ярусы спутников, renderer candidate failure, три recovery fixtures и невалидные project/ramp/portal/group данные. Пакетная приёмка и точные пути фиксируются в audit, не выводятся из Core-тестов.
+
+Малое исправление runtime-ревью: при Paused назначение анимационного кадра лидера тоже останавливается, даже если движение удерживается. GPU body route сохраняет `ladder-pause-start` и `ladder-paused`; verifier сравнивает реальные sprite frame indices и ticks, не только неподвижность позиции.
 
 ### Core/session: историческая граница до Windows
 

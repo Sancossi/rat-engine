@@ -237,6 +237,7 @@ public sealed class ExpeditionGame : Game
         session.Advance(elapsed,sessionCommand,options.SmokeFrames>0||IsActive);
         if(ladderPauseFrame is >=0 and <10)
         {
+            if(ladderPauseFrame==0)sessionRoute.Capture="ladder-pause-start";
             if(ladderPauseFrame==7){ladderPausePassed=session.Ticks==ladderPauseTicks&&session.Mode==SessionMode.Paused;sessionRoute.Capture="ladder-paused";}
             if(ladderPauseFrame==9)sessionRoute.Capture="ladder-resumed";
             ladderPauseFrame++;
@@ -248,7 +249,7 @@ public sealed class ExpeditionGame : Game
         FollowHero();
         UpdatePartyAndOcclusion((session.Ticks-ticksBeforeFocus)*TraversalMotor.StepSeconds);
         input = sessionCommand.Move;
-        if (provider is not null && input.LengthSquared() > 0) provider.CurrentFrame = frames / 12 % 2 + (Math.Abs(input.X) > Math.Abs(input.Y) ? (input.X > 0 ? 4 : 2) : input.Y > 0 ? 6 : 0);
+        if (session.Mode==SessionMode.Explore && input.LengthSquared() > 0) provider.CurrentFrame = frames / 12 % 2 + (Math.Abs(input.X) > Math.Abs(input.Y) ? (input.X > 0 ? 4 : 2) : input.Y > 0 ? 6 : 0);
         if (options.SmokeFrames > 0 && frames % 30 == 0) samples.Add(new { frame = frames, x = session.Leader.Position.X, y = session.Leader.Position.Y, z = session.Leader.Position.Z, session.Ticks, snapshot=session.Leader });
         base.Update(gameTime);
     }
@@ -262,7 +263,7 @@ public sealed class ExpeditionGame : Game
             using var capture=File.Create(Path.Combine(options.EvidenceDirectory,$"session-{sessionMilestone}.png"));
             GraphicsDevice.Presenter.BackBuffer.Save(GraphicsContext.CommandList,capture,ImageFileType.Png);
             sessionRoute.Milestones.Add(new {name=sessionMilestone,frame=frames,session=session.Snapshot,companions=session.Trail.Companions,
-                hidden=bundle.Occlusion.Hidden.ToArray(),actorVisible=bundle.Actors.Select(a=>a.Get<SpriteComponent>().Enabled).ToArray(),ownedBuffers=bundle.BufferCount});
+                hidden=bundle.Occlusion.Hidden.ToArray(),actorVisible=bundle.Actors.Select(a=>a.Get<SpriteComponent>().Enabled).ToArray(),leaderAnimationFrame=provider.CurrentFrame,ownedBuffers=bundle.BufferCount});
             sessionRoute.Capture=null;
         }
         if(options.SmokeFrames>0 && options.SmokeRoute=="body" && bodyRoute.Capture is string milestone)

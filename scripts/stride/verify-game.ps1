@@ -93,6 +93,9 @@ try {
         $results += Invoke-GameScenario $name @('--width', [string]$resolution[0], '--height', [string]$resolution[1], '--smoke-route', 'body', '--smoke-frames', '1200') $true
         $run = Get-Content -LiteralPath (Join-Path $root "$name/run.json") -Raw | ConvertFrom-Json
         if (-not $run.bodyComplete -or $run.width -ne $resolution[0] -or $run.height -ne $resolution[1] -or $run.ladderPausePassed -ne $true) { throw "$name did not complete the real body route and ladder pause." }
+        $pauseStart = @($run.sessionMilestones | Where-Object name -eq 'ladder-pause-start')
+        $pauseEnd = @($run.sessionMilestones | Where-Object name -eq 'ladder-paused')
+        if ($pauseStart.Count -ne 1 -or $pauseEnd.Count -ne 1 -or $pauseStart[0].session.Mode -ne 'Paused' -or $pauseEnd[0].session.Mode -ne 'Paused' -or $pauseStart[0].session.Ticks -ne $pauseEnd[0].session.Ticks -or $pauseStart[0].leaderAnimationFrame -ne $pauseEnd[0].leaderAnimationFrame) { throw "$name advanced simulation or sprite animation while paused." }
         foreach ($milestone in @('standing-blocked','crouched','blocked-stand','clear-standing','climb-up','upper-exit','held-interact-top','top-walking','climb-down','lower-exit')) {
             $item = @($run.bodyMilestones | Where-Object name -eq $milestone)
             if ($item.Count -ne 1 -or -not (Test-Path -LiteralPath (Join-Path $root "$name/body-$milestone.png"))) { throw "$name missing $milestone evidence." }
