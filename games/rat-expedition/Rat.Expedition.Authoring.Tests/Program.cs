@@ -44,6 +44,18 @@ Check("translated parent contributes once to world bounds",()=>{
     var f=Fixture();var parent=new Entity("Translated parent");parent.Transform.Position=new(2,0,0);f.Scene.Entities.Remove(f.Wall);parent.Transform.Children.Add(f.Wall.Transform);f.Scene.Entities.Add(parent);
     var scene=Read(f.Scene);Require(scene.Walls[0].Min.X==1&&scene.Walls[0].Max.X==3);
 });
+Check("common fractional vertical parent preserves floor wall and spawn contact",()=>{
+    foreach(float y in new[]{.1f,-.1f,.3f,1000f}){
+    var f=Fixture();var parent=new Entity("Common translated parent");parent.Transform.Position=new(.1f,y,.1f);
+    foreach(var entity in f.Scene.Entities.ToArray()){f.Scene.Entities.Remove(entity);parent.Transform.Children.Add(entity.Transform);}
+    f.Scene.Entities.Add(parent);
+    var scene=Read(f.Scene);
+    Require(scene.Floor.Max.Y==y&&scene.Walls[0].Min.Y==scene.Floor.Max.Y&&scene.Spawn.Y==y);
+    Require(scene.CreateWorld().HasSupport(scene.Spawn.Vector,.2f)&&scene.CreateWorld().HasClearance(scene.Spawn.Vector,.2f,.8f));
+    f.Wall.Transform.Position.Y+=.01f;
+    Reject(()=>Read(f.Scene),"wall bottom must meet floor top");
+    }
+});
 Check("duplicate native identity rejected",()=>{var f=Fixture();f.Wall.Id=f.Floor.Id;Reject(()=>Read(f.Scene),"identity");});
 Check("missing foreign and non-spawn default references rejected",()=>{
     foreach(int variant in Enumerable.Range(0,3)){var f=Fixture();f.Root.Get<TraversalSceneComponent>().DefaultSpawn=variant==0?null:variant==1?new Entity("Foreign"){new SpawnComponent()}:f.Wall;Reject(()=>Read(f.Scene),"DefaultSpawn");}

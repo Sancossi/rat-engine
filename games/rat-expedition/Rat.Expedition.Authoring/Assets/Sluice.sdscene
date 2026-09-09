@@ -14,64 +14,6 @@ Hierarchy:
         - ref!! aea7e044-0ffb-5b31-8120-ce0612531607
     Parts:
         -   Entity:
-                Id: 2de85001-5541-59e4-b3f8-e2341d2aa288
-                Name: expedition_sluice
-                Components:
-                    4551aa9308675a129151e9e60201e536: !TransformComponent
-                        Id: b4004522-6c24-5707-b684-8de721bfeed3
-                        Position: {X: 0.0, Y: 0.0, Z: 0.0}
-                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
-                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
-                        Children: {}
-                    ee6e3396c8a15754b1d70f4d5b3cb308: !ExpeditionScene
-                        Id: b1847105-9abe-5f89-a6d2-63f4ddbb44a8
-                        DefaultSpawn: ref!! 7da1e56d-f030-5649-a49d-81cd712f7f97
-                        RecoveryThreshold: -2
-        -   Entity:
-                Id: 60aa598b-d16a-5d3a-a2dc-970d3874808a
-                Name: floor
-                Components:
-                    6271704b260e5ed594c41e360768c723: !TransformComponent
-                        Id: 21e706a9-3cb2-5031-a6ea-5847f96f89fd
-                        Position: {X: 0.0, Y: -0.15, Z: 0.0}
-                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
-                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
-                        Children: {}
-                    25f1540ce5fc55a59f47016b586c9999: !ExpeditionGeometry
-                        Id: 435e5513-4ad6-5b10-9520-3e686630f9f1
-                        Role: Floor
-                        Size: {X: 8.0, Y: 0.3, Z: 8.0}
-                        Axis: X
-                        Rise: 1
-        -   Entity:
-                Id: 51033aa7-68cf-5e4a-aff7-e9e769142a88
-                Name: north-wall
-                Components:
-                    abbf7dfb611150bab761bc94902a4bd7: !TransformComponent
-                        Id: f0255e13-da01-597c-800d-8cad2ffbf3a0
-                        Position: {X: 0.0, Y: 0.6, Z: -3.85}
-                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
-                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
-                        Children: {}
-                    5156aa7d1f0c56808eab0fde6c666f94: !ExpeditionGeometry
-                        Id: c1e82a60-21b8-57ed-a6be-9755188ed1ff
-                        Role: Wall
-                        Size: {X: 8.0, Y: 1.2, Z: 0.2999999999999998}
-                        Axis: X
-                        Rise: 1
-        -   Entity:
-                Id: 7da1e56d-f030-5649-a49d-81cd712f7f97
-                Name: entry
-                Components:
-                    a0d2f5f275cc586ca707a9e644984fd9: !TransformComponent
-                        Id: 8e2a6e62-51b5-56bf-ae3c-191d60a00cd4
-                        Position: {X: 0.0, Y: 0.0, Z: 2.0}
-                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
-                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
-                        Children: {}
-                    da141bcf61b652a392cdcbe1ed90c294: !ExpeditionSpawn
-                        Id: 32b1d872-5953-5861-aeb5-e71972bea4e3
-        -   Entity:
                 Id: 16470738-cf16-5196-a703-0b22f586f948
                 Name: to-courtyard
                 Components:
@@ -87,6 +29,64 @@ Hierarchy:
                         TargetScene: a6d301f9-3171-5137-b3c7-4622618bebc5:Courtyard
                         TargetSpawnId: d185ae4a-8177-59e0-9b03-49a9ad2148d5
         -   Entity:
+                Id: 2de85001-5541-59e4-b3f8-e2341d2aa288
+                Name: expedition_sluice
+                Components:
+                    4551aa9308675a129151e9e60201e536: !TransformComponent
+                        Id: b4004522-6c24-5707-b684-8de721bfeed3
+                        Position: {X: 0.0, Y: 0.0, Z: 0.0}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
+                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
+                        Children: {}
+                    ee6e3396c8a15754b1d70f4d5b3cb308: !ExpeditionScene
+                        Id: b1847105-9abe-5f89-a6d2-63f4ddbb44a8
+                        DefaultSpawn: ref!! 7da1e56d-f030-5649-a49d-81cd712f7f97
+                        RecoveryThreshold: -2.0
+        -   Entity:
+                Id: 51033aa7-68cf-5e4a-aff7-e9e769142a88
+                Name: north-wall
+                Components:
+                    abbf7dfb611150bab761bc94902a4bd7: !TransformComponent
+                        Id: f0255e13-da01-597c-800d-8cad2ffbf3a0
+                        Position: {X: 0.0, Y: 0.6, Z: -3.85}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
+                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
+                        Children: {}
+                    5156aa7d1f0c56808eab0fde6c666f94: !ExpeditionGeometry
+                        Id: c1e82a60-21b8-57ed-a6be-9755188ed1ff
+                        Role: Wall
+                        Size: {X: 8.0, Y: 1.2, Z: 0.3}
+                        Axis: X
+                        Rise: 1.0
+        -   Entity:
+                Id: 60aa598b-d16a-5d3a-a2dc-970d3874808a
+                Name: floor
+                Components:
+                    6271704b260e5ed594c41e360768c723: !TransformComponent
+                        Id: 21e706a9-3cb2-5031-a6ea-5847f96f89fd
+                        Position: {X: 0.0, Y: -0.15, Z: 0.0}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
+                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
+                        Children: {}
+                    25f1540ce5fc55a59f47016b586c9999: !ExpeditionGeometry
+                        Id: 435e5513-4ad6-5b10-9520-3e686630f9f1
+                        Role: Floor
+                        Size: {X: 8.0, Y: 0.3, Z: 8.0}
+                        Axis: X
+                        Rise: 1.0
+        -   Entity:
+                Id: 7da1e56d-f030-5649-a49d-81cd712f7f97
+                Name: entry
+                Components:
+                    a0d2f5f275cc586ca707a9e644984fd9: !TransformComponent
+                        Id: 8e2a6e62-51b5-56bf-ae3c-191d60a00cd4
+                        Position: {X: 0.0, Y: 0.0, Z: 2.0}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
+                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
+                        Children: {}
+                    da141bcf61b652a392cdcbe1ed90c294: !ExpeditionSpawn
+                        Id: 32b1d872-5953-5861-aeb5-e71972bea4e3
+        -   Entity:
                 Id: aea7e044-0ffb-5b31-8120-ce0612531607
                 Name: Editor ambient
                 Components:
@@ -98,5 +98,7 @@ Hierarchy:
                         Children: {}
                     e318becf487b515bb818547b75ffcc26: !LightComponent
                         Id: df5396d7-eee0-553a-9bf5-e52c3a9ca06b
-                        Type: !LightAmbient {}
+                        Type: !LightAmbient
+                            Color: !ColorRgbProvider
+                                Value: {R: 1.0, G: 1.0, B: 1.0}
                         Intensity: 0.55

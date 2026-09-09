@@ -24,14 +24,20 @@ public static class NativeSceneAdapter
     }
     public static Vector3 Position(Entity entity,string asset)
     {
-        var sum=Vector3.Zero;var visited=new HashSet<Entity>();
+        var p=PrecisePosition(entity,asset);
+        return new((float)p.X,(float)p.Y,(float)p.Z);
+    }
+    private static (double X,double Y,double Z) PrecisePosition(Entity entity,string asset)
+    {
+        (double X,double Y,double Z) sum=(0,0,0);var visited=new HashSet<Entity>();
         for(var transform=entity.Transform;transform is not null;transform=transform.Parent)
         {
             if(!visited.Add(transform.Entity))throw Error(asset,entity,"Parent","cyclic hierarchy");
             if(!transform.UseTRS||transform.Rotation!=Quaternion.Identity||transform.Scale!=Vector3.One)
                 throw Error(asset,transform.Entity,"Transform","requires TRS, identity rotation and unit scale for gameplay geometry and points");
-            sum+=transform.Position;
-            if(!Finite(transform.Position)||!Finite(sum))throw Error(asset,transform.Entity,"Position","must remain finite including parents");
+            sum=(sum.X+transform.Position.X,sum.Y+transform.Position.Y,sum.Z+transform.Position.Z);
+            if(!Finite(transform.Position)||Math.Abs(sum.X)>float.MaxValue||Math.Abs(sum.Y)>float.MaxValue||Math.Abs(sum.Z)>float.MaxValue)
+                throw Error(asset,transform.Entity,"Position","must remain finite including parents");
         }
         return sum;
     }
@@ -42,16 +48,20 @@ public static class NativeSceneAdapter
     }
     public static (WorldBox? Box,RampDefinition? Ramp) Geometry(GeometryComponent component,string asset)
     {
-        var entity=component.Entity;var p=Position(entity,asset);var size=component.Size;PositiveSize(entity,size,asset);
+        // Round only the final bounds. Rounding translated centres to float first
+        // breaks shared floor/wall contact (e.g. common parent Y=.1), even when
+        // their authored faces coincide exactly. Core's strict contact stays intact.
+        var entity=component.Entity;var p=PrecisePosition(entity,asset);var size=component.Size;PositiveSize(entity,size,asset);
         if(!Enum.IsDefined(component.Role)||!Enum.IsDefined(component.Axis))throw Error(asset,entity,"Role/Axis","unknown value");
         string id=entity.Id.ToString();
         if(component.Role==GeometryRole.Ramp)
         {
-            var ramp=new RampDefinition(id,new(p.X,p.Z),new(p.X+size.X,p.Z+size.Z),component.Axis,p.Y,p.Y+component.Rise,size.Y);
+            var ramp=new RampDefinition(id,new((float)p.X,(float)p.Z),new((float)(p.X+size.X),(float)(p.Z+size.Z)),component.Axis,(float)p.Y,(float)(p.Y+component.Rise),size.Y);
             try {ramp.ToWorld();}catch(Exception error){throw Error(asset,entity,"Ramp",error.Message);}
             return(null,ramp);
         }
-        var min=p-size/2;var max=p+size/2;
+        var min=new Vector3((float)(p.X-size.X/2d),(float)(p.Y-size.Y/2d),(float)(p.Z-size.Z/2d));
+        var max=new Vector3((float)(p.X+size.X/2d),(float)(p.Y+size.Y/2d),(float)(p.Z+size.Z/2d));
         if(!Finite(min)||!Finite(max)||min.X>=max.X||min.Y>=max.Y||min.Z>=max.Z)
             throw Error(asset,entity,"Size/Position","bounds overflow or collapse at this magnitude");
         return(new(id,Point(min),Point(max)),null);

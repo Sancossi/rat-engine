@@ -8,6 +8,14 @@
 
 Box: Entity.Position — центр, Size — конечные положительные размеры. Ramp: Entity.Position — начальный угол верхней поверхности, Size.X/Z — горизонтальные пролёты, Size.Y — толщина, Rise — signed перепад вдоль Axis. Используется прежняя конечная slab geometry с вертикальными торцами, без коллизии произвольного mesh. Для геометрии/точек и родителей допустима только конечная трансляция, identity rotation, unit scale и TRS. Изменение Size/Position обновляет один источник геометрии. Editor processor показывает box/точную ramp; runtime строит прежнюю owned presentation из того же validated Core snapshot. Это не два вручную поддерживаемых набора размеров.
 
+Сумма parent translations и centre±Size/2 вычисляется с double intermediates;
+float округляются только итоговые bounds/points. Поэтому общий parent Y=.1 не
+создаёт искусственный зазор floor/wall. Строгое Core правило контакта не ослабляется:
+реально поднятая стена по-прежнему требует Role=Structure. Preview generation имеет
+Order −300, до TransformProcessor(−200) и ModelRenderProcessor(0), чтобы новая
+геометрия получила world matrices, а старые буферы не освобождались после сбора
+RenderMeshes текущего кадра.
+
 Core остаётся без Stride references. Native adapter проверяет metadata, затем прежние Core clearance/support/corridor/reference guards. Каждый candidate заново читает native assets через отдельный ContentManager, конвертирует в plain values и выгружает native scene; renderer подготавливается до атомарной смены session. Ошибка candidate оставляет старый мир. Активный loader не использует старый JSON как fallback. Legacy JSON до A1.4 может оставаться для исторических Core fixtures; производные native-world.json являются только evidence.
 
 ## Приёмка

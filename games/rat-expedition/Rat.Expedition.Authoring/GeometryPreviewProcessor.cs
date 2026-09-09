@@ -14,6 +14,11 @@ namespace Rat.Expedition.Authoring;
 // ModelComponent/buffers; the game constructs its owned presentation from Core data.
 public sealed class GeometryPreviewProcessor : EntityProcessor<GeometryComponent,GeometryPreviewProcessor.Preview>
 {
+    // EntityManager draws processors in order. Generate/replace models before
+    // TransformProcessor(-200) updates skeleton/world matrices and before
+    // ModelRenderProcessor(0) collects this frame's RenderMeshes. Never retire
+    // a buffer after that collection has retained it for the same frame.
+    public GeometryPreviewProcessor(){Order=-300;}
     public sealed class Preview
     {
         public ModelComponent Model {get;}=new();

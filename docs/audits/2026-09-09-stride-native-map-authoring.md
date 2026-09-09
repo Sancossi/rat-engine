@@ -105,3 +105,48 @@ Mapping старых 33 сценариев и трёх добавленных о
 GUI rename/delete всех категорий. Legacy JSON остаётся в исходниках для Core tests,
 но исключён из publish. Статусы, финальную Release editor сборку и публикацию
 принятого среза в main ведёт parent; незавершённые A1.3/A1.4 этим отчётом не закрываются.
+
+## Independent review: два исправления
+
+`857e3a1` прошёл все 36 executable сценариев:
+`C:/5_gamedev/rat-expedition-validation/20260909-122643-970/verification.json`.
+Пакет `build/stride-game/20260909-122553-348/rat-expedition-0.1.0-win-x64.zip`,
+SHA256 `7816C55A55152201A9FC108DA0AC7E9464C5BC2CE60BBE6F9D55D7C87658F3ED`,
+gameCommit `857e3a1`, dirty=false. Обычный пакет без QA также собран в `122654-343`
+(manifest `59fa6ac`, только parent card change поверх того же кода, dirty=false),
+но эти сборки предшествуют следующим review fixes и не заменяют их проверку.
+
+1. Reviewer воспроизвёл ложный floating wall при общем parent Y=.1: floor top
+   `.10000000149`, wall bottom `.10000002384`. Новый regression до исправления:
+   `build/a12-vertical-parent-before.log`, 14 pass / 1 fail. Adapter теперь складывает
+   parent translations и вычисляет bounds в double, округляя только окончательный
+   результат. Core epsilon/точное требование wall-floor не менялись. После исправления
+   `build/a12-vertical-parent-after.log`: 15 passed; parent Y=+.1/−.1/.3/1000 сохраняет
+   support/contact, настоящая добавка +.01 к стене отвергается.
+2. Preview.Draw раньше имел Order=0, равный ModelRenderProcessor. OrderedCollection
+   не гарантирует порядок равных элементов; прежние buffers могли уже попасть в
+   текущий RenderMesh. Теперь preview Order=−300, до TransformProcessor(−200) и
+   ModelRenderProcessor(0). Source anchors integration 88301e8:
+   `sources/engine/Stride.Engine/Engine/EntityManager.cs:199`,
+   `Engine/EntityProcessorCollection.cs:59`, `Engine/Processors/TransformProcessor.cs:46`,
+   `Engine/Processors/ModelTransformProcessor.cs:35`, `Rendering/ModelRenderProcessor.cs:75`.
+   Модель создаётся до обновления skeleton/world matrices и renderer collection.
+
+После прежних builds editor показывал пять dirty scenes. Native history через
+read-only UIAutomation подтвердил только четыре `Reload game assemblies` после
+двух наших MCP Position transactions: `build/a12-history-open-uia.json`.
+Последний сохранённый revision был 12, reload довёл его до 16. Известное reload-state
+сохранено через MCP (`build/a12-save-reload.json`), затем old owned PID 40632 закрыт
+штатно. Save канонизировал только Sluice: порядок entities, представление float и
+явный default white LightAmbient; значения gameplay не изменились. Неизвестные
+ручные правки не отбрасывались.
+
+Свежий owned editor PID 45016 запущен через `start-mcp-editor.ps1 -SolutionPath
+C:/5_gamedev/rat-engine/games/rat-expedition/Rat.Expedition.sln`; Debug preflight
+собрал исправленную assembly (SHA256 `ba5aca019747ec37be796555e7223262991ddc2606f165ee0698259de093ba19`).
+Квалификация `build/a12-preview-lifecycle/evidence.json` прошла 85 MCP вызовов:
+13 Size/Role изменений, Undo/Redo, Save/close/reopen и возврат исходных Size/Role.
+17 captures ожидали реальный editor NextFrame, имели непустые pixels, 7 различных
+hash; diagnostics errorCount=0. PNG не сохранялись и не использовались для управления.
+Это проверка работающего render/замены моделей, не ручной осмотр формы или GPU
+memory profiling. Позиция/размер/роль исходной стены восстановлены и сохранены.
