@@ -217,7 +217,7 @@ def main():
     report["door_clear_aperture_m"]={"spring_width":spring_width,"center_height":opening_top,"clearance_samples_height_m":[.12,1,1.75]}
     leaf=[obj for obj in bpy.data.collections["door_standard"].objects if obj.type=="MESH" and obj.get("export_group")=="leaf"]
     report["source_door_sweep"]=door_sweep(scene,frame,leaf)
-    body=[obj for obj in bpy.data.collections["scale_rat_adult"].objects if obj.type=="MESH" and obj.get("export_group")=="body"]
+    body=[obj for obj in bpy.data.collections["scale_rat_adult"].objects if obj.type=="MESH" and obj.get("export_group") in {"body","robe"}]
     report["ordinary_adult_door_passage"]=resident_passage(frame,body)
     for key in sorted(PILOTS):
         bpy.ops.wm.read_factory_settings(use_empty=True)

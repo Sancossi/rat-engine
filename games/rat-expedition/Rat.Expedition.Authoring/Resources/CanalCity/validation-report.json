@@ -695,7 +695,7 @@
   },
   "ordinary_adult_door_passage": {
     "standing_height_m": 2.799999952316284,
-    "swept_body_vertices": 2746,
+    "swept_body_vertices": 3980,
     "masonry_hits": 0,
     "alignment": "centered X=0, standing Z=0, movement along Y; body/robe included, tail/staff excluded"
   },

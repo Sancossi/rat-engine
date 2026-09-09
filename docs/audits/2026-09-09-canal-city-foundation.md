@@ -28,14 +28,14 @@ Checkpoint `d8b513e` сохранён в истории и описывает п
 build `2026-07-14 01:35:40`. Проверка запускается из корня рабочей копии:
 
 ```powershell
-& 'C:/Program Files/Blender Foundation/Blender 5.2/blender.exe' --factory-startup --background --python-exit-code 1 --python games/rat-expedition/tools/canal_city/validate.py -- --input games/rat-expedition/Rat.Expedition.Authoring/Resources/CanalCity --report build/canal-city/source-reviewfix-validation.json
+& 'C:/Program Files/Blender Foundation/Blender 5.2/blender.exe' --factory-startup --background --python-exit-code 1 --python games/rat-expedition/tools/canal_city/validate.py -- --input games/rat-expedition/Rat.Expedition.Authoring/Resources/CanalCity --report build/canal-city/source-robe-validation.json
 python scripts/check_vault.py
 python -m unittest discover -s scripts/tests
 git diff --check
 ```
 
 Все команды завершились с кодом 0; vault checker прошёл, **25 Python-тестов**
-прошли. Свежий `source-reviewfix-validation.json` структурно совпадает с доставленным
+прошли. Свежий `source-robe-validation.json` структурно совпадает с доставленным
 `validation-report.json`. SHA256 всех **66** перечисленных файлов совпали.
 Состав хешируемых файлов: Blender, 14 FBX, 45 PNG-карт, 4 PNG-превью, шрифт и OFL.
 JSON-манифесты не входят в эту хеш-таблицу; их история фиксируется Git.
@@ -147,3 +147,7 @@ commit `59182a5`; статусы карточки исполнитель не м
 `dremma_scale_comparison.png` и `door_lantern_detail.png` открыты исполнителем:
 профиль проёма, створка, размерные подписи и четырёхростовое сравнение читаются.
 Vault checker и 25 Python-тестов повторно прошли после исправлений.
+
+????? ???????? ??????????? P2 ???????? ???????? ???????: ??? ???? ????????
+?????? `body` ? `robe`. 3980 ?????? ????? ????? ????????; ????? ????????
+`source-robe-validation.json` ??????????? ??????? ??? ????????? ????????? ??? PNG.
