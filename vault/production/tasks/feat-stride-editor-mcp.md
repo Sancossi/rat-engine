@@ -27,7 +27,7 @@ Acceptance:
 - Независимое read-only review, журнал реального API roundtrip и полная Release сборка редактора. Отдельно обозначены проверки MCP, GUI отображения, игры и оставшаяся A1 приёмка.
 
 Origin: [[feat-stride-game-studio-authoring]]; [[research-open-engine-foundation]].
-Follow-up: [[feat-stride-game-studio-authoring]].
+Follow-up: [[feat-stride-game-studio-authoring]]; [[publish-accepted-project-editor-main]].
 
 ## Resolution
 

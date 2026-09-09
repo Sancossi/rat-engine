@@ -23,6 +23,8 @@ Acceptance:
 
 Origin: [[expedition-prototype-traversal]]; [[feat-stride-source-foundation]].
 
+Follow-up: [[publish-accepted-project-editor-main]].
+
 ## Resolution
 
 Опубликован общий снимок в [ветке GitHub](https://github.com/Sancossi/rat-engine/tree/publish/stride-p11-editor-game-vault): исходники редактора, текущей Stride-игры, исторического C++ прототипа, оригинальные ассеты, инженерные документы и vault. Подготовка `af7041d` / `a6d4d96`; независимое ревью состава Approved. Первый push и `git ls-remote` подтвердили совпадение remote и локального SHA `a6d4d96969cc4b39f240a9ca364e11207b47fdb5`; заключительный документационный коммит также отправляется и проверяется.
