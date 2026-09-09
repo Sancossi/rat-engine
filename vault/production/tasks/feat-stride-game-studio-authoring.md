@@ -4,7 +4,7 @@ area: Game
 status: In progress
 task_type: Feature
 sprint: Sprint 19
-review: Approved
+review: Pending
 due:
 tags: [task, expedition, stride, authoring]
 ---
@@ -30,6 +30,10 @@ Origin: [[design-stride-editor-asset-workflow]]; [[expedition-prototype-traversa
 Follow-up: [[expedition-prototype-interactions]]; [[feat-expedition-character-sprites]]; [[expedition-vertical-slice]]; [[feat-stride-editor-mcp]].
 
 ## Resolution
+
+A1.2 опубликован в `rat-engine/main`: `ff24f314e3d5b3f08f955757b6516c301be65ff4`, remote SHA проверен; `Sancossi/stride/main` остаётся на принятом `88301e861149c48c8b408aac3030b190332d7f97`. Посторонние два vault EOL changes сохранены. Начат A1.3 по утверждённой таблице ресурсов: один представитель обязательной категории, native авторский источник, runtime/ZIP использование, API edit/save/reopen и import/reference qualification. Сначала исполнитель фиксирует конкретные assets/API и границы проверки в инженерной спецификации, затем реализует этот срез; A1.4 и ручной P1 остаются отдельными. Review Pending относится к A1.3, принятие A1.2 сохраняется.
+
+Работа MCP по умолчанию опирается на структурированные данные без viewport_capture; изображения нужны только отдельным визуальным критериям. Существующие 12 команд не объявляются API всего asset catalog/import: недостающая часть должна быть явно квалифицирована в A1.3.
 
 Финальное review документации — Approved `ac4f88e`: README явно разделяет production ZIP и QA build/verifier. A1.2 полностью принят как срез; оба runtime P2 и ошибка команды устранены. Публикуется проверенная история до этого acceptance commit; A1.3/A1.4 остаются незавершёнными.
 
