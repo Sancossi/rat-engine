@@ -1,9 +1,10 @@
 ---
 type: task
 area: Game
-status: Not started
+status: In progress
 task_type: Feature
-sprint:
+sprint: Sprint 19
+review: Pending
 due:
 tags: [task, expedition, stride, authoring]
 ---
@@ -14,7 +15,7 @@ Intent: Открывать, размещать и настраивать кар�
 
 Specification: [План A1 и приёмка](../../../docs/stride-editor-asset-workflow-plan.md); [архитектура](../../../docs/rat-expedition-architecture.md); [[ADR-018 Rat expedition uses Stride]].
 
-Dependencies: [[expedition-prototype-traversal]] целиком, включая P1.3; [[feat-stride-source-foundation]]; [[design-stride-editor-asset-workflow]]. Предлагаемое место A1 — после P1 перед P2, до массового контента E3. Карточка вне спринта; планирование не запускает реализацию.
+Dependencies: реализация и автоматическая приёмка [[expedition-prototype-traversal]], включая P1.3; [[feat-stride-source-foundation]]; [[design-stride-editor-asset-workflow]]. Пользователь 2026-09-09 явно разрешил начать A1, перенеся оставшуюся ручную приёмку P1 на позже. Это исключение из прежнего порядка «полностью закрытый P1 → A1», не утверждение о выполнении ручного теста. A1 включён в Sprint 19 перед P2, до массового контента E3.
 
 Acceptance:
 
@@ -30,7 +31,7 @@ Follow-up: [[expedition-prototype-interactions]]; [[feat-expedition-character-sp
 
 ## Resolution
 
-Реализация не начиналась. При выполнении фиксировать результаты срезов A1.1–A1.4 из плана, не создавать параллельный источник статусов.
+Начато 2026-09-09 по явному разрешению пользователя. Порядок: A1.1 native project/compiler/GUI квалификация → A1.2 карты/Core → A1.3 библиотека ресурсов → A1.4 единый запуск/ZIP/общая приёмка. Один исполнитель, независимое read-only ревью каждого среза. Оставшийся ручной P1 перенесён на позже; его статус не закрывается автоматически.
 
 ## Bugs found
 
