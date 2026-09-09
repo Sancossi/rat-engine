@@ -52,3 +52,5 @@ Adapter теперь проверяет native state в actual queued callback, 
 - `build/stride-authoring/20260909-112230-877/result.json`: exit0; compiled runtime снова совпал с MCP (`Edited through MCP: qualified`, position0, тот же entity GUID). Manifest отдельно записывает upstream baseline и engine integration SHA; это pre-commit проверка wrapper, не ложное утверждение о clean implementation HEAD.
 
 Codex CLI0.153.4 не загрузила подготовленный project-scoped config без trust record этого checkout. Глобальный trust не изменялся. Работающий официальный MCP client остаётся доступным; native Codex tool namespace требует trusted project и перезапуска подключения. Это ограничение регистрации, не отказ native editor API.
+
+Повторный review закрыл оба runtime P2 и выявил узкую ошибку wrapper: qualification build не получал StrideBin выбранного `-CheckoutPath`. Исправлено через общий Get-StrideCheckoutPath и явный `-p:StrideBin`, как в build-mcp. Проверены PowerShell parse и diff; source commit и runtime не менялись, новый запуск qualification выполняется parent отдельно.

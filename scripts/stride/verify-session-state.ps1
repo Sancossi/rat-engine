@@ -1,13 +1,15 @@
 [CmdletBinding()]
 param([string]$CheckoutPath)
-$ErrorActionPreference='Stop'
+. (Join-Path $PSScriptRoot 'common.ps1')
+$engine=Get-StrideCheckoutPath $CheckoutPath
+$editorBin=Join-Path $engine 'sources/editor/Stride.GameStudio/bin/Release/net10.0-windows'
 $repository=[IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../..'))
 $output=Join-Path $repository ('build/mcp/session-state-'+(Get-Date -Format 'yyyyMMdd-HHmmss-fff'))
 New-Item -ItemType Directory -Path $output | Out-Null
 $result=Join-Path $output 'result.json'
 & (Join-Path $PSScriptRoot 'build-mcp.ps1') -CheckoutPath $CheckoutPath
 if($LASTEXITCODE -ne 0){throw 'MCP build failed.'}
-& dotnet build (Join-Path $repository 'tools/stride-mcp/Rat.StrideMcp.Qualification/Rat.StrideMcp.Qualification.csproj') -c Release -p:RestoreLockedMode=true --nologo
+& dotnet build (Join-Path $repository 'tools/stride-mcp/Rat.StrideMcp.Qualification/Rat.StrideMcp.Qualification.csproj') -c Release -p:RestoreLockedMode=true "-p:StrideBin=$editorBin" --nologo
 if($LASTEXITCODE -ne 0){throw 'Native session-state qualification build failed.'}
 Copy-Item -LiteralPath (Join-Path $repository 'tools/stride-mcp/Rat.StrideMcp.Qualification/bin/Release/net10.0-windows/Rat.StrideMcp.Qualification.dll') -Destination (Join-Path $repository 'build/stride-mcp/adapter')
 & (Join-Path $PSScriptRoot 'start-mcp-editor.ps1') -CheckoutPath $CheckoutPath -QualificationResult $result
