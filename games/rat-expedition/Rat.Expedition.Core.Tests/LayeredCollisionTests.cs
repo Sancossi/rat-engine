@@ -124,6 +124,37 @@ internal static class LayeredCollisionTests
             foreach(var sample in new[]{(-.2f,0f),(0,.08f),(2,.88f),(3.8f,1.6f),(4,1.6f),(4.2f,1.6f)})
                 require(world.HasSupport(new(sample.Item1,sample.Item2,0),radius),$"Expected support at {sample}");
         });
+        check("nominal float side contact supports inward and tangent movement on box and ramp",()=>{
+            var flat=new LayeredCollisionWorld([new("narrow",new(-2,-1,-.5f),new(2,0,.5f))],[]);
+            var slope=new LayeredCollisionWorld([],[ramp with {Min=new(0,-.5f),Max=new(4,.5f)}]);
+            foreach(var item in new[]{(flat,new Vector3(0,0,.3f)),(slope,new Vector3(2,.88f,.3f))})
+            {
+                require(item.Item1.HasSupport(item.Item2,radius),"Nominal .3 + .2 edge lost support");
+                foreach(var delta in new[]{new Vector2(0,-.1f),new Vector2(.25f,0)})
+                {
+                    var move=item.Item1.MoveSupported(item.Item2,delta,radius,height);
+                    require(!move.LostSupport && !move.Blocked && move.Fraction==1,"Nominal edge rejected inward/tangent movement");
+                }
+            }
+            var world=World(); var edge=world.MoveSupported(new(6,1.6f,0),new(0,2),radius,height);
+            require(edge.LostSupport && world.HasSupport(edge.Position,radius),"Returned .8 + .2 edge is not supported");
+            foreach(var delta in new[]{new Vector2(0,-.1f),new Vector2(.25f,0)})
+            {
+                var move=world.MoveSupported(edge.Position,delta,radius,height);
+                require(!move.LostSupport && !move.Blocked && move.Fraction==1,"Returned edge cannot move inward/tangent");
+            }
+        });
+        check("coverage tolerance does not seal a sub-epsilon interior hole",()=>{
+            // Connected ring; unlike disconnected strips it reaches Covers as one component.
+            var ring=new LayeredCollisionWorld([
+                new("left",new(-1,-1,-1),new(.05f,0,1)),
+                new("right",new(.050001f,-1,-1),new(1,0,1)),
+                new("back",new(.05f,-1,-1),new(.050001f,0,-.1f)),
+                new("front",new(.05f,-1,.1f),new(.050001f,0,1))],[]);
+            require(!ring.HasSupport(Vector3.Zero,radius),"Interior hole smaller than epsilon was sealed");
+            var move=ring.MoveSupported(new(-.5f,0,0),new(1,0),radius,height);
+            require(move.LostSupport && move.Fraction<.5f,"Movement crossed sub-epsilon interior hole");
+        });
         check("ramp metadata rejects nonfinite degenerate steep and duplicate geometry",()=>{
             Reject(()=>new LayeredCollisionWorld([floor],[ramp with {StartY=float.NaN}]));
             Reject(()=>new LayeredCollisionWorld([floor],[ramp with {Max=new(0,1)}]));

@@ -190,9 +190,15 @@ public sealed class LayeredCollisionWorld
         var xs=rectangles.SelectMany(q=>new[]{q.X0,q.X1}).Append((double)p.X-r).Append((double)p.X+r).Distinct().Order().ToArray();
         var zs=rectangles.SelectMany(q=>new[]{q.Z0,q.Z1}).Append((double)p.Z-r).Append((double)p.Z+r).Distinct().Order().ToArray();
         // Full rectangle arrangement coverage: narrow holes missed by all four corners
-        // still leave an uncovered cell. This is exact for these axis-aligned domains.
+        // still leave an uncovered cell. Only the footprint's exterior boundary has
+        // contact tolerance; never enlarge every patch and accidentally seal a hole.
         for(int x=1;x<xs.Length;x++) for(int z=1;z<zs.Length;z++)
-            if(!rectangles.Any(q=>q.Contains((xs[x-1]+xs[x])/2,(zs[z-1]+zs[z])/2))) return false;
+        {
+            if(rectangles.Any(q=>q.Contains((xs[x-1]+xs[x])/2,(zs[z-1]+zs[z])/2))) continue;
+            bool outerX=(x==1 || x==xs.Length-1) && xs[x]-xs[x-1]<=Epsilon;
+            bool outerZ=(z==1 || z==zs.Length-1) && zs[z]-zs[z-1]<=Epsilon;
+            if(!outerX && !outerZ) return false;
+        }
         return true;
     }
 
