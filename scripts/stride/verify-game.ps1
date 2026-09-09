@@ -24,8 +24,9 @@ try {
         $commandArguments = @('--smoke-frames', '360', '--evidence-dir', $evidence) + $Arguments
         $quotedArguments = @($commandArguments | ForEach-Object { '"' + $_ + '"' })
         $process = Start-Process -FilePath $exe -ArgumentList $quotedArguments -WorkingDirectory $unrelatedCwd -WindowStyle Hidden -PassThru
-        # The 1440-frame edge route needs 48 seconds at 30 Hz, plus startup/capture.
-        $timeoutMs = if ($Arguments -contains 'edges') { 90000 } else { 30000 }
+        # Stride throttles hidden/unfocused windows to 15 Hz: 1440 frames need 96 seconds.
+        # Allow bounded startup/capture margin without disabling normal engine throttling.
+        $timeoutMs = if ($Arguments -contains 'edges') { 150000 } else { 30000 }
         if (-not $process.WaitForExit($timeoutMs)) {
             Stop-Process -Id $process.Id -ErrorAction SilentlyContinue
             throw "$Name exceeded $($timeoutMs / 1000) seconds; only its spawned process was stopped."
