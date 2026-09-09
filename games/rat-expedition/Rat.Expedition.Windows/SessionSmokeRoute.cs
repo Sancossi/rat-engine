@@ -8,6 +8,7 @@ internal sealed class SessionSmokeRoute(string route)
 {
     private int phase,wait,legs;
     private long revision;
+    private bool mixedFallCaptured;
     public string? Capture {get;set;}
     public bool Complete {get;private set;}
     public List<object> Milestones {get;}=[];
@@ -27,7 +28,7 @@ internal sealed class SessionSmokeRoute(string route)
      (4.5f,-3.6f,0,false,"lower-forward"),(5.5f,-3.6f,0,false,"cut-restored"),
      (4.5f,-3.6f,0,false,null),(2.5f,-3.6f,0,false,"lower-reverse"),
      (2.5f,-5.15f,0,false,"offcentre-behind-wall")];
-        return route=="mixed"?points.Take(10).Concat(new (float,float,float,bool,string?)[]{(2.5f,-4.6f,0,false,null),(2.5f,-3.6f,0,false,"mixed-companions"),(2.5f,-2.3f,0,false,"mixed-restored")}).ToArray():points;
+        return route=="mixed"?points.Take(10).Concat(new (float,float,float,bool,string?)[]{(2.5f,-4.6f,0,false,null),(2.5f,-3.6f,0,false,"mixed-lower"),(2.5f,-2.3f,0,false,"mixed-restored")}).ToArray():points;
     }
     public SessionInput Next(ExpeditionSession session)
     {
@@ -42,6 +43,12 @@ internal sealed class SessionSmokeRoute(string route)
         if(Complete)return new(Vector2.Zero);
         if(route is "layered" or "mixed")
         {
+            // Compact spacing cannot span the entire 1.6-unit drop plus the
+            // grounded return. Observe the real fall before the rear leaves deck.
+            if(route=="mixed"&&!mixedFallCaptured&&s.Mode==TraversalMode.Falling&&s.Position.Y<.9f)
+            {
+                Capture="mixed-companions";mixedFallCaptured=true;
+            }
             if(phase>=layered.Length){Complete=true;return new(Vector2.Zero);}
             var point=layered[phase];
             if(Near(point.X,point.Z))

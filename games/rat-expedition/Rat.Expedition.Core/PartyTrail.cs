@@ -8,7 +8,7 @@ public readonly record struct TrailPose(Vector3 Position,BodyStance Stance,Trave
 public sealed class PartyTrail
 {
     public const float Spacing=.7f;
-    public const float RearDistance=3.2f;
+    public const float RearDistance=2*Spacing;
     private readonly List<TrailPose> points=[];
     public PartyTrail(TraversalSnapshot leader)=>Reset(leader);
     public void Reset(TraversalSnapshot leader){points.Clear();points.Add(new(leader.Position,leader.Stance,leader.Mode));}

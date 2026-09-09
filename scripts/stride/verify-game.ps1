@@ -199,7 +199,28 @@ try {
     $results += Invoke-GameScenario 'mixed-companions' @('--smoke-route','mixed','--smoke-frames','1500') $true
     $run = Get-Content -LiteralPath (Join-Path $root 'mixed-companions/run.json') -Raw | ConvertFrom-Json
     $mixed = @($run.sessionMilestones | Where-Object name -eq 'mixed-companions')
-    if (-not $run.sessionComplete -or $mixed.Count -ne 1 -or $mixed[0].actorVisible[1] -ne $true -or $mixed[0].actorVisible[2] -ne $false -or $mixed[0].companions[0].Position.Y -ne 0 -or $mixed[0].companions[1].Position.Y -ne 1.6) { throw 'Mixed-height companion locality not demonstrated.' }
+    # A 1.4-unit trail cannot span the full 1.6-unit drop and grounded return.
+    # Observe the actual fall, then the lower route, without increasing game spacing.
+    if (-not $run.sessionComplete -or $mixed.Count -ne 1 -or $mixed[0].session.Leader.Mode -ne 'Falling' -or
+        $mixed[0].session.Leader.Position.Y -le 0 -or $mixed[0].session.Leader.Position.Y -ge 1.6 -or
+        $mixed[0].actorVisible[0] -ne $true -or $mixed[0].actorVisible[1] -ne $true -or $mixed[0].actorVisible[2] -ne $false -or
+        $mixed[0].companions[0].Position.Y -le $mixed[0].session.Leader.Position.Y -or $mixed[0].companions[0].Position.Y -ge 1.6 -or
+        $mixed[0].companions[1].Position.Y -ne 1.6 -or $mixed[0].hidden -notcontains 'bridge-cut' -or $mixed[0].hidden -notcontains 'bridge-rail-cut') {
+        throw 'Falling mixed-height companion locality not demonstrated.'
+    }
+    $mixedLower = @($run.sessionMilestones | Where-Object name -eq 'mixed-lower')
+    if ($mixedLower.Count -ne 1 -or $mixedLower[0].session.Leader.Position.Y -ne 0 -or $mixedLower[0].companions[0].Position.Y -ne 0 -or
+        $mixedLower[0].companions[1].Position.Y -ge 1.6 -or $mixedLower[0].actorVisible -contains $false -or $mixedLower[0].hidden -notcontains 'bridge-cut') {
+        throw 'Lower companions were hidden with the upper deck.'
+    }
+    $mixedRestored = @($run.sessionMilestones | Where-Object name -eq 'mixed-restored')
+    if ($mixedRestored.Count -ne 1 -or $mixedRestored[0].hidden.Count -ne 0 -or $mixedRestored[0].actorVisible -contains $false -or
+        $mixedRestored[0].session.Leader.Position.Y -ne 0 -or @($mixedRestored[0].companions | Where-Object { $_.Position.Y -ne 0 }).Count -ne 0) {
+        throw 'Grounded compact party or deck restoration missing.'
+    }
+    $leaderZ = $mixedRestored[0].session.Leader.Position.Z
+    if ([Math]::Abs($leaderZ - $mixedRestored[0].companions[0].Position.Z - .7) -gt .001 -or
+        [Math]::Abs($leaderZ - $mixedRestored[0].companions[1].Position.Z - 1.4) -gt .001) { throw 'GPU route did not retain compact equal spacing.' }
     $results += Invoke-GameScenario 'portal-roundtrips' @('--smoke-route','portals','--smoke-frames','1800') $true
     $run = Get-Content -LiteralPath (Join-Path $root 'portal-roundtrips/run.json') -Raw | ConvertFrom-Json
     if (-not $run.sessionComplete -or $run.portalLegs -ne 20 -or $run.session.WorldRevision -ne 20) { throw 'Did not complete ten round trips.' }

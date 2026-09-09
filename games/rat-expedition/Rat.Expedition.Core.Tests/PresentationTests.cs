@@ -8,6 +8,19 @@ internal static class PresentationTests
         Vector2 Screen(Vector2 v)=>new(Vector2.Dot(v,TraversalMotor.CameraRight),Vector2.Dot(v,TraversalMotor.CameraForward));
         var scene=new SceneDefinition(3,"trail",new("floor",new(-3,-.3f,-3),new(9,0,3)),new(-1,0,0),[],[new("deck",new(4,1.4f,-1),new(8,1.6f,1))],[])
             {Ramps=[new("ramp",new(0,-1),new(4,1),RampAxis.X,0,1.6f,.2f)]};
+        check("party keeps equal compact intervals after walking and stopping",()=>{
+            var s=new ExpeditionSession(new("trail",[scene with {Ramps=[],Structures=[]}]));
+            for(int tick=0;tick<180;tick++)s.Advance(TraversalMotor.StepSeconds,new(Screen(Vector2.UnitX)));
+            var party=s.Trail.Companions.ToArray();
+            require(Math.Abs(s.Leader.Position.X-party[0].Position.X-.7f)<.0001f,"First companion distance changed");
+            require(Math.Abs(s.Leader.Position.X-party[1].Position.X-1.4f)<.0001f,$"Rear distance was {s.Leader.Position.X-party[1].Position.X}, expected 1.4");
+            require(Math.Abs(party[0].Position.X-party[1].Position.X-.7f)<.0001f,"Companions do not have equal intervals");
+            for(int tick=0;tick<60;tick++)s.Advance(TraversalMotor.StepSeconds,new(Vector2.Zero));
+            require(party.SequenceEqual(s.Trail.Companions),"Idle changed compact trail positions");
+            s.Advance(0,new(Vector2.Zero,PauseHeld:true));
+            s.Advance(.1,new(Screen(Vector2.UnitX)));
+            require(party.SequenceEqual(s.Trail.Companions),"Pause changed compact trail positions");
+        });
         check("trail follows supported ramp and crest during multi-tick catchup",()=>{
             var s=new ExpeditionSession(new("trail",[scene]));var world=scene.CreateWorld();
             for(int i=0;i<23;i++)
