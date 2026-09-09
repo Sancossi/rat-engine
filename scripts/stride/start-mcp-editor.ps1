@@ -1,8 +1,8 @@
 [CmdletBinding()]
-param([string]$CheckoutPath,[string]$SolutionPath)
+param([string]$CheckoutPath,[string]$SolutionPath,[string]$QualificationResult)
 . (Join-Path $PSScriptRoot 'common.ps1')
 $engine=Get-StrideCheckoutPath $CheckoutPath
-if((Assert-StrideCheckout $engine) -ne $script:StrideLock.upstreamCommit){throw 'Exact pinned Stride is required.'}
+if((Assert-StrideCheckout $engine) -ne (Get-StrideIntegrationCommit)){throw 'Exact pinned Stride integration commit is required.'}
 $repository=[IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../..'))
 if(-not $SolutionPath){$SolutionPath=Join-Path $repository 'games/rat-expedition/Rat.Expedition.Authoring.sln'}
 $solution=$ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($SolutionPath)
@@ -19,10 +19,17 @@ New-Item -ItemType Directory -Path $connectionDir | Out-Null
 $connection=Join-Path $connectionDir 'connection.json'
 $editor=Join-Path $engine 'sources/editor/Stride.GameStudio/bin/Release/net10.0-windows/Stride.GameStudio.exe'
 $oldHook=$env:DOTNET_STARTUP_HOOKS;$oldConnection=$env:RAT_MCP_CONNECTION;$oldPipe=$env:RAT_MCP_PIPE
+$oldQualification=$env:RAT_MCP_QUALIFICATION_RESULT
 try {
     $env:DOTNET_STARTUP_HOOKS=$hook;$env:RAT_MCP_CONNECTION=$connection;$env:RAT_MCP_PIPE='rat-stride-mcp-'+[Guid]::NewGuid().ToString('N')
+    if($QualificationResult){
+        $fixtureHook=Join-Path $repository 'build/stride-mcp/adapter/Rat.StrideMcp.Qualification.dll'
+        if(-not(Test-Path -LiteralPath $fixtureHook)){throw 'Build the explicit session-state qualification assembly first.'}
+        $env:DOTNET_STARTUP_HOOKS+=';'+$fixtureHook
+        $env:RAT_MCP_QUALIFICATION_RESULT=$ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($QualificationResult)
+    }
     $process=Start-Process -FilePath $editor -ArgumentList ('"'+$solution+'"') -WorkingDirectory (Split-Path $solution) -WindowStyle Hidden -PassThru
-} finally {$env:DOTNET_STARTUP_HOOKS=$oldHook;$env:RAT_MCP_CONNECTION=$oldConnection;$env:RAT_MCP_PIPE=$oldPipe}
+} finally {$env:DOTNET_STARTUP_HOOKS=$oldHook;$env:RAT_MCP_CONNECTION=$oldConnection;$env:RAT_MCP_PIPE=$oldPipe;$env:RAT_MCP_QUALIFICATION_RESULT=$oldQualification}
 [ordered]@{processId=$process.Id;connection=$connection;solution=$solution} | ConvertTo-Json | Tee-Object -FilePath (Join-Path $connectionDir 'launch.json')
 $deadline=[DateTime]::UtcNow.AddSeconds(60)
 while(-not(Test-Path -LiteralPath $connection)){

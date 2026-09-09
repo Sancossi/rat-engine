@@ -127,6 +127,35 @@ class StrideCheckoutTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(Path(result.stdout.decode().strip()), self.repo)
 
+    def test_fresh_bootstrap_fetches_exact_fork_patch_not_moving_tip(self):
+        baseline = self.initialize()
+        self.git("branch", "-m", "master")
+        upstream = self.fixture / "upstream.git"
+        subprocess.check_call(["git", "clone", "--bare", str(self.repo), str(upstream)], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        (self.repo / "editor-patch.txt").write_text("qualified native state")
+        self.git("add", "editor-patch.txt")
+        self.git("commit", "-m", "qualified editor patch")
+        pinned = self.git("rev-parse", "HEAD")
+        (self.repo / "future-unqualified.txt").write_text("do not select moving fork tip")
+        self.git("add", "future-unqualified.txt")
+        self.git("commit", "-m", "later unrelated work")
+        fork = self.fixture / "fork.git"
+        subprocess.check_call(["git", "clone", "--bare", str(self.repo), str(fork)], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        harness = self.fixture / "harness"
+        shutil.copytree(ROOT / "scripts/stride", harness / "scripts/stride")
+        (harness / "tools/stride").mkdir(parents=True)
+        fixture_lock = dict(LOCK, upstreamCommit=baseline, engineCommit=pinned,
+                            upstreamUrl=str(upstream), forkUrl=str(fork), forkRemote="origin")
+        (harness / "tools/stride/engine.lock.json").write_text(json.dumps(fixture_lock))
+        target = self.fixture / "fresh checkout[pin]"
+        result = self.run_ps("& " + ps_literal(harness / "scripts/stride/bootstrap.ps1") +
+                             " -CheckoutPath " + ps_literal(target))
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertEqual(subprocess.check_output(["git", "-C", str(target), "rev-parse", "HEAD"]).decode().strip(), pinned)
+        self.assertTrue((target / "editor-patch.txt").exists())
+        self.assertFalse((target / "future-unqualified.txt").exists())
+        self.assertEqual(subprocess.check_output(["git", "-C", str(target), "status", "--porcelain"]).strip(), b"")
+
     def test_build_enters_literal_bracket_checkout_and_records_artifact(self):
         self.repo = self.fixture / "checkout[rat]"
         self.repo.mkdir()

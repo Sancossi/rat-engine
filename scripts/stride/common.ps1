@@ -3,6 +3,11 @@ $ErrorActionPreference = 'Stop'
 $script:StrideLockFile = Join-Path $PSScriptRoot '../../tools/stride/engine.lock.json'
 $script:StrideLock = Get-Content -LiteralPath $script:StrideLockFile -Raw | ConvertFrom-Json
 
+function Get-StrideIntegrationCommit {
+    if($script:StrideLock.PSObject.Properties['engineCommit']){return [string]$script:StrideLock.engineCommit}
+    return [string]$script:StrideLock.upstreamCommit
+}
+
 function Invoke-StrideGit {
     param([string]$Root, [string[]]$Arguments)
     # Windows PowerShell wraps even successful git progress on stderr as ErrorRecord.

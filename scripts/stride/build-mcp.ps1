@@ -3,7 +3,7 @@ param([string]$CheckoutPath)
 . (Join-Path $PSScriptRoot 'common.ps1')
 $engine=Get-StrideCheckoutPath $CheckoutPath
 $head=Assert-StrideCheckout $engine
-if($head -ne $script:StrideLock.upstreamCommit){throw 'MCP requires exact pinned Stride checkout.'}
+if($head -ne (Get-StrideIntegrationCommit)){throw 'MCP requires exact pinned Stride integration commit.'}
 $repository=[IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../..'))
 $output=Join-Path $repository 'build/stride-mcp'
 $editorBin=Join-Path $engine 'sources/editor/Stride.GameStudio/bin/Release/net10.0-windows'

@@ -9,6 +9,9 @@
 3. [MCP tools](../tools/stride-mcp/Rat.StrideMcp.Server/EditorTools.cs), [process-checked client](../tools/stride-mcp/Rat.StrideMcp.Server/BridgeClient.cs).
 4. [Live editor checks](../tools/stride-mcp/verify_live.py), [transport checks](../tools/stride-mcp/verify_transport.py), [dispatcher regression](../tools/stride-mcp/Rat.StrideMcp.Tests/Program.cs).
 5. [Build](../scripts/stride/build-mcp.ps1), [owned launch/preflight](../scripts/stride/start-mcp-editor.ps1), [exact package-cohort recovery](../scripts/stride/restore-authoring-cohort.ps1).
+6. Review fixes: [native Save/Close regression](../tools/stride-mcp/Rat.StrideMcp.Qualification/QualificationPlugin.cs), [opt-in runner](../scripts/stride/verify-session-state.ps1), [integration lock](../tools/stride/engine.lock.json), [source patch](https://github.com/Sancossi/stride/commit/88301e861149c48c8b408aac3030b190332d7f97).
+
+Native lifecycle boundary after review: весь Save (включая Undo save point) должен иметь публичный busy state независимо от инициатора; Close блокирует queued requests до отмены либо навсегда после принятия. Disposal виден до уничтожения сервисов. Adapter проверяет эти значения на dispatcher непосредственно перед исполнением. Отменённые/ошибочные native операции снимают временные состояния; вложенный Close→Save сохраняет оба. Integration SHA закрепляется отдельно от исходного upstream baseline.
 
 Основание: пользователь 2026-09-09 попросил заменить координатный ввод управлением через API, затем явно разрешил реализацию. [Карточка](../vault/production/tasks/feat-stride-editor-mcp.md) — источник статуса. [Предварительное исследование](stride-mcp-integration-research.md) сохраняется; этот документ задаёт текущий узкий срез.
 

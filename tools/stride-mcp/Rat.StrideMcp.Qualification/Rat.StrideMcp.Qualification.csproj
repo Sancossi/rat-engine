@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><TargetFramework>net10.0-windows</TargetFramework><UseWPF>true</UseWPF></PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Rat.StrideMcp.Adapter/Rat.StrideMcp.Adapter.csproj" />
+    <Reference Include="$(StrideBin)/Stride.Core.dll;$(StrideBin)/Stride.Core.Serialization.dll;$(StrideBin)/Stride.Foundation.dll;$(StrideBin)/Stride.Core.Mathematics.dll;$(StrideBin)/Stride.Core.Design.dll;$(StrideBin)/Stride.Core.Assets.dll;$(StrideBin)/Stride.Core.Assets.Quantum.dll;$(StrideBin)/Stride.Core.Quantum.dll;$(StrideBin)/Stride.Core.Presentation.dll;$(StrideBin)/Stride.Core.Presentation.Wpf.dll;$(StrideBin)/Stride.Core.Assets.Editor.dll;$(StrideBin)/Stride.Assets.dll;$(StrideBin)/Stride.Assets.Presentation.dll;$(StrideBin)/Stride.Engine.dll"><Private>false</Private></Reference>
+  </ItemGroup>
+</Project>

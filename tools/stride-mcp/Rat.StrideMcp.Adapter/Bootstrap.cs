@@ -27,6 +27,10 @@ public sealed class EditorPlugin : AssetsPlugin
     public override void InitializeSession(SessionViewModel session)
     {
         lifetime?.Cancel();lifetime=new();
+        var sessionLifetime=lifetime;
+        session.PropertyChanged+=(_,change)=>{
+            if(change.PropertyName==nameof(SessionViewModel.IsSessionDisposed)&&session.IsSessionDisposed)sessionLifetime.Cancel();
+        };
         var dispatcher=Dispatcher.CurrentDispatcher;
         var bridge=new EditorBridge(session,dispatcher);
         var file=Wire.Object(new {pipeName=Bootstrap.PipeName,processId=Environment.ProcessId,projectId=bridge.ProjectId,sessionId=bridge.SessionId,
@@ -35,7 +39,6 @@ public sealed class EditorPlugin : AssetsPlugin
         var token=lifetime.Token;
         _=Task.Run(()=>Listen(bridge,token));
     }
-    protected override void SessionDisposed(SessionViewModel session){lifetime?.Cancel();}
     private static async Task Listen(EditorBridge bridge,CancellationToken lifetime)
     {
         while(!lifetime.IsCancellationRequested)

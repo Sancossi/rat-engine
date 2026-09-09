@@ -1,6 +1,6 @@
 # Game Studio MCP
 
-Локальный stdio MCP server управляет отдельно запущенным Game Studio через нативный asset Quantum graph. Требуются Windows, .NET 10 и собранный locked Stride `e2c786a45f69917bf233793f6a097b150e2fe264`. Редактирование не использует мышь, клавиатуру или замену файлов сцены.
+Локальный stdio MCP server управляет отдельно запущенным Game Studio через нативный asset Quantum graph. Требуются Windows, .NET 10 и собранная интеграция Stride `88301e861149c48c8b408aac3030b190332d7f97` поверх upstream `e2c786a45f69917bf233793f6a097b150e2fe264`. SHA и fork закреплены в engine lock. Редактирование не использует мышь, клавиатуру или замену файлов сцены.
 
 ## Запуск
 
@@ -48,6 +48,8 @@ python tools/stride-mcp/client.py --server <absolute-server.exe> --connection <a
 
 Quantum.Update выполняется в именованной Undo transaction на WPF dispatcher. **Undo/Redo и Save имеют scope всей session**, включая другие сцены. `editor_undo`/`editor_redo` требуют expected transaction ID и revision; `save_session` требует revision. Незавершённое ручное поле нативно подтверждается перед проверкой revision, поэтому его правка вызывает конфликт. Обновления native Undo history и asset properties увеличивают revision независимо от клиента. Нужно заново прочитать состояние после конфликта, затем осознанно повторить команду.
 
+Native `IsSaving` блокирует MCP-изменения на всём протяжении Save, включая сериализацию и Undo save point, независимо от инициатора (GUI, F5 или MCP). `IsClosing` охватывает prompt и вложенный Save, снимается при Cancel/ошибке и остаётся терминальным после успешного Close. `IsSessionDisposed` устанавливается до уничтожения сервисов. Эти сигналы проверяются в самом queued callback; lifecycle также отменяет pipe listener. Старого upstream API без этого патча недостаточно.
+
 Open/Save возвращают operation ID. `editor_operation` различает running и completed/success; начавшийся native Save не отменяется. Очередь UI проверяет cancellation непосредственно перед выполнением. MCP request имеет 12-секундный предел, включая очередь сервера, pipe request — до 10 секунд; connect — 3 секунды, запись ответа — 10 секунд. Входные MCP строки и pipe requests ограничены 64 KiB, отдельное property value — 4096 символами, pipe response — 24 MiB. Уже начавшаяся короткая синхронная транзакция завершается с результатом, а не объявляется отменённой задним числом.
 
 `viewport_capture` возвращает PNG только из backbuffer указанной открытой видимой вкладки. Отрисовка скрытой вкладки может отсутствовать: команда отказывает, desktop fallback отсутствует. `editor_diagnostics` показывает отдельные error/warning counts и последние сообщения native AssetLog, а также capabilities. Это не API управления сборочными заданиями.
@@ -63,5 +65,9 @@ powershell -ExecutionPolicy Bypass -File scripts/stride/build-authoring.ps1
 ```
 
 Live verifier предназначен только для двух собственных qualification scenes. Он действительно изменяет/saves DisplayLabel и Position первой сцены, проверяет вторую, минимизирует только свой editor на время API операций и восстанавливает окно без активации. Не запускать его против пользовательских карт. UI queue regression использует реальный WPF dispatcher с искусственным блокирующим тестовым действием; этого test command нет в MCP. P1 gameplay/verifier не изменены.
+
+`scripts/stride/verify-session-state.ps1` отдельно собирает opt-in qualification assembly и запускает собственный editor с дополнительным test startup hook. Он проверяет прямой native Save, конкурентную queued MCP-правку, disk/dirty/Undo, Cancel/ошибку Close, Close→Save и queued callback после Destroy. Ответы Close prompt подставляет временный dialog-service proxy в тестовой сессии; production services и набор MCP tools не меняются. В конце runner завершает только свой PID после намеренного native Destroy. `-QualificationResult` у launcher предназначен исключительно этому тесту.
+
+На проверенной Codex CLI `0.153.4` project config подготовлен, но checkout пока не имеет сохранённого trust record, поэтому CLI его не загрузила. Нативный набор MCP tools Codex требует trusted project и перезапуска подключения; рабочий официальный MCP CLI выше доступен уже сейчас. Глобальные настройки доверия и другие MCP connections не изменялись.
 
 См. [инженерный контракт](../../docs/stride-editor-mcp-spec.md), [evidence](../../docs/audits/2026-09-09-stride-editor-mcp.md), [NOTICE](NOTICE). Оригинальные незавершённые A1.2 карты остаются в другом checkout; их интеграция следует после review этого среза.

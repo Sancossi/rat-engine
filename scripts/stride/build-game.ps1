@@ -5,8 +5,8 @@ param([string]$CheckoutPath)
 try {
     $engine = Get-StrideCheckoutPath $CheckoutPath
     $engineHead = Assert-StrideCheckout $engine
-    if ($engineHead -ne $script:StrideLock.upstreamCommit) {
-        throw 'This game slice uses exactly the locked upstream build. Qualify custom engine packages in a separate slice.'
+    if ($engineHead -ne (Get-StrideIntegrationCommit)) {
+        throw 'This game slice requires the exact locked engine integration build and its qualified package cohort.'
     }
     $repository = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../..'))
     $game = Join-Path $repository 'games/rat-expedition'

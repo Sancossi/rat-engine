@@ -46,7 +46,7 @@ internal sealed class EditorBridge
     public async Task<JsonObject> Dispatch(JsonObject request,CancellationToken cancellation)
     {
         return await UiRequestQueue.Run(dispatcher,()=>{
-            cancellation.ThrowIfCancellationRequested();CheckAddress(request["address"]!.AsObject());
+            cancellation.ThrowIfCancellationRequested();CheckNativeSession(false);CheckAddress(request["address"]!.AsObject());
             return Execute(request,cancellation);
         },cancellation);
     }
@@ -57,6 +57,7 @@ internal sealed class EditorBridge
     }
     private void Guard(JsonObject args,CancellationToken cancellation)
     {
+        CheckNativeSession(true);
         if(activeOperation is {IsCompleted:false})throw new InvalidOperationException("A session operation is still running; inspect operation/status first.");
         if(session.AllAssets.Where(a=>a.Asset is SceneAsset).Any(a=>((SceneAsset)a.Asset).Hierarchy.Parts.Values.Any(p=>p.Entity.Components.Any(c=>c is Stride.Core.Yaml.IUnloadable))))
             throw new InvalidOperationException("Session contains unloadable scene components. Fix restore/build before editing or saving.");
@@ -64,11 +65,20 @@ internal sealed class EditorBridge
         // A pending manual value therefore conflicts, instead of overwriting our change later.
         session.ServiceProvider.Get<IEditorDialogService>().ClearKeyboardFocus();
         cancellation.ThrowIfCancellationRequested();
+        CheckNativeSession(true);
         if(undo.TransactionInProgress||undo.UndoRedoInProgress)throw new InvalidOperationException("Native editor transaction is in progress.");
         if(args["expectedRevision"]?.GetValue<long>()!=Interlocked.Read(ref revision))throw new InvalidOperationException("Stale session revision; refresh status and inspect before retrying.");
     }
+    private void CheckNativeSession(bool requireIdle)
+    {
+        dispatcher.VerifyAccess();
+        if(session.IsSessionDisposed||session.IsClosing)
+            throw new InvalidOperationException("Native editor session is closing or disposed.");
+        if(requireIdle&&session.IsSaving)
+            throw new InvalidOperationException("Native session save is running; wait for completion before editing.");
+    }
     private object Status()=>new {processId=Environment.ProcessId,projectId=ProjectId,sessionId=SessionId,projectPath=session.SessionFilePath.ToString(),revision=Interlocked.Read(ref revision),
-        scope="session",stride="4.4.0-dev",busy=activeOperation is {IsCompleted:false},undo.TransactionInProgress,undo.UndoRedoInProgress,
+        scope="session",stride="4.4.0-dev",busy=session.IsSaving||activeOperation is {IsCompleted:false},session.IsSaving,session.IsClosing,session.IsSessionDisposed,undo.TransactionInProgress,undo.UndoRedoInProgress,
         undoTransactionId=session.ActionHistory.Transactions.LastOrDefault(t=>t.IsDone)?.Id.ToString(),
         redoTransactionId=session.ActionHistory.Transactions.FirstOrDefault(t=>!t.IsDone)?.Id.ToString(),
         hookCleared=Environment.GetEnvironmentVariable("DOTNET_STARTUP_HOOKS") is null,
@@ -143,6 +153,7 @@ internal sealed class EditorBridge
     private async Task<JsonObject> Execute(JsonObject request,CancellationToken cancellation)
     {
         var args=request["arguments"]?.AsObject()??new();string command=request["command"]!.GetValue<string>();object? data;
+        if(command is not ("status" or "operation"))CheckNativeSession(true);
         var manager=session.ServiceProvider.Get<IAssetEditorsManager>();
         switch(command)
         {

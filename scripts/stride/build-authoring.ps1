@@ -5,7 +5,7 @@ param([string]$CheckoutPath)
 try {
     $engine = Get-StrideCheckoutPath $CheckoutPath
     $engineHead = Assert-StrideCheckout $engine
-    if ($engineHead -ne $script:StrideLock.upstreamCommit) { throw 'Authoring qualification requires the exact locked upstream build.' }
+    if ($engineHead -ne (Get-StrideIntegrationCommit)) { throw 'Authoring qualification requires the exact locked engine integration build.' }
     $repository = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../..'))
     $game = Join-Path $repository 'games/rat-expedition'
     $feed = Join-Path $engine 'bin/packages'
@@ -55,7 +55,7 @@ try {
         if (-not (Test-Path -LiteralPath (Join-Path $evidence $file))) { throw "Runtime evidence missing $file" }
     }
     [ordered]@{
-        exitCode = 0; sourceBaseline = $engineHead
+        exitCode = 0; sourceBaseline = $script:StrideLock.upstreamCommit; engineHead = $engineHead
         gameCommit = [string](Invoke-StrideGit $repository @('rev-parse', 'HEAD'))
         authoringWorkingTreeDirty = [bool](Invoke-StrideGit $repository @('status', '--porcelain', '--', 'games/rat-expedition/Rat.Expedition.Authoring', 'games/rat-expedition/Rat.Expedition.Authoring.Windows', 'games/rat-expedition/Rat.Expedition.Authoring.sln', 'scripts/stride/build-authoring.ps1'))
         executable = $executable; artifacts = $artifacts; evidence = $evidence
