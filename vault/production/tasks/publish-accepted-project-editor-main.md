@@ -1,10 +1,10 @@
 ---
 type: task
 area: Engine
-status: In progress
+status: In review
 task_type: Feature
 sprint: Sprint 19
-review: Pending
+review: In review
 due:
 tags: [task, publication, stride, mcp]
 ---
@@ -25,6 +25,8 @@ Acceptance:
 Origin: [[feat-stride-editor-mcp]]; [[publish-editor-game-vault-snapshot]].
 
 ## Resolution
+
+Слияние `1c344ed` передано на независимое read-only review: оба родителя сохранены, main-only roadmap архивирован побайтно. Trees games/tools/scripts идентичны принятому `ad733e2`; vault/projection/diff checks прошли. [Отчёт](../../../docs/audits/2026-09-09-main-publication.md). Parent Release retry `C:/5_gamedev/stride/logs/rat-foundation/20260909-114644-943/result.json`: exit0, 5 известных NU5100 warnings / 0 errors. Публикация main и default branch ожидает review.
 
 Начато 2026-09-09. rat-engine origin/main имеет 5 собственных исторических коммитов относительно принятой ветки; fork Stride master имеет 16 новых upstream commits вне pinned baseline. Слияние проекта готовится в publish/accepted-main; main fork создаётся из принятой интеграции без обновления движка. Parent владеет статусами и финальной публикацией.
 
