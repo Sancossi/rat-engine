@@ -8,6 +8,7 @@ import json
 import math
 from pathlib import Path
 import random
+import shutil
 import sys
 
 import bpy
@@ -21,6 +22,7 @@ RNG = random.Random(1909)
 CURRENT = None
 ROOT = None
 MATS = {}
+FIGURE_HEIGHTS={"scale_rat_small":1.2,"scale_rat_medium":1.8,"scale_rat_adult":2.8,"scale_rat_high":4.0}
 
 
 def mesh(name, vertices, faces, material, bevel=0.015, group="structure"):
@@ -92,7 +94,7 @@ def rod(name, a, b, radius=0.025, material="iron", sides=8, group="ironwork", ra
     if radius_end==0:
         vertices=vertices[:sides]+[tuple(b)]
         faces=[tuple(reversed(range(sides)))]+[(i,(i+1)%sides,sides) for i in range(sides)]
-    return mesh(name, vertices, faces, material, 0.004, group)
+    return mesh(name, vertices, faces, material, min(.004,(b-a).length*.1,radius*.2), group)
 
 
 def wire(name, points, radius=0.018, material="brass", group="ironwork", closed=False):
@@ -167,8 +169,8 @@ def railing(x=0,y=0,z=0,width=2,height=1):
     # Each bay has a pointed gothic lancet with a nested diamond and scrolls.
     for px in (x-width/2+.07,x+width/2-.07):
         post(px,y,z,height-.17)
-    for level in (.14,height-.24,height-.11):
-        rod("Continuous rail",(x-width/2,y,z+level),(x+width/2,y,z+level),.025,"brass" if level==height-.11 else "iron")
+    for level in (.14,height-.16,height-.025):
+        rod("Handrail datum" if level==height-.025 else "Continuous rail",(x-width/2,y,z+level),(x+width/2,y,z+level),.025,"brass" if level==height-.025 else "iron")
     bays = max(2,round(width/.5))
     for i in range(bays):
         cx=x-width/2+(i+.5)*width/bays
@@ -178,6 +180,9 @@ def railing(x=0,y=0,z=0,width=2,height=1):
         rod("Center spike",(cx,y,z+.58),(cx,y,z+.8),.023,"brass",radius_end=0)
         for sign in (-1,1):
             wire("Forged volute",[(cx+sign*(half*.35+.05*math.cos(t)),y,z+.22+.065*math.sin(t)) for t in np.linspace(0,math.tau*1.1,16)],.01,"iron")
+        if height>1.1:
+            rod("Extended lancet stem",(cx,y,z+.78),(cx,y,z+height-.16),.018,"iron")
+            wire("High guard crown",[(cx-half,y,z+.8),(cx-half*.6,y,z+height-.25),(cx,y,z+height-.16),(cx+half*.6,y,z+height-.25),(cx+half,y,z+.8)],.016,"brass")
 
 
 def lantern(x=0,y=0,z=0,scale=1):
@@ -270,18 +275,114 @@ def bridge():
         wire("Faith star",[(-2.9+.10*math.cos(t+angle),-1.735,2.8+.10*math.sin(t+angle)) for t in (0,math.pi*.5,math.pi,math.pi*1.5)],.012,"brass","banner",True)
 
 
-def stairs(width=2.4,steps=9,rise=.2,tread=2/9):
+def stairs(width=2.4,steps=8,rise=.3,tread=.56,center_x=0,handrails=True):
     for i in range(steps):
         height=(i+1)*rise
-        masonry(width,height,tread,(0,(i+.5)*tread,0),course=rise,block=.5,group="stair_mass")
-        box("Eased stair nosing",(0,i*tread+.045,height-.03),(width+.035,.11,.06),"stone_light",.012,"treads")
-    for x in (-width/2+.06,width/2-.06):
+        masonry(width,height,tread,(center_x,(i+.5)*tread,0),course=rise,block=.5,group="stair_mass")
+        box("Eased stair nosing",(center_x,i*tread+.045,height-.03),(width,.11,.06),"stone_light",.012,"treads")
+    if not handrails:
+        return
+    for x in (center_x-width/2+.08,center_x+width/2-.08):
         for i in (0,steps-1):
             post(x,(i+.5)*tread,(i+1)*rise,.75,stone=False)
         for level in (.42,.72):
             rod("Sloping handrail",(x,.2,rise+level),(x,(steps-.5)*tread,steps*rise+level),.03,"brass")
         for i in range(1,steps-1):
             rod("Stair baluster",(x,(i+.5)*tread,(i+1)*rise),(x,(i+.5)*tread,(i+1)*rise+.69),.02)
+
+
+def paired_stairs():
+    # Small lane is a .8m recess within the 2.4m assembly; its support profile
+    # follows the half-steps. This prevents low wooden treads being buried in
+    # the solid .30m risers. Main clear lane:1.6m, small useful lane:.6m.
+    stairs(width=1.6,center_x=.4,handrails=False)
+    for i in range(16):
+        top=(i+1)*.15
+        y=(i+.5)*.28
+        box("Small lane stone support",(-.8,y,(top-.045)/2),(.79,.27,top-.045),"stone_dark",.01,"overlay_support")
+        box("Overlay wooden tread",(-.8,y,top-.0225),(.8,.28,.045),"oak",.009,"overlay_treads")
+        box("Overlay brass nose",(-.8,i*.28+.012,top-.009),(.78,.024,.018),"brass",.004,"overlay_treads")
+        for x in (-1.12,-.48):
+            rod("Overlay bolt",(x,y-.06,top-.004),(x,y-.06,top),.015,"brass",group="overlay_treads")
+    for x in (-1.18,-.42,1.12):
+        for y,z in ((.14,.15),(4.34,2.4)):
+            post(x,y,z,.8)
+        rod("Paired lane handrail",(x,.14,1.0),(x,4.34,3.25),.025,"brass")
+
+
+def ellipsoid(name,center,radii,material="fur",group="figure",segments=20,rings=12):
+    cx,cy,cz=center
+    rx,ry,rz=radii
+    vertices=[(cx,cy,cz-rz)]
+    for j in range(1,rings):
+        phi=-math.pi/2+j*math.pi/rings
+        for i in range(segments):
+            theta=i*math.tau/segments
+            vertices.append((cx+rx*math.cos(phi)*math.cos(theta),cy+ry*math.cos(phi)*math.sin(theta),cz+rz*math.sin(phi)))
+    top=len(vertices)
+    vertices.append((cx,cy,cz+rz))
+    faces=[(0,1+(i+1)%segments,1+i) for i in range(segments)]
+    for j in range(rings-2):
+        for i in range(segments):
+            a=1+j*segments+i
+            b=1+j*segments+(i+1)%segments
+            faces.append((a,b,b+segments,a+segments))
+    faces.extend((top,1+(rings-2)*segments+i,1+(rings-2)*segments+(i+1)%segments) for i in range(segments))
+    obj=mesh(name,vertices,faces,material,0,group)
+    for face in obj.data.polygons:
+        face.use_smooth=True
+    return obj
+
+
+def robe(height,child=False):
+    segments=40
+    levels=[(.065,.145),(.10,.15),(.28,.125),(.46,.10),(.62,.135),(.73,.155),(.78,.09)]
+    vertices=[]
+    for z,r in levels:
+        for i in range(segments):
+            angle=i*math.tau/segments
+            pleat=1+.055*math.cos(angle*10)+.02*math.cos(angle*17)
+            vertices.append((height*r*math.cos(angle)*pleat,height*r*.78*math.sin(angle)*pleat,height*z))
+    faces=[tuple(reversed(range(segments))),tuple(range((len(levels)-1)*segments,len(levels)*segments))]
+    for j in range(len(levels)-1):
+        for i in range(segments):
+            a=j*segments+i
+            b=j*segments+(i+1)%segments
+            faces.append((a,b,b+segments,a+segments))
+    obj=mesh("Pleated travelling robe",vertices,faces,"burgundy",0,"robe")
+    for face in obj.data.polygons:
+        face.use_smooth=True
+    for sign in (-1,1):
+        wire("Embroidered robe seam",[(sign*height*x,-height*y,height*z) for x,y,z in ((.045,.08,.76),(.07,.11,.65),(.045,.085,.46),(.07,.11,.28),(.09,.13,.08))],height*.004,"brass","robe")
+
+
+def ratfolk(height,child=False,tall=False):
+    robe(height,child)
+    # Feet touch z0 exactly. Body-height measurement excludes the tail/staff group.
+    for sign in (-1,1):
+        ellipsoid("Rat foot",(sign*.072*height,-.046*height,.032*height),(.045*height,.092*height,.032*height),"fur","body")
+        ellipsoid("Draped sleeve",(sign*.145*height,-.005*height,.60*height),(.065*height,.085*height,.155*height),"burgundy","robe")
+        wire("Folded forearm sleeve",[(sign*x*height,-y*height,z*height) for x,y,z in ((.18,.03,.54),(.12,.09,.52),(.04,.14,.55))],.035*height,"burgundy","robe")
+        ellipsoid("Clasped hand",(sign*.035*height,-.151*height,.553*height),(.037*height,.025*height,.022*height),"fur","body")
+    ellipsoid("Raised hood",(0,.024*height,.81*height),(.145*height,.115*height,.15*height),"burgundy","robe")
+    head_width=.123 if child else .111
+    ellipsoid("Rat head",(0,-.055*height,.859*height),(head_width*height,.122*height,.103*height),"fur","body")
+    ellipsoid("Long rat muzzle",(0,-.18*height,.824*height),(.069*height,.145*height,.052*height),"fur_light","body")
+    ellipsoid("Dark nose",(0,-.309*height,.829*height),(.039*height,.024*height,.028*height),"iron","body")
+    for sign in (-1,1):
+        # Ear upper point is exactly1.0*height, making standing height unambiguous.
+        ellipsoid("Round rat ear",(sign*.119*height,-.008*height,.942*height),(.074*height,.031*height,.058*height),"fur","body")
+        ellipsoid("Ear inset",(sign*.119*height,-.031*height,.942*height),(.052*height,.009*height,.043*height),"ear","body")
+        ellipsoid("Black eye",(sign*.078*height,-.142*height,.879*height),(.012*height,.012*height,.016*height),"iron","body",12,8)
+        ellipsoid("Eye glint",(sign*.079*height,-.153*height,.883*height),(.004*height,.003*height,.004*height),"stone_light","body",8,6)
+        for offset in (-.01,.01):
+            wire("Whisker",[(sign*.037*height,-.26*height,(.83+offset)*height),(sign*.15*height,-.27*height,(.838+offset)*height)],height*.0018,"fur_light","body")
+    wire("Rat tail",[(0,.075*height,.15*height),(.09*height,.15*height,.08*height),(.23*height,.17*height,.04*height),(.34*height,.10*height,.032*height),(.36*height,0,.038*height),(.31*height,-.04*height,.055*height)],height*.017,"ear","accessories")
+    # A small pendant and shoulder clasp lend scale to the silhouette.
+    ring("Robe pendant",(0,-.128*height,.675*height),height*.026,height*.004,"brass","robe")
+    if tall:
+        rod("Walking staff",(.23*height,-.13*height,.0),(.23*height,-.13*height,.86*height),height*.012,"oak",group="accessories")
+        ellipsoid("Staff pommel",(.23*height,-.13*height,.86*height),(.026*height,.026*height,.035*height),"brass","accessories")
 
 
 def gothic_points(width,height,spring,segments=16):
@@ -294,7 +395,7 @@ def gothic_points(width,height,spring,segments=16):
     return [(-half,0),(-half,spring)]+left[1:]+[(-x,z) for x,z in reversed(left[:-1])]+[(half,0)]
 
 
-def door(width=1.8,height=3.5,depth=.4):
+def door(width=1.6,height=3,depth=.4):
     global ROOT
     # Captioned dimension denotes leaf opening. The removable stone surround is
     # explicit additional envelope, recorded separately in the generated manifest.
@@ -304,7 +405,7 @@ def door(width=1.8,height=3.5,depth=.4):
     for x in (-width/2-frame/2,width/2+frame/2):
         masonry(frame,spring,depth,(x,0,0),course=.25,block=.5,group="frame")
         for level in (.12,spring-.14):
-            box("Door jamb moulding",(x,-.03,level),(.4,depth+.08,.16),"stone_light",.018,"frame")
+            box("Door jamb moulding",(x+math.copysign(.06,x),-.03,level),(.4,depth+.08,.16),"stone_light",.018,"frame")
     # Radial blocks between matching pointed curves, not a filled triangular cap.
     inside=inner[1:-1]
     outside=gothic_points(width+2*frame,height+frame,spring)[1:-1]
@@ -354,6 +455,7 @@ def make_textures(output):
         "stone_dark":((.075,.098,.115),.9,0),"iron":((.035,.05,.055),.43,.85),
         "brass":((.49,.285,.09),.34,.82),"oak":((.085,.038,.021),.78,0),
         "burgundy":((.16,.023,.045),.94,0),"amber":((1,.3,.025),.26,0),
+        "fur":((.17,.18,.19),.9,0),"fur_light":((.27,.28,.28),.87,0),"ear":((.24,.12,.12),.9,0),
     }
     manifests={}
     for name,(color,roughness,metallic) in definitions.items():
@@ -442,7 +544,7 @@ def export_model(collection,path,animation=False):
         bm=bmesh.new()
         bm.from_mesh(data)
         bmesh.ops.triangulate(bm,faces=list(bm.faces))
-        collapsed=[face for face in bm.faces if face.calc_area()<1e-9]
+        collapsed=[face for face in bm.faces if face.calc_area()<1e-9 or any(edge.calc_length()<1e-6 for edge in face.edges)]
         if collapsed:
             bmesh.ops.delete(bm,geom=collapsed,context="FACES_ONLY")
         bm.to_mesh(data)
@@ -458,7 +560,8 @@ def export_model(collection,path,animation=False):
         for obj in objects:
             obj.select_set(True)
         bpy.context.view_layer.objects.active=objects[0]
-        bpy.ops.object.join()
+        if len(objects)>1:
+            bpy.ops.object.join()
         objects[0].name=collection.name+"_"+group
     bpy.context.view_layer.update()
     bpy.ops.object.select_all(action="DESELECT")
@@ -522,6 +625,67 @@ def camera(location,target,scale):
     bpy.context.scene.camera=obj
 
 
+def label(text,location,size=.22,align="CENTER",font=None):
+    data=bpy.data.curves.new("Dimension label","FONT")
+    data.body=text
+    data.size=size
+    data.align_x=align
+    if font:
+        data.font=font
+    obj=bpy.data.objects.new("Label "+text,data)
+    bpy.context.scene.collection.objects.link(obj)
+    obj.location=location
+    obj.rotation_euler=bpy.context.scene.camera.rotation_euler.copy()
+    obj.data.materials.append(MATS["label"])
+    return obj
+
+
+def comparison(collections,output,font):
+    global CURRENT,ROOT
+    scene=bpy.data.scenes.new("SCALE | Dremma generations")
+    bpy.context.window.scene=scene
+    CURRENT=bpy.data.collections.new("Dimension guides (not exported models)")
+    scene.collection.children.link(CURRENT)
+    ROOT=None
+    render_setup(scene)
+    scene.render.resolution_x=2400
+    scene.render.resolution_y=1600
+    camera((0,-32,22),(0,-1,2),27)
+    ink=bpy.data.materials.new("Presentation dimension ink")
+    ink.use_nodes=True
+    shader=ink.node_tree.nodes.get("Principled BSDF")
+    shader.inputs["Base Color"].default_value=(.8,.72,.5,1)
+    shader.inputs["Emission Color"].default_value=(.8,.72,.5,1)
+    shader.inputs["Emission Strength"].default_value=.65
+    MATS["label"]=ink
+    box("Comparison ground",(0,0,-.1),(200,200,.15),"stone_dark",0,"presentation")
+    label("ДРЁММА · ГОРОД РАЗНЫХ ПОКОЛЕНИЙ",(0,2.5,7),.45,font=font)
+    label("РОСТ ЖИТЕЛЕЙ",(-6,1.5,5.1),.3,font=font)
+    names=["Ребёнок","Небольшой взрослый","Обычный житель","Взрослый дрёмец"]
+    for (key,height),x,name in zip(FIGURE_HEIGHTS.items(),(-10,-7.7,-5,-2.1),names):
+        instance(collections[key],(x,1.5,0))
+        dx=x+.8
+        wire("Height guide",[(dx,1.5,0),(dx,1.5,height)],.009,"brass","presentation")
+        for z in (0,height):
+            wire("Height tick",[(dx-.12,1.5,z),(dx+.12,1.5,z)],.009,"brass","presentation")
+        label(str(height).replace(".",",")+" м",(x,1.5,height+.28),.3,font=font)
+        label(name,(x,.4,.3),.21,font=font)
+    label("СВЕТОВЫЕ ПРОЁМЫ · РАЗМЕРНЫЕ КОНТУРЫ",(6,2.5,6.6),.28,font=font)
+    for x,width,height,name in ((1,1.2,2.2,"Малый"),(3.4,1.6,3,"Средний"),(6.2,2.2,4.2,"Высокий"),(10,3.5,6,"Парадный")):
+        points=[(x-width/2,1.5,0),(x-width/2,1.5,height),(x+width/2,1.5,height),(x+width/2,1.5,0)]
+        wire("Opening guide only",points,.018,"brass","presentation")
+        label(name+"\n"+str(width).replace(".",",")+" × "+str(height).replace(".",",")+" м",(x,-.1,.6),.23,font=font)
+    instance(collections["stairs_paired"],(-6,-9,0))
+    label("ДВЕ ДОРОЖКИ · ОДИН ПОДЪЁМ",(-6,-11,.8),.3,font=font)
+    label("Камень: 8 × 0,30 м\nДерево: 16 × 0,15 м\nПодъём 2,40 м · вынос 4,48 м",(-6,-12,.85),.24,font=font)
+    for x,key,height in ((1,"railing_iron",1),(5,"railing_high",1.5)):
+        instance(collections[key],(x,-5,0))
+        label("Поручень "+str(height).replace(".",",")+" м",(x,-6.6,.6),.25,font=font)
+    instance(collections["door_standard"],(9,-5,0))
+    label("Готовая дверь\nпроём 1,6 × 3,0 м",(9,-6.8,.6),.23,font=font)
+    return scene
+
+
 def render_setup(scene):
     scene.render.engine="CYCLES"
     scene.cycles.samples=48
@@ -555,7 +719,6 @@ def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output",type=Path,required=True)
     parser.add_argument("--skip-render",action="store_true")
-    parser.add_argument("--stair-tread",type=float,default=2/9)
     args=parser.parse_args(sys.argv[sys.argv.index("--")+1:])
     output=args.output.resolve()
     if output.exists():
@@ -563,6 +726,10 @@ def main():
     output.mkdir(parents=True)
     for folder in ("models","animations","previews"):
         (output/folder).mkdir()
+    (output/"fonts").mkdir()
+    font_source=Path(__file__).resolve().parents[2]/"Content"/"fonts"
+    for filename in ("NotoSans-Regular.ttf","OFL.txt"):
+        shutil.copy2(font_source/filename,output/"fonts"/filename)
     bpy.ops.wm.read_factory_settings(use_empty=True)
     library=bpy.context.scene
     library.name="SOURCE | Editable modules"
@@ -573,7 +740,8 @@ def main():
     library.frame_end=60
     materials=make_textures(output/"textures")
     builders={"lantern_amber":lantern,"railing_iron":railing,"canal_wall":canal_wall,"bridge_arch":bridge,
-              "stairs_medium":lambda:stairs(tread=args.stair_tread),"door_standard":door}
+              "stairs_medium":stairs,"door_standard":door,"railing_high":lambda:railing(height=1.5),"stairs_paired":paired_stairs}
+    builders.update({key:lambda h=height:ratfolk(h,child=h==1.2,tall=h==4) for key,height in FIGURE_HEIGHTS.items()})
     collections={key:module(key,builder) for key,builder in builders.items()}
     report={"blender":bpy.app.version_string,"units":"metres","assets":{}}
     manifest=inventory()
@@ -598,7 +766,18 @@ def main():
             asset["design_dimensions_m"][1]=3
             asset["walking_surface_height_m"]=3.1
         elif key=="stairs_medium":
-            asset["stair_profile"]={"steps":9,"rise_m":.2,"tread_m":args.stair_tread,"total_rise_m":1.8,"total_run_m":9*args.stair_tread}
+            asset["stair_profile"]={"steps":8,"rise_m":.3,"tread_m":.56,"total_rise_m":2.4,"total_run_m":4.48}
+        elif key=="stairs_paired":
+            asset["stair_profile"]={"stone_steps":8,"stone_rise_m":.3,"stone_tread_m":.56,"wood_steps":16,"wood_rise_m":.15,"wood_tread_m":.28,"total_rise_m":2.4,"total_run_m":4.48,"overlay_total_width_m":.8,"overlay_useful_width_m":.6}
+        elif key in FIGURE_HEIGHTS:
+            asset["standing_body_height_m"]=FIGURE_HEIGHTS[key]
+            body_points=[o.matrix_world@Vector(p) for o in collection.objects if o.type=="MESH" and o.get("export_group")=="body" for p in o.bound_box]
+            body_dims=[max(p[i] for p in body_points)-min(p[i] for p in body_points) for i in range(3)]
+            asset["observed_body_dimensions_m"]=body_dims
+            asset["design_dimensions_m"]=body_dims
+            asset["dimension_basis"]="Dremma caption fixes standing height; width/depth are observed authored silhouette, excluding staff/tail and not inherited placeholder bounds"
+        elif key in {"railing_iron","railing_high"}:
+            asset["handrail_height_m"]=1.5 if key=="railing_high" else 1
     hinge=bpy.data.objects["door_hinge"]
     for clip,opening in (("door_open",True),("door_close",False)):
         animate(hinge,opening)
@@ -632,7 +811,9 @@ def main():
     for x,angle in ((-6,math.pi/2),(6,-math.pi/2)):
         instance(collections["canal_wall"],(x,0,-.65),angle)
     instance(collections["door_standard"],(-6,2,3.1))
-    instance(collections["stairs_medium"],(6,-6,1.3))
+    instance(collections["stairs_paired"],(6,-8.48,.7))
+    instance(collections["scale_rat_adult"],(-5,1,3.1))
+    instance(collections["scale_rat_high"],(6,1,3.1))
     for x in (-6,6):
         for y in (-3.5,3.5):
             if (x,y)!=(6,-3.5):
@@ -641,10 +822,10 @@ def main():
     CURRENT=bpy.data.collections.new("Diorama ground and water (presentation)")
     diorama.collection.children.link(CURRENT)
     ROOT=None
-    box("Canal foundation",(0,-1, -1.7),(17,13,.4),"stone_dark",.12,"presentation")
+    box("Canal foundation",(0,-2.5, -1.7),(17,16,.4),"stone_dark",.12,"presentation")
     for x in (-6,6):
         masonry(4,.85,8,(x,0,-1.5),course=.25,block=.5,group="presentation")
-    masonry(3,2.8,1,(6,-6.5,-1.5),course=.25,block=.5,group="presentation")
+    masonry(3,2.2,1,(6,-8.98,-1.5),course=.25,block=.5,group="presentation")
     water=bpy.data.materials.new("Presentation water")
     water.use_nodes=True
     shader=water.node_tree.nodes.get("Principled BSDF")
@@ -661,7 +842,7 @@ def main():
     MATS["water"]=water
     box("Still canal water",(0,0,-.03),(8,10,.07),"water",0,"presentation")
     render_setup(diorama)
-    camera((16,-22,18),(0,0,1.2),23)
+    camera((16,-22,18),(0,-1,1.8),26)
     if not args.skip_render:
         diorama.render.filepath=str(output/"previews"/"lantern_crossing.png")
         bpy.ops.render.render(write_still=True)
@@ -680,6 +861,12 @@ def main():
     if not args.skip_render:
         closeup.render.filepath=str(output/"previews"/"door_lantern_detail.png")
         bpy.ops.render.render(write_still=True)
+    font=bpy.data.fonts.load(str(output/"fonts"/"NotoSans-Regular.ttf"))
+    dimension_scene=comparison(collections,output,font)
+    if not args.skip_render:
+        dimension_scene.render.filepath=str(output/"previews"/"dremma_scale_comparison.png")
+        bpy.ops.render.render(write_still=True)
+    font.filepath="//fonts/NotoSans-Regular.ttf"
     bpy.context.window.scene=diorama
     # Relative image paths survive relocation. Save with the inviting diorama active.
     for image in bpy.data.images:

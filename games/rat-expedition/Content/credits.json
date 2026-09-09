@@ -17,9 +17,16 @@
     {
       "exported_path": "Rat.Expedition.Authoring/Resources/CanalCity/",
       "source": "tools/canal_city/build.py, tools/canal_city/catalog.py; editable canal_city_foundation.blend",
-      "author_tool": "Codex procedural 3D modelling and original tile textures; Blender 5.2.0 LTS; based on three user-supplied Canal City of Ratfolk concept sheets and their dimensioned revisions",
+      "author_tool": "Codex procedural 3D modelling and original tile textures; Blender 5.2.0 LTS; based on three user-supplied Canal City of Ratfolk concept sheets, dimensioned revisions and latest Dremma scale sheet",
       "license_terms": "Project LICENSE for generated geometry/code/textures; reference images supplied by the user are not redistributed and their external authorship/license was not established",
-      "modifications": "Six source pilots, grouped FBX meshes, two baked door clips, shared PNG PBR maps and Cycles previews. 128-entry inventory retains unbuilt assets as pending. Stride qualification remains separate."
+      "modifications": "Twelve source models including four static ratfolk scale figures, paired stone/wood stairs and high railing; two baked door clips, 45 PNG PBR maps and four Cycles previews. 135-entry inventory retains 123 unbuilt assets as pending. Dremma ordinary adult is 2.8m; maximum scale figure 4m. Stride qualification remains separate."
+    },
+    {
+      "exported_path": "Rat.Expedition.Authoring/Resources/CanalCity/fonts/NotoSans-Regular.ttf",
+      "source": "Content/fonts/NotoSans-Regular.ttf",
+      "author_tool": "Noto Sans project",
+      "license_terms": "SIL Open Font License 1.1, Rat.Expedition.Authoring/Resources/CanalCity/fonts/OFL.txt",
+      "modifications": "Unchanged copy of the existing game font for portable Cyrillic Blender dimension labels"
     }
   ]
 }

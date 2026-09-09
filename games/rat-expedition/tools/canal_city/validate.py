@@ -14,7 +14,8 @@ import sys
 import bpy
 from mathutils import Vector
 
-PILOTS={"canal_wall","bridge_arch","stairs_medium","railing_iron","lantern_amber","door_standard"}
+PILOTS={"canal_wall","bridge_arch","stairs_medium","railing_iron","lantern_amber","door_standard",
+        "scale_rat_small","scale_rat_medium","scale_rat_adult","scale_rat_high","railing_high","stairs_paired"}
 
 
 def check_meshes(objects):
@@ -80,8 +81,11 @@ def main():
     assert scene.render.fps==30
     scene.frame_set(0)
     material_paths(root)
+    for font in bpy.data.fonts:
+        if font.filepath and font.filepath!="<builtin>":
+            assert Path(bpy.path.abspath(font.filepath)).is_file(),"Missing font: "+font.filepath
     report={"blender":bpy.app.version_string,"catalogue_entries":len(ids),"source_pilots":len(PILOTS),"source":{},"fbx":{},"animations":{},"failures":[]}
-    report["render_configuration"]={s.name:{"engine":s.render.engine,"device":s.cycles.device,"samples":s.cycles.samples,"resolution":[s.render.resolution_x,s.render.resolution_y]} for s in bpy.data.scenes if s.name.startswith(("PREVIEW","DETAIL","DIORAMA"))}
+    report["render_configuration"]={s.name:{"engine":s.render.engine,"device":s.cycles.device,"samples":s.cycles.samples,"resolution":[s.render.resolution_x,s.render.resolution_y]} for s in bpy.data.scenes if s.name.startswith(("PREVIEW","DETAIL","DIORAMA","SCALE"))}
     for key in sorted(PILOTS):
         objects=list(bpy.data.collections[key].objects)
         report["source"][key]=check_meshes(objects)
@@ -92,8 +96,48 @@ def main():
     ray_clear(bpy.data.collections["canal_wall"].objects,(0,-5,.5),(0,1,0),10)
     # Step heights are observed from saved nosing geometry, not generator config.
     steps=sorted(max((obj.matrix_world@v.co).z for v in obj.data.vertices) for obj in bpy.data.collections["stairs_medium"].objects if obj.name.startswith("Eased stair nosing"))
-    assert len(steps)==9 and all(abs(z-(i+1)*.2)<1e-5 for i,z in enumerate(steps)),steps
+    assert len(steps)==8 and all(abs(z-(i+1)*.3)<1e-5 for i,z in enumerate(steps)),steps
     report["stair_surface_heights_m"]=steps
+    paired=bpy.data.collections["stairs_paired"]
+    wood=sorted(max((obj.matrix_world@v.co).z for v in obj.data.vertices) for obj in paired.objects if obj.name.startswith("Overlay wooden tread"))
+    stone=sorted(max((obj.matrix_world@v.co).z for v in obj.data.vertices) for obj in paired.objects if obj.name.startswith("Eased stair nosing"))
+    assert len(wood)==16 and len(stone)==8
+    assert all(abs(z-(i+1)*.15)<1e-5 for i,z in enumerate(wood)),wood
+    assert all(abs(a-b)<1e-5 for a,b in zip(wood[1::2],stone))
+    assert abs(wood[-1]-2.4)<1e-5
+    treads=[obj for obj in paired.objects if obj.name.startswith("Overlay wooden tread")]
+    tread_vertices=[obj.matrix_world@v.co for obj in treads for v in obj.data.vertices]
+    run=max(v.y for v in tread_vertices)-min(v.y for v in tread_vertices)
+    width=max(v.x for v in tread_vertices)-min(v.x for v in tread_vertices)
+    assert abs(run-4.48)<1e-5 and abs(width-.8)<1e-5
+    # A walking lane above each wooden tread is unobstructed; the recessed
+    # support must not conceal the small treads inside the coarse stone steps.
+    for i,z in enumerate(wood):
+        ray_clear(paired.objects,(-.8,(i+.5)*.28,z+.025),(0,0,1),.5)
+    report["paired_stairs"]={"wood_surface_heights_m":wood,"stone_surface_heights_m":stone,"wood_total_run_m":run,"wood_total_width_m":width,"matched_top_m":wood[-1]}
+    report["body_heights_m"]={}
+    for key,height in {"scale_rat_small":1.2,"scale_rat_medium":1.8,"scale_rat_adult":2.8,"scale_rat_high":4}.items():
+        objects=[obj for obj in bpy.data.collections[key].objects if obj.type=="MESH" and obj.get("export_group")=="body"]
+        observed=check_meshes(objects)
+        actual=observed["bounds_max_m"][2]-observed["bounds_min_m"][2]
+        assert abs(actual-height)<1e-5 and abs(observed["bounds_min_m"][2])<1e-5,(key,actual)
+        report["body_heights_m"][key]=actual
+    report["handrail_heights_m"]={}
+    for key,height in (("railing_iron",1),("railing_high",1.5)):
+        rails=[obj for obj in bpy.data.collections[key].objects if obj.name.startswith("Handrail datum")]
+        assert len(rails)==1
+        actual=max((rails[0].matrix_world@v.co).z for v in rails[0].data.vertices)
+        assert abs(actual-height)<1e-5,(key,actual)
+        report["handrail_heights_m"][key]=actual
+    frame=[obj for obj in bpy.data.collections["door_standard"].objects if obj.type=="MESH" and obj.get("export_group")=="frame"]
+    for z in (.12,1.0,1.75):
+        ray_clear(frame,(-.799,0,z),(1,0,0),1.598)
+    ray_clear(frame,(0,0,.001),(0,0,1),2.998)
+    arch_vertices=[obj.matrix_world@v.co for obj in frame if obj.name.startswith("Pointed archivolt") for v in obj.data.vertices]
+    opening_top=min(v.z for v in arch_vertices if abs(v.x)<1e-5)
+    spring_width=2*min(abs(v.x) for v in arch_vertices if abs(v.z-1.92)<1e-5)
+    assert abs(opening_top-3)<1e-5 and abs(spring_width-1.6)<1e-5,(opening_top,spring_width)
+    report["door_clear_aperture_m"]={"spring_width":spring_width,"center_height":opening_top,"clearance_samples_height_m":[.12,1,1.75]}
     for key in sorted(PILOTS):
         bpy.ops.wm.read_factory_settings(use_empty=True)
         bpy.context.scene.render.fps=30
@@ -129,7 +173,7 @@ def main():
         assert {"basecolor","normal","roughness","metallic"}<=set(material["textures"])
         for path in material["textures"].values():
             assert (root/path).is_file()
-    report["file_sha256"]={str(path.relative_to(root)).replace("\\","/"):hashlib.sha256(path.read_bytes()).hexdigest() for path in sorted(root.rglob("*")) if path.is_file() and path.suffix in {".blend",".fbx",".png"}}
+    report["file_sha256"]={str(path.relative_to(root)).replace("\\","/"):hashlib.sha256(path.read_bytes()).hexdigest() for path in sorted(root.rglob("*")) if path.is_file() and path.suffix in {".blend",".fbx",".png",".ttf",".txt"}}
     report["status"]="passed"
     report["qualification_limit"]="Saved Blender sources and Blender FBX reimport only; no Stride editor/runtime/ZIP or visual-art approval implied."
     args.report.parent.mkdir(parents=True,exist_ok=True)

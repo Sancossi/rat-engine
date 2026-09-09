@@ -80,5 +80,35 @@
       "emission": "textures/amber_emission.png"
     },
     "emission_strength": 4
+  },
+  "fur": {
+    "metallic": 0,
+    "roughness": 0.9,
+    "textures": {
+      "basecolor": "textures/fur_basecolor.png",
+      "normal": "textures/fur_normal.png",
+      "roughness": "textures/fur_roughness.png",
+      "metallic": "textures/fur_metallic.png"
+    }
+  },
+  "fur_light": {
+    "metallic": 0,
+    "roughness": 0.87,
+    "textures": {
+      "basecolor": "textures/fur_light_basecolor.png",
+      "normal": "textures/fur_light_normal.png",
+      "roughness": "textures/fur_light_roughness.png",
+      "metallic": "textures/fur_light_metallic.png"
+    }
+  },
+  "ear": {
+    "metallic": 0,
+    "roughness": 0.9,
+    "textures": {
+      "basecolor": "textures/ear_basecolor.png",
+      "normal": "textures/ear_normal.png",
+      "roughness": "textures/ear_roughness.png",
+      "metallic": "textures/ear_metallic.png"
+    }
   }
 }

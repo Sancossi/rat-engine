@@ -7,7 +7,8 @@ Multiple reference addresses mean one reusable asset, never a second camera view
 import json
 from pathlib import Path
 
-PILOTS = {"canal_wall", "bridge_arch", "stairs_medium", "railing_iron", "lantern_amber", "door_standard"}
+PILOTS = {"canal_wall", "bridge_arch", "stairs_medium", "railing_iron", "lantern_amber", "door_standard",
+          "scale_rat_small","scale_rat_medium","scale_rat_adult","scale_rat_high","railing_high","stairs_paired"}
 
 # ID | English label | production stage | W,D,H | sheet:section:variant references
 ROWS = """
@@ -240,12 +241,81 @@ def inventory():
             asset["dimension_extent"]="walking structure; railings add height"
     next(a for a in assets if a["id"]=="sluice_compact")["dimension_conflict"]="Outer W4/H3 also labelled clear opening with 1m pylons. Outer envelope wins; clear aperture must be smaller."
     next(a for a in assets if a["id"]=="window_narrow_tall")["dimension_conflict"]="Arrow H3.5 wins over caption H2.5."
-    return {"schema_version": 1, "units": "metres", "grid_m": 1, "detail_grid_m":0.25,
-            "dimension_policy":"Latest main-view envelope and step count take precedence over contradictory inset details; all conflicts remain recorded. Door dimensions are openings. Unlabelled axes are explicit inferred targets.",
-            "reference_source": "Three user-supplied Canal City of Ratfolk concept sheets plus latest dimensioned revisions, conversation 2026-09-09; original bitmap files not available in checkout",
+    # Explicit user revision: Dremma body classes and named types, not a global
+    # multiplier. Preserve the previous dimensions as provenance per asset.
+    additions=[
+        ("scale_rat_adult","Ordinary adult Dremma resident",1,(1.1,1.2,2.8),"dremma:people:ordinary_adult"),
+        ("railing_high","High railing",1,(2,.25,1.5),"dremma:railings:high"),
+        ("stairs_paired","Paired stone and wooden stairs",1,(2.4,4.48,2.4),"dremma:stairs:paired"),
+        ("house_vertical_family","Vertical family house",3,(7,6.5,14),"dremma:houses:vertical_family"),
+        ("cathedral_main_facade","Main cathedral facade",3,(16,1,20),"dremma:public:cathedral"),
+        ("undertaker_workshop","Undertaker bureau and workshop",3,(10,6,11),"dremma:public:workshop"),
+        ("civic_hall","Civic hall and gallery",3,(12,4,6),"dremma:public:hall"),
+    ]
+    for key,label,stage,dims,ref in additions:
+        assets.append({"id":key,"label":label,"stage":stage,"references":[ref],"design_dimensions_m":list(dims),"dimension_basis":"Dremma named width/height; unlabelled depth is inferred design target","source_status":"pending","native_status":"pending_A1_qualification","source":None,"export":None,"materials":[],"animations":[],"planned_clips":[]})
+    revised={
+        "scale_rat_small":(None,1.2),"scale_rat_medium":(None,1.8),"scale_rat_high":(None,4),
+        "door_low":(1.2,2.2),"door_standard":(1.6,3),"door_cathedral":(3.5,6),
+        "door_small_adapted":(1.2,2.2),"door_medium_adapted":(1.6,3),"door_high_adapted":(2.2,4.2),
+        "house_small_civic":(4.5,6),"house_small_adapted":(4.5,6),
+        "house_medium_civic":(5.5,8.5),"house_mixed_adapted":(5.5,8.5),
+        "house_high_civic":(6.5,11.5),"house_high_adapted":(6.5,11.5),
+        "mausoleum_front":(8,4.5),"stairs_medium":(2.4,2.4),"railing_iron":(2,1),
+    }
+    labels={"scale_rat_small":"Dremma child (1.2m)","scale_rat_medium":"Small adult / guest (1.8m)","scale_rat_high":"Fully grown Dremma adult (4.0m)"}
+    for asset in assets:
+        key=asset["id"]
+        if key in revised:
+            asset["previous_dimension_revision"]={"checkpoint":"d8b513e","design_dimensions_m":asset["design_dimensions_m"].copy(),"conflict":asset.pop("dimension_conflict",None)}
+            width,height=revised[key]
+            if width is not None:
+                asset["design_dimensions_m"][0]=width
+            asset["design_dimensions_m"][2]=height
+            asset["dimension_basis"]="Latest Dremma named type supersedes prior width/height; previous depth retained, no global scaling"
+            asset["references"].append("dremma:named_type:"+key)
+            asset["reference_dimensions_m"]=[width,None,height]
+            if key in labels:
+                asset["label"]=labels[key]
+            if key.startswith("door_"):
+                asset["opening_dimensions_m"]=asset["design_dimensions_m"].copy()
+            if key.startswith("scale_rat_"):
+                asset["stage"]=1
+                asset["dimension_extent"]="standing feet to uppermost head/ear; accessories excluded"
+        if key=="stairs_medium":
+            asset["label"]="Dremma main stone staircase, 8 steps"
+            asset["design_dimensions_m"][1]=4.48
+            asset["dimension_basis"]="Dremma paired standard: 8 rises of .30 and inferred tread .56 give total rise 2.4 and run 4.48; supersedes previous staircase dimensions"
+            asset["stair_profile"]={"stone_steps":8,"stone_rise_m":.30,"stone_tread_m":.56,"total_rise_m":2.4,"total_run_m":4.48}
+        if key=="stairs_paired":
+            asset["dimension_basis"]="Dremma paired standard: 8 stone rises of .30 and 16 small rises of .15 share total rise 2.4 and run 4.48; chosen small tread .28"
+            asset["dimension_extent"]="walking structure; railings add height and project beyond the walking width"
+        if key=="scale_rat_adult":
+            asset["reference_dimensions_m"]=[None,None,2.8]
+            asset["dimension_extent"]="standing feet to uppermost head/ear; accessories excluded"
+        if key=="bridge_arch":
+            asset["design_dimensions_m"][1]=3
+        if key in {"railing_iron","railing_high"}:
+            asset["dimension_extent"]="handrail upper surface above deck; finials measured separately"
+        if key in {"stairs_small","stairs_large"}:
+            asset["dimension_basis"]+="; earlier stair family retained as historical style variant, not the current Dremma paired standard"
+        if key.startswith("house_"):
+            asset["style_policy"]="Retain original silhouette/style variant; use revised named width/height and inherited depth"
+    return_data = {"schema_version": 2, "units": "metres", "grid_m": 1, "detail_grid_m":0.25,
+            "scale_revision":"Dremma / user sheet 2026-09-09; supersedes d8b513e",
+            "body_height_classes_m":[1.2,1.8,2.8,4.0],"ordinary_adult_height_m":2.8,
+            "future_visual_to_game_scale":0.8/2.8,
+            "ceiling_guides_m":{"residential":[3,4.2],"residential_example":3.6,"public_hall":[5.5,6.5],"public_example":6,"cathedral_nave":[12,16],"nave_example":14},
+            "growth_guides":[{"stage":"foundation","storeys":"2-3","height_m":[6,8]},{"stage":"development","storeys":"3-4","height_m":[8,11]},{"stage":"new_generations","storeys":"4-5","height_m":[11,14]},{"stage":"mature_quarter","storeys":"5+","minimum_height_m":14}],
+            "floor_guides_m":{"old_low_house_first":2.9,"mixed_house":[3,4],"high_adult_house":[3.2,4.3],"high_house_roof":4,"vertical_family_old":[3,3.4],"vertical_family_new":[4,5]},
+            "door_guides_m":{"small":[1.2,2.2],"medium":[1.6,3],"high":[2.2,4.2],"ceremonial":[3.5,6]},
+            "dimension_policy":"Dremma named types win. The high door is2.2x4.2 despite a conflicting3.2 arrow; unnamed3.5x4.2 observation does not replace ceremonial3.5x6. Prior depths and distinct visual variants remain; openings/rises/body/handrail heights differ from decorated bounds.",
+            "reference_source": "Three user-supplied Canal City of Ratfolk concept sheets, dimensioned revisions and latest Dremma scale sheet, conversation 2026-09-09; original bitmap files not available in checkout",
             "deduplication": "References use sheet:section:variant. Repeated views share a record; substantially different silhouettes/dimensions remain separate variants. Composite scenes use existing parts.",
-            "exclusions": ["Waterfall/flame effects: architectural outfalls and lamp meshes only", "Scale scenes reuse figures and furniture", "Water levels are illustrative placement guides, not separate fluids"],
+            "exclusions": ["Waterfall/flame effects: architectural outfalls and lamp meshes only", "Scale figures are static art tools, not playable 3D characters", "Water levels are illustrative placement guides, not separate fluids"],
             "assets": assets}
+    assert len({a["id"] for a in assets})==len(assets)
+    return return_data
 
 
 if __name__ == "__main__":
