@@ -1,0 +1,84 @@
+{
+  "stone": {
+    "metallic": 0,
+    "roughness": 0.87,
+    "textures": {
+      "basecolor": "textures/stone_basecolor.png",
+      "normal": "textures/stone_normal.png",
+      "roughness": "textures/stone_roughness.png",
+      "metallic": "textures/stone_metallic.png"
+    }
+  },
+  "stone_light": {
+    "metallic": 0,
+    "roughness": 0.83,
+    "textures": {
+      "basecolor": "textures/stone_light_basecolor.png",
+      "normal": "textures/stone_light_normal.png",
+      "roughness": "textures/stone_light_roughness.png",
+      "metallic": "textures/stone_light_metallic.png"
+    }
+  },
+  "stone_dark": {
+    "metallic": 0,
+    "roughness": 0.9,
+    "textures": {
+      "basecolor": "textures/stone_dark_basecolor.png",
+      "normal": "textures/stone_dark_normal.png",
+      "roughness": "textures/stone_dark_roughness.png",
+      "metallic": "textures/stone_dark_metallic.png"
+    }
+  },
+  "iron": {
+    "metallic": 0.85,
+    "roughness": 0.43,
+    "textures": {
+      "basecolor": "textures/iron_basecolor.png",
+      "normal": "textures/iron_normal.png",
+      "roughness": "textures/iron_roughness.png",
+      "metallic": "textures/iron_metallic.png"
+    }
+  },
+  "brass": {
+    "metallic": 0.82,
+    "roughness": 0.34,
+    "textures": {
+      "basecolor": "textures/brass_basecolor.png",
+      "normal": "textures/brass_normal.png",
+      "roughness": "textures/brass_roughness.png",
+      "metallic": "textures/brass_metallic.png"
+    }
+  },
+  "oak": {
+    "metallic": 0,
+    "roughness": 0.78,
+    "textures": {
+      "basecolor": "textures/oak_basecolor.png",
+      "normal": "textures/oak_normal.png",
+      "roughness": "textures/oak_roughness.png",
+      "metallic": "textures/oak_metallic.png"
+    }
+  },
+  "burgundy": {
+    "metallic": 0,
+    "roughness": 0.94,
+    "textures": {
+      "basecolor": "textures/burgundy_basecolor.png",
+      "normal": "textures/burgundy_normal.png",
+      "roughness": "textures/burgundy_roughness.png",
+      "metallic": "textures/burgundy_metallic.png"
+    }
+  },
+  "amber": {
+    "metallic": 0,
+    "roughness": 0.26,
+    "textures": {
+      "basecolor": "textures/amber_basecolor.png",
+      "normal": "textures/amber_normal.png",
+      "roughness": "textures/amber_roughness.png",
+      "metallic": "textures/amber_metallic.png",
+      "emission": "textures/amber_emission.png"
+    },
+    "emission_strength": 4
+  }
+}

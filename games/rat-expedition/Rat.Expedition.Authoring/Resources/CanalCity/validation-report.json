@@ -1,0 +1,313 @@
+{
+  "blender": "5.2.0 LTS",
+  "catalogue_entries": 128,
+  "source_pilots": 6,
+  "source": {
+    "bridge_arch": {
+      "mesh_count": 520,
+      "triangles": 18656,
+      "bounds_min_m": [
+        -4.010000228881836,
+        -1.7699999809265137,
+        0.0
+      ],
+      "bounds_max_m": [
+        4.010000228881836,
+        1.7699999809265137,
+        5.0
+      ]
+    },
+    "canal_wall": {
+      "mesh_count": 561,
+      "triangles": 9276,
+      "bounds_min_m": [
+        -3.992500066757202,
+        -2.2300000190734863,
+        0.0
+      ],
+      "bounds_max_m": [
+        3.992500066757202,
+        2.0,
+        4.5
+      ]
+    },
+    "door_standard": {
+      "mesh_count": 87,
+      "triangles": 2320,
+      "bounds_min_m": [
+        -1.2400000095367432,
+        -0.27000001072883606,
+        0.0
+      ],
+      "bounds_max_m": [
+        1.2400000095367432,
+        0.20999999344348907,
+        3.776407480239868
+      ]
+    },
+    "lantern_amber": {
+      "mesh_count": 12,
+      "triangles": 224,
+      "bounds_min_m": [
+        -0.18031126260757446,
+        -0.18031126260757446,
+        0.0
+      ],
+      "bounds_max_m": [
+        0.18031126260757446,
+        0.18031126260757446,
+        0.75
+      ]
+    },
+    "railing_iron": {
+      "mesh_count": 35,
+      "triangles": 2304,
+      "bounds_min_m": [
+        -1.0099999904632568,
+        -0.07999999821186066,
+        0.0
+      ],
+      "bounds_max_m": [
+        1.0099999904632568,
+        0.07999999821186066,
+        0.9810101389884949
+      ]
+    },
+    "stairs_medium": {
+      "mesh_count": 276,
+      "triangles": 3608,
+      "bounds_min_m": [
+        -1.2200000286102295,
+        -0.009999999776482582,
+        0.0
+      ],
+      "bounds_max_m": [
+        1.2200000286102295,
+        1.9950000047683716,
+        2.7010107040405273
+      ]
+    }
+  },
+  "fbx": {
+    "bridge_arch": {
+      "mesh_count": 8,
+      "triangles": 65584,
+      "bounds_min_m": [
+        -4.010000228881836,
+        -1.7699995040893555,
+        -2.4356640437872557e-07
+      ],
+      "bounds_max_m": [
+        4.010000228881836,
+        1.770000696182251,
+        5.000000476837158
+      ]
+    },
+    "canal_wall": {
+      "mesh_count": 5,
+      "triangles": 69046,
+      "bounds_min_m": [
+        -3.992500066757202,
+        -2.2300000190734863,
+        -3.2584134146418364e-07
+      ],
+      "bounds_max_m": [
+        3.992500066757202,
+        2.000000476837158,
+        4.500000476837158
+      ]
+    },
+    "door_standard": {
+      "mesh_count": 2,
+      "triangles": 11000,
+      "bounds_min_m": [
+        -1.2400000095367432,
+        -0.27000001072883606,
+        -3.4213339716870905e-08
+      ],
+      "bounds_max_m": [
+        1.2400000095367432,
+        0.21000060439109802,
+        3.776407480239868
+      ]
+    },
+    "lantern_amber": {
+      "mesh_count": 1,
+      "triangles": 1856,
+      "bounds_min_m": [
+        -0.18031126260757446,
+        -0.18031126260757446,
+        -2.9376431953664905e-08
+      ],
+      "bounds_max_m": [
+        0.18031126260757446,
+        0.180311381816864,
+        0.75
+      ]
+    },
+    "railing_iron": {
+      "mesh_count": 3,
+      "triangles": 4608,
+      "bounds_min_m": [
+        -1.0099999904632568,
+        -0.07999986410140991,
+        -1.0589842780461822e-08
+      ],
+      "bounds_max_m": [
+        1.0099999904632568,
+        0.080000139772892,
+        0.9810101389884949
+      ]
+    },
+    "stairs_medium": {
+      "mesh_count": 5,
+      "triangles": 31960,
+      "bounds_min_m": [
+        -1.2200000286102295,
+        -0.009999977424740791,
+        -3.2502674685019883e-07
+      ],
+      "bounds_max_m": [
+        1.2200000286102295,
+        1.9950002431869507,
+        2.7010107040405273
+      ]
+    }
+  },
+  "animations": {
+    "door_open": {
+      "fps": 30,
+      "frames": [
+        0,
+        60
+      ],
+      "duration_seconds": 2,
+      "sample_frames": [
+        0,
+        15,
+        30,
+        45,
+        60
+      ],
+      "local_hinge_angles_deg": [
+        0.0,
+        -15.625007122698799,
+        -50.00001391339024,
+        -84.37502070408168,
+        -100.0000005060238
+      ]
+    },
+    "door_close": {
+      "fps": 30,
+      "frames": [
+        0,
+        60
+      ],
+      "duration_seconds": 2,
+      "sample_frames": [
+        0,
+        15,
+        30,
+        45,
+        60
+      ],
+      "local_hinge_angles_deg": [
+        -100.0000005060238,
+        -84.37502070408168,
+        -50.00001391339024,
+        -15.625007122698799,
+        0.0
+      ]
+    }
+  },
+  "failures": [],
+  "render_configuration": {
+    "DETAIL | Door and amber lantern": {
+      "engine": "CYCLES",
+      "device": "GPU",
+      "samples": 48,
+      "resolution": [
+        1600,
+        1200
+      ]
+    },
+    "DIORAMA | Lantern crossing": {
+      "engine": "CYCLES",
+      "device": "GPU",
+      "samples": 48,
+      "resolution": [
+        1600,
+        1200
+      ]
+    },
+    "PREVIEW | Six foundation modules": {
+      "engine": "CYCLES",
+      "device": "GPU",
+      "samples": 48,
+      "resolution": [
+        1600,
+        1200
+      ]
+    }
+  },
+  "stair_surface_heights_m": [
+    0.20000000298023224,
+    0.4000000059604645,
+    0.6000000238418579,
+    0.800000011920929,
+    1.0,
+    1.2000000476837158,
+    1.399999976158142,
+    1.600000023841858,
+    1.7999999523162842
+  ],
+  "file_sha256": {
+    "animations/door_close.fbx": "c5c6bc0a126826957c6ec5f508ad0b09ecceba9b8bb1d8b4785a891c0fb821ab",
+    "animations/door_open.fbx": "7f67ce7ab93fa3c3770b45e13c46ec783e859384b04e64ca3815618585dcd6e5",
+    "canal_city_foundation.blend": "21293c18485dcdb9b79dce40ad632416c001b738a402e797a0f00816dee922c0",
+    "models/bridge_arch.fbx": "5db5b50740585285b923969a8195dff2ea3f9cff7b8e386aebf212fc61c90f35",
+    "models/canal_wall.fbx": "83e09255d4bf686de08fee0b3464f00f5ee58baf52a6d22b20759e2b7810910d",
+    "models/door_standard.fbx": "ed6c45a73ed0f6c3cccb059aac79a90ae1a8bbb984dcd06fd3c65b1348924c5d",
+    "models/lantern_amber.fbx": "6d95950c1ebd6c3091a8c5f9359e84bb550f62caadcb6ef724b16123909aec36",
+    "models/railing_iron.fbx": "7f1f913952c831d4463d8a66fa85720c2da810f0411b89ba5fbe9aaf781ea016",
+    "models/stairs_medium.fbx": "13a2d795f2c7db3235039cec25cf69dbebfdc247497f62ca9feafb3098fc766e",
+    "previews/door_lantern_detail.png": "fd34146d276a346a161248abb727e92aad63b950376c850e107a44c09a6feebe",
+    "previews/foundation_modules.png": "7dfb55ee16b911e507a2fda2d8df2817699334b165c041ed4c49a936c0b8bfef",
+    "previews/lantern_crossing.png": "c5a44a66ded5133b9448e5448896360cd997fa21b690352d7159ece540f495fa",
+    "textures/amber_basecolor.png": "3e3214303d819a44c13b36565dac837d9d06c2e5d177673ef673554a3b9973e1",
+    "textures/amber_emission.png": "3e3214303d819a44c13b36565dac837d9d06c2e5d177673ef673554a3b9973e1",
+    "textures/amber_metallic.png": "ab5140637b7f6192e92fac400e32e957c8a7b1682cddd128e96e0bfbaef50639",
+    "textures/amber_normal.png": "3ed5e8dc196483f0360d711a435f8ca1eb5f6297960a84da9c7e51abb3ae68fe",
+    "textures/amber_roughness.png": "5dbd1aebae8d54a363143e11db89e64430cb9779280d1f4e62f285791e391354",
+    "textures/brass_basecolor.png": "a29f8f9c3d7eb923085d08ddf8071030bc662cb37bf83b4006b9d3258e1c3eca",
+    "textures/brass_metallic.png": "17a6e05ffc509d6153e25a6bdef76b6197c07278d68b2da9ce9dfe5e5b95b0ac",
+    "textures/brass_normal.png": "3ed5e8dc196483f0360d711a435f8ca1eb5f6297960a84da9c7e51abb3ae68fe",
+    "textures/brass_roughness.png": "a89815c27c13f99968fd865e353f1a05ef5d0002154fff763c19848c529037f3",
+    "textures/burgundy_basecolor.png": "315b3e1aaaca1a08486db9f3e291b9c58ece7548265d03e54314ec59729166f7",
+    "textures/burgundy_metallic.png": "ab5140637b7f6192e92fac400e32e957c8a7b1682cddd128e96e0bfbaef50639",
+    "textures/burgundy_normal.png": "3ed5e8dc196483f0360d711a435f8ca1eb5f6297960a84da9c7e51abb3ae68fe",
+    "textures/burgundy_roughness.png": "66cca8dcfed1d413ddd66c8be53c292f54999e52170ea28dca088c73c1cb956d",
+    "textures/iron_basecolor.png": "fa034d2cbea878760a4275e381b460f75adf76d336f79cda5f725dcb8716ac5e",
+    "textures/iron_metallic.png": "bd002e772f9ef61c1e1f767347d3de158a640f2158550fc94ce3e8ee951a8713",
+    "textures/iron_normal.png": "3ed5e8dc196483f0360d711a435f8ca1eb5f6297960a84da9c7e51abb3ae68fe",
+    "textures/iron_roughness.png": "beb2ed0e404e4c669638db5423685db0fb183047934178e6fb1ae5448b3bb959",
+    "textures/oak_basecolor.png": "51275eb47724f0a9e78a3bdc39b37561479b3549b211e596b0d7403e1672815b",
+    "textures/oak_metallic.png": "ab5140637b7f6192e92fac400e32e957c8a7b1682cddd128e96e0bfbaef50639",
+    "textures/oak_normal.png": "3ed5e8dc196483f0360d711a435f8ca1eb5f6297960a84da9c7e51abb3ae68fe",
+    "textures/oak_roughness.png": "8c4540acd8ee1dff7cd2ae80b0dfdf398e841758322fd9d9b945628c4af019a3",
+    "textures/stone_basecolor.png": "3fbdf9cb06c876ccada821dcd9da29d0530258bd6e6097c459530208569e3a1a",
+    "textures/stone_dark_basecolor.png": "8ca7c489a00c3403d73074d60a5dbadba50f7ed06cc80b506d200981b41789cf",
+    "textures/stone_dark_metallic.png": "ab5140637b7f6192e92fac400e32e957c8a7b1682cddd128e96e0bfbaef50639",
+    "textures/stone_dark_normal.png": "3ed5e8dc196483f0360d711a435f8ca1eb5f6297960a84da9c7e51abb3ae68fe",
+    "textures/stone_dark_roughness.png": "80c081b73c55a6a01a8da84ee9b57375aa5cec05cc3a53b4a4d407e449564122",
+    "textures/stone_light_basecolor.png": "5397e4d2c670b41dd4f4c9de855a956c701f9979e70c4b47187bfba9228ddc88",
+    "textures/stone_light_metallic.png": "ab5140637b7f6192e92fac400e32e957c8a7b1682cddd128e96e0bfbaef50639",
+    "textures/stone_light_normal.png": "3ed5e8dc196483f0360d711a435f8ca1eb5f6297960a84da9c7e51abb3ae68fe",
+    "textures/stone_light_roughness.png": "acae1539fac6e2980268466c3b7eb0290e9a0fa46ce286b5c7ff7cf0fba75cb7",
+    "textures/stone_metallic.png": "ab5140637b7f6192e92fac400e32e957c8a7b1682cddd128e96e0bfbaef50639",
+    "textures/stone_normal.png": "3ed5e8dc196483f0360d711a435f8ca1eb5f6297960a84da9c7e51abb3ae68fe",
+    "textures/stone_roughness.png": "2507f61def2bb69030f4c7168ef222c5d54d93464b2d21cfe03a624450c54dad"
+  },
+  "status": "passed",
+  "qualification_limit": "Saved Blender sources and Blender FBX reimport only; no Stride editor/runtime/ZIP or visual-art approval implied."
+}
