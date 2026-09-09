@@ -1,10 +1,10 @@
 ---
 type: task
 area: Game
-status: In review
+status: In progress
 task_type: Feature
 sprint: Sprint 19
-review: In review
+review: Approved
 due:
 tags: [task, expedition, stride, authoring]
 ---
@@ -31,6 +31,10 @@ Follow-up: [[expedition-prototype-interactions]]; [[feat-expedition-character-sp
 
 ## Resolution
 
+A1.2 принят 2026-09-09: независимое повторное review `49a9923` — Approved, оба P2 исправлены. Native Courtyard/Sluice открываются и сохраняются в Game Studio; реальный MCP wall edit/Undo/Redo/reopen меняет compiled вид и Core collision из одного источника. Финальные QA и обычный ZIP собраны из `b403f84` (исправленный runtime, gameWorkingTreeDirty=false), Core 63 / Authoring 15 passed. Все 36 executable сценариев прошли: 21 успешный запуск и 15 ожидаемых отказов, `C:/5_gamedev/rat-expedition-validation/20260909-125458-633/verification.json`. Обычный ZIP `build/stride-game/20260909-125515-649/rat-expedition-0.1.0-win-x64.zip` отдельно распакован и запущен с другим cwd; обе native карты совпадают с QA, legacy map/project JSON в пакете нет. Parent повторил численную parity исправленного пакета: 2 карты / 146 полей / max delta 2e-7 / errors[].
+
+Полный Release Game Studio пересобран: `C:/5_gamedev/stride/logs/rat-foundation/20260909-125243-034/result.json`, exit 0, 5 прежних NU5100 warnings / 0 errors. Редактор: `C:/5_gamedev/stride/sources/editor/Stride.GameStudio/bin/Release/net10.0-windows/Stride.GameStudio.exe`. Stride main/pin остаётся `88301e8`, исходники движка в A1.2 не менялись. [Итоговые доказательства и SHA256](../../../docs/audits/2026-09-09-stride-native-map-authoring.md). Проверка выполнена на developer PC; новый ручной F5/playtest и чистая машина не заявлены. Публикация принятого среза в main выполняется по постоянному поручению пользователя. Review Approved относится к A1.2; вся A1 остаётся In progress, далее A1.3 библиотека ресурсов и A1.4 общая приёмка.
+
 A1.2 исправления переданы на повторное review: `49a9923`. Parent translation и границы считаются с wider intermediates, float округляется на конечной границе; Core exact contact не ослаблен. Новый тест воспроизвёл отказ до исправления, затем authoring 15 passed, включая отрицательный Y и отказ реально висящей стены. Preview выполняется до Transform/ModelRender processors. В свежем редакторе прошли 85 MCP вызовов Size/Role/Undo/Redo/Save/reopen и 17 проверок готового непустого кадра, diagnostics 0/0; PNG не сохранялись и не использовались для управления. Исходные параметры стены восстановлены. Ожидаются повторное review и итоговые проверки исправленной версии.
 
 A1.2 review `857e3a1` — Needs fixes: допустимый общий parent Y=.1 даёт разные float wall bottom/floor top после centre/size-конверсии; GeometryPreviewProcessor.Draw может освобождать buffers после их включения ModelRenderProcessor в текущий кадр (оба Order=0). Исправить в этом срезе и повторить независимое review до мержа. Committed QA package `20260909-122553-348` прошёл все 36 executable сценариев (`C:/5_gamedev/rat-expedition-validation/20260909-122643-970/verification.json`); это не отменяет замечаний review. Полная A1 приёмка остаётся открытой.
@@ -53,6 +57,6 @@ A1.1 принят 2026-09-09: независимое read-only review `ffeab7a..
 
 ## Bugs found
 
-A1.2: два P2 в конверсии Y и времени жизни editor preview buffers выявлены независимым review, исправляются до закрытия среза. Следующие игровые срезы не подбираются до положительного повторного review.
+A1.2: два P2 в конверсии Y и времени жизни editor preview buffers выявлены независимым review и исправлены в `49a9923`; повторное review Approved. Остаточных блокирующих дефектов не найдено.
 
 A1.1: none; независимое ревью не выявило блокирующих дефектов. A1.2 ещё выполняется.
