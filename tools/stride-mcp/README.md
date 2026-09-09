@@ -54,6 +54,14 @@ Open/Save возвращают operation ID. `editor_operation` различае
 
 `viewport_capture` возвращает PNG только из backbuffer указанной открытой видимой вкладки. Отрисовка скрытой вкладки может отсутствовать: команда отказывает, desktop fallback отсутствует. `editor_diagnostics` показывает отдельные error/warning counts и последние сообщения native AssetLog, а также capabilities. Это не API управления сборочными заданиями.
 
+Обычная работа не требует `viewport_capture`: `editor_status` → `scene_list` /
+`scene_inspect` → `entity_set_property` с прочитанной `expectedRevision` → повторное
+чтение результата → `save_session` и проверка operation. Управление использует
+структурированные данные, без фотографий viewport, мыши и клавиатуры. Capture
+нужен только при отдельной проверке визуального результата или работающего render.
+Текущие команды охватывают сцены и сериализуемые простые свойства; общий каталог
+ресурсов, import и редактирование всех типов assets ещё не реализованы этим API.
+
 ## Воспроизводимость и проверки
 
 Полная пересборка Stride может переупаковать `4.4.0-dev` с другим SHA512 при тех же DLL. Если NU1403 останавливает preflight, не обновлять lock вслепую. `restore-authoring-cohort.ps1 -VerifiedCache <cache>` проверяет исходные nupkg всех locked Stride packages по SHA512 и восстанавливает только isolated game cache. Несовпадающие старые каталоги перемещаются в scoped `build/mcp/cache-cohort-before-*`; глобальные caches не удаляются. В этой квалификации проверенный источник — исходный checkout `C:/5_gamedev/rat-engine/games/rat-expedition/.packages`.
@@ -70,4 +78,8 @@ Live verifier предназначен только для двух собств
 
 На проверенной Codex CLI `0.153.4` project config подготовлен, но checkout пока не имеет сохранённого trust record, поэтому CLI его не загрузила. Нативный набор MCP tools Codex требует trusted project и перезапуска подключения; рабочий официальный MCP CLI выше доступен уже сейчас. Глобальные настройки доверия и другие MCP connections не изменялись.
 
-См. [инженерный контракт](../../docs/stride-editor-mcp-spec.md), [evidence](../../docs/audits/2026-09-09-stride-editor-mcp.md), [NOTICE](NOTICE). Оригинальные незавершённые A1.2 карты остаются в другом checkout; их интеграция следует после review этого среза.
+См. [инженерный контракт](../../docs/stride-editor-mcp-spec.md), [историю MCP qualification](../../docs/audits/2026-09-09-stride-editor-mcp.md), [NOTICE](NOTICE).
+Native Courtyard/Sluice теперь находятся в текущем repository; открыть их можно
+через `start-mcp-editor.ps1 -SolutionPath <checkout>/games/rat-expedition/Rat.Expedition.sln`.
+Реальные API wall edit/Undo/Redo/Save/reopen и compiled collision parity описаны в
+[A1.2 evidence](../../docs/audits/2026-09-09-stride-native-map-authoring.md).

@@ -150,3 +150,57 @@ C:/5_gamedev/rat-engine/games/rat-expedition/Rat.Expedition.sln`; Debug prefligh
 hash; diagnostics errorCount=0. PNG не сохранялись и не использовались для управления.
 Это проверка работающего render/замены моделей, не ручной осмотр формы или GPU
 memory profiling. Позиция/размер/роль исходной стены восстановлены и сохранены.
+
+## Исправленный committed-head build
+
+Оба P2 исправлены в `49a9923`; повторное независимое review — Approved, новых
+блокеров не найдено. Перед сборками MCP подтвердил revision 30, dirtyAssets=[],
+busy=false (`build/a12-fixed-pre-close.json`), после чего owned PID 45016 закрыт
+штатным CloseMainWindow. Чужие сессии не закрывались.
+
+Parent выполнил полную Release сборку Game Studio: exit 0, 64.16 s, пять известных
+NU5100 warnings, 0 errors. Результат:
+`C:/5_gamedev/stride/logs/rat-foundation/20260909-125243-034/result.json`.
+Редактор: `C:/5_gamedev/stride/sources/editor/Stride.GameStudio/bin/Release/net10.0-windows/Stride.GameStudio.exe`.
+Integration SHA остаётся `88301e861149c48c8b408aac3030b190332d7f97`.
+
+Затем последовательно выполнены `build-game.ps1 -IncludeQualificationAssets` и
+`build-game.ps1`: оба exit 0, Core 63 / authoring 15. Manifest обоих пакетов фиксирует
+`b403f84dd35db7ff67730387aecd59be7b2d1a5f` (поверх исправления только parent card),
+gameWorkingTreeDirty=false, self-contained win-x64. Посторонние EOL изменения vault
+сохранены; чистота всего repository не заявляется.
+
+| Пакет | Путь относительно repository | SHA256 |
+|---|---|---|
+| QA, qualificationAssets=true | `build/stride-game/20260909-125416-102/rat-expedition-0.1.0-win-x64.zip` | `56E9B7F94A552E72AB94D09470351C8747A31CA7684998FA0FCD4901FDEF4C30` |
+| Обычный, qualificationAssets=false | `build/stride-game/20260909-125515-649/rat-expedition-0.1.0-win-x64.zip` | `4E18ABCC41A58EAB7489E9C6429208C5AACC7348A350C29FAC0FD4BB639BE59B` |
+
+Логи сборок: `build/a12-package-fixed.log`, `build/a12-package-production-fixed.log`.
+
+`verify-game.ps1 -PackageZip <QA ZIP>` завершился exit 0: **36 сценариев**, из них
+21 успешный запуск и 15 ожидаемых отказов. Итоговый файл:
+`C:/5_gamedev/rat-expedition-validation/20260909-125458-633/verification.json`;
+лог `build/a12-verifier-fixed.log`. Проверены обе размерности окна, ramp/bridge
+верх/низ, local occlusion и mixed companions, десять portal roundtrips, сохранение
+active world при renderer/native candidate failure, три recovery слоя, large-Y
+startup, трансформации/ссылки и отказы ресурсов. Четыре фактических OS window states
+дали steady 59.30–59.68 Hz. Это автоматические команды/реальный GPU, не ручной ввод.
+
+Parent независимо сравнил исправленный compiled native export с историческим
+baseline: `build/a12-parent/fixed-native-parity.json`, две сцены, 146 численных
+полей, max absolute delta 2e-7, errors=[]; сравнивались также разрешённые по именам
+references/lists. Старый JSON используется только как исторический эталон проверки.
+
+Обычный production ZIP отдельно распакован и запущен с `--smoke-route zoom
+--smoke-frames 60` из чужого cwd. Exit 0, реальный кадр и две native сцены загружены;
+полный `native-world.json` совпал с production world проверочного ZIP. Legacy
+`courtyard.json`/`sluice.json`/`project.json` отсутствуют в опубликованном Content.
+Результат: `C:/5_gamedev/rat-expedition-validation/a12-production-20260909-125515-649/result.json`;
+exe: `C:/5_gamedev/rat-expedition-validation/a12-production-20260909-125515-649/extracted/Rat.Expedition.Windows.exe`.
+Это standalone smoke на машине разработки, не clean-machine или новый manual playtest.
+
+Vault/diff и синхронизированная BMad projection проверены. A1.2 завершает миграцию
+двух карт; A1.3 resource catalog/import и A1.4 общая authoring приёмка остаются
+следующими срезами. MCP используется через structured status/inspect/property/save;
+viewport снимки не нужны для обычного управления. Финальные статусы/публикация —
+в канонической карточке, не в этом audit.
