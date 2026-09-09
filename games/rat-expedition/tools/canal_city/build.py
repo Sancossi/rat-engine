@@ -730,6 +730,9 @@ def main():
     font_source=Path(__file__).resolve().parents[2]/"Content"/"fonts"
     for filename in ("NotoSans-Regular.ttf","OFL.txt"):
         shutil.copy2(font_source/filename,output/"fonts"/filename)
+    (output/"fonts"/".gitattributes").write_text(
+        "# Preserve the upstream license bytes covered by validation-report.json.\n"
+        "OFL.txt -text -whitespace\n",encoding="utf-8")
     bpy.ops.wm.read_factory_settings(use_empty=True)
     library=bpy.context.scene
     library.name="SOURCE | Editable modules"
