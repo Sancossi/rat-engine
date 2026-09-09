@@ -31,6 +31,8 @@ The body route supplies real input commands to the same motor without assigning 
 
 ## Findings and review resolution
 
+Two independent read-only reviewers covered the slice. Blind review approved `a8ecb96`; the acceptance/edge reviewer requested the bounded rung correction and approved `2fd011b` after re-review against the final 17-scenario package evidence. No remaining P1.2 blockers were reported. This approval does not include P1.3 or manual playtesting.
+
 The original courtyard GPU route exposed a contact-rounding defect after body integration: consuming the full clearance epsilon in the swept bound left a float-rounded contact slightly inside clearance, freezing subsequent sliding. The exact W90/D150/W60/A60 route was added to Core, reproduced the failure, then passed with geometric contact bounds and matching face/away-motion handling. Collision checks remain active at contact. Midway ladder reversal and stable exit before same-frame grounded catch-up are also regression scenarios.
 
 Independent review found one further blocker: a float-increment rung loop could stop advancing at accepted finite Y=4194304, whose float spacing exceeds .2. The fix uses a height-derived integer count/index, bounded by the validated maximum ladder height of ten units. The new executable scenario constructs a valid floor at Y=4194304 and platform/ladder top at Y=4194306, requires startup and an actual frame within 30 seconds, and does not claim large-world precision. The prior 16-scenario run at `20260909-040721-544` passed for `a8ecb96` but predates this correction and is superseded by the replacement package.
