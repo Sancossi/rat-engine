@@ -44,6 +44,8 @@
 
 ## Suggested Review Order
 
+Результат реализации, проверки и точные артефакты: [P1.2 audit](audits/2026-09-09-stride-body-traversal.md).
+
 1. [Body queries](../games/rat-expedition/Rat.Expedition.Core/BodyCollisionWorld.cs) и [квалификация](../games/rat-expedition/Rat.Expedition.Core.Tests/BodyCollisionTests.cs).
 2. [Scene schema 2 и guards](../games/rat-expedition/Rat.Expedition.Core/SceneDefinition.cs), [input/snapshot/FSM states](../games/rat-expedition/Rat.Expedition.Core/TraversalInput.cs), [guarded motor transitions](../games/rat-expedition/Rat.Expedition.Core/TraversalMotor.cs).
 3. [FSM sequences](../games/rat-expedition/Rat.Expedition.Core.Tests/BodyTraversalTests.cs), [исходный wall-route regression](../games/rat-expedition/Rat.Expedition.Core.Tests/Program.cs).
