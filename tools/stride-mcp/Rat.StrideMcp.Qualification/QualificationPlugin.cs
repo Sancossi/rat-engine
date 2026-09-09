@@ -145,8 +145,10 @@ public class DialogProxy:DispatchProxy
 {
     public IEditorDialogService Inner=null!;
     public Task<int> Answer=Task.FromResult(3);
+    public bool SuppressProgress;
     protected override object? Invoke(MethodInfo? targetMethod,object?[]? args)
     {
+        if(SuppressProgress&&targetMethod!.Name=="ShowProgressWindow")return null;
         if(targetMethod!.Name=="MessageBoxAsync"&&targetMethod.ReturnType==typeof(Task<int>))return Answer;
         try{return targetMethod.Invoke(Inner,args);}
         catch(TargetInvocationException error) when(error.InnerException is not null){System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(error.InnerException).Throw();throw;}

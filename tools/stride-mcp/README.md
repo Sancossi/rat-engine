@@ -1,6 +1,6 @@
 # Game Studio MCP
 
-Локальный stdio MCP server управляет отдельно запущенным Game Studio через нативный asset Quantum graph. Требуются Windows, .NET 10 и собранная интеграция Stride `8227ac7402463b14546fc99a169adb14d72f62f0` поверх upstream `e2c786a45f69917bf233793f6a097b150e2fe264`. SHA и fork закреплены в engine lock. Редактирование не использует мышь, клавиатуру или замену файлов сцены.
+Локальный stdio MCP server управляет отдельно запущенным Game Studio через нативный asset Quantum graph. Требуются Windows, .NET 10 и собранная интеграция Stride `4d336dac55900c8f0836f04bffb0e985e9145e68` поверх upstream `e2c786a45f69917bf233793f6a097b150e2fe264`. SHA и fork закреплены в engine lock. Редактирование не использует мышь, клавиатуру или замену файлов сцены.
 
 ## Запуск
 
@@ -54,6 +54,8 @@ Native `IsSaving` блокирует MCP-изменения на всём про
 включая ожидание importer. Native Save/Close возвращают false с диагностикой, а
 MCP-мутации отклоняются до завершения операции. После Destroy importer не сливает
 результат в graph и не принимает source hashes; ошибки importer также не принимаются.
+Native Selected/All batch держит одну reservation и Undo transaction, последовательно
+обновляет assets с раздельными loggers: ошибка одного не отвергает корректный следующий.
 
 Open/Save возвращают operation ID. `editor_operation` различает running и completed/success; начавшийся native Save не отменяется. Очередь UI проверяет cancellation непосредственно перед выполнением. MCP request имеет 12-секундный предел, включая очередь сервера, pipe request — до 10 секунд; connect — 3 секунды, запись ответа — 10 секунд. Входные MCP строки и pipe requests ограничены 64 KiB, отдельное property value — 4096 символами, pipe response — 24 MiB. Уже начавшаяся короткая синхронная транзакция завершается с результатом, а не объявляется отменённой задним числом.
 
@@ -72,6 +74,7 @@ sprite-sheet и отдельного кадра, постоянный diffuse co
 `asset_set_reference` связывает model→material, entity ModelComponent→model,
 UIComponent→page и TextBlock→font в том же editable package. Оно проверяет native
 типы и IDs владельцев. Все изменения требуют `expectedRevision` и участвуют в Undo.
+Sound CompressionRatio ограничен native диапазоном 1..40, SampleRate должен быть положительным.
 Sprite/material элементы адресуются прочитанным `itemIndex` плюс session revision;
 UI/entity/component — собственными GUID. `packageKey` — относительный путь package
 в выбранной session: у native package нет отдельного сериализуемого GUID.
@@ -103,6 +106,13 @@ timestamp descriptor собственного запуска; после зак�
 и sources в папке evidence. Исходные fixture folders должны отсутствовать до запуска.
 Это API/lifecycle qualification; импорт mesh настоящим backend, звук и визуальная
 библиотека A1.3 ещё требуют отдельной приёмки.
+
+`verify-resource-api.ps1 -FailedReadiness` отдельно проверяет отказ запуска: opt-in
+hook задерживает host Main, launcher достигает deadline, закрывает только свой
+Process, а runner сохраняет тестовые файлы в evidence и убирает их из authoring.
+Второй owned sentinel process остаётся живым. Владение процессом передаётся runner
+сразу после StartProcess, до readiness; mutable выбранный descriptor для cleanup
+не используется. Публичных MCP-инструментов fault injection нет.
 
 На проверенной Codex CLI `0.153.4` project config подготовлен, но checkout пока не имеет сохранённого trust record, поэтому CLI его не загрузила. Нативный набор MCP tools Codex требует trusted project и перезапуска подключения; рабочий официальный MCP CLI выше доступен уже сейчас. Глобальные настройки доверия и другие MCP connections не изменялись.
 

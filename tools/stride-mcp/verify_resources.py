@@ -56,6 +56,11 @@ async def main():
                 ('Material', 'Value', {'R': 1e40, 'G': .2, 'B': .3, 'A': 1}, {}),
                 ('Sheet', 'Center', {'X': 1}, {'itemIndex': 0}),
                 ('TextureA', 'NotAProperty', 1, {}),
+                ('Sound', 'CompressionRatio', -1, {}),
+                ('Sound', 'CompressionRatio', 0, {}),
+                ('Sound', 'CompressionRatio', 41, {}),
+                ('Sound', 'SampleRate', -44100, {}),
+                ('Sound', 'SampleRate', 0, {}),
             ):
                 before = await state(); snapshot = await inspect(name)
                 await call('asset_set_property', dict(assetId=ids[name], property=key, value=value, expectedRevision=before['revision'], **extra), error=True)

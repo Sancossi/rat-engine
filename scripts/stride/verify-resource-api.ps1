@@ -1,6 +1,7 @@
 [CmdletBinding()]
-param([string]$CheckoutPath,[string]$McpPython='python')
+param([string]$CheckoutPath,[string]$McpPython='python',[switch]$FailedReadiness)
 . (Join-Path $PSScriptRoot 'common.ps1')
+. (Join-Path $PSScriptRoot 'mcp-process.ps1')
 $engine=Get-StrideCheckoutPath $CheckoutPath
 $editorBin=Join-Path $engine 'sources/editor/Stride.GameStudio/bin/Release/net10.0-windows'
 $repository=[IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../..'))
@@ -15,13 +16,29 @@ if($LASTEXITCODE -ne 0){throw 'MCP build failed.'}
 & dotnet build (Join-Path $repository 'tools/stride-mcp/Rat.StrideMcp.Qualification') -c Release -p:RestoreLockedMode=true "-p:StrideBin=$editorBin" --nologo
 if($LASTEXITCODE -ne 0){throw 'Resource API qualification build failed.'}
 Copy-Item -LiteralPath (Join-Path $repository 'tools/stride-mcp/Rat.StrideMcp.Qualification/bin/Release/net10.0-windows/Rat.StrideMcp.Qualification.dll') -Destination (Join-Path $repository 'build/stride-mcp/adapter')
-$launch=@(& (Join-Path $PSScriptRoot 'start-mcp-editor.ps1') -CheckoutPath $CheckoutPath -SolutionPath (Join-Path $repository 'games/rat-expedition/Rat.Expedition.sln') -QualificationResult $result -QualificationMode resources -PassThru) | Where-Object { $_.PSObject.Properties['OwnedProcess'] }
-if(@($launch).Count -ne 1){throw 'Launcher did not return exactly one owned process.'}
-$connectionPath=$launch.ConnectionPath
-$connection=Get-Content -LiteralPath $connectionPath -Raw | ConvertFrom-Json
-$owned=$launch.OwnedProcess
-if($connection.processId -ne $owned.Id){throw 'This launch descriptor does not match its process.'}
+$launch=@{};$sentinel=$null;$failedReadinessEvidence=$null
 try{
+    $mode='resources';$timeout=60
+    if($FailedReadiness){
+        $mode='readiness-failure';$timeout=5
+        $sentinel=Start-Process powershell -ArgumentList '-NoProfile -Command "Start-Sleep -Seconds 60"' -WindowStyle Hidden -PassThru
+    }
+    try{
+        & (Join-Path $PSScriptRoot 'start-mcp-editor.ps1') -CheckoutPath $CheckoutPath -SolutionPath (Join-Path $repository 'games/rat-expedition/Rat.Expedition.sln') -QualificationResult $result -QualificationMode $mode -LaunchOwnership $launch -ReadinessTimeoutSeconds $timeout
+    }catch{
+        if(-not $FailedReadiness -or $_.Exception.Message -notlike 'Adapter readiness exceeded*'){throw}
+        if($null -eq $launch.OwnedProcess -or -not $launch.OwnedProcess.HasExited){throw 'Failed readiness leaked its owned editor.'}
+        if(-not(Test-Path -LiteralPath ($result+'.failure-started.json'))){throw 'Controlled startup fixture did not run.'}
+        if($sentinel.HasExited){throw 'Other owned sentinel process was affected by readiness cleanup.'}
+        $failedReadinessEvidence=@{passed=$true;failedReadiness=$true;editorPid=$launch.OwnedProcess.Id;editorExited=$true;sentinelPid=$sentinel.Id;sentinelUnaffected=$true}
+    }
+    if($FailedReadiness){
+        if($null -eq $failedReadinessEvidence){throw 'Readiness failure qualification unexpectedly succeeded.'}
+    }else{
+    $connectionPath=$launch.ConnectionPath
+    $connection=Get-Content -LiteralPath $connectionPath -Raw | ConvertFrom-Json
+    $owned=$launch.OwnedProcess
+    if($connection.processId -ne $owned.Id){throw 'This launch descriptor does not match its process.'}
     $deadline=[DateTime]::UtcNow.AddSeconds(60)
     while(-not(Test-Path -LiteralPath ($result+'.ready.json'))){
         if(Test-Path -LiteralPath $result){throw (Get-Content -LiteralPath $result -Raw)}
@@ -38,13 +55,12 @@ try{
     $evidence=Get-Content -LiteralPath $result -Raw | ConvertFrom-Json
     if(-not $evidence.passed){throw "Native resource qualification failed: $($evidence.error)"}
     Write-Host "Resource MCP and native source-update qualification PASS: $result"
+    }
 }finally{
     # Exact opt-in process deliberately calls native Destroy. Do not run normal
     # GameStudio close handlers against the destroyed session a second time.
-    if(-not $owned.HasExited){
-        if($owned.StartTime.ToUniversalTime() -ne $launch.StartTimeUtc -or $owned.MainModule.FileName -ne $launch.ExecutablePath){throw 'Owned process identity changed; refusing termination.'}
-        $owned.Kill();if(-not $owned.WaitForExit(10000)){throw 'Owned resource editor did not exit within 10 seconds.'}
-    }
+    Stop-OwnedMcpProcess $launch
+    if($null -ne $sentinel -and -not $sentinel.HasExited){$sentinel.Kill();if(-not $sentinel.WaitForExit(5000)){throw 'Owned sentinel did not stop.'}}
     # Keep native saved files as evidence, away from the normal asset build.
     # Both source folders were absent before this owned test session started.
     for($i=0;$i -lt $fixturePaths.Count;$i++){
@@ -57,4 +73,12 @@ try{
             Move-Item -LiteralPath $source -Destination $target
         }
     }
+}
+if($null -ne $failedReadinessEvidence){
+    foreach($i in 0,1){
+        if(-not(Test-Path -LiteralPath (Join-Path $output "saved-fixture-$i/failed-readiness.txt")) -or (Test-Path -LiteralPath $fixturePaths[$i])){throw 'Failed-readiness fixture evidence was lost or left in production assets.'}
+    }
+    $failedReadinessEvidence.fixturesPreservedAndRemoved=$true
+    $failedReadinessEvidence | ConvertTo-Json | Set-Content -LiteralPath $result -Encoding UTF8
+    Write-Host "Owned failed-readiness qualification PASS: $result"
 }

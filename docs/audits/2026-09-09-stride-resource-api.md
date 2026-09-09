@@ -23,7 +23,7 @@ Engine commits в `Sancossi/stride`, ветка `rat/expedition-foundation`:
 - `196759b122545b96d7c494fd159501681536b596`: dispatcher-owned asset-operation lease,
   взаимное исключение native Save/Close и source update, защита после await/Destroy.
 - `8227ac7402463b14546fc99a169adb14d72f62f0`: partial result с importer errors не
-  сливается в graph. Это текущий `engineCommit`; baseline и `88301e8` сохранены.
+  сливается в graph. Это pin первого среза до review fixes; baseline и `88301e8` сохранены.
 
 Изменены `SessionViewModel`, `AssetSourcesViewModel`, `ImportedAssetViewModel`.
 Busy state выставляется до await и снимается в finally. Ошибка acquisition
@@ -33,7 +33,7 @@ notification освобождает reservation. Native Save/Close возвра�
 
 ## Фактическая проверка
 
-Финальная evidence: `build/mcp/resource-api-20260909-134412-394/result.json`,
+Первичная evidence до review fixes: `build/mcp/resource-api-20260909-134412-394/result.json`,
 журнал `build/a13-resource-api-final.log`.
 
 ```powershell
@@ -103,3 +103,50 @@ Engine commits → [native race fixture](../../tools/stride-mcp/Rat.StrideMcp.Qu
 → [owned runner](../../scripts/stride/verify-resource-api.ps1).
 Следующий срез: остальные bounded API, затем настоящая библиотека, runtime resource
 ownership, визуальный/аудио результат и standalone ZIP.
+
+## Исправления трёх P2 после независимого review
+
+Первый native batch regression на `8227ac7` воспроизвёл отказ обновить два assets:
+`build/a13-batch-repro.log`, «Native batch did not invoke both importers».
+Exclusive per-asset lease отклонял второй параллельный update, а общий LoggerResult
+также отбрасывал результат первого. Source fix
+`4d336dac55900c8f0836f04bffb0e985e9145e68` сохраняет один lease на весь native
+Selected/All batch и одну Undo transaction, выполняет updates последовательно,
+использует отдельный logger на каждый asset с копированием сообщений в общий log.
+Partial-error guard сохранён. Публичные individual updates всё ещё отвергают reentry.
+
+Финальный исправленный resource run:
+`build/mcp/resource-api-20260909-140442-982/result.json`, журнал
+`build/a13-resource-fixed.log`: **101 calls, 16 tools, 13 ожидаемых отказов, PASS**.
+Actual private native batch entry Selected/All вызван opt-in fixture через reflection;
+MCP eval не добавлен. Проверены два успешных assets и failed-first/valid-second,
+Save/Close во время batch, один Undo для всего batch, отсутствие leaked busy/transaction.
+Только progress dialog подавляется test dialog-service proxy, чтобы проверка не
+ожидала ручного закрытия error log. Native импорт/graph/Undo и guards выполняются.
+
+Sound CompressionRatio проверяется до transaction по native range 1..40 из
+`sources/engine/Stride.Assets/Media/SoundAsset.cs`; SampleRate должен быть положительным.
+Пять actual MCP negative cases (-1/0/41 и negative/zero SampleRate) проверяют неизменность
+значений, revision, dirty и Undo. Own silent WAV служит только source fixture для
+metadata; наличие слышимого звука не утверждается.
+
+Failed readiness проверен отдельно:
+`build/mcp/resource-api-20260909-140534-001/result.json`, журнал
+`build/a13-readiness-failure.log`. Команда `verify-resource-api.ps1 -FailedReadiness`
+прошла: test hook задержал host Main, deadline 5 s сработал, owned editor PID 58396
+закрыт, sentinel PID 45784 оставался жив и затем закрыт отдельно. Два test marker
+файла сохранены в `saved-fixture-0/1` и удалены из authoring folders перемещением.
+Launcher публикует ownership сразу после StartProcess; readiness находится внутри
+cleanup, runner охватывает try/finally и сам launch. Cleanup использует прямой
+Process, проверенные start time/exe и bounded exit, не mutable selected descriptor.
+
+Прежний native Save/Close набор повторно PASS на новом source:
+`build/mcp/session-state-20260909-140633-032/result.json`,
+`build/a13-session-state-fixed.log`. MCP unit, vault и synchronized BMad projection
+также PASS. Resource editor PID 59972 и failed-readiness editor закрыты; runtime
+игры и следующие asset operations не менялись.
+
+Scoped editor build нового source PASS: `build/a13-editor-batch-build-fixed.log`,
+52.41 s, 2133 warnings, 0 errors. Первичная compile-попытка обнаружила неправильный
+аргумент LogKey, исправлена до live tests. Ранее описанный canonical full Release
+`8227ac7` относится к доисправленному срезу; новый final Release принадлежит parent.

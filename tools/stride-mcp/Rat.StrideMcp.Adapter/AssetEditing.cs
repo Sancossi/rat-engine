@@ -102,6 +102,8 @@ internal sealed partial class EditorBridge
         var fields=AssetFields(asset,args);string key=args["property"]!.GetValue<string>();
         if(!fields.TryGetValue(key,out var member))throw new InvalidOperationException("Property is not allowlisted for this asset/item.");
         object value=AssetValue(args["value"],member.Type);
+        if(asset.Asset is SoundAsset&&(key=="CompressionRatio"&&((int)value<1||(int)value>40)||key=="SampleRate"&&(int)value<=0))
+            throw new InvalidOperationException("Sound CompressionRatio must be 1..40 and SampleRate must be positive.");
         if(key is "Width" or "Height" or "ScaleImport" or "PixelsPerUnit" or "Size" or "TextSize"&&Convert.ToDouble(value)<=0)
             throw new InvalidOperationException("Resource dimension/scale must be positive.");
         using(var transaction=undo.CreateTransaction())

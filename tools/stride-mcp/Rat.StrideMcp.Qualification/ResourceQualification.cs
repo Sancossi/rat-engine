@@ -6,6 +6,7 @@ using System.Windows.Threading;
 using Rat.StrideMcp.Adapter;
 using Stride.Assets.Entities;
 using Stride.Assets.Materials;
+using Stride.Assets.Media;
 using Stride.Assets.Models;
 using Stride.Assets.Sprite;
 using Stride.Assets.SpriteFont;
@@ -61,6 +62,11 @@ internal static class ResourceQualification
                 }
                 Add("TextureA",new TextureAsset{Source=png,IsCompressed=false});
                 Add("TextureB",new TextureAsset{Source=png,IsCompressed=false});
+                // Own short silence, sufficient for typed metadata checks (not audio acceptance).
+                string wave=Path.Combine(sources,"metadata-fixture.wav");
+                using(var stream=File.Create(wave))using(var writer=new BinaryWriter(stream))
+                {writer.Write("RIFF"u8);writer.Write(36+882);writer.Write("WAVEfmt "u8);writer.Write(16);writer.Write((short)1);writer.Write((short)1);writer.Write(44100);writer.Write(88200);writer.Write((short)2);writer.Write((short)16);writer.Write("data"u8);writer.Write(882);writer.Write(new byte[882]);}
+                Add("Sound",new SoundAsset{Source=wave});
                 var mat=Add("Material",new MaterialAsset{Attributes=new(){Diffuse=new MaterialDiffuseMapFeature(new ComputeColor(new Color4(.3f,.6f,.2f,1))),DiffuseModel=new MaterialDiffuseLambertModelFeature()}});
                 Add("MaterialB",new MaterialAsset{Attributes=new(){Diffuse=new MaterialDiffuseMapFeature(new ComputeColor(new Color4(.6f,.3f,.2f,1))),DiffuseModel=new MaterialDiffuseLambertModelFeature()}});
                 var model=new ModelAsset{Source=obj};model.Materials.Add(new ModelMaterial{Name="InitialMaterial",MaterialInstance=new(){Material=ContentReferenceHelper.CreateReference<Material>(mat)}});
@@ -98,6 +104,34 @@ internal static class ResourceQualification
             result["leaseNotificationReentryAndDoubleDispose"]=true;
 
             var importer=new GatedModelImporter();AssetRegistry.RegisterImporter(importer);
+            var batchMethod=typeof(AssetSourceTrackerViewModel).GetMethod("UpdateAssetsFromSource",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic)!;
+            var batchAssets=new[]{created["Model"],created["ModelB"]};
+            var nativeDialogs=session.Dialogs;
+            var batchDialogs=System.Reflection.DispatchProxy.Create<IEditorDialogService,DialogProxy>();
+            ((DialogProxy)(object)batchDialogs).Inner=nativeDialogs;((DialogProxy)(object)batchDialogs).SuppressProgress=true;
+            session.ServiceProvider.UnregisterService(nativeDialogs);session.ServiceProvider.RegisterService(batchDialogs);
+            try{
+            foreach(string batchMode in new[]{"batch-success","batch-mixed"})
+            {
+                var beforeModels=batchAssets.Select(a=>string.Join(";",((ModelAsset)a.Asset).Materials.Select(m=>m.Name))).ToArray();
+                var beforeHashes=batchAssets.Select(a=>HashText(a.Asset)).ToArray();
+                importer.Reset(batchMode);
+                // Invoke the exact native batch entry used by Selected/All commands.
+                // Reflection is restricted to this opt-in fixture, never a MCP tool.
+                var updating=(Task)batchMethod.Invoke(session.SourceTracker,[batchAssets])!;
+                await importer.Entered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+                Require(session.IsAssetOperationInProgress&&!await session.SaveSession()&&!await session.Close(),"Batch did not exclude native Save/Close for its whole await.");
+                importer.Release.Set();await updating;
+                Require(!session.IsAssetOperationInProgress&&!undo.TransactionInProgress,"Native batch leaked its reservation/transaction.");
+                Require(importer.Calls==2,"Native batch did not invoke both importers.");
+                Require(((ModelAsset)batchAssets[1].Asset).Materials.Single().Name=="BatchMaterial","Valid second batch asset was rejected or poisoned by another logger.");
+                if(batchMode=="batch-success")Require(((ModelAsset)batchAssets[0].Asset).Materials.Single().Name=="BatchMaterial","Successful first batch asset was not updated.");
+                else Require(string.Join(";",((ModelAsset)batchAssets[0].Asset).Materials.Select(m=>m.Name))==beforeModels[0]&&HashText(batchAssets[0].Asset)==beforeHashes[0],"Failed first batch asset changed graph/hashes.");
+                undo.Undo();
+                Require(batchAssets.Select(a=>string.Join(";",((ModelAsset)a.Asset).Materials.Select(m=>m.Name))).SequenceEqual(beforeModels)&&batchAssets.All(a=>!a.IsDirty),"One batch Undo did not restore both assets to disk baseline.");
+                result[batchMode+"BothAssetsAndSingleUndo"]=true;
+            }
+            }finally{session.ServiceProvider.UnregisterService(batchDialogs);session.ServiceProvider.RegisterService(nativeDialogs);}
             var vm=created["Model"];var definition=(ModelAsset)vm.Asset;
             string disk=vm.AssetItem.FullPath.ToString();string diskBefore=File.ReadAllText(disk);
             var bridge=new EditorBridge(session,Dispatcher.CurrentDispatcher);
@@ -153,16 +187,18 @@ internal sealed class GatedModelImporter:ThreeDAssetImporter
 {
     internal TaskCompletionSource<bool> Entered=new(TaskCreationOptions.RunContinuationsAsynchronously);
     internal ManualResetEventSlim Release=new();private string mode="success";
+    internal int Calls;
     public GatedModelImporter(){Order=-1000;}
     public override Guid Id=>new("2b43333c-ec41-4f44-9ce9-7a136be5b784");
     public override bool IsSupportingFile(string path)=>Path.GetFileName(path)=="native-source-probe.obj";
-    internal void Reset(string value){mode=value;Entered=new(TaskCreationOptions.RunContinuationsAsynchronously);Release.Reset();}
+    internal void Reset(string value){mode=value;Calls=0;Entered=new(TaskCreationOptions.RunContinuationsAsynchronously);Release.Reset();}
     public override IEnumerable<AssetItem> Import(UFile path,AssetImporterParameters parameters)
     {
-        Entered.TrySetResult(true);if(!Release.Wait(TimeSpan.FromSeconds(8)))throw new TimeoutException("Gated test importer was not released.");
+        int call=Interlocked.Increment(ref Calls);Entered.TrySetResult(true);if(!Release.Wait(TimeSpan.FromSeconds(8)))throw new TimeoutException("Gated test importer was not released.");
         if(mode=="throw")throw new InvalidDataException("Deliberate native importer failure");
         if(mode=="partial-error")parameters.Logger.Error("Deliberate partial result with importer error");
-        var asset=new ModelAsset{Source=path};asset.Materials.Add(new ModelMaterial{Name=mode=="success"?"ImportedMaterial":"MUST NOT MERGE",MaterialInstance=new()});
+        if(mode=="batch-mixed"&&call==1)parameters.Logger.Error("Deliberate first asset failure in native batch");
+        var asset=new ModelAsset{Source=path};asset.Materials.Add(new ModelMaterial{Name=mode.StartsWith("batch-")?"BatchMaterial":mode=="success"?"ImportedMaterial":"MUST NOT MERGE",MaterialInstance=new()});
         return [new AssetItem("PreparedImport",asset)];
     }
 }

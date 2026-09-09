@@ -1,6 +1,9 @@
 [CmdletBinding()]
-param([string]$CheckoutPath,[string]$SolutionPath,[string]$QualificationResult,[ValidateSet('session','resources')][string]$QualificationMode='session',[switch]$PassThru)
+param([string]$CheckoutPath,[string]$SolutionPath,[string]$QualificationResult,[ValidateSet('session','resources','readiness-failure')][string]$QualificationMode='session',[switch]$PassThru,[hashtable]$LaunchOwnership,[ValidateRange(1,60)][int]$ReadinessTimeoutSeconds=60)
 . (Join-Path $PSScriptRoot 'common.ps1')
+. (Join-Path $PSScriptRoot 'mcp-process.ps1')
+if($null -eq $LaunchOwnership){$LaunchOwnership=@{}}
+if($LaunchOwnership.Count -ne 0){throw 'Launch ownership record must initially be empty.'}
 $engine=Get-StrideCheckoutPath $CheckoutPath
 if((Assert-StrideCheckout $engine) -ne (Get-StrideIntegrationCommit)){throw 'Exact pinned Stride integration commit is required.'}
 $repository=[IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../..'))
@@ -31,12 +34,18 @@ try {
         $env:RAT_MCP_QUALIFICATION_MODE=$QualificationMode
     }
     $process=Start-Process -FilePath $editor -ArgumentList ('"'+$solution+'"') -WorkingDirectory (Split-Path $solution) -WindowStyle Hidden -PassThru
-} finally {$env:DOTNET_STARTUP_HOOKS=$oldHook;$env:RAT_MCP_CONNECTION=$oldConnection;$env:RAT_MCP_PIPE=$oldPipe;$env:RAT_MCP_QUALIFICATION_RESULT=$oldQualification;$env:RAT_MCP_QUALIFICATION_MODE=$oldQualificationMode}
+    # Publish ownership immediately, before any readiness await or file write.
+    $LaunchOwnership.OwnedProcess=$process
+    $LaunchOwnership.ExecutablePath=$editor
+    $LaunchOwnership.StartTimeUtc=$process.StartTime.ToUniversalTime()
+    $LaunchOwnership.ConnectionPath=$connection
+} catch {Stop-OwnedMcpProcess $LaunchOwnership;throw} finally {$env:DOTNET_STARTUP_HOOKS=$oldHook;$env:RAT_MCP_CONNECTION=$oldConnection;$env:RAT_MCP_PIPE=$oldPipe;$env:RAT_MCP_QUALIFICATION_RESULT=$oldQualification;$env:RAT_MCP_QUALIFICATION_MODE=$oldQualificationMode}
+try{
 [ordered]@{processId=$process.Id;connection=$connection;solution=$solution} | ConvertTo-Json | Tee-Object -FilePath (Join-Path $connectionDir 'launch.json')
-$deadline=[DateTime]::UtcNow.AddSeconds(60)
+$deadline=[DateTime]::UtcNow.AddSeconds($ReadinessTimeoutSeconds)
 while(-not(Test-Path -LiteralPath $connection)){
     if($process.HasExited){throw "Own editor exited before adapter readiness. See $connectionDir"}
-    if([DateTime]::UtcNow -ge $deadline){throw "Adapter readiness exceeded 60 seconds; inspect own PID $($process.Id)."}
+    if([DateTime]::UtcNow -ge $deadline){throw "Adapter readiness exceeded $ReadinessTimeoutSeconds seconds for own PID $($process.Id)."}
     Start-Sleep -Milliseconds 200
 }
 $ready=Get-Content -LiteralPath $connection -Raw | ConvertFrom-Json
@@ -46,3 +55,4 @@ if($ready.processId -ne $process.Id){throw 'Descriptor PID differs from launched
 Copy-Item -LiteralPath $connection -Destination (Join-Path $repository 'build/stride-mcp/connection.json')
 Write-Host "Ready: $connection"
 if($PassThru){[pscustomobject]@{OwnedProcess=$process;ConnectionPath=$connection;StartTimeUtc=$process.StartTime.ToUniversalTime();ExecutablePath=$editor}}
+}catch{Stop-OwnedMcpProcess $LaunchOwnership;throw}
