@@ -4,7 +4,7 @@ area: Game
 status: In progress
 task_type: Feature
 sprint: Sprint 19
-review: Approved
+review: Needs fixes
 due:
 tags: [task, expedition, stride, authoring]
 ---
@@ -30,6 +30,8 @@ Origin: [[design-stride-editor-asset-workflow]]; [[expedition-prototype-traversa
 Follow-up: [[expedition-prototype-interactions]]; [[feat-expedition-character-sprites]]; [[expedition-vertical-slice]]; [[feat-stride-editor-mcp]].
 
 ## Resolution
+
+Финальная проверка документации выявила неверный quick start: обычный production ZIP передаётся полному verifier, которому теперь нужны QA assets. До публикации исправить пример в README игры и повторить read-only проверку. Одобрение runtime `49a9923` и результаты всех финальных проверок сохраняются; мерж пока не выполнен.
 
 A1.2 принят 2026-09-09: независимое повторное review `49a9923` — Approved, оба P2 исправлены. Native Courtyard/Sluice открываются и сохраняются в Game Studio; реальный MCP wall edit/Undo/Redo/reopen меняет compiled вид и Core collision из одного источника. Финальные QA и обычный ZIP собраны из `b403f84` (исправленный runtime, gameWorkingTreeDirty=false), Core 63 / Authoring 15 passed. Все 36 executable сценариев прошли: 21 успешный запуск и 15 ожидаемых отказов, `C:/5_gamedev/rat-expedition-validation/20260909-125458-633/verification.json`. Обычный ZIP `build/stride-game/20260909-125515-649/rat-expedition-0.1.0-win-x64.zip` отдельно распакован и запущен с другим cwd; обе native карты совпадают с QA, legacy map/project JSON в пакете нет. Parent повторил численную parity исправленного пакета: 2 карты / 146 полей / max delta 2e-7 / errors[].
 
