@@ -1,0 +1,16 @@
+!GameSettingsAsset
+Id: 2d436dc4-b2ee-4fa4-8c8a-3c7d30e34247
+SerializedVersion: {Stride: 3.1.0.1}
+Tags: []
+DefaultScene: 58182787-af94-441d-94c8-e94ca4d17b57:QualificationScene
+GraphicsCompositor: d8864284-0fe9-47ee-825e-fb4f0a2589df:GraphicsCompositor
+Defaults:
+    - !Stride.Assets.EditorSettings,Stride.Assets
+        RenderingMode: LDR
+    - !Stride.Graphics.RenderingSettings,Stride.Graphics
+        DefaultBackBufferWidth: 1280
+        DefaultBackBufferHeight: 720
+        AdaptBackBufferToScreen: false
+        DefaultGraphicsProfile: Level_10_0
+        ColorSpace: Gamma
+        DisplayOrientation: Default

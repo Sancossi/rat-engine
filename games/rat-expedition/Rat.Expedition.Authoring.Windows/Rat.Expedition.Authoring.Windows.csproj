@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <OutputType>WinExe</OutputType>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <StrideCurrentPackagePath>$(MSBuildThisFileDirectory)../Rat.Expedition.Authoring/Rat.Expedition.Authoring.sdpkg</StrideCurrentPackagePath>
+    <StridePlatform>Windows</StridePlatform>
+    <StrideGraphicsApi>Direct3D11</StrideGraphicsApi>
+    <StrideRemoteEffectCompilerEnabled>false</StrideRemoteEffectCompilerEnabled>
+    <PublishAot>false</PublishAot>
+    <PublishTrimmed>false</PublishTrimmed>
+    <PublishSingleFile>false</PublishSingleFile>
+    <SelfContained>true</SelfContained>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Rat.Expedition.Authoring/Rat.Expedition.Authoring.csproj" />
+  </ItemGroup>
+</Project>

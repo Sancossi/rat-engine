@@ -1,0 +1,8 @@
+!ProceduralModelAsset
+Id: 50f3e840-0dc0-4617-8d30-37a872aac71e
+SerializedVersion: {Stride: 2.0.0.0}
+Tags: []
+Type: !CubeProceduralModel
+    Size: {X: 2.0, Y: 1.0, Z: 1.0}
+    MaterialInstance:
+        Material: dfaedbdd-0753-4b7f-8b0e-f9c70c9ac1fc:QualificationMaterial
