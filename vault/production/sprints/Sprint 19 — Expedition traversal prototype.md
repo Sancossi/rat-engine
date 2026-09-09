@@ -15,6 +15,7 @@ tags: [sprint, expedition, prototype]
 2. [[feat-stride-source-foundation]]: подготовить закреплённую исходную копию официального Stride и проверить сборку Game Studio.
 3. [[expedition-prototype-traversal]]: после исходной основы адаптировать архитектуру и критерии P1 к Stride; исторические C++ срезы не продолжать.
 4. [[publish-editor-game-vault-snapshot]]: по отдельному запросу пользователя опубликовать общий снимок после коррекции камеры P1.1a, до продолжения P1.2.
+5. [[design-stride-editor-asset-workflow]]: по запросу пользователя запланировать визуальную работу с картами и всеми категориями игровых ассетов в Game Studio; только документы, без запуска миграции.
 
 Реализация по [спецификации](../../../docs/rat-expedition-traversal-spec.md) и [архитектуре](../../../docs/rat-expedition-architecture.md), включая оба визуальных ориентира и [[rat-expedition-layered-maps]]. Другие игровые карточки и закрытые задачи старого движка не входят в спринт.
 
