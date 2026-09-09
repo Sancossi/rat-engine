@@ -1,10 +1,10 @@
 ---
 type: task
 area: Game
-status: In review
+status: In progress
 task_type: Feature
 sprint: Sprint 19
-review: In review
+review: Approved
 due:
 tags: [task, expedition, stride, authoring]
 ---
@@ -32,6 +32,8 @@ Origin: [[design-stride-editor-asset-workflow]]; [[expedition-prototype-traversa
 Follow-up: [[expedition-prototype-interactions]]; [[feat-expedition-character-sprites]]; [[expedition-vertical-slice]]; [[feat-stride-editor-mcp]].
 
 ## Resolution
+
+Первый API milestone A1.3 принят: независимое повторное review `bcd63d6` / Stride `4d336dac` — Approved, все три P2 закрыты, новых блокеров нет. Приняты catalog/inspect, типизированные properties/references и native source-update lifecycle. Итоговая квалификация: 101 MCP calls / 16 tools / 13 ожидаемых отказов / 0 captures, batch success/mixed + single Undo, failed readiness и прежний Save/Close PASS. Полный Release `20260909-140946-490` — 0 errors / 6 прежних warnings; Python 25, vault/projection PASS. Публикация в обе main разрешена постоянным поручением пользователя. Review Approved относится только к этому срезу; вся A1 остаётся In progress, import/reimport/delete/prefab и runtime библиотека ещё не приняты.
 
 Исправления первого API milestone переданы на повторное независимое review: проект `bcd63d6`, Stride `4d336dac` (точный pin). Все три P2 квалифицированы: native batch success/mixed failure и единый Undo, пять отказов Sound без mutation, failed-readiness cleanup своего процесса с сохранением fixtures. Resource run `build/mcp/resource-api-20260909-140442-982/result.json`: 101 вызов / 16 tools / 13 ожидаемых отказов / 0 captures. Failed readiness `140534-001` и прежний session regression `140633-032` прошли. Итоговый полный Release прошёл: `C:/5_gamedev/stride/logs/rat-foundation/20260909-140946-490/result.json`, 50.12 s, 6 прежних warnings / 0 errors. Main ещё не изменены, следующий срез не начат.
 

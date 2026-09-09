@@ -156,3 +156,15 @@ Parent canonical full Release исправленного `4d336dac` прошёл
 exit 0, 50.12 s, 6 прежних warnings (5 NU5100, 1 CA1416), 0 errors.
 Editor executable существует по указанному выше Release пути. Это сборка на
 developer PC; новый ручной F5, чистая машина и remote CI не заявляются.
+
+## Acceptance
+
+Независимое повторное read-only review `bcd63d6` / source `4d336dac` — **Approved**:
+все три P2 исправлены, новых блокеров не найдено. Reviewer проверил код и artifacts,
+самостоятельно не запускал сборки или GUI. Parent дополнительно выполнил Python
+25 tests, vault check и sync/check BMad projection — PASS; два посторонних EOL
+изменения в vault сохранены. NuGet versions/content hashes не менялись.
+
+Закрыт только первый API milestone. Import/reimport как MCP команды, rename/delete,
+prefab placement и настоящая runtime библиотека остаются следующими срезами A1.3.
+Bugs found: три review P2 исправлены в этом milestone; новых открытых bugs нет.
