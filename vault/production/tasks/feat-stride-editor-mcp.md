@@ -1,10 +1,10 @@
 ---
 type: task
 area: Engine
-status: In review
+status: In progress
 task_type: Feature
 sprint: Sprint 19
-review: In review
+review: Needs fixes
 due:
 tags: [task, stride, mcp, authoring]
 ---
@@ -37,4 +37,4 @@ Follow-up: [[feat-stride-game-studio-authoring]].
 
 ## Bugs found
 
-Пока не проверено. Предыдущие координатные попытки сдвига стены не считаются пройденной приёмкой.
+Независимое review `fcc73f6` выявило два P2: невызываемый SessionDisposed оставляет очередь активной после Session.Destroy; GUI Save не учитывается собственным activeOperation моста и может пересечься с MCP-мутацией. Исправления и регрессии выполняются в этом срезе до публикации. Предыдущие координатные попытки сдвига стены A1.2 не считаются пройденной приёмкой.
