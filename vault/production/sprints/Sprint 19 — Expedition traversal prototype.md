@@ -22,6 +22,14 @@ tags: [sprint, expedition, prototype]
 
 ## Resolution
 
+2026-09-09: по прямому запросу реализации утверждённого плана добавлен каталог
+Blender → Stride: [[feat-canal-city-01-foundation]] → [[feat-canal-city-02-passages]]
+→ [[feat-canal-city-03-architecture]] → [[feat-canal-city-04-mechanisms]]
+→ [[feat-canal-city-05-decoration]] → [[feat-canal-city-06-library]].
+Первый source набор ведётся в изолированной feature worktree; текущая A1 работа
+сохраняется. Runtime приёмка каталога зависит от A1.3/A1.4; их статусы и оставшийся
+ручной P1 не закрываются этой работой.
+
 MCP принят 2026-09-09: [[feat-stride-editor-mcp]] — Done / Approved. Исходники опубликованы в rat-engine, native lifecycle patch — в собственном fork Stride; полный Release редактор и независимая API квалификация прошли. Зависимость A1.2 снята, [[feat-stride-game-studio-authoring]] возвращён в In progress. Подключение к реальной карте через API подтверждено; редактирование стены/столкновения, оставшаяся A1 приёмка и отложенная ручная P1 приёмка ещё не завершены.
 
 По явному запросу 2026-09-09 начат [[feat-stride-editor-mcp]]: API управление Game Studio для завершения authoring приёмки. [[feat-stride-game-studio-authoring]] сохраняет принятый A1.1; A1.2 ожидает MCP с сохранёнными изменениями. После независимой приёмки MCP возобновить A1.2, не закрывая отложенную ручную P1 приёмку.
