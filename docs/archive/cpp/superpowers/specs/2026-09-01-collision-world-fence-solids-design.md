@@ -1,9 +1,9 @@
 # Collision world and fence solids
 
 Vault: [[edge-walls-passable-from-adjacent-side]] (Sprint 6).
-Follow-ups (not this slice): [[feat: Bake height-grid and ramps to collision solids]],
-[[feat: Field physics puzzles]], [[feat: Stacked surfaces caves and basements]].
-ECS: do not introduce; [[research: Entity model ECS vs scene vs hybrid]] still gates any ECS code.
+Follow-ups (not this slice): [[feat-bake-height-grid-and-ramps-to-collision-solids|feat: Bake height-grid and ramps to collision solids]],
+[[feat-field-physics-puzzles|feat: Field physics puzzles]], [[feat-stacked-surfaces-caves-and-basements|feat: Stacked surfaces caves and basements]].
+ECS: do not introduce; [[research-entity-model-ecs-vs-scene|research: Entity model ECS vs scene vs hybrid]] still gates any ECS code.
 
 ## Goal
 

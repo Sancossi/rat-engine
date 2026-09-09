@@ -1,7 +1,7 @@
 # Camera-aligned walk (Play)
 
-Vault: [[feat: Camera-aligned walk]].
-Prerequisite for: [[feat: MGS3 ladder climb]].
+Vault: [[feat-camera-aligned-walk|feat: Camera-aligned walk]].
+Prerequisite for: [[feat-mgs3-ladder-climb|feat: MGS3 ladder climb]].
 Supersedes Play behavior of [[camera-switch-changes-wasd-world-directions]] (Edit stays without player WASD).
 
 Chat 2026-09-02: world-aligned walk plus camera-projected climb feels wrong; next slice is Play walk that follows the camera.
@@ -38,4 +38,4 @@ Physics integrate tests that pass `MoveInput` directly are unchanged.
 
 ## Out of scope
 
-MGS3 camera lock, Interact-to-mount, 1D climb rail, bounce removal, same-tile step-off. Those stay on [[feat: MGS3 ladder climb]].
+MGS3 camera lock, Interact-to-mount, 1D climb rail, bounce removal, same-tile step-off. Those stay on [[feat-mgs3-ladder-climb|feat: MGS3 ladder climb]].

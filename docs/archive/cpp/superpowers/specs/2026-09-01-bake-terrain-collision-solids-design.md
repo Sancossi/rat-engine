@@ -1,8 +1,8 @@
 # Bake height-grid and ramps to collision solids
 
-Vault: [[feat: Bake height-grid and ramps to collision solids]] (Sprint 6).
+Vault: [[feat-bake-height-grid-and-ramps-to-collision-solids|feat: Bake height-grid and ramps to collision solids]] (Sprint 6).
 Depends: [[edge-walls-passable-from-adjacent-side]] (shipped).
-Not this card: [[feat: Stacked surfaces caves and basements]], crates, ECS.
+Not this card: [[feat-stacked-surfaces-caves-and-basements|feat: Stacked surfaces caves and basements]], crates, ECS.
 
 ## Goal
 

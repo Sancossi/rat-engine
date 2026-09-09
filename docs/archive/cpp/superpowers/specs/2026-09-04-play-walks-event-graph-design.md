@@ -1,6 +1,6 @@
 # Play walks event graph (2026-09-04)
 
-Sprint 12 design. Supersedes [[research: Event node graph vs bytecode]] Play-truth: graph is authoring-only.
+Sprint 12 design. Supersedes [[research-event-node-graph|research: Event node graph vs bytecode]] Play-truth: graph is authoring-only.
 
 ## Decision
 

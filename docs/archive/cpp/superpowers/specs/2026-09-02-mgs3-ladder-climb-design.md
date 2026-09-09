@@ -1,9 +1,9 @@
 # MGS3 ladder climb
 
-Vault: [[feat: MGS3 ladder climb]].
-Depends: [[feat: Camera-aligned walk]] (shipped).
-Absorbs: [[feat: Step off ladder onto same-tile floor]].
-Replaces feel of: [[feat: Ladder toward-climb, jump grab, jump off]] (bounce / auto-latch / camera-projected tangent).
+Vault: [[feat-mgs3-ladder-climb|feat: MGS3 ladder climb]].
+Depends: [[feat-camera-aligned-walk|feat: Camera-aligned walk]] (shipped).
+Absorbs: [[feat-step-off-ladder-onto-same-tile-floor|feat: Step off ladder onto same-tile floor]].
+Replaces feel of: [[feat-ladder-toward-climb-jump-grab|feat: Ladder toward-climb, jump grab, jump off]] (bounce / auto-latch / camera-projected tangent).
 
 Chat 2026-09-02: camera does not turn on climb; do the full MGS3 ladder, not another WASD projection tweak.
 

@@ -64,7 +64,7 @@ and opaque callable overhead; they are not process RSS or serialized map sizes.
 - [GUI contract and full manifest](../gui-automation.md).
 - [Storage ADR](../adr-storage-v2.md), [replay ADR](../adr-replay-v2.md).
 - [Benchmark methodology](../benchmark.md) and [committed baseline](../benchmarks/2026-09-07-windows-release.json), measured implementation `6694640`.
-- [CI and analysis contract](../../../continuous-integration.md).
+- [CI and analysis contract](../continuous-integration.md).
 
 Approved implementation checkpoints: foundation `c11288b`/`83746e7`, storage
 `ebe7759`/`c90638f`, authoring `160a376`, runtime `eed6158`/`4eaeaf6`, geometry

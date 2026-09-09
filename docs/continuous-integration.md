@@ -3,7 +3,9 @@
 [The workflow](../.github/workflows/ci.yml) runs on push and pull requests with
 read-only repository permissions. Its Ubuntu 24.04 job installs Python 3.13 and
 runs vault validation and the Python unit tests within a 30-minute timeout.
-These cover vault/BMad contracts and Stride checkout guards.
+The Ubuntu job covers vault/BMad contracts. Stride checkout guard scenarios in
+the Python suite run on Windows and are skipped on Ubuntu; record their local
+Windows results separately from hosted CI coverage.
 
 Full Stride builds and executable acceptance currently use the local Windows
 [game workflow](../games/rat-expedition/README.md) and

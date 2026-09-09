@@ -1,7 +1,7 @@
 # Stacked floors: collider locomotion, slabs, ladders
 
-Vault: [[feat: Stacked surfaces caves and basements]].
-Depends: [[feat: Bake height-grid and ramps to collision solids]] (shipped — sides only).
+Vault: [[feat-stacked-surfaces-caves-and-basements|feat: Stacked surfaces caves and basements]].
+Depends: [[feat-bake-height-grid-and-ramps-to-collision-solids|feat: Bake height-grid and ramps to collision solids]] (shipped — sides only).
 Chat 2026-09-02: multi-level house (airborne floor = ceiling below), Floor slab tool, collider support including **ramp tops**, climbable ladders.
 
 Not this card: wall-top parapet, voxel world, second height-grid paint layer, archetype ECS, Interact-to-climb.

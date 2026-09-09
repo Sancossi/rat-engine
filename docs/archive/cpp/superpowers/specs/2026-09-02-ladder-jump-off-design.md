@@ -1,8 +1,8 @@
 # Ladder climb: camera up/down, jump bounce-off
 
-Vault: [[feat: Ladder toward-climb, jump grab, jump off]].
-Depends: [[feat: Stacked surfaces caves and basements]] (shipped — overlap climb).
-Related (not this card): [[feat: Step off ladder onto same-tile floor]].
+Vault: [[feat-ladder-toward-climb-jump-grab|feat: Ladder toward-climb, jump grab, jump off]].
+Depends: [[feat-stacked-surfaces-caves-and-basements|feat: Stacked surfaces caves and basements]] (shipped — overlap climb).
+Related (not this card): [[feat-step-off-ladder-onto-same-tile-floor|feat: Step off ladder onto same-tile floor]].
 
 Chat 2026-09-02: jump grabs by reaching the volume; jump on a ladder bounces off the face.
 Clarification: **up vs down follows the camera**, not world WASD. Walk off-ladder stays world-aligned (W=−Z, D=−X).

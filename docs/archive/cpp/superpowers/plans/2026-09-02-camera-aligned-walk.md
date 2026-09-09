@@ -14,7 +14,7 @@
 - Vault: `vault/production/tasks/feat-camera-aligned-walk.md` — implementer does **not** set Done / In review
 - Do not change `camera_relative_move` math
 - Do not change `integrate_player` / jump / climb motors
-- Do not start [[feat: MGS3 ladder climb]] in this plan
+- Do not start [[feat-mgs3-ladder-climb|feat: MGS3 ladder climb]] in this plan
 - `rat_core` stays glfw/miniaudio-free; do not commit `imgui.ini`
 - Tests from repo root (PowerShell):
 
@@ -150,7 +150,7 @@ Leave `status: Fixed`.
 
 - [ ] **Step 3: Point the MGS3 card at this**
 
-In `feat-mgs3-ladder-climb.md` Acceptance, replace “Ходьба вне лестницы — world-aligned” with “Ходьба в Play — camera-aligned ([[feat: Camera-aligned walk]]); на Climb камера локается так, что вперёд = вверх.”
+In `feat-mgs3-ladder-climb.md` Acceptance, replace “Ходьба вне лестницы — world-aligned” with “Ходьба в Play — camera-aligned ([[feat-camera-aligned-walk|feat: Camera-aligned walk]]); на Climb камера локается так, что вперёд = вверх.”
 
 Add `Depends: [[feat: Camera-aligned walk]]` if missing.
 
@@ -167,4 +167,4 @@ Do not set the camera-walk card to Done.
 
 ## Execution
 
-After Task 1+2: parent sets the vault card `In review`, then a read-only reviewer. Full `ctest` once `[unit][input]` is green. Then [[feat: MGS3 ladder climb]] can assume W is into the shot.
+After Task 1+2: parent sets the vault card `In review`, then a read-only reviewer. Full `ctest` once `[unit][input]` is green. Then [[feat-mgs3-ladder-climb|feat: MGS3 ladder climb]] can assume W is into the shot.
