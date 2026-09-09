@@ -1,4 +1,5 @@
 using System.Numerics;
+using System.Diagnostics;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Rat.Expedition.Core;
@@ -158,6 +159,64 @@ internal static class SessionTests
             }
             FallRecover(1.6f);Walk(s,new(.5f,0));Press(s);require(s.Scene.Id=="b","Portal after recovery failed");
             FallRecover(.5f);require(s.Scene.Id=="b","Recovery returned previous scene");
+        });
+        check("named startup and portal spawns below recovery threshold are rejected",()=>{
+            var low=new WorldBox("low",new(-.5f,-3.2f,-.5f),new(.5f,-3,.5f));
+            var invalidStart=a with {Spawn=new(0,-3,0),Structures=[low],Portals=[]};
+            Reject(()=>new ExpeditionSession(new("a",[invalidStart])));
+            var invalidTarget=b with {Structures=[low],Spawns=[new("entry",b.Spawn),new("low-entry",new(0,-3,0))]};
+            Reject(()=>new ExpeditionProject("a",[a with {Portals=[a.Portals[0] with {TargetSpawn="low-entry"}]},invalidTarget]));
+        });
+        check("nearby ramp portal and ladder accept continuous rising approach",()=>{
+            var ramp=new RampDefinition("ramp",new(0,-1),new(4,1),RampAxis.X,0,1.6f,.2f);
+            var scene=a with {Spawn=new(1,.48f,0),Ramps=[ramp],Portals=[new("ramp-portal",new(1.5f,.6f,-.5f),new(2.5f,1.2f,.5f),new(2,.88f,0),"b","entry")]};
+            var s=new ExpeditionSession(new("a",[scene,b]));Walk(s,new(1.9f,0));
+            require(Math.Abs(s.Leader.Position.Y-.84f)<.0001f&&s.Leader.ContextId=="ramp-portal","Continuous rising portal approach rejected");
+            Press(s);require(s.Scene.Id=="b","Ramp portal did not activate");
+            var ladder=new LadderDefinition("ramp-ladder",new(2,.88f,.6f),new(2,2.5f,.6f),new(2,.88f,0),new(2,2.5f,1.6f),new(2,.88f,0),new(2,2.5f,1.6f));
+            scene=scene with {Portals=[],Ladders=[ladder],Structures=[new("platform",new(1,2.3f,1.2f),new(3,2.5f,2.4f))]};
+            s=new ExpeditionSession(new("a",[scene]));Walk(s,new(1.9f,0));
+            require(s.Leader.ContextId=="ramp-ladder","Continuous rising ladder approach rejected");
+            Press(s);require(s.Leader.Mode==TraversalMode.Climbing,"Ramp ladder did not capture");
+        });
+        check("candidate reload rejects parent reparse replacement and keeps active session",()=>{
+            string temp=Path.GetFullPath(Path.GetTempPath());
+            string root=Path.GetFullPath(Path.Combine(temp,"rat-reparse-"+Guid.NewGuid()));
+            require(root.StartsWith(Path.TrimEndingDirectorySeparator(temp)+Path.DirectorySeparatorChar,StringComparison.OrdinalIgnoreCase),"Fixture escaped temporary root");
+            string content=Path.Combine(root,"Content"),outside=Path.Combine(root,"outside");
+            string link=Path.Combine(content,"targets"),original=Path.Combine(content,"targets-original");
+            try
+            {
+                WriteProject(content,a,b);Directory.CreateDirectory(link);Directory.CreateDirectory(outside);
+                File.WriteAllText(Path.Combine(link,"b.json"),JsonSerializer.Serialize(b));
+                File.WriteAllText(Path.Combine(outside,"b.json"),JsonSerializer.Serialize(b));
+                File.WriteAllText(Path.Combine(content,"project.json"),JsonSerializer.Serialize(new ProjectDefinition(1,"a",[new("a","a.json"),new("b","targets/b.json")])));
+                var s=new ExpeditionSession(ExpeditionProject.Load(content));Walk(s,new(1,0));var before=s.Snapshot;
+                Directory.Move(link,original);
+                if(OperatingSystem.IsWindows())
+                {
+                    var info=new ProcessStartInfo("powershell") {UseShellExecute=false,CreateNoWindow=true,WindowStyle=ProcessWindowStyle.Hidden,RedirectStandardOutput=true,RedirectStandardError=true};
+                    foreach(string arg in new[]{"-NoProfile","-NonInteractive","-Command",
+                        "$ErrorActionPreference='Stop'; New-Item -ItemType Junction -Path '"+link.Replace("'","''")+"' -Target '"+outside.Replace("'","''")+"' | Out-Null"})info.ArgumentList.Add(arg);
+                    using var process=Process.Start(info)!;
+                    if(!process.WaitForExit(30000)){process.Kill(true);throw new Exception("Fixture junction helper exceeded 30 seconds");}
+                    require(process.ExitCode==0,"Junction creation failed: "+process.StandardError.ReadToEnd());
+                }
+                else Directory.CreateSymbolicLink(link,outside);
+                require((File.GetAttributes(link)&FileAttributes.ReparsePoint)!=0,"Fixture is not a reparse point");
+                Press(s);
+                require(s.Scene.Id=="a"&&s.Leader.Position==before.Leader.Position&&s.SafePoint==before.SafePoint&&s.WorldRevision==before.WorldRevision&&s.LastError is not null,
+                    "Reload followed replacement outside Content or changed active session");
+            }
+            finally
+            {
+                // Never recursively remove a directory containing a link. Delete only
+                // the known junction itself, then explicit fixture files/directories.
+                if(Directory.Exists(link)&&(File.GetAttributes(link)&FileAttributes.ReparsePoint)!=0)Directory.Delete(link,false);
+                foreach(string file in new[]{Path.Combine(content,"a.json"),Path.Combine(content,"b.json"),Path.Combine(content,"project.json"),Path.Combine(original,"b.json"),Path.Combine(outside,"b.json"),Path.Combine(link,"b.json")})
+                    if(File.Exists(file))File.Delete(file);
+                foreach(string dir in new[]{original,link,outside,content,root})if(Directory.Exists(dir))Directory.Delete(dir,false);
+            }
         });
         check("strict project schema validates actual content and rejects missing ramp coordinates and references",()=>{
             string content=Path.GetFullPath(Path.Combine(AppContext.BaseDirectory,"../../../../Content"));

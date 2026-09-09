@@ -9,6 +9,7 @@ public sealed class ExpeditionProject
 {
     private readonly Dictionary<string,SceneDefinition> scenes;
     private readonly Dictionary<string,string>? paths;
+    private readonly string? contentRoot;
     public string StartScene {get;}
     public IReadOnlyDictionary<string,SceneDefinition> Scenes {get;}
     public ExpeditionProject(string startScene,IEnumerable<SceneDefinition> definitions)
@@ -23,7 +24,8 @@ public sealed class ExpeditionProject
         StartScene=startScene; Scenes=new ReadOnlyDictionary<string,SceneDefinition>(scenes);
         foreach(var scene in scenes.Values)ValidateReferences(scene);
     }
-    private ExpeditionProject(string startScene,IEnumerable<SceneDefinition> definitions,Dictionary<string,string> paths):this(startScene,definitions)=>this.paths=paths;
+    private ExpeditionProject(string startScene,IEnumerable<SceneDefinition> definitions,string contentRoot,Dictionary<string,string> paths):this(startScene,definitions)
+    {this.contentRoot=contentRoot;this.paths=paths;}
     public static ExpeditionProject Load(string contentDirectory)
     {
         string root=Path.GetFullPath(contentDirectory);
@@ -34,17 +36,17 @@ public sealed class ExpeditionProject
         {
             if(entry is null||string.IsNullOrWhiteSpace(entry.Id))throw new InvalidDataException("Scene asset needs id/path.");
             string path=ContentPath(root,entry.Path);
-            if(!paths.TryAdd(entry.Id,path))throw new InvalidDataException($"Duplicate project scene '{entry.Id}'.");
+            if(!paths.TryAdd(entry.Id,entry.Path))throw new InvalidDataException($"Duplicate project scene '{entry.Id}'.");
             var scene=SceneDefinition.Load(path);
             if(scene.Id!=entry.Id)throw new InvalidDataException($"Scene id in '{entry.Path}' does not match project.");
             scenes.Add(scene);
         }
-        return new(document.StartScene,scenes,paths);
+        return new(document.StartScene,scenes,root,paths);
     }
     public SceneDefinition LoadCandidate(string id)
     {
         if(!scenes.TryGetValue(id,out var scene))throw new InvalidDataException($"Unknown scene '{id}'.");
-        if(paths is not null)scene=SceneDefinition.Load(paths[id]);
+        if(paths is not null)scene=SceneDefinition.Load(ContentPath(contentRoot!,paths[id]));
         if(scene.Id!=id)throw new InvalidDataException($"Candidate scene id changed: '{id}'.");
         scene.Validate(); ValidateReferences(scene); return scene;
     }
@@ -63,6 +65,8 @@ public sealed class ExpeditionProject
         if(parts.Any(p=>p is "" or "." or ".." || p.EndsWith('.') || p.EndsWith(' ')))
             throw new InvalidDataException("Content path must not escape or use Windows-normalized directory names.");
         string current=root;
+        if(Directory.Exists(root)&&(File.GetAttributes(root)&FileAttributes.ReparsePoint)!=0)
+            throw new InvalidDataException("Content root uses a symbolic link/reparse point.");
         foreach(var part in parts)
         {
             current=Path.Combine(current,part);

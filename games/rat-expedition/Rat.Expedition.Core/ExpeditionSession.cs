@@ -76,7 +76,7 @@ public sealed class ExpeditionSession
                 TryReplace(Scene,new(SafePoint.X,SafePoint.Y,SafePoint.Z),SceneChangeReason.Recovery);
                 Flush();break;
             }
-            if(motor.StandingSafe)SafePoint=motor.Position;
+            if(motor.StandingSafe&&motor.Position.Y>Scene.RecoveryThreshold)SafePoint=motor.Position;
             if(previousMode==TraversalMode.Climbing&&motor.Mode!=TraversalMode.Climbing){accumulator=0;break;}
         }
     }
@@ -94,6 +94,7 @@ public sealed class ExpeditionSession
     {
         try
         {
+            if(spawn.Y<=target.RecoveryThreshold)throw new InvalidDataException("Scene entry/recovery point must be above the recovery threshold.");
             var nextMotor=new TraversalMotor(target,spawn);
             using var candidate=prepare?.Invoke(new(target,nextMotor.Snapshot,reason));
             candidate?.Activate();

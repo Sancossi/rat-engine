@@ -154,7 +154,6 @@ public sealed class TraversalMotor
     private bool CanStand(Vector3 p)=>world.HasSupport(p,Radius)&&world.HasClearance(p,Radius,StandingHeight);
     private bool CanReach(Vector3 entry)
     {
-        if(Math.Abs(Position.Y-entry.Y)>BodyCollisionWorld.Epsilon)return false;
         var move=world.MoveSupported(Position,new(entry.X-Position.X,entry.Z-Position.Z),Radius,StandingHeight);
         return !move.Blocked&&!move.LostSupport&&Vector3.Distance(move.Position,entry)<=BodyCollisionWorld.Epsilon;
     }

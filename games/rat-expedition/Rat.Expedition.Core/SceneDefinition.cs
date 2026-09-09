@@ -89,7 +89,8 @@ public sealed record SceneDefinition(int SchemaVersion,string Id,WorldBox Floor,
         foreach(var spawn in Spawns)
         {
             if(spawn is null)throw new InvalidDataException("Null spawn."); UniqueId(spawn.Id);
-            if(!Safe(spawn.Position))throw new InvalidDataException($"Spawn '{spawn.Id}' needs full standing support/clearance.");
+            if(!Safe(spawn.Position)||spawn.Position.Y<=RecoveryThreshold)
+                throw new InvalidDataException($"Spawn '{spawn.Id}' needs standing support/clearance above the recovery threshold.");
         }
         _=GetSpawn("entry");
         foreach(var ladder in Ladders)
