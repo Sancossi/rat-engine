@@ -31,6 +31,8 @@ Follow-up: [[expedition-prototype-interactions]]; [[feat-expedition-character-sp
 
 ## Resolution
 
+Возобновлено 2026-09-09 по «Давай продолжим выполнение задач». Следующий срез — завершение A1.2 по [спецификации native карт](../../../docs/stride-native-map-authoring-spec.md), используя принятый MCP. Новое постоянное поручение: после приёмки и закрытия каждого этапа/спринта мержить проверенный результат в main; при изменении исходников Stride также обновлять main собственного fork и точный pin. Правило записано в AGENTS/source workflow. Сохранённые A1.2 изменения продолжаются в feat/stride-native-authoring, посторонние изменения Task board.base и task template сохраняются отдельно.
+
 Обновление после приёмки MCP 2026-09-09: [[feat-stride-editor-mcp]] — Done / Approved, зависимость снята. A1.2 возобновляется в сохранённой основной рабочей копии. Parent через API прочитал 30 entities Courtyard, открыл сцену и получил реальный viewport PNG; файлы A1.2 не менялись. Wall edit/save/reopen/collision, native verifier 33, упаковка и независимое review A1.2 остаются обязательными; A1.3 и A1.4 ещё не приняты.
 
 Обновление 2026-09-09: пользователь явно поручил [[feat-stride-editor-mcp]] для управления через API. A1.2 ожидает этот мост; его незакоммиченная реализация сохранена в основной рабочей копии. Пройдены Core 63, adapter 14, native build и layered GPU route, parent сравнил обе карты с прежними данными (146 численных полей, max delta 2e-7). Не завершены GUI/API wall edit/save/reopen/collision, адаптация verifier 33, итоговая упаковка и независимое ревью A1.2. Это не отмена A1 и не закрытие P1.

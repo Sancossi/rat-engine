@@ -30,6 +30,11 @@ queue. Only an implementation request activates execution below.
   Origin / Follow-up; schedule only in-scope followups into the current sprint.
 - Rebuild the full Release editor after closing each stage and report its path.
   Never claim GUI or remote CI verification from headless tests alone.
+- After every accepted and closed stage or sprint, merge and publish its verified
+  commits to rat-engine/main without asking again. If the stage changes Stride,
+  publish the reviewed engine changes to Sancossi/stride/main and update the exact
+  integration pin. Preserve both histories and verify remote SHA; unfinished work
+  stays in feature branches. This is the user's standing publication instruction.
 
 ## Vault contract
 
