@@ -6,7 +6,7 @@ Bounded A1.3 implementation: `asset_rename`, `asset_delete`, `prefab_place`.
 [MCP usage](../../tools/stride-mcp/README.md).
 The engine remains pinned to `c0b9065d6e902b45d4d3a5c656318c70df53a6f3`;
 this slice needs no engine patch or game package/content change.
-Independent review, full Release editor acceptance and publication belong to the parent.
+Independent review and parent full Release acceptance are complete for this slice.
 
 ## Behavior
 
@@ -100,11 +100,31 @@ changes across native reload and irrelevant collection ordering. Source hierarch
 instance hierarchy, model/material properties and independent overrides are all
 included in the saved comparison.
 
-## Limits
+## Parent acceptance
+
+Independent read-only review approved implementation `15a75cc7af7f2722d559890225ac4433af247366`
+against `975f653`, with no actionable blockers. The reviewer inspected native
+rename validation, deletion modal branches and dependency preflights, owned abort
+and poison guards, native prefab identity/inheritance, qualification and evidence.
+
+Parent canonical `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/stride/build.ps1`
+completed with exit 0 on the unchanged clean engine pin. Evidence:
+`C:/5_gamedev/stride/logs/rat-foundation/20260909-154241-614/result.json`,
+`build.log` and `build.binlog`; SDK 10.0.300, 73.28 seconds, 952 warnings, 0 errors.
+Editor: `C:/5_gamedev/stride/sources/editor/Stride.GameStudio/bin/Release/net10.0-windows/Stride.GameStudio.exe`.
+The warning count describes this actual build, not new warnings introduced by the adapter.
+Parent vault/projection checks and 25 Python tests passed. The two unrelated vault
+files retain their original hashes and are excluded from these commits.
+
+Bugs found: the invalid native inheritance test fixture described above is fixed;
+no open findings from independent review. This accepted milestone is published to
+project main under the standing instruction. Stride main/pin remains unchanged.
+
+## Verification limits
 
 This proves API behavior in actual editor processes, not manual GUI gestures,
 viewport appearance, game runtime resource rendering, sound, import/reimport or
 the full A1.3 library. No remote CI or clean-machine claim is made. The game's
-Release ZIP and canonical full Release editor are not rebuilt by this implementer;
-the parent owns the required editor build after independent review. Runtime game
+Release ZIP was not rebuilt for this adapter-only slice. The full Release editor
+was rebuilt by the parent as recorded above. Runtime game
 code, dependency locks and pinned package hashes remain unchanged.

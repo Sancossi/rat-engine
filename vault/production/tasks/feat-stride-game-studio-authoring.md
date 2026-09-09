@@ -1,10 +1,10 @@
 ---
 type: task
 area: Game
-status: In review
+status: In progress
 task_type: Feature
 sprint: Sprint 19
-review: In review
+review: Approved
 due:
 tags: [task, expedition, stride, authoring]
 ---
@@ -32,6 +32,8 @@ Origin: [[design-stride-editor-asset-workflow]]; [[expedition-prototype-traversa
 Follow-up: [[expedition-prototype-interactions]]; [[feat-expedition-character-sprites]]; [[expedition-vertical-slice]]; [[feat-stride-editor-mcp]].
 
 ## Resolution
+
+Срез трёх MCP команд принят: независимое review `15a75cc7af7f2722d559890225ac4433af247366` — Approved, открытых замечаний нет. Rename, удаление неиспользуемых ресурсов и native prefab placement проверены через 160 + 12 MCP вызовов, включая Undo/Redo, shared references/local override и fresh reopen; 19 tools, 20 ожидаемых отказов, 0 captures. Resource/session regressions, vault и 25 Python tests PASS. Итоговый полный Release: `C:/5_gamedev/stride/logs/rat-foundation/20260909-154241-614/result.json`, exit 0, 73.28 s, 952 warnings, 0 errors. Редактор: `C:/5_gamedev/stride/sources/editor/Stride.GameStudio/bin/Release/net10.0-windows/Stride.GameStudio.exe`. Stride pin не изменён. Публикуется принятый срез; вся A1 остаётся In progress, import/reimport и runtime библиотека — следующие отдельные срезы.
 
 Три MCP команды переданы на независимое review: `15a75cc7af7f2722d559890225ac4433af247366`, Stride остаётся `c0b9065d6e902b45d4d3a5c656318c70df53a6f3`. [Отчёт](../../../docs/audits/2026-09-09-stride-native-asset-actions.md): rename/delete/prefab, 160 вызовов и 12 после fresh reopen, 19 tools, ноль captures; resource regression 101 вызов и session regression PASS. Причина NRE — некорректная тестовая связь наследования, исправлена native derived hierarchy без патча движка. Ожидаются независимое review и итоговый полный Release; import/reimport и runtime библиотека этим срезом не закрываются.
 
@@ -96,6 +98,8 @@ A1.1 принят 2026-09-09: независимое read-only review `ffeab7a..
 Начат A1.2: перенос обеих игровых карт (courtyard/sluice), metadata и общей валидации/Core boundary. A1.1 Approved относится только к законченному срезу; review Pending относится к продолжающейся реализации A1.2. Ручной P1 по-прежнему отложен по решению пользователя.
 
 ## Bugs found
+
+Три asset actions: некорректная тестовая BasePart связь вызывала NRE при добавлении prefab; исправлено штатным native derived hierarchy, проверены оба экземпляра и повторное открытие. Открытых дефектов по независимому review этого среза нет.
 
 A1.2: два P2 в конверсии Y и времени жизни editor preview buffers выявлены независимым review и исправлены в `49a9923`; повторное review Approved. Остаточных блокирующих дефектов не найдено.
 
