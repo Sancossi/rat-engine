@@ -11,7 +11,7 @@ public sealed class TraversalMotor
     public static readonly Vector2 CameraRight = Vector2.Normalize(new(1, -1));
     public static readonly Vector2 CameraForward = Vector2.Normalize(new(-1, -1));
     private readonly SceneDefinition scene;
-    private readonly BodyCollisionWorld world;
+    private readonly LayeredCollisionWorld world;
     private double accumulator;
     private bool interactWasHeld, pendingInteract;
     private LadderDefinition? ladder;
@@ -20,25 +20,34 @@ public sealed class TraversalMotor
     public Vector3 Position { get; private set; }
     public long Ticks { get; private set; }
     public PlayerTraversalState State { get; private set; } = PlayerTraversalState.Standing;
-    public BodyStance Stance => State == PlayerTraversalState.Crouched ? BodyStance.Crouched : BodyStance.Standing;
-    public TraversalMode Mode => State == PlayerTraversalState.Climbing ? TraversalMode.Climbing : TraversalMode.Grounded;
+    public BodyStance Stance => State is PlayerTraversalState.Crouched or PlayerTraversalState.FallingCrouched ? BodyStance.Crouched : BodyStance.Standing;
+    public TraversalMode Mode => State == PlayerTraversalState.Climbing ? TraversalMode.Climbing : State is PlayerTraversalState.FallingStanding or PlayerTraversalState.FallingCrouched ? TraversalMode.Falling : TraversalMode.Grounded;
     public float BodyHeight => Stance == BodyStance.Standing ? StandingHeight : CrouchedHeight;
     public bool StandBlocked { get; private set; }
+    public float VerticalVelocity {get; private set;}
+    public TraversalContext? Context => Mode==TraversalMode.Grounded ? FindContext() : null;
+    internal bool StandingSafe=>State==PlayerTraversalState.Standing&&CanStand(Position);
 
     public TraversalMotor(SceneDefinition scene)
     {
         scene.Validate(); this.scene = scene;
-        world = new(scene.AllSolids); Position = scene.Spawn.Vector;
+        world = scene.CreateWorld(); Position = scene.Spawn.Vector;
+    }
+
+    internal TraversalMotor(SceneDefinition scene,Point3 spawn):this(scene)
+    {
+        if(!scene.IsFree(spawn.Vector))throw new InvalidDataException("Motor entry needs standing-safe support.");
+        Position=spawn.Vector;
     }
 
     public TraversalSnapshot Snapshot
     {
         get
         {
-            var context = ladder is null ? FindLadder() : null;
-            string hint = ladder is not null ? "W / S — вверх / вниз" : StandBlocked ? "Здесь нельзя встать" :
-                context is not null ? "E / Enter — лестница" : "Ctrl — присесть";
-            return new(scene.Id,Position,State,Stance,Mode,BodyHeight,StandBlocked,ladder?.Id ?? context?.Ladder.Id,hint);
+            var context = Context;
+            string hint = ladder is not null ? "W / S — вверх / вниз" : Mode==TraversalMode.Falling ? "Падение" : StandBlocked ? "Здесь нельзя встать" :
+                context is not null ? context.Kind==ContextKind.Portal ? "E / Enter — перейти" : "E / Enter — лестница" : "Ctrl — присесть";
+            return new(scene.Id,Position,State,Stance,Mode,BodyHeight,StandBlocked,ladder?.Id ?? context?.Id,hint);
         }
     }
 
@@ -53,27 +62,71 @@ public sealed class TraversalMotor
         while (accumulator + 1e-12 >= StepSeconds)
         {
             bool wasClimbing = State == PlayerTraversalState.Climbing;
-            Step(input); accumulator -= StepSeconds;
+            bool interact=pendingInteract; pendingInteract=false;
+            Tick(input,interact); accumulator -= StepSeconds;
             // A climb-direction input belongs to this action until the exit snapshot is emitted.
             if(wasClimbing && State != PlayerTraversalState.Climbing) {accumulator=0;break;}
         }
     }
 
-    private void Step(TraversalInput input)
+    // Session owns the clock and action edge. Standalone Advance remains a fixture helper.
+    internal PortalDefinition? Tick(TraversalInput input,bool interact)
     {
-        bool interact = pendingInteract; pendingInteract = false;
-        if (State == PlayerTraversalState.Climbing) { Climb(input.Move.Y); Ticks++; return; }
+        Ticks++;
+        if (State == PlayerTraversalState.Climbing) { Climb(input.Move.Y); return null; }
+        if (Mode==TraversalMode.Falling) {MoveAir(HorizontalDelta(input)); Fall(); return null;}
         if (input.CrouchHeld) { State = PlayerTraversalState.Crouched; StandBlocked = false; }
         else TryStand();
-        var target = interact ? FindLadder() : null;
-        if (target is not null && TryBeginClimb(target)) { Climb(0); Ticks++; return; }
-        var move = input.Move;
-        if (move.LengthSquared() > 1) move = Vector2.Normalize(move);
-        var delta = (CameraRight * move.X + CameraForward * move.Y) * ((Stance == BodyStance.Crouched ? CrouchSpeed : Speed) * (float)StepSeconds);
-        Position = world.MoveGrounded(Position,delta,Radius,BodyHeight); Ticks++;
+        var target = interact ? FindContext() : null;
+        if(target?.Kind==ContextKind.Portal)return target.Portal;
+        if (target is not null && TryBeginClimb(target)) { Climb(0); return null; }
+        var delta=HorizontalDelta(input);
+        GroundAxis(new(delta.X,0)); GroundAxis(new(0,delta.Y));
+        if(Mode==TraversalMode.Falling)Fall();
+        return null;
     }
 
-    private sealed record LadderTarget(LadderDefinition Ladder, bool Top, float Distance);
+    private Vector2 HorizontalDelta(TraversalInput input)
+    {
+        var move = input.Move;
+        if (move.LengthSquared() > 1) move = Vector2.Normalize(move);
+        return (CameraRight * move.X + CameraForward * move.Y) * ((Stance == BodyStance.Crouched ? CrouchSpeed : Speed) * (float)StepSeconds);
+    }
+
+    private void GroundAxis(Vector2 delta)
+    {
+        if(Mode==TraversalMode.Falling){MoveAir(delta);return;}
+        var move=world.MoveSupported(Position,delta,Radius,BodyHeight); Position=move.Position;
+        if(!move.LostSupport)return;
+        State=Stance==BodyStance.Crouched?PlayerTraversalState.FallingCrouched:PlayerTraversalState.FallingStanding;
+        VerticalVelocity=0; StandBlocked=false;
+        MoveAir(delta*(1-move.Fraction));
+    }
+    private void MoveAir(Vector2 delta)
+    {
+        foreach(var shift in new[]{new Vector3(delta.X,0,0),new Vector3(0,0,delta.Y)})
+        {
+            var target=Position+shift;
+            Position=Vector3.Lerp(Position,target,world.SweepFraction(Position,target,Radius,BodyHeight));
+        }
+    }
+    private void Fall()
+    {
+        VerticalVelocity=Math.Max(-12,VerticalVelocity-9.8f*(float)StepSeconds);
+        var target=Position+new Vector3(0,VerticalVelocity*(float)StepSeconds,0);
+        float fraction=world.SweepFraction(Position,target,Radius,BodyHeight);
+        Position=Vector3.Lerp(Position,target,fraction);
+        if(fraction<1)
+        {
+            VerticalVelocity=0;
+            if(world.HasSupport(Position,Radius))
+            {
+                State=Stance==BodyStance.Crouched?PlayerTraversalState.Crouched:PlayerTraversalState.Standing;
+                StandBlocked=!world.HasClearance(Position,Radius,StandingHeight);
+            }
+            // Partial edge contact can hold vertical motion but never disables air steering.
+        }
+    }
 
     private bool TryStand()
     {
@@ -83,10 +136,10 @@ public sealed class TraversalMotor
         return !StandBlocked;
     }
 
-    private bool TryBeginClimb(LadderTarget target)
+    private bool TryBeginClimb(TraversalContext target)
     {
-        if (State == PlayerTraversalState.Climbing || !world.CanStand(Position,Radius,StandingHeight)) return false;
-        ladder = target.Ladder; State = PlayerTraversalState.Climbing; StandBlocked = false;
+        if (Mode!=TraversalMode.Grounded || !CanStand(Position)) return false;
+        ladder = target.Ladder!; State = PlayerTraversalState.Climbing; StandBlocked = false;
         approach.Enqueue(target.Top ? ladder.TopEntry.Vector : ladder.BottomEntry.Vector);
         approach.Enqueue(target.Top ? ladder.Top.Vector : ladder.Bottom.Vector);
         departing = false; return true;
@@ -94,23 +147,30 @@ public sealed class TraversalMotor
 
     private void FinishClimb()
     {
-        if (State != PlayerTraversalState.Climbing || !world.CanStand(Position,Radius,StandingHeight))
+        if (State != PlayerTraversalState.Climbing || !CanStand(Position))
             throw new InvalidOperationException("Validated ladder exit lost support or standing clearance.");
         State = PlayerTraversalState.Standing; StandBlocked = false; ladder = null; departing = false;
     }
-    private LadderTarget? FindLadder()
+    private bool CanStand(Vector3 p)=>world.HasSupport(p,Radius)&&world.HasClearance(p,Radius,StandingHeight);
+    private bool CanReach(Vector3 entry)
     {
-        if (!world.CanStand(Position,Radius,StandingHeight)) return null;
-        return scene.Ladders.SelectMany(l => new[] {new LadderTarget(l,false,Vector3.Distance(Position,l.BottomEntry.Vector)),new LadderTarget(l,true,Vector3.Distance(Position,l.TopEntry.Vector))})
-            .Where(t => t.Distance <= .55f && Math.Abs(Position.Y-(t.Top?t.Ladder.TopEntry.Y:t.Ladder.BottomEntry.Y)) <= BodyCollisionWorld.Epsilon)
-            .Where(t =>
-            {
-                var entry = t.Top ? t.Ladder.TopEntry.Vector : t.Ladder.BottomEntry.Vector;
-                // Convex full support in one box ensures the capture does not cross an empty gap.
-                bool support = scene.AllSolids.Any(b => Math.Abs(b.Max.Y-Position.Y)<=BodyCollisionWorld.Epsilon &&
-                    new BodyCollisionWorld([b]).HasSupport(Position,Radius) && new BodyCollisionWorld([b]).HasSupport(entry,Radius));
-                return support && world.IsSegmentClear(Position,entry,Radius,StandingHeight);
-            }).OrderBy(t => t.Distance).ThenBy(t => t.Ladder.Id,StringComparer.Ordinal).FirstOrDefault();
+        if(Math.Abs(Position.Y-entry.Y)>BodyCollisionWorld.Epsilon)return false;
+        var move=world.MoveSupported(Position,new(entry.X-Position.X,entry.Z-Position.Z),Radius,StandingHeight);
+        return !move.Blocked&&!move.LostSupport&&Vector3.Distance(move.Position,entry)<=BodyCollisionWorld.Epsilon;
+    }
+    private TraversalContext? FindContext()
+    {
+        if(!CanStand(Position))return null;
+        var targets=new List<TraversalContext>();
+        foreach(var l in scene.Ladders)foreach(bool top in new[]{false,true})
+        {
+            var entry=top?l.TopEntry:l.BottomEntry; float distance=Vector3.Distance(Position,entry.Vector);
+            if(distance<=.55f&&CanReach(entry.Vector))targets.Add(new(l.Id,ContextKind.Ladder,distance,l,top,null));
+        }
+        foreach(var portal in scene.Portals)
+            if(portal.Contains(Position)&&CanReach(portal.Anchor.Vector))
+                targets.Add(new(portal.Id,ContextKind.Portal,Vector3.Distance(Position,portal.Anchor.Vector),null,false,portal));
+        return targets.OrderBy(t=>t.Distance).ThenBy(t=>t.Id,StringComparer.Ordinal).FirstOrDefault();
     }
 
     private void Climb(float direction)

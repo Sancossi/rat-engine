@@ -10,7 +10,7 @@ internal static class BodyTraversalTests
         WorldBox floor = new("floor",new(-5,-1,-5),new(5,0,5));
         WorldBox platform = new("platform",new(-1,1.4f,-2),new(1,1.6f,-.5f));
         LadderDefinition ladder = new("ladder",new(0,0,0),new(0,1.6f,0),new(0,0,.5f),new(0,1.6f,-1),new(0,0,.5f),new(0,1.6f,-1));
-        SceneDefinition scene = new(2,"body",floor,new(0,0,.5f),[],[platform],[ladder]);
+        SceneDefinition scene = new(3,"body",floor,new(0,0,.5f),[],[platform],[ladder]);
         Vector2 Screen(Vector2 world) => new(Vector2.Dot(world,TraversalMotor.CameraRight),Vector2.Dot(world,TraversalMotor.CameraForward));
         void Frames(TraversalMotor motor, TraversalInput input, int frames)
         { for(int i=0;i<frames;i++) motor.Advance(1.0/60,input); }
@@ -51,10 +51,13 @@ internal static class BodyTraversalTests
             Until(m,new(new(0,-1),true,true),()=>m.Mode==TraversalMode.Grounded && m.Position.Y==0);
             require(Vector3.Distance(m.Position,ladder.BottomExit.Vector)<.0001f,"Wrong lower exit");
         });
-        check("top walking keeps explicit support and stops at platform footprint edge",()=>{
+        check("top walking preserves upper Y until step-off then falls onto lower floor",()=>{
             var m=new TraversalMotor(scene with {Spawn=ladder.TopEntry});
-            Frames(m,new(Screen(new(1,0))),180);
-            require(Math.Abs(m.Position.X-.8f)<.001 && m.Position.Y==1.6f,"Top walking fell or changed floor");
+            Frames(m,new(Screen(new(1,0))),12);
+            require(m.Position.Y==1.6f&&m.Mode==TraversalMode.Grounded,"Top walking changed floor before edge");
+            bool fell=false;
+            for(int i=0;i<60;i++){Frames(m,new(Screen(new(1,0))),1);fell|=m.Mode==TraversalMode.Falling;}
+            require(fell&&m.Position.Y==0&&m.Mode==TraversalMode.Grounded,"Step-off failed to land on lower floor");
         });
         check("pending interaction survives a short frame but is flushed by focus loss",()=>{
             var m=new TraversalMotor(scene);

@@ -6,83 +6,126 @@ namespace Rat.Expedition.Core;
 
 public sealed record Point3(float X, float Y, float Z)
 {
-    [JsonIgnore] public Vector3 Vector => new(X, Y, Z);
+    [JsonIgnore] public Vector3 Vector => new(X,Y,Z);
     [JsonIgnore] public bool IsFinite => float.IsFinite(X) && float.IsFinite(Y) && float.IsFinite(Z);
 }
-
-public sealed record WorldBox(string Id, Point3 Min, Point3 Max)
+public sealed record Point2(float X,float Z)
 {
-    public bool OverlapsFootprint(Vector3 position, float radius) =>
-        position.X + radius > Min.X && position.X - radius < Max.X &&
-        position.Z + radius > Min.Z && position.Z - radius < Max.Z;
+    [JsonIgnore] public Vector2 Vector => new(X,Z);
 }
-
-public sealed record LadderDefinition(string Id, Point3 Bottom, Point3 Top, Point3 BottomEntry, Point3 TopEntry, Point3 BottomExit, Point3 TopExit);
-
-public sealed record SceneDefinition(int SchemaVersion, string Id, WorldBox Floor, Point3 Spawn, WorldBox[] Walls, WorldBox[] Structures, LadderDefinition[] Ladders)
+public sealed record WorldBox(string Id,Point3 Min,Point3 Max)
 {
-    [JsonIgnore] public IEnumerable<WorldBox> AllSolids => Walls.Concat(Structures).Prepend(Floor);
-    public static SceneDefinition Load(string path)
+    public bool OverlapsFootprint(Vector3 p,float radius) => p.X+radius>Min.X && p.X-radius<Max.X && p.Z+radius>Min.Z && p.Z-radius<Max.Z;
+}
+public sealed record LadderDefinition(string Id,Point3 Bottom,Point3 Top,Point3 BottomEntry,Point3 TopEntry,Point3 BottomExit,Point3 TopExit);
+public sealed record RampDefinition(string Id,Point2 Min,Point2 Max,RampAxis Axis,float StartY,float EndY,float Thickness)
+{
+    public WorldRamp ToWorld()
+    {
+        if(Min is null || Max is null) throw new InvalidDataException($"Ramp '{Id}' needs bounds.");
+        var ramp=new WorldRamp(Id,Min.Vector,Max.Vector,Axis,StartY,EndY,Thickness); ramp.Validate(); return ramp;
+    }
+}
+public sealed record NamedSpawn(string Id,Point3 Position);
+public sealed record PortalDefinition(string Id,Point3 Min,Point3 Max,Point3 Anchor,string TargetScene,string TargetSpawn)
+{
+    public bool Contains(Vector3 p) => p.X>=Min.X && p.X<=Max.X && p.Y>=Min.Y && p.Y<=Max.Y && p.Z>=Min.Z && p.Z<=Max.Z;
+}
+public sealed record OccluderGroup(string Id,string[] Members);
+
+internal static class StrictJson
+{
+    internal static readonly JsonSerializerOptions Options=new()
+    {
+        PropertyNameCaseInsensitive=true, UnmappedMemberHandling=JsonUnmappedMemberHandling.Disallow,
+        RespectRequiredConstructorParameters=true, Converters={new JsonStringEnumConverter()}
+    };
+    internal static T Read<T>(string path)
     {
         try
         {
-            var scene = JsonSerializer.Deserialize<SceneDefinition>(File.ReadAllText(path),
-                new JsonSerializerOptions { PropertyNameCaseInsensitive = true, UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow,
-                    RespectRequiredConstructorParameters = true });
-            if (scene is null) throw new InvalidDataException("Scene document is null.");
-            scene.Validate();
-            return scene;
+            string text=File.ReadAllText(path);
+            if(typeof(T)==typeof(SceneDefinition))
+            {
+                using var document=JsonDocument.Parse(text);
+                if(document.RootElement.ValueKind==JsonValueKind.Object&&document.RootElement.EnumerateObject().Any(p=>p.Name.Equals("spawn",StringComparison.OrdinalIgnoreCase)))
+                    throw new InvalidDataException("Scene schema 3 uses named spawns; obsolete 'spawn' is forbidden.");
+            }
+            return JsonSerializer.Deserialize<T>(text,Options) ?? throw new InvalidDataException($"Null document '{path}'.");
         }
-        catch (Exception error) when (error is IOException or JsonException or ArgumentException)
-        {
-            throw new InvalidDataException($"Cannot load courtyard '{path}': {error.Message}", error);
-        }
+        catch(Exception e) when(e is IOException or JsonException or ArgumentException)
+        {throw new InvalidDataException($"Cannot load '{path}': {e.Message}",e);}
     }
+}
+
+[method:JsonConstructor]
+public sealed record SceneDefinition(int SchemaVersion,string Id,WorldBox Floor,NamedSpawn[] Spawns,
+    WorldBox[] Walls,WorldBox[] Structures,LadderDefinition[] Ladders,RampDefinition[] Ramps,
+    PortalDefinition[] Portals,float RecoveryThreshold,OccluderGroup[] OcclusionGroups,WorldBox[] Decorations)
+{
+    // Convenience for pure-code fixtures. Serialized schema 3 always requires all fields.
+    public SceneDefinition(int schemaVersion,string id,WorldBox floor,Point3 spawn,WorldBox[] walls,WorldBox[] structures,LadderDefinition[] ladders)
+        :this(schemaVersion,id,floor,[new("entry",spawn)],walls,structures,ladders,[],[],-2,[],[]) {}
+    [JsonIgnore] public Point3 Spawn {get=>GetSpawn("entry"); init=>Spawns=[new("entry",value)];}
+    [JsonIgnore] public IEnumerable<WorldBox> AllSolids=>Walls.Concat(Structures).Prepend(Floor);
+    public LayeredCollisionWorld CreateWorld()=>new(AllSolids,Ramps.Select(r=>r.ToWorld()));
+    public Point3 GetSpawn(string id)=>Spawns.SingleOrDefault(s=>s.Id==id)?.Position ?? throw new InvalidDataException($"Scene '{Id}' has no spawn '{id}'.");
+    public static SceneDefinition Load(string path) {var scene=StrictJson.Read<SceneDefinition>(path);scene.Validate();return scene;}
+    public bool IsFree(Vector3 p) {var world=CreateWorld();return world.HasSupport(p,TraversalMotor.Radius)&&world.HasClearance(p,TraversalMotor.Radius,TraversalMotor.StandingHeight);}
 
     public void Validate()
     {
-        if (SchemaVersion != 2 || string.IsNullOrWhiteSpace(Id))
-            throw new InvalidDataException("Scene requires schemaVersion 2 and an id.");
-        if (Floor is null || Spawn is null || Walls is null || Structures is null || Ladders is null || !Spawn.IsFinite)
-            throw new InvalidDataException("Scene requires floor, finite spawn, walls, structures and ladders.");
-        var ids = new HashSet<string>(StringComparer.Ordinal);
-        foreach (var box in AllSolids)
+        if(SchemaVersion!=3 || string.IsNullOrWhiteSpace(Id)) throw new InvalidDataException("Scene requires schemaVersion 3 and id.");
+        if(Floor is null || Spawns is null || Walls is null || Structures is null || Ladders is null || Ramps is null ||
+            Portals is null || OcclusionGroups is null || Decorations is null || Ramps.Any(r=>r is null))
+            throw new InvalidDataException($"Scene '{Id}' is missing required collections/geometry.");
+        var world=CreateWorld();
+        var ids=AllSolids.Select(b=>b.Id).Concat(Ramps.Select(r=>r.Id)).ToHashSet(StringComparer.Ordinal);
+        foreach(var wall in Walls) if(wall.Min.Y!=Floor.Max.Y) throw new InvalidDataException("Walls must start at floor level; use finite structures otherwise.");
+        if(!float.IsFinite(RecoveryThreshold) || RecoveryThreshold>=Floor.Min.Y)
+            throw new InvalidDataException("Recovery threshold must be finite and below the floor bottom.");
+        void UniqueId(string? id) {if(string.IsNullOrWhiteSpace(id)||!ids.Add(id))throw new InvalidDataException($"Scene '{Id}' duplicate/empty id '{id}'.");}
+        bool Safe(Point3? p)=>p is not null && p.IsFinite && world.HasSupport(p.Vector,TraversalMotor.Radius)&&world.HasClearance(p.Vector,TraversalMotor.Radius,TraversalMotor.StandingHeight);
+        foreach(var spawn in Spawns)
         {
-            if (box is null || string.IsNullOrWhiteSpace(box.Id) || !ids.Add(box.Id) ||
-                box.Min is null || box.Max is null || !box.Min.IsFinite || !box.Max.IsFinite ||
-                box.Min.X >= box.Max.X || box.Min.Y >= box.Max.Y || box.Min.Z >= box.Max.Z ||
-                !float.IsFinite(box.Max.X - box.Min.X) || !float.IsFinite(box.Max.Y - box.Min.Y) || !float.IsFinite(box.Max.Z - box.Min.Z))
-                throw new InvalidDataException("Geometry requires unique ids and finite min < max bounds.");
+            if(spawn is null)throw new InvalidDataException("Null spawn."); UniqueId(spawn.Id);
+            if(!Safe(spawn.Position))throw new InvalidDataException($"Spawn '{spawn.Id}' needs full standing support/clearance.");
         }
-        if (Floor.Max.X - Floor.Min.X <= TraversalMotor.Radius * 2 ||
-            Floor.Max.Z - Floor.Min.Z <= TraversalMotor.Radius * 2 ||
-            !IsFree(Spawn.Vector))
-            throw new InvalidDataException("Spawn needs stable support and full standing clearance.");
-        foreach (var wall in Walls)
+        _=GetSpawn("entry");
+        foreach(var ladder in Ladders)
         {
-            if (wall.Min.Y != Floor.Max.Y)
-                throw new InvalidDataException("Walls start at floor level; use structures for finite elevated solids.");
+            if(ladder is null)throw new InvalidDataException("Null ladder."); UniqueId(ladder.Id);
+            Point3[] points=[ladder.Bottom,ladder.Top,ladder.BottomEntry,ladder.TopEntry,ladder.BottomExit,ladder.TopExit];
+            if(points.Any(p=>p is null||!p.IsFinite)||ladder.Bottom.X!=ladder.Top.X||ladder.Bottom.Z!=ladder.Top.Z||
+                ladder.Top.Y<=ladder.Bottom.Y||!float.IsFinite(ladder.Top.Y-ladder.Bottom.Y)||
+                ladder.BottomEntry.Y!=ladder.Bottom.Y||ladder.BottomExit.Y!=ladder.Bottom.Y||ladder.TopEntry.Y!=ladder.Top.Y||ladder.TopExit.Y!=ladder.Top.Y)
+                throw new InvalidDataException($"Ladder '{ladder.Id}' needs finite vertical endpoints and matching entry/exit heights.");
+            foreach(var p in new[]{ladder.BottomEntry,ladder.TopEntry,ladder.BottomExit,ladder.TopExit})
+                if(!Safe(p))throw new InvalidDataException($"Ladder '{ladder.Id}' entry/exit needs standing support/clearance.");
+            foreach(var (from,to) in new[]{(ladder.Bottom,ladder.Top),(ladder.BottomEntry,ladder.Bottom),(ladder.TopEntry,ladder.Top),(ladder.Bottom,ladder.BottomExit),(ladder.Top,ladder.TopExit)})
+                if(Vector3.Distance(from.Vector,to.Vector)>(from.Y==to.Y?1.5f:10f)||world.SweepFraction(from.Vector,to.Vector,TraversalMotor.Radius,TraversalMotor.StandingHeight)<1)
+                    throw new InvalidDataException($"Ladder '{ladder.Id}' corridor/entry/exit is blocked or too long.");
         }
-        var world = new BodyCollisionWorld(AllSolids);
-        foreach (var ladder in Ladders)
+        foreach(var portal in Portals)
         {
-            if (ladder is null || string.IsNullOrWhiteSpace(ladder.Id) || !ids.Add(ladder.Id))
-                throw new InvalidDataException("Ladder ids must be unique across scene geometry.");
-            Point3[] points = [ladder.Bottom,ladder.Top,ladder.BottomEntry,ladder.TopEntry,ladder.BottomExit,ladder.TopExit];
-            if (points.Any(p => p is null || !p.IsFinite) || ladder.Bottom.X != ladder.Top.X || ladder.Bottom.Z != ladder.Top.Z ||
-                ladder.Top.Y <= ladder.Bottom.Y || !float.IsFinite(ladder.Top.Y-ladder.Bottom.Y) ||
-                ladder.BottomEntry.Y != ladder.Bottom.Y || ladder.BottomExit.Y != ladder.Bottom.Y ||
-                ladder.TopEntry.Y != ladder.Top.Y || ladder.TopExit.Y != ladder.Top.Y)
-                throw new InvalidDataException($"Ladder {ladder.Id} needs finite vertical endpoints and matching entry/exit heights.");
-            foreach (var p in new[] {ladder.BottomEntry,ladder.TopEntry,ladder.BottomExit,ladder.TopExit})
-                if (!world.CanStand(p.Vector,TraversalMotor.Radius,TraversalMotor.StandingHeight))
-                    throw new InvalidDataException($"Ladder {ladder.Id} entry/exit needs full standing support and clearance.");
-            foreach (var (from,to) in new[] {(ladder.Bottom,ladder.Top),(ladder.BottomEntry,ladder.Bottom),(ladder.TopEntry,ladder.Top),(ladder.Bottom,ladder.BottomExit),(ladder.Top,ladder.TopExit)})
-                if (Vector3.Distance(from.Vector,to.Vector)> (from.Y==to.Y ? 1.5f : 10f) ||
-                    !world.IsSegmentClear(from.Vector,to.Vector,TraversalMotor.Radius,TraversalMotor.StandingHeight))
-                    throw new InvalidDataException($"Ladder {ladder.Id} corridor or entry/exit segment is blocked or too long.");
+            if(portal is null)throw new InvalidDataException("Null portal."); UniqueId(portal.Id);
+            if(portal.Min is null||portal.Max is null||!portal.Min.IsFinite||!portal.Max.IsFinite||
+                portal.Min.X>=portal.Max.X||portal.Min.Y>=portal.Max.Y||portal.Min.Z>=portal.Max.Z||
+                !float.IsFinite(portal.Max.X-portal.Min.X)||!float.IsFinite(portal.Max.Y-portal.Min.Y)||!float.IsFinite(portal.Max.Z-portal.Min.Z)||
+                string.IsNullOrWhiteSpace(portal.TargetScene)||string.IsNullOrWhiteSpace(portal.TargetSpawn)||
+                !Safe(portal.Anchor)||!portal.Contains(portal.Anchor.Vector))
+                throw new InvalidDataException($"Portal '{portal.Id}' needs finite bounds, safe anchor and target.");
+            if(Spawns.Any(s=>portal.Contains(s.Position.Vector)))throw new InvalidDataException($"Spawn lies inside portal '{portal.Id}'.");
+        }
+        _=new LayeredCollisionWorld(Decorations,[]);
+        foreach(var box in Decorations)UniqueId(box.Id);
+        var geometry=AllSolids.Select(b=>b.Id).Concat(Ramps.Select(r=>r.Id)).Concat(Decorations.Select(b=>b.Id)).ToHashSet(StringComparer.Ordinal);
+        var members=new HashSet<string>(StringComparer.Ordinal);
+        foreach(var group in OcclusionGroups)
+        {
+            if(group is null)throw new InvalidDataException("Null occluder group."); UniqueId(group.Id);
+            if(group.Members is null||group.Members.Length==0||group.Members.Any(m=>!geometry.Contains(m)||!members.Add(m)))
+                throw new InvalidDataException($"Occluder group '{group.Id}' needs existing exclusive members.");
         }
     }
-
-    public bool IsFree(Vector3 position) => new BodyCollisionWorld(AllSolids).CanStand(position,TraversalMotor.Radius,TraversalMotor.StandingHeight);
 }

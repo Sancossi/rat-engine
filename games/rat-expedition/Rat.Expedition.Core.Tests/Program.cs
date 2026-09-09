@@ -16,7 +16,7 @@ void Reject(Action action)
     throw new Exception("Invalid scene was accepted");
 }
 WorldBox Box(string id, float x1, float z1, float x2, float z2) => new(id, new(x1, 0, z1), new(x2, 2, z2));
-SceneDefinition Scene(params WorldBox[] walls) => new(2, "test", new("floor", new(-10, -1, -10), new(10, 0, 10)), new(0, 0, 3), walls, [], []);
+SceneDefinition Scene(params WorldBox[] walls) => new(3, "test", new("floor", new(-10, -1, -10), new(10, 0, 10)), new(0, 0, 3), walls, [], []);
 void Drive(TraversalMotor motor, Vector2 input, int frames) { for (int i = 0; i < frames; i++) motor.Advance(1.0 / 60, new TraversalInput(input)); }
 
 Check("camera-relative W moves screen-up on XZ at 3 units per second", () => {
@@ -35,10 +35,13 @@ Check("thin wall sweep stops footprint and permits sliding", () => {
     Require(motor.Position.Z >= 0.201f - 0.0001f, "Passed through wall");
     Require(motor.Position.X < -3 && scene.IsFree(motor.Position), "No wall sliding or footprint overlaps");
 });
-Check("all floor edges retain complete footprint", () => {
+Check("all unsupported floor edges enter falling without penetrating the edge", () => {
     var scene = Scene(); var motor = new TraversalMotor(scene);
     foreach (var direction in new[] { new Vector2(1,1), new(-1,-1), new(1,-1), new(-1,1) }) {
-        Drive(motor, direction, 1000); Require(scene.IsFree(motor.Position), "Left floor bounds");
+        motor=new(scene);
+        Drive(motor,direction,1000);
+        Require(motor.Mode==TraversalMode.Falling&&motor.Position.Y<0,"Unsupported edge did not fall");
+        Require(scene.CreateWorld().HasClearance(motor.Position,TraversalMotor.Radius,motor.BodyHeight),"Falling body penetrated floor");
     }
 });
 Check("original courtyard contact route slides along wall and reaches its far side",()=>{
@@ -89,7 +92,7 @@ Check("missing nested spawn and bounds coordinates rejected", () => {
         foreach (var member in new[] { "X", "Y", "Z" }) {
             foreach (var location in new[] { "Spawn", "FloorMin", "WallMax" }) {
                 var json = JsonSerializer.SerializeToNode(Scene(Box("wall", 2,2,3,3)))!;
-                var point = location == "Spawn" ? json["Spawn"] : location == "FloorMin" ? json["Floor"]!["Min"] : json["Walls"]![0]!["Max"];
+                var point = location == "Spawn" ? json["Spawns"]![0]!["Position"] : location == "FloorMin" ? json["Floor"]!["Min"] : json["Walls"]![0]!["Max"];
                 point!.AsObject().Remove(member);
                 File.WriteAllText(path, json.ToJsonString()); Reject(() => SceneDefinition.Load(path));
             }
@@ -99,5 +102,6 @@ Check("missing nested spawn and bounds coordinates rejected", () => {
 BodyCollisionTests.Run(Check, Require);
 BodyTraversalTests.Run(Check, Require);
 LayeredCollisionTests.Run(Check, Require);
+SessionTests.Run(Check, Require);
 Console.WriteLine($"Core scenarios: {passed} passed, {failed} failed.");
 return failed == 0 ? 0 : 1;

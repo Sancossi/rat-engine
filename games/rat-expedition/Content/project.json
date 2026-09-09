@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "startScene": "expedition_courtyard",
+  "scenes": [
+    {
+      "id": "expedition_courtyard",
+      "path": "courtyard.json"
+    },
+    {
+      "id": "expedition_sluice",
+      "path": "sluice.json"
+    }
+  ]
+}
