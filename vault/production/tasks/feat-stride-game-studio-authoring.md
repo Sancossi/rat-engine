@@ -1,10 +1,10 @@
 ---
 type: task
 area: Game
-status: In progress
+status: In review
 task_type: Feature
 sprint: Sprint 19
-review: Needs fixes
+review: In review
 due:
 tags: [task, expedition, stride, authoring]
 ---
@@ -32,6 +32,8 @@ Origin: [[design-stride-editor-asset-workflow]]; [[expedition-prototype-traversa
 Follow-up: [[expedition-prototype-interactions]]; [[feat-expedition-character-sprites]]; [[expedition-vertical-slice]]; [[feat-stride-editor-mcp]].
 
 ## Resolution
+
+Исправление poisoned child передано на повторное review: проект `dd6baea`, Stride `c0b9065d6e902b45d4d3a5c656318c70df53a6f3`. Проверка identity выполняется через Peek до Pop и completion-finally. Оба новых regression cases упали до исправления, Transactions 32/32 прошли после него. Native creation/reopen `build/mcp/creation-failure-20260909-150743-953/` также PASS: три rollback сценария, прежняя история, успешное создание/Save/reopen по тому же ID и poison guards. Полный Release новой версии выполняется; публикация ожидает одобрения.
 
 Независимое review основы creation (`6871672` / Stride `fddf82aa`) — Needs fixes, один P2: CompleteTransaction(parent) снимает poisoned child через Pop до проверки identity, после чего Core stack снова допускает записи. Native Save/MCP остаются заблокированы отдельным HasFailedTransaction; обход этих guards не утверждается. Исправить проверку Peek до изменения стека и добавить regression failed child → parent Dispose → дальнейшие записи запрещены. Остальные cleanup/qualification границы не получили блокеров. Main не изменены; после исправления нужны повторное review и Release.
 
