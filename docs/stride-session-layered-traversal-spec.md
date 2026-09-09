@@ -46,7 +46,9 @@
 
 Прежние 17 executable scenarios сохраняются: schema fixtures теперь содержат project/named spawns; camera-edge fixture получает конечные бортики, потому что обычный мир P1.3 разрешает срыв. Default/upper-void recovery проверяется отдельно. Focus probe явно проходит pause/release/resume, body route дополнительно держит паузу на лестнице. Новые проверки охватывают layered720/1080, 20 portal legs, смешанные ярусы спутников, renderer candidate failure, три recovery fixtures и невалидные project/ramp/portal/group данные. Пакетная приёмка и точные пути фиксируются в audit, не выводятся из Core-тестов.
 
-Малое исправление runtime-ревью: при Paused назначение анимационного кадра лидера тоже останавливается, даже если движение удерживается. GPU body route сохраняет `ladder-pause-start` и `ladder-paused`; verifier сравнивает реальные sprite frame indices и ticks, не только неподвижность позиции.
+Малое исправление runtime-ревью: при Paused назначение анимационного кадра лидера тоже останавливается, даже если движение удерживается. GPU body route сохраняет `ladder-pause-start` и `ladder-paused` через ровно 12 updates; это гарантированно пересекает интервал смены анимационного кадра. Verifier сравнивает реальные sprite frame indices и ticks, не только неподвижность позиции; короткая пауза внутри одного animation interval не была бы достаточной регрессией.
+
+Mutation-проверка в реальном приложении: без guard на кадрах 158→170 sprite index менялся 7→6 при неизменных ticks 612; после восстановления guard остаётся 7→7 при тех же ticks. Артефакты: `build/stride-game/p13-pause-missing-guard-repro/` и `p13-pause-guard-verified/`. Временная мутация не коммитилась; первоначальный источник восстановлен в `finally`, затем заново собран и проверен.
 
 ### Core/session: историческая граница до Windows
 

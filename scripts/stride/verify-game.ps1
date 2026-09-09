@@ -95,6 +95,7 @@ try {
         if (-not $run.bodyComplete -or $run.width -ne $resolution[0] -or $run.height -ne $resolution[1] -or $run.ladderPausePassed -ne $true) { throw "$name did not complete the real body route and ladder pause." }
         $pauseStart = @($run.sessionMilestones | Where-Object name -eq 'ladder-pause-start')
         $pauseEnd = @($run.sessionMilestones | Where-Object name -eq 'ladder-paused')
+        if ($pauseStart.Count -eq 1 -and $pauseEnd.Count -eq 1 -and $pauseEnd[0].frame-$pauseStart[0].frame -ne 12) { throw "$name did not cross a complete animation frame interval while paused." }
         if ($pauseStart.Count -ne 1 -or $pauseEnd.Count -ne 1 -or $pauseStart[0].session.Mode -ne 'Paused' -or $pauseEnd[0].session.Mode -ne 'Paused' -or $pauseStart[0].session.Ticks -ne $pauseEnd[0].session.Ticks -or $pauseStart[0].leaderAnimationFrame -ne $pauseEnd[0].leaderAnimationFrame) { throw "$name advanced simulation or sprite animation while paused." }
         foreach ($milestone in @('standing-blocked','crouched','blocked-stand','clear-standing','climb-up','upper-exit','held-interact-top','top-walking','climb-down','lower-exit')) {
             $item = @($run.bodyMilestones | Where-Object name -eq $milestone)

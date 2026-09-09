@@ -232,14 +232,14 @@ public sealed class ExpeditionGame : Game
         if(options.SmokeFrames>0 && frames==122)sessionCommand=new(System.Numerics.Vector2.Zero,PauseHeld:true);
         if(options.SmokeFrames>0&&options.SmokeRoute=="body"&&session.Leader.Mode==TraversalMode.Climbing&&session.Leader.Position.Y>.75f&&ladderPauseFrame<0)
         {ladderPauseFrame=0;ladderPauseTicks=session.Ticks;}
-        if(ladderPauseFrame is >=0 and <10)
-            sessionCommand=new(new(0,1),InteractHeld:true,PauseHeld:ladderPauseFrame is 0 or 8);
+        if(ladderPauseFrame is >=0 and <16)
+            sessionCommand=new(new(0,1),InteractHeld:true,PauseHeld:ladderPauseFrame is 0 or 14);
         session.Advance(elapsed,sessionCommand,options.SmokeFrames>0||IsActive);
-        if(ladderPauseFrame is >=0 and <10)
+        if(ladderPauseFrame is >=0 and <16)
         {
             if(ladderPauseFrame==0)sessionRoute.Capture="ladder-pause-start";
-            if(ladderPauseFrame==7){ladderPausePassed=session.Ticks==ladderPauseTicks&&session.Mode==SessionMode.Paused;sessionRoute.Capture="ladder-paused";}
-            if(ladderPauseFrame==9)sessionRoute.Capture="ladder-resumed";
+            if(ladderPauseFrame==12){ladderPausePassed=session.Ticks==ladderPauseTicks&&session.Mode==SessionMode.Paused;sessionRoute.Capture="ladder-paused";}
+            if(ladderPauseFrame==15)sessionRoute.Capture="ladder-resumed";
             ladderPauseFrame++;
         }
         foreach(var old in retired)old.Dispose();retired.Clear();
