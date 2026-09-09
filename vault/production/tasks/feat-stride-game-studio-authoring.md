@@ -1,10 +1,10 @@
 ---
 type: task
 area: Game
-status: In progress
+status: In review
 task_type: Feature
 sprint: Sprint 19
-review: Pending
+review: In review
 due:
 tags: [task, expedition, stride, authoring]
 ---
@@ -32,6 +32,8 @@ Origin: [[design-stride-editor-asset-workflow]]; [[expedition-prototype-traversa
 Follow-up: [[expedition-prototype-interactions]]; [[feat-expedition-character-sprites]]; [[expedition-vertical-slice]]; [[feat-stride-editor-mcp]].
 
 ## Resolution
+
+Основа отмены native creation передана на независимое review: проект `6871672`, Stride `fddf82aa16f547b037a246bcf5cf518a35ccdeee`. [Аудит](../../../docs/audits/2026-09-09-stride-native-creation-abort.md): 656 Core.Design tests, native три rollback сценария с сохранением graph/disk/dirty/Undo/Redo, subsequent create/Undo/Redo/Save/fresh reopen по тому же ID, отказ Save/MCP после failed rollback. Resource regression — 101 calls / 16 tools / 13 ожидаемых отказов / 0 captures; прежние session/readiness gates PASS. Полный Release выполняется. Это отдельная зависимость import API; следующие пять MCP команд и runtime библиотека пока не включены, main остаются на принятом предыдущем milestone.
 
 Квалификация следующего import API воспроизвела native creation failure на `4d336dac`: `build/a13-creation-failure-probe.log`. Ошибка после первого CreateAsset оставляет asset; Complete→Undo теряет прежний Redo и делает неудачную операцию повторяемой. Ошибка уведомления directory.AddAsset внутри конструктора оставляет session/graph/directory registrations. До публикации import разрешён узкий source срез в рамках постоянного разрешения дорабатывать fork: отмена текущей принадлежащей операции транзакции без изменения прежних Undo/Redo/dirty, очистка незавершённого CreateAsset, regression обоих отказов и последующего успешного создания. Это зависимость нового API; ранее принятый milestone остаётся закрыт, main не содержит нового import API.
 
