@@ -124,3 +124,16 @@ Native creation gate повторён на этом pin: runner exit0,
 poison guards также прошли. Owned PID64796/22780 закрыты, source checkout clean.
 Vault/diff checks passed. Final canonical Release и узкое re-review нового pin
 остаются отдельными parent gates.
+
+## Acceptance
+
+Повторное независимое read-only review `dd6baea` / source `c0b9065d` — **Approved**.
+P2 исправлен, новых блокеров нет. Reviewer проверил код и artifacts; сборки/GUI
+самостоятельно не запускал. Parent canonical full Release нового pin прошёл:
+`C:/5_gamedev/stride/logs/rat-foundation/20260909-150919-513/result.json`, exit 0,
+50.46 s, 6 прежних warnings (5 NU5100, 1 CA1416), 0 errors. Release executable
+находится по указанному выше пути. Две посторонние vault EOL правки сохранены.
+
+Bugs found: один review P2 poisoned child исправлен в этом milestone; новых
+открытых bugs нет. Закрыта только native creation foundation; MCP import/reimport,
+rename/delete/prefab и runtime библиотека остаются следующими срезами A1.3.

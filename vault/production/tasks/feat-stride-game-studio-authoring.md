@@ -1,10 +1,10 @@
 ---
 type: task
 area: Game
-status: In review
+status: In progress
 task_type: Feature
 sprint: Sprint 19
-review: In review
+review: Approved
 due:
 tags: [task, expedition, stride, authoring]
 ---
@@ -32,6 +32,8 @@ Origin: [[design-stride-editor-asset-workflow]]; [[expedition-prototype-traversa
 Follow-up: [[expedition-prototype-interactions]]; [[feat-expedition-character-sprites]]; [[expedition-vertical-slice]]; [[feat-stride-editor-mcp]].
 
 ## Resolution
+
+Основа безопасного native creation принята: повторное независимое review `dd6baea` / Stride `c0b9065d` — Approved, P2 poisoned child закрыт, новых блокеров нет. Transactions 32/32 и native creation/rollback/Save/reopen на исправленном source прошли; прежние Core.Design 656 и MCP 101/16/13/0 captures сохранены как evidence предыдущего foundation commit. Итоговый canonical Release `C:/5_gamedev/stride/logs/rat-foundation/20260909-150919-513/result.json`: 50.46 s, 6 прежних warnings, 0 errors. Публикуется отдельный foundation milestone; вся A1 остаётся In progress, пять новых MCP операций и runtime библиотека ещё не приняты.
 
 Исправление poisoned child передано на повторное review: проект `dd6baea`, Stride `c0b9065d6e902b45d4d3a5c656318c70df53a6f3`. Проверка identity выполняется через Peek до Pop и completion-finally. Оба новых regression cases упали до исправления, Transactions 32/32 прошли после него. Native creation/reopen `build/mcp/creation-failure-20260909-150743-953/` также PASS: три rollback сценария, прежняя история, успешное создание/Save/reopen по тому же ID и poison guards. Полный Release новой версии выполняется; публикация ожидает одобрения.
 
