@@ -2,7 +2,7 @@
 type: bug
 area: Game
 status: Investigating
-review: Pending
+review: In review
 severity: Medium
 sprint: Sprint 19
 tags: [bug, expedition, companions]
