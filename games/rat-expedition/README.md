@@ -40,6 +40,15 @@ Scene schema 2 задаёт конечные solid structures и валидир�
 независимо от working directory. Ошибки завершаются ненулевым кодом и `error.log`.
 Обычные диагностические записи расположены в `%LOCALAPPDATA%/RatExpedition/logs`.
 
+## Работа в Zed
+
+Откройте каталог `games/rat-expedition` как папку проекта Zed. C# language server
+автоматически загрузит `Rat.Expedition.slnx` со всеми тремя проектами и ссылками Stride.
+Если окно уже было открыто до добавления решения, выполните в палитре команд
+`editor: restart language server` из открытого C# файла.
+
+## Проверка и зависимости
+
 Core scenarios запускаются без GPU:
 
 ```powershell
