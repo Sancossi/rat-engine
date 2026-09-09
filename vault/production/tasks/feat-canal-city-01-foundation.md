@@ -1,10 +1,10 @@
 ---
 type: task
 area: Game
-status: In progress
+status: In review
 task_type: Feature
 sprint: Sprint 19
-review: Pending
+review: In review
 due:
 tags: [task, expedition, art, blender]
 ---
@@ -28,6 +28,8 @@ Origin: [[rat-expedition-art-audio]].
 Follow-up: [[feat-canal-city-02-passages]]; [[feat-canal-city-03-architecture]]; [[feat-canal-city-04-mechanisms]]; [[feat-canal-city-05-decoration]]; [[feat-canal-city-06-library]].
 
 ## Resolution
+
+2026-09-09: изолированный native preview передан на независимое ревью: `9d54ba7`, исправление выборки одежды — `913df0c`. 97 native assets включают 12 моделей/prefab и два клипа; Release build, GPU 720p/1080p и запуск self-contained ZIP вне checkout прошли. Реальные углы петли 0/50/100° и обратно, неподвижная рама; credits/OFL/package notices включены. [Аудит preview](../../../docs/audits/2026-09-09-canal-city-native-preview.md). Это проверка отдельного preview, производственные A1/native reimport/game runtime остаются открытыми.
 
 2026-09-09: повторное независимое ревью `d00374f` — Approved для исходного среза; все три P2 закрыты. Проверяющий независимо подтвердил не менее 21,9988 мм отделения створки от рамы на всех кадрах source/обоих FBX и проход 3980 вершин тела вместе с одеждой. Осталась неблокирующая неточность отчёта: автоматическая выборка учитывала только body, хотя описание включало robe; выборка будет расширена. Начат изолированный native preview первого набора с теми же source assets и закреплёнными пакетами. Это квалификация модели/материалов/клипов в отдельной сцене, не обход A1 и не приёмка игрового runtime. Вся карточка остаётся открытой.
 
