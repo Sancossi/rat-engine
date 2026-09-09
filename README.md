@@ -1,5 +1,17 @@
 # rat-engine
 
+Rat Expedition is now developed in Stride/C#. Start with the
+[current game and Windows package workflow](games/rat-expedition/README.md),
+[pinned Stride source workflow](docs/stride-source-workflow.md), and
+[game design](vault/game/GDD.md). Open [vault/](vault/) in Obsidian for decisions
+and the work queue. P1.1/P1.1a are complete; the remaining P1 traversal slices
+are tracked in the vault.
+
+This repository also preserves the C++ engine/editor below, which remains buildable
+and verified, and the [historical C++ game prototype](apps/game/README.md).
+The current game lives in `games/rat-expedition/`; Stride's pinned upstream source
+is a separate checkout and is not vendored here.
+
 C++20 game engine and in-process map editor using **bgfx**, **GLFW**, and **Dear ImGui**.
 The editor supports Play/Edit, JSON maps, event graphs, undo/redo, voxel terrain,
 rotating ramps, slabs and ladder traversal. Headless tests use the same simulation

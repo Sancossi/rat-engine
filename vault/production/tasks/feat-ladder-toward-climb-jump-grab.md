@@ -18,7 +18,7 @@ Origin: chat 2026-09-02 (переделка climb). Related: [[feat-stacked-surf
 
 Spec: `docs/superpowers/specs/2026-09-02-ladder-jump-off-design.md`
 Plan: `docs/superpowers/plans/2026-09-02-ladder-jump-off.md`
-Follow-up: [[feat-drive-player-physics-from-locomotion-fsm|feat: Drive player physics from locomotion FSM]]
+Follow-up: [[feat-drive-player-physics-from-locomotion-fsm|feat: Drive player physics from locomotion FSM]], [[feat-mgs3-ladder-climb|feat: MGS3 ladder climb]]
 
 ## Resolution
 

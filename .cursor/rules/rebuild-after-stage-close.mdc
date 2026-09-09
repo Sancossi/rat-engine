@@ -1,0 +1,13 @@
+---
+description: Rebuild the editor after a vault card or plan stage is closed so Play can be hand-tested
+alwaysApply: true
+---
+
+# Rebuild after closing a stage
+
+When a vault card hits **Done** / **Fixed**, or a written plan’s last task is closed after review **Approved**:
+
+1. Rebuild the **full** Release tree (not only `rat_tests`): VsDevCmd x64 + `cmake --build build --config Release`.
+2. Tell the human the editor exe path so they can playtest.
+
+Do this in the parent chat (no subagent). Do not wait for «пересобери».
