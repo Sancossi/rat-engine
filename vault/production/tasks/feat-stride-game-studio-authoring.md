@@ -1,10 +1,10 @@
 ---
 type: task
 area: Game
-status: In review
+status: In progress
 task_type: Feature
 sprint: Sprint 19
-review: In review
+review: Pending
 due:
 tags: [task, expedition, stride, authoring]
 ---
@@ -35,6 +35,10 @@ Follow-up: [[expedition-prototype-interactions]]; [[feat-expedition-character-sp
 
 A1.1 передан на независимое ревью: `fcd1fd7`. Native scene/custom metadata прошли реальный GUI edit/undo/redo/save/close/reopen/F5; wrapper загрузил те же id, значение и изображение. [Контракт среза](../../../docs/stride-native-authoring-qualification-spec.md), [доказательства](../../../docs/audits/2026-09-09-stride-native-authoring-qualification.md). Это проверка основы; карты/Core и библиотека ресурсов ещё не перенесены. A1 целиком не закрыт.
 
+A1.1 принят 2026-09-09: независимое read-only review `ffeab7a..fcd1fd7` — Approved. Parent повторил wrapper из committed HEAD `a302c75`, authoringWorkingTreeDirty=false, exit 0; результат `build/stride-authoring/20260909-094802-255/result.json`, JSON/PNG совпадают с F5. Core: 63 passed; Python: 22 passed. Полный Release Game Studio пересобран, exit 0, 5 upstream NU5100 warnings / 0 errors: `C:/5_gamedev/stride/sources/editor/Stride.GameStudio/bin/Release/net10.0-windows/Stride.GameStudio.exe`; evidence `C:/5_gamedev/stride/logs/rat-foundation/20260909-094805-068/result.json`. Исполняемые P1 сценарии повторно не запускались: основной runtime и данные не изменены, их последняя приёмка записана в [[bug-expedition-background-smoke-speed]].
+
+Начат A1.2: перенос обеих игровых карт (courtyard/sluice), metadata и общей валидации/Core boundary. A1.1 Approved относится только к законченному срезу; review Pending относится к продолжающейся реализации A1.2. Ручной P1 по-прежнему отложен по решению пользователя.
+
 ## Bugs found
 
-В A1.1 подтверждённых дефектов движка не обнаружено; независимое ревью ещё идёт.
+A1.1: none; независимое ревью не выявило блокирующих дефектов. A1.2 ещё выполняется.

@@ -18,4 +18,6 @@
 
 ## Границы
 
+Parent acceptance: независимое read-only review `ffeab7a..fcd1fd7` — Approved. Повторный wrapper из committed HEAD `a302c75` завершился exit 0, `authoringWorkingTreeDirty=false`: `build/stride-authoring/20260909-094802-255/result.json`. Его runtime JSON и PNG совпадают с F5 (тот же SHA256 выше). Core regression: 63 passed / 0 failed; Python: 22 passed. Полная Release сборка редактора: exit 0, 5 upstream NU5100 / 0 errors; `C:/5_gamedev/stride/logs/rat-foundation/20260909-094805-068/result.json`, executable `C:/5_gamedev/stride/sources/editor/Stride.GameStudio/bin/Release/net10.0-windows/Stride.GameStudio.exe`. Основной P1 runtime/данные не изменены; его executable suite на этом срезе не повторялся.
+
 Это A1.1, не полная приёмка A1: игровые дворы/sluice ещё используют P1 pipeline, Core не менялся. Не проверены collision authoring, prefab identity при clone, весь каталог assets, reimport/rename/delete, чистая машина или remote CI. Проверочный publish не является дистрибутивом A1/P1 ZIP. F5/GUI действия здесь реальные; это не вывод из headless tests. Полную Release сборку редактора и отдельную регрессию P1 на закрытии среза фиксирует parent в карточке.
