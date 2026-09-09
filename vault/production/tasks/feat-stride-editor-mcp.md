@@ -1,10 +1,10 @@
 ---
 type: task
 area: Engine
-status: In review
+status: In progress
 task_type: Feature
 sprint: Sprint 19
-review: In review
+review: Needs fixes
 due:
 tags: [task, stride, mcp, authoring]
 ---
@@ -38,5 +38,7 @@ Follow-up: [[feat-stride-game-studio-authoring]].
 Начато 2026-09-09 по явному «Давай делать MCP». Это согласованное изменение порядка: сначала MCP для редактора, затем возобновление A1.2 через проверенный API. Реализация в отдельной рабочей копии `C:/5_gamedev/rat-engine-mcp`, ветка `feat/stride-editor-mcp`; незакоммиченные карты в `C:/5_gamedev/rat-engine` сохранены. Один исполнитель, затем независимый reviewer; статусы ведёт parent.
 
 ## Bugs found
+
+Повторное review подтвердило исправление обоих runtime P2. Остался узкий дефект переносимости `verify-session-state.ps1`: выбранный CheckoutPath не передавался как StrideBin при сборке qualification assembly; исправляется перед финальной приёмкой.
 
 Независимое review `fcc73f6` выявило два P2: невызываемый SessionDisposed оставляет очередь активной после Session.Destroy; GUI Save не учитывается собственным activeOperation моста и может пересечься с MCP-мутацией. Исправления и регрессии выполняются в этом срезе до публикации. Предыдущие координатные попытки сдвига стены A1.2 не считаются пройденной приёмкой.
