@@ -1,7 +1,7 @@
 ---
 type: task
 area: Game
-status: Blocked
+status: In progress
 task_type: Feature
 sprint: Sprint 19
 review: Pending
@@ -30,6 +30,8 @@ Origin: [[design-stride-editor-asset-workflow]]; [[expedition-prototype-traversa
 Follow-up: [[expedition-prototype-interactions]]; [[feat-expedition-character-sprites]]; [[expedition-vertical-slice]]; [[feat-stride-editor-mcp]].
 
 ## Resolution
+
+Обновление после приёмки MCP 2026-09-09: [[feat-stride-editor-mcp]] — Done / Approved, зависимость снята. A1.2 возобновляется в сохранённой основной рабочей копии. Parent через API прочитал 30 entities Courtyard, открыл сцену и получил реальный viewport PNG; файлы A1.2 не менялись. Wall edit/save/reopen/collision, native verifier 33, упаковка и независимое review A1.2 остаются обязательными; A1.3 и A1.4 ещё не приняты.
 
 Обновление 2026-09-09: пользователь явно поручил [[feat-stride-editor-mcp]] для управления через API. A1.2 ожидает этот мост; его незакоммиченная реализация сохранена в основной рабочей копии. Пройдены Core 63, adapter 14, native build и layered GPU route, parent сравнил обе карты с прежними данными (146 численных полей, max delta 2e-7). Не завершены GUI/API wall edit/save/reopen/collision, адаптация verifier 33, итоговая упаковка и независимое ревью A1.2. Это не отмена A1 и не закрытие P1.
 
