@@ -1,10 +1,10 @@
 ---
 type: task
 area: Game
-status: In progress
+status: In review
 task_type: Feature
 sprint: Sprint 19
-review: Pending
+review: In review
 due:
 tags: [task, expedition, stride, authoring]
 ---
@@ -32,6 +32,8 @@ Origin: [[design-stride-editor-asset-workflow]]; [[expedition-prototype-traversa
 Follow-up: [[expedition-prototype-interactions]]; [[feat-expedition-character-sprites]]; [[expedition-vertical-slice]]; [[feat-stride-editor-mcp]].
 
 ## Resolution
+
+Три MCP команды переданы на независимое review: `15a75cc7af7f2722d559890225ac4433af247366`, Stride остаётся `c0b9065d6e902b45d4d3a5c656318c70df53a6f3`. [Отчёт](../../../docs/audits/2026-09-09-stride-native-asset-actions.md): rename/delete/prefab, 160 вызовов и 12 после fresh reopen, 19 tools, ноль captures; resource regression 101 вызов и session regression PASS. Причина NRE — некорректная тестовая связь наследования, исправлена native derived hierarchy без патча движка. Ожидаются независимое review и итоговый полный Release; import/reimport и runtime библиотека этим срезом не закрываются.
 
 Возобновлено по утверждённому плану завершения трёх MCP команд. Сохранённый черновик объявляет 19 tools, но прогон `build/mcp/asset-actions-20260909-152225-451/` остановился после 88 вызовов на первом допустимом prefab_place с NullReferenceException. Сначала получить точный стек и устранить этот отказ, затем завершить rename/delete/prefab qualification с Undo/Redo, ссылками, локальными overrides и fresh reopen по ID. Повторное открытие сравнивает смысл данных и согласованность native URL, учитывая package prefix. Управление через API без снимков/имитации ввода; независимое review и полный Release обязательны перед публикацией. Прежние принятые milestones остаются закрытыми.
 
