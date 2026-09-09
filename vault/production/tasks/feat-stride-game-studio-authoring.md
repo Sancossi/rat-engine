@@ -1,10 +1,10 @@
 ---
 type: task
 area: Game
-status: In review
+status: In progress
 task_type: Feature
 sprint: Sprint 19
-review: In review
+review: Needs fixes
 due:
 tags: [task, expedition, stride, authoring]
 ---
@@ -32,6 +32,8 @@ Origin: [[design-stride-editor-asset-workflow]]; [[expedition-prototype-traversa
 Follow-up: [[expedition-prototype-interactions]]; [[feat-expedition-character-sprites]]; [[expedition-vertical-slice]]; [[feat-stride-editor-mcp]].
 
 ## Resolution
+
+Независимое review первого API milestone (`dacdfcb`, Stride `8227ac7`) — Needs fixes, три P2: native selected/all batch reimport запускает assets параллельно с общим logger и конфликтует с новым exclusive lease; sound CompressionRatio/SampleRate пропускают невалидные значения; readiness failure происходит до try/finally нового runner и оставляет owned editor/fixtures. Исправить в текущем срезе, квалифицировать batch (включая ошибку отдельного asset), sound rejection без dirty/Undo и failed-start cleanup, затем повторить review и Release. Main не изменены; дальнейшие import/prefab/runtime срезы не подбираются до положительного review.
 
 Первый API milestone A1.3 передан на независимое review: проект `dacdfcb`, Stride `196759b` + `8227ac7` (новый точный pin). Четыре новые MCP команды (`asset_list`, `asset_inspect`, `asset_set_property`, `asset_set_reference`) прошли реальный SDK roundtrip: 76 вызовов / 16 tools / 8 ожидаемых отказов / 0 captures, `build/mcp/resource-api-20260909-134412-394/result.json`. Native reimport race, Save/Close, Undo/Redo/disk, ошибки/partial results и Destroy прошли; повторён прежний session regression. Исправлены только отсутствующая Core project edge в lock и native-generated запись проекта в historical Authoring.sln; NuGet content hashes/версии сохранены. Полный Release source `8227ac7` собран, exit 0, 6 warnings / 0 errors: `C:/5_gamedev/stride/logs/rat-foundation/20260909-134647-678/result.json`. Runtime библиотека и оставшиеся import/delete/prefab команды ещё не реализованы. Main пока сохраняют предыдущий принятый срез.
 
