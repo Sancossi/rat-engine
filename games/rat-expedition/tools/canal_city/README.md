@@ -117,3 +117,23 @@ evaluated геометрии створки вместе с фурнитурой
 хвост и посох исключены из этой размерной проверки.
 Рендеры необходимо дополнительно осматривать; автоматический `passed` не является
 художественным одобрением или свидетельством запуска игры.
+
+## Native preview Stride
+
+Первый набор также создан в `Rat.Expedition.Authoring/Assets/CanalCity/`:
+12 моделей, 12 prefab, skeleton/animation и общие native PBR материалы/текстуры.
+Для просмотра запускайте отдельный проект `Rat.Expedition.CanalCity.Preview`;
+основная игровая сцена этот набор пока не использует. Preview загружает compiled
+`CanalCity/PreviewScene` и делает ограниченный по кадрам GPU-прогон с PNG/JSON.
+
+`NativeImport` читает реальные Stride mesh/material/node names и SHA256 FBX.
+`native_assets.py` создаёт стабильные native IDs и относительные ссылки;
+`--replace-owned` предназначен только для явного обновления принадлежащих ему
+assets. Такой запуск сбрасывает preview qualification; после сборки снова
+нужен успешный runtime-прогон. `package_preview.py` добавляет существующие credits
+и dependency notices к self-contained publish и создаёт новый ZIP.
+
+Команды, параметры запуска и измеренные матрицы анимации приведены в
+[отчёте native preview](../../../../docs/audits/2026-09-09-canal-city-native-preview.md).
+Производственный `native_status` остаётся `pending_A1_qualification`: результаты
+preview не подтверждают MCP reimport, Game Studio Save/reopen или обычную игру.

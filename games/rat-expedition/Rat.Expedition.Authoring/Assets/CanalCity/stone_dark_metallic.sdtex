@@ -1,0 +1,9 @@
+!Texture
+Id: af145db4-c1de-56ff-b04f-90d1297f01bf
+SerializedVersion: {Stride: 2.0.0.0}
+Tags: []
+Source: !file ../../Resources/CanalCity/textures/stone_dark_metallic.png
+Type: !GrayscaleTextureType {}
+IsStreamable: false
+IsCompressed: false
+GenerateMipmaps: true

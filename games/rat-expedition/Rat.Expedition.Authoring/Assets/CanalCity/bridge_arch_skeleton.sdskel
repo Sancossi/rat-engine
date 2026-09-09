@@ -1,0 +1,18 @@
+!Skeleton
+Id: b2db25f5-9694-5c5f-9467-ab755fc91835
+SerializedVersion: {Stride: 2.0.0.0}
+Tags: []
+Source: !file ../../Resources/CanalCity/models/bridge_arch.fbx
+ScaleImport: 1
+PivotPosition: {X: 0, Y: 0, Z: 0}
+Nodes:
+    2b2768c9b3155ab394fc15615210f1e8: {Name: RootNode, Depth: 0, Preserve: true}
+    50680ed89e155ec199d2b00a5e69a72e: {Name: Root, Depth: 1, Preserve: true}
+    7d6bfdc52d285ec281bd739218a143b2: {Name: bridge_arch_abutments, Depth: 2, Preserve: true}
+    f1e3c41d0979557ea40e614f8271cb50: {Name: bridge_arch_arch, Depth: 2, Preserve: true}
+    b6662063d4965692ad214c32ecd49d39: {Name: bridge_arch_banner, Depth: 2, Preserve: true}
+    5b069a988d555814b75040979600aa17: {Name: bridge_arch_deck, Depth: 2, Preserve: true}
+    ab7c3290a1fb50d6908ce0fa37e20c18: {Name: bridge_arch_ironwork, Depth: 2, Preserve: true}
+    5f2138b2e13755bf96e9aed3d78a3594: {Name: bridge_arch_lamp, Depth: 2, Preserve: true}
+    81dab8e3dd4359b0985f092528b06228: {Name: bridge_arch_posts, Depth: 2, Preserve: true}
+    427db90f5882521482517d968795d773: {Name: bridge_arch_structure, Depth: 2, Preserve: true}

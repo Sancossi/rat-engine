@@ -1,0 +1,9 @@
+!Texture
+Id: 88a2fe42-4c66-5766-9f17-bf7e7330bd63
+SerializedVersion: {Stride: 2.0.0.0}
+Tags: []
+Source: !file ../../Resources/CanalCity/textures/amber_emission.png
+Type: !ColorTextureType {}
+IsStreamable: false
+IsCompressed: false
+GenerateMipmaps: true

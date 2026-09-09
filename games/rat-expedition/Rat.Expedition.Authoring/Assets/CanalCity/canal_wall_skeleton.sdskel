@@ -1,0 +1,15 @@
+!Skeleton
+Id: 218d1692-5f65-5cc6-9e87-7282543eb07a
+SerializedVersion: {Stride: 2.0.0.0}
+Tags: []
+Source: !file ../../Resources/CanalCity/models/canal_wall.fbx
+ScaleImport: 1
+PivotPosition: {X: 0, Y: 0, Z: 0}
+Nodes:
+    2c8997a6e2d05494896bf469dab4dce6: {Name: RootNode, Depth: 0, Preserve: true}
+    8dbc9d15b86d57039c00c4784bb46031: {Name: Root, Depth: 1, Preserve: true}
+    804eea21c3d75b71aebdf0465268100c: {Name: canal_wall_deck, Depth: 2, Preserve: true}
+    ae9b902e7b205af0adcaa92fe12caee5: {Name: canal_wall_ironwork, Depth: 2, Preserve: true}
+    e08daacc424d581b8bdbadad46b97d37: {Name: canal_wall_lamp, Depth: 2, Preserve: true}
+    deb6e76a62a2553fb8b79d695bb02dc1: {Name: canal_wall_posts, Depth: 2, Preserve: true}
+    f2d07332d5fd51eda5d238f6ef68b732: {Name: canal_wall_structure, Depth: 2, Preserve: true}

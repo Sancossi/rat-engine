@@ -1,0 +1,9 @@
+!Texture
+Id: a2c02d3a-5d74-5094-a9d4-59ccfacf0406
+SerializedVersion: {Stride: 2.0.0.0}
+Tags: []
+Source: !file ../../Resources/CanalCity/textures/burgundy_roughness.png
+Type: !GrayscaleTextureType {}
+IsStreamable: false
+IsCompressed: false
+GenerateMipmaps: true

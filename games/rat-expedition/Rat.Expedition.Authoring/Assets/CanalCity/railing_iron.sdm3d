@@ -1,0 +1,19 @@
+!Model
+Id: e9f865f3-44d6-5d5d-971f-070d54429ddb
+SerializedVersion: {Stride: 2.0.0.0}
+Tags: []
+Source: !file ../../Resources/CanalCity/models/railing_iron.fbx
+ScaleImport: 1
+PivotPosition: {X: 0, Y: 0, Z: 0}
+MergeMeshes: false
+DeduplicateMaterials: true
+Skeleton: 0446d4ae-94df-58d7-9ea9-d3d2f8f8b88b:CanalCity/railing_iron_skeleton
+Materials:
+    5f517c26b84d5e22ae515558b67b2007:
+        Name: CC_brass
+        MaterialInstance:
+            Material: 044d9c32-b62a-55a1-bc9d-e462f7eb449d:CanalCity/brass
+    8710ab2eb9d150cba72e07eb3926af37:
+        Name: CC_iron
+        MaterialInstance:
+            Material: cdd4b95a-4244-5c9c-9fd6-2b076cdee59f:CanalCity/iron

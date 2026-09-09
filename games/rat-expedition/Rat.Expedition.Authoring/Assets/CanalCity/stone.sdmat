@@ -1,0 +1,24 @@
+!MaterialAsset
+Id: 9f251351-c844-541a-a7a1-43bf563ef2c7
+SerializedVersion: {Stride: 2.0.0.0}
+Tags: []
+Attributes:
+    Surface: !MaterialNormalMapFeature
+        NormalMap: !ComputeTextureColor
+            Texture: 29a7dcd1-4ed9-575c-8051-13a4d4a1c2d3:CanalCity/stone_normal
+    MicroSurface: !MaterialGlossinessMapFeature
+        GlossinessMap: !ComputeTextureScalar
+            Texture: 8c62f37e-00d0-5a61-aa90-1b294aeced54:CanalCity/stone_roughness
+        Invert: true
+    Diffuse: !MaterialDiffuseMapFeature
+        DiffuseMap: !ComputeTextureColor
+            Texture: 43bf09e4-97ea-54ac-8fcb-d4bfb652d653:CanalCity/stone_basecolor
+    Specular: !MaterialMetalnessMapFeature
+        MetalnessMap: !ComputeTextureScalar
+            Texture: 9abea2dd-88dd-556b-adf9-4054b7ff4f93:CanalCity/stone_metallic
+    DiffuseModel: !MaterialDiffuseLambertModelFeature {}
+    SpecularModel: !MaterialSpecularMicrofacetModelFeature
+        Fresnel: !MaterialSpecularMicrofacetFresnelSchlick {}
+        Visibility: !MaterialSpecularMicrofacetVisibilitySmithSchlickGGX {}
+        NormalDistribution: !MaterialSpecularMicrofacetNormalDistributionGGX {}
+Layers: {}

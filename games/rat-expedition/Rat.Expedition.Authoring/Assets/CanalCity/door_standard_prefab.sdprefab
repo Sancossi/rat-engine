@@ -1,0 +1,27 @@
+!PrefabAsset
+Id: 58128478-2100-52fb-a2be-7400f72e48b4
+SerializedVersion: {Stride: 3.1.0.1}
+Tags: []
+Hierarchy:
+    RootParts:
+        - ref!! 67e0b42c-ef6a-5639-9c63-cacb9b0e8872
+    Parts:
+        -   Entity:
+                Id: 67e0b42c-ef6a-5639-9c63-cacb9b0e8872
+                Name: door_standard
+                Components:
+                    3828ee6a7b8a512c96f6690d4668c62d: !TransformComponent
+                        Id: 382c6066-36b3-5944-b5bc-21a9810a4685
+                        Position: {X: 0, Y: 0, Z: 0}
+                        Rotation: {X: 0, Y: 0, Z: 0, W: 1}
+                        Scale: {X: 1, Y: 1, Z: 1}
+                        Children: {}
+                    643c11194cd354c687155ccf6c1f21f8: !ModelComponent
+                        Id: 845e7e24-2a7b-5eb7-aaaf-775aaaf8eadb
+                        Model: 9b09e4d0-4c3c-5e13-8901-335306d3cc20:CanalCity/door_standard
+                        Materials: {}
+                    0bcd49ac073255fdb5f4b7d89336f740: !AnimationComponent
+                        Id: fcefb05a-a621-5612-a6f8-4e62c65c0b15
+                        Animations:
+                            4716e7f18e3e5b7aba7bd7f8f89bcf6a~open: 767d0213-346e-5bfe-a394-0e7dcd593851:CanalCity/door_open
+                            95ca908f89755aa7ad4ebd7dffb622c1~close: c8bc0c12-9b17-58fd-aa69-5781a47fc78e:CanalCity/door_close

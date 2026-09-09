@@ -317,7 +317,13 @@
         "editable_mesh_objects": 520,
         "base_triangles": 18656
       },
-      "walking_surface_height_m": 3.1
+      "walking_surface_height_m": 3.1,
+      "native_preview_status": "validated_isolated_native_preview",
+      "native_preview": {
+        "model": "../../Assets/CanalCity/bridge_arch.sdm3d",
+        "skeleton": "../../Assets/CanalCity/bridge_arch_skeleton.sdskel",
+        "prefab": "../../Assets/CanalCity/bridge_arch_prefab.sdprefab"
+      }
     },
     {
       "id": "bridge_side",
@@ -392,7 +398,13 @@
         "base_triangles": 9276
       },
       "walking_surface_height_m": 3.75,
-      "dimension_interpretation": "Provisional: main overall H4.5 includes .75m lamps. Structural platform H3.75. Front rings/anchors project .23m beyond reference structural depth4."
+      "dimension_interpretation": "Provisional: main overall H4.5 includes .75m lamps. Structural platform H3.75. Front rings/anchors project .23m beyond reference structural depth4.",
+      "native_preview_status": "validated_isolated_native_preview",
+      "native_preview": {
+        "model": "../../Assets/CanalCity/canal_wall.sdm3d",
+        "skeleton": "../../Assets/CanalCity/canal_wall_skeleton.sdskel",
+        "prefab": "../../Assets/CanalCity/canal_wall_prefab.sdprefab"
+      }
     },
     {
       "id": "canal_corner",
@@ -596,6 +608,12 @@
         ],
         "editable_mesh_objects": 228,
         "base_triangles": 3000
+      },
+      "native_preview_status": "validated_isolated_native_preview",
+      "native_preview": {
+        "model": "../../Assets/CanalCity/stairs_medium.sdm3d",
+        "skeleton": "../../Assets/CanalCity/stairs_medium_skeleton.sdskel",
+        "prefab": "../../Assets/CanalCity/stairs_medium_prefab.sdprefab"
       }
     },
     {
@@ -856,6 +874,12 @@
         ],
         "editable_mesh_objects": 85,
         "base_triangles": 2296
+      },
+      "native_preview_status": "validated_isolated_native_preview",
+      "native_preview": {
+        "model": "../../Assets/CanalCity/door_standard.sdm3d",
+        "skeleton": "../../Assets/CanalCity/door_standard_skeleton.sdskel",
+        "prefab": "../../Assets/CanalCity/door_standard_prefab.sdprefab"
       }
     },
     {
@@ -1295,7 +1319,13 @@
         0.46320000290870667,
         0.47999999672174454,
         1.2000000476837158
-      ]
+      ],
+      "native_preview_status": "validated_isolated_native_preview",
+      "native_preview": {
+        "model": "../../Assets/CanalCity/scale_rat_small.sdm3d",
+        "skeleton": "../../Assets/CanalCity/scale_rat_small_skeleton.sdskel",
+        "prefab": "../../Assets/CanalCity/scale_rat_small_prefab.sdprefab"
+      }
     },
     {
       "id": "scale_rat_medium",
@@ -1367,7 +1397,13 @@
         0.6948000192642212,
         0.7199999839067459,
         1.7999999523162842
-      ]
+      ],
+      "native_preview_status": "validated_isolated_native_preview",
+      "native_preview": {
+        "model": "../../Assets/CanalCity/scale_rat_medium.sdm3d",
+        "skeleton": "../../Assets/CanalCity/scale_rat_medium_skeleton.sdskel",
+        "prefab": "../../Assets/CanalCity/scale_rat_medium_prefab.sdprefab"
+      }
     },
     {
       "id": "scale_rat_high",
@@ -1440,7 +1476,13 @@
         1.5440000295639038,
         1.600000023841858,
         4.0
-      ]
+      ],
+      "native_preview_status": "validated_isolated_native_preview",
+      "native_preview": {
+        "model": "../../Assets/CanalCity/scale_rat_high.sdm3d",
+        "skeleton": "../../Assets/CanalCity/scale_rat_high_skeleton.sdskel",
+        "prefab": "../../Assets/CanalCity/scale_rat_high_prefab.sdprefab"
+      }
     },
     {
       "id": "ladder_wood",
@@ -1760,7 +1802,13 @@
         "editable_mesh_objects": 35,
         "base_triangles": 2304
       },
-      "handrail_height_m": 1
+      "handrail_height_m": 1,
+      "native_preview_status": "validated_isolated_native_preview",
+      "native_preview": {
+        "model": "../../Assets/CanalCity/railing_iron.sdm3d",
+        "skeleton": "../../Assets/CanalCity/railing_iron_skeleton.sdskel",
+        "prefab": "../../Assets/CanalCity/railing_iron_prefab.sdprefab"
+      }
     },
     {
       "id": "post_lantern",
@@ -2774,6 +2822,12 @@
         ],
         "editable_mesh_objects": 12,
         "base_triangles": 224
+      },
+      "native_preview_status": "validated_isolated_native_preview",
+      "native_preview": {
+        "model": "../../Assets/CanalCity/lantern_amber.sdm3d",
+        "skeleton": "../../Assets/CanalCity/lantern_amber_skeleton.sdskel",
+        "prefab": "../../Assets/CanalCity/lantern_amber_prefab.sdprefab"
       }
     },
     {
@@ -3971,7 +4025,13 @@
         1.0808000564575195,
         1.1199999898672104,
         2.799999952316284
-      ]
+      ],
+      "native_preview_status": "validated_isolated_native_preview",
+      "native_preview": {
+        "model": "../../Assets/CanalCity/scale_rat_adult.sdm3d",
+        "skeleton": "../../Assets/CanalCity/scale_rat_adult_skeleton.sdskel",
+        "prefab": "../../Assets/CanalCity/scale_rat_adult_prefab.sdprefab"
+      }
     },
     {
       "id": "railing_high",
@@ -4016,7 +4076,13 @@
         "editable_mesh_objects": 43,
         "base_triangles": 2640
       },
-      "handrail_height_m": 1.5
+      "handrail_height_m": 1.5,
+      "native_preview_status": "validated_isolated_native_preview",
+      "native_preview": {
+        "model": "../../Assets/CanalCity/railing_high.sdm3d",
+        "skeleton": "../../Assets/CanalCity/railing_high_skeleton.sdskel",
+        "prefab": "../../Assets/CanalCity/railing_high_prefab.sdprefab"
+      }
     },
     {
       "id": "stairs_paired",
@@ -4076,6 +4142,12 @@
         "total_run_m": 4.48,
         "overlay_total_width_m": 0.8,
         "overlay_useful_width_m": 0.6
+      },
+      "native_preview_status": "validated_isolated_native_preview",
+      "native_preview": {
+        "model": "../../Assets/CanalCity/stairs_paired.sdm3d",
+        "skeleton": "../../Assets/CanalCity/stairs_paired_skeleton.sdskel",
+        "prefab": "../../Assets/CanalCity/stairs_paired_prefab.sdprefab"
       }
     },
     {
@@ -4164,5 +4236,6 @@
       "planned_clips": []
     }
   ],
-  "source_validation_report": "validation-report.json"
+  "source_validation_report": "validation-report.json",
+  "native_preview_validation_report": "native-preview-validation.json"
 }

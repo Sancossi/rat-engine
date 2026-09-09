@@ -1,0 +1,22 @@
+!PrefabAsset
+Id: d7746b67-0553-5a5e-bdde-60a5343adbc3
+SerializedVersion: {Stride: 3.1.0.1}
+Tags: []
+Hierarchy:
+    RootParts:
+        - ref!! 54043816-13b9-5d88-a04e-e0551ca95eca
+    Parts:
+        -   Entity:
+                Id: 54043816-13b9-5d88-a04e-e0551ca95eca
+                Name: railing_high
+                Components:
+                    9986301a3bc853b093529394c8533318: !TransformComponent
+                        Id: 56002775-b1aa-548e-9c85-9a544208fe00
+                        Position: {X: 0, Y: 0, Z: 0}
+                        Rotation: {X: 0, Y: 0, Z: 0, W: 1}
+                        Scale: {X: 1, Y: 1, Z: 1}
+                        Children: {}
+                    b1b8a066ac2d5955b22a698514a0be4d: !ModelComponent
+                        Id: a4bb62fc-c96f-5957-938d-3abd343a9dbd
+                        Model: 8e3751fb-f9bc-570a-828a-944b4a797690:CanalCity/railing_high
+                        Materials: {}

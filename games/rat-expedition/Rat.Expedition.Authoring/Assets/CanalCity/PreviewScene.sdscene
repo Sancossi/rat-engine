@@ -1,0 +1,278 @@
+!SceneAsset
+Id: 32e0a064-11e8-5608-863e-18deeb1cd12c
+SerializedVersion: {Stride: 3.1.0.1}
+Tags: []
+ChildrenIds: []
+Offset: {X: 0, Y: 0, Z: 0}
+Hierarchy:
+    RootParts:
+        - ref!! 11d71fdc-e451-547f-8597-c9e4b7696ec1
+        - ref!! a44d45d9-7155-5c76-9fc4-1c233a6e598d
+        - ref!! 67e0b42c-ef6a-5639-9c63-cacb9b0e8872
+        - ref!! 86e6b82a-576e-5d11-a7d4-b962c296237d
+        - ref!! 54043816-13b9-5d88-a04e-e0551ca95eca
+        - ref!! 72127128-a7ef-55a7-a5e8-1cb9a4f02807
+        - ref!! 08c03f01-38e2-5573-a063-cf3a64d0ec3c
+        - ref!! ae7790ae-3e09-50b8-9df9-96ed6f1ad766
+        - ref!! 59e3d7be-164c-5c10-aa5e-0533eaaefd09
+        - ref!! b1fe3078-7bbd-5df1-9c5c-6ba494a08050
+        - ref!! 3730c328-9986-504d-bcd2-66d62cdc2b34
+        - ref!! 61fd743c-74b0-562e-865d-e73b4f30d231
+        - ref!! 1877434f-0d87-519d-8631-896b8f56b00e
+        - ref!! 6f2d01b6-d468-58ab-91d0-1d36ab714edd
+        - ref!! 9b5dbb6d-913c-5ce9-90cb-33ec8af3f2ad
+        - ref!! 633da72f-1459-5bc0-aba5-9f71eace8b55
+        - ref!! 0cf75c76-4d96-52a4-b705-2448ee5f2d67
+    Parts:
+        -   Entity:
+                Id: 11d71fdc-e451-547f-8597-c9e4b7696ec1
+                Name: bridge_arch
+                Components:
+                    7598e53b18bb52aa8e04590246bc24fc: !TransformComponent
+                        Id: 7ddb0917-72d1-53fc-962d-c9110616049f
+                        Position: {X: 3, Y: 0, Z: -6}
+                        Rotation: {X: 0, Y: 0, Z: 0, W: 1}
+                        Scale: {X: 1, Y: 1, Z: 1}
+                        Children: {}
+                    8ed5018d87075a5f92b670223d954d26: !ModelComponent
+                        Id: cd9874d2-1320-59dc-a2cd-44dc8a0f2388
+                        Model: 7453c19f-4830-5209-a02e-9828735efc32:CanalCity/bridge_arch
+                        Materials: {}
+        -   Entity:
+                Id: a44d45d9-7155-5c76-9fc4-1c233a6e598d
+                Name: canal_wall
+                Components:
+                    fe9d32dc7ac0552b80a20d1bc883d38b: !TransformComponent
+                        Id: 16c427ee-858c-5e3c-ac4d-32f09c1b6c49
+                        Position: {X: -7, Y: 0, Z: -6}
+                        Rotation: {X: 0, Y: 0, Z: 0, W: 1}
+                        Scale: {X: 1, Y: 1, Z: 1}
+                        Children: {}
+                    7cdc325b9be8574ca40e9d90cc1181f3: !ModelComponent
+                        Id: d1968a28-1bba-54d6-9dc0-72270ff4d5f7
+                        Model: 092d2bf8-c678-52e4-aaca-b475fa1f4787:CanalCity/canal_wall
+                        Materials: {}
+        -   Entity:
+                Id: 67e0b42c-ef6a-5639-9c63-cacb9b0e8872
+                Name: door_standard
+                Components:
+                    3828ee6a7b8a512c96f6690d4668c62d: !TransformComponent
+                        Id: 382c6066-36b3-5944-b5bc-21a9810a4685
+                        Position: {X: 1, Y: 0, Z: 3.5}
+                        Rotation: {X: 0, Y: 0, Z: 0, W: 1}
+                        Scale: {X: 1, Y: 1, Z: 1}
+                        Children: {}
+                    643c11194cd354c687155ccf6c1f21f8: !ModelComponent
+                        Id: 845e7e24-2a7b-5eb7-aaaf-775aaaf8eadb
+                        Model: 9b09e4d0-4c3c-5e13-8901-335306d3cc20:CanalCity/door_standard
+                        Materials: {}
+                    0bcd49ac073255fdb5f4b7d89336f740: !AnimationComponent
+                        Id: fcefb05a-a621-5612-a6f8-4e62c65c0b15
+                        Animations:
+                            4716e7f18e3e5b7aba7bd7f8f89bcf6a~open: 767d0213-346e-5bfe-a394-0e7dcd593851:CanalCity/door_open
+                            95ca908f89755aa7ad4ebd7dffb622c1~close: c8bc0c12-9b17-58fd-aa69-5781a47fc78e:CanalCity/door_close
+        -   Entity:
+                Id: 86e6b82a-576e-5d11-a7d4-b962c296237d
+                Name: lantern_amber
+                Components:
+                    0302c7ba8fed57b299030d745eff9a44: !TransformComponent
+                        Id: 246debad-b928-52d0-8156-0b96a2ff652d
+                        Position: {X: 11, Y: 0, Z: 3.5}
+                        Rotation: {X: 0, Y: 0, Z: 0, W: 1}
+                        Scale: {X: 1, Y: 1, Z: 1}
+                        Children: {}
+                    e93c5356c131507789233eea5b41624e: !ModelComponent
+                        Id: 2d57c8f4-cea5-56fc-8e8b-534caf563e6e
+                        Model: 03021514-18ab-5b03-a6b3-80ad2201b372:CanalCity/lantern_amber
+                        Materials: {}
+        -   Entity:
+                Id: 54043816-13b9-5d88-a04e-e0551ca95eca
+                Name: railing_high
+                Components:
+                    9986301a3bc853b093529394c8533318: !TransformComponent
+                        Id: 56002775-b1aa-548e-9c85-9a544208fe00
+                        Position: {X: 8, Y: 0, Z: 3.5}
+                        Rotation: {X: 0, Y: 0, Z: 0, W: 1}
+                        Scale: {X: 1, Y: 1, Z: 1}
+                        Children: {}
+                    b1b8a066ac2d5955b22a698514a0be4d: !ModelComponent
+                        Id: a4bb62fc-c96f-5957-938d-3abd343a9dbd
+                        Model: 8e3751fb-f9bc-570a-828a-944b4a797690:CanalCity/railing_high
+                        Materials: {}
+        -   Entity:
+                Id: 72127128-a7ef-55a7-a5e8-1cb9a4f02807
+                Name: railing_iron
+                Components:
+                    b6b04b2044cc58749d517ff405dd6ad0: !TransformComponent
+                        Id: bfe11bed-9373-5f06-870e-4c9a403c5da8
+                        Position: {X: 5, Y: 0, Z: 3.5}
+                        Rotation: {X: 0, Y: 0, Z: 0, W: 1}
+                        Scale: {X: 1, Y: 1, Z: 1}
+                        Children: {}
+                    e74e5be0e953522998e669e7e13bb49d: !ModelComponent
+                        Id: cef25698-18b8-5b33-823b-37be029be7a6
+                        Model: e9f865f3-44d6-5d5d-971f-070d54429ddb:CanalCity/railing_iron
+                        Materials: {}
+        -   Entity:
+                Id: 08c03f01-38e2-5573-a063-cf3a64d0ec3c
+                Name: scale_rat_adult
+                Components:
+                    e73c6f1f1f6752639cc6e5fdcba4adaf: !TransformComponent
+                        Id: 0894c5cb-231d-563e-97e6-3353ed6548a0
+                        Position: {X: 7, Y: 0, Z: 8}
+                        Rotation: {X: 0, Y: 0, Z: 0, W: 1}
+                        Scale: {X: 1, Y: 1, Z: 1}
+                        Children: {}
+                    a730f8d8c8015fbf89bae6cf546dce79: !ModelComponent
+                        Id: 4bd9bf17-fb81-5e50-91cd-38915c63e838
+                        Model: a30f543c-60fb-5b1a-87b8-51b81a8d8d9e:CanalCity/scale_rat_adult
+                        Materials: {}
+        -   Entity:
+                Id: ae7790ae-3e09-50b8-9df9-96ed6f1ad766
+                Name: scale_rat_high
+                Components:
+                    80d582a9b5f85b02bcf3e8fad4dab591: !TransformComponent
+                        Id: 05ce3d1a-7243-5543-bf08-e9d0d18b8706
+                        Position: {X: 10, Y: 0, Z: 8}
+                        Rotation: {X: 0, Y: 0, Z: 0, W: 1}
+                        Scale: {X: 1, Y: 1, Z: 1}
+                        Children: {}
+                    eda56f6674f3573388259df68afab7da: !ModelComponent
+                        Id: e78463df-b277-581c-8710-0b83c500607d
+                        Model: 639579c9-1b93-5bef-b2e2-24901d59ec90:CanalCity/scale_rat_high
+                        Materials: {}
+        -   Entity:
+                Id: 59e3d7be-164c-5c10-aa5e-0533eaaefd09
+                Name: scale_rat_medium
+                Components:
+                    0d1df4c6414b5a139b3fc69dbf0078de: !TransformComponent
+                        Id: 1092aaee-bc8e-5cc1-bceb-46d036942f52
+                        Position: {X: 5, Y: 0, Z: 8}
+                        Rotation: {X: 0, Y: 0, Z: 0, W: 1}
+                        Scale: {X: 1, Y: 1, Z: 1}
+                        Children: {}
+                    ace45546bd075c7b8a09088459024c6c: !ModelComponent
+                        Id: 58add1d8-0f11-5621-9ab6-672c18d4a352
+                        Model: 4fd98ccc-7899-5219-ad1f-a17b1d240473:CanalCity/scale_rat_medium
+                        Materials: {}
+        -   Entity:
+                Id: b1fe3078-7bbd-5df1-9c5c-6ba494a08050
+                Name: scale_rat_small
+                Components:
+                    f915ffc79eb25ef5915703f8f6d66c3c: !TransformComponent
+                        Id: 447fbd57-8fd1-575c-b483-9834e6df30ec
+                        Position: {X: 3, Y: 0, Z: 8}
+                        Rotation: {X: 0, Y: 0, Z: 0, W: 1}
+                        Scale: {X: 1, Y: 1, Z: 1}
+                        Children: {}
+                    c78765174d2c5f0aaba4e844972ac968: !ModelComponent
+                        Id: 2e97d4aa-38e0-500d-bc5b-a5908ffc6ff6
+                        Model: 7448773b-726b-5826-953e-dff37bbbec91:CanalCity/scale_rat_small
+                        Materials: {}
+        -   Entity:
+                Id: 3730c328-9986-504d-bcd2-66d62cdc2b34
+                Name: stairs_medium
+                Components:
+                    22200fa7ff5959e987da4b3b9adb1f94: !TransformComponent
+                        Id: a9db50b9-383c-5bb4-bf35-1e5a3ab7fa03
+                        Position: {X: -8, Y: 0, Z: 5}
+                        Rotation: {X: 0, Y: 0, Z: 0, W: 1}
+                        Scale: {X: 1, Y: 1, Z: 1}
+                        Children: {}
+                    fa3cb850d04b54b0b49a0a52c76198aa: !ModelComponent
+                        Id: db3a40aa-ac19-558d-ab85-3d01f8bbc4b8
+                        Model: 2345f4da-9ab5-517c-a4be-676148662b8e:CanalCity/stairs_medium
+                        Materials: {}
+        -   Entity:
+                Id: 61fd743c-74b0-562e-865d-e73b4f30d231
+                Name: stairs_paired
+                Components:
+                    35f28c99b68953239a242b2becea0f4c: !TransformComponent
+                        Id: 30f1a1ef-fc69-5808-ba1f-34178c04be31
+                        Position: {X: -4, Y: 0, Z: 5}
+                        Rotation: {X: 0, Y: 0, Z: 0, W: 1}
+                        Scale: {X: 1, Y: 1, Z: 1}
+                        Children: {}
+                    dbb3711be6f250389743e536018f251d: !ModelComponent
+                        Id: 8b473fdc-6f52-5a37-8fac-2ee9934d7a6b
+                        Model: fecdea16-c6d8-58b7-9aea-cefcb892b2fb:CanalCity/stairs_paired
+                        Materials: {}
+        -   Entity:
+                Id: 1877434f-0d87-519d-8631-896b8f56b00e
+                Name: Camera
+                Components:
+                    031f39c985d850b4a1de9ae6b0fe8e79: !TransformComponent
+                        Id: a87de740-b9e2-5694-9d4d-778dca595c0c
+                        Position: {X: -21, Y: 18, Z: 30}
+                        Rotation: {X: -0.19504912954450568, Y: -0.29428520079239345, Z: -0.06148382173434279, W: 0.9335800968976635}
+                        Scale: {X: 1, Y: 1, Z: 1}
+                        Children: {}
+                    32478a193e2450a785e651c5c6bcb145: !CameraComponent
+                        Id: 6129369c-c0d8-522d-82c9-1b928fec6690
+                        Projection: Perspective
+                        VerticalFieldOfView: 45
+                        NearClipPlane: 0.1
+                        FarClipPlane: 200
+                        Slot: bbfef2cb-8c63-4cab-9caf-6ae48f44a8ba
+        -   Entity:
+                Id: 6f2d01b6-d468-58ab-91d0-1d36ab714edd
+                Name: Ambient
+                Components:
+                    bf1bf4a245515e2cbfa5fca7560d4e52: !TransformComponent
+                        Id: cb6ef71e-813b-506b-a868-0eff78eb3b0e
+                        Position: {X: 0, Y: 8, Z: 0}
+                        Rotation: {X: 0, Y: 0, Z: 0, W: 1}
+                        Scale: {X: 1, Y: 1, Z: 1}
+                        Children: {}
+                    5f036778ea9a58b39a606423146eb04f: !LightComponent
+                        Id: 2461250a-c21f-5db9-88cc-c13581ce8af2
+                        Intensity: 0.8
+                        Type: !LightAmbient
+                            Color: !ColorRgbProvider
+                                Value: {R: 0.6, G: 0.68, B: 0.8}
+        -   Entity:
+                Id: 9b5dbb6d-913c-5ce9-90cb-33ec8af3f2ad
+                Name: Key
+                Components:
+                    f057729073cc58f6bcc4a09ea0f5de34: !TransformComponent
+                        Id: fcdc33fa-55ef-5a4d-b0dd-4c4f3a8dcdf5
+                        Position: {X: 0, Y: 8, Z: 0}
+                        Rotation: {X: 0, Y: 0, Z: 0, W: 1}
+                        Scale: {X: 1, Y: 1, Z: 1}
+                        Children: {}
+                    2213d32edf58591283ec54415dc67d04: !LightComponent
+                        Id: 7f2ea7b0-b9a8-5185-8ecb-938a793805e9
+                        Intensity: 3
+                        Type: !LightDirectional
+                            Color: !ColorRgbProvider
+                                Value: {R: 1, G: 0.85, B: 0.66}
+        -   Entity:
+                Id: 633da72f-1459-5bc0-aba5-9f71eace8b55
+                Name: Fill
+                Components:
+                    6124f5e560e65aa6a834247e0c1f2f81: !TransformComponent
+                        Id: 3b8d8926-2e7f-5d0e-a83d-f11659050279
+                        Position: {X: 0, Y: 8, Z: 0}
+                        Rotation: {X: 0, Y: 0, Z: 0, W: 1}
+                        Scale: {X: 1, Y: 1, Z: 1}
+                        Children: {}
+                    401c08b0912c563090c96e58a72252c0: !LightComponent
+                        Id: 2f6238a1-c710-5d44-818a-c1304a06b944
+                        Intensity: 1
+                        Type: !LightDirectional
+                            Color: !ColorRgbProvider
+                                Value: {R: 0.5, G: 0.65, B: 1}
+        -   Entity:
+                Id: 0cf75c76-4d96-52a4-b705-2448ee5f2d67
+                Name: Ground
+                Components:
+                    8947e27eb61c5e24b7a28c313c5cfdbf: !TransformComponent
+                        Id: 61aa37c6-c18a-57f3-ab53-153e30a5806e
+                        Position: {X: 0, Y: -0.11, Z: 0}
+                        Rotation: {X: 0, Y: 0, Z: 0, W: 1}
+                        Scale: {X: 1, Y: 1, Z: 1}
+                        Children: {}
+                    20e39bf1130559db9689797a36a991df: !ModelComponent
+                        Id: 1b7d6350-fdf1-52b9-9ac6-4bc41585defb
+                        Model: 5f049f01-784e-59fb-bf9f-400fe9e78b60:CanalCity/preview_ground
+                        Materials: {}

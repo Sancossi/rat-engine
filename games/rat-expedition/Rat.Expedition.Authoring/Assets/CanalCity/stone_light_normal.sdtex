@@ -1,0 +1,9 @@
+!Texture
+Id: a4b0329a-2b2a-5bab-9fb0-d7b10522e383
+SerializedVersion: {Stride: 2.0.0.0}
+Tags: []
+Source: !file ../../Resources/CanalCity/textures/stone_light_normal.png
+Type: !NormalMapTextureType {}
+IsStreamable: false
+IsCompressed: false
+GenerateMipmaps: true

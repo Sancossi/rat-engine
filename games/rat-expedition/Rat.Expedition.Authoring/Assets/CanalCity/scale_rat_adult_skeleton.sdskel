@@ -1,0 +1,13 @@
+!Skeleton
+Id: d37c2ceb-269a-547a-b643-f00ce36004c8
+SerializedVersion: {Stride: 2.0.0.0}
+Tags: []
+Source: !file ../../Resources/CanalCity/models/scale_rat_adult.fbx
+ScaleImport: 1
+PivotPosition: {X: 0, Y: 0, Z: 0}
+Nodes:
+    63ff1d9628635af686d415ca804261bf: {Name: RootNode, Depth: 0, Preserve: true}
+    4e6eeca3c63653b5a84b4027fa96f45c: {Name: Root, Depth: 1, Preserve: true}
+    38fbabeb6ead598daf33e0464b7d98b5: {Name: scale_rat_adult_accessories, Depth: 2, Preserve: true}
+    11ffe507f4ee5c408c7cb5504199bb2e: {Name: scale_rat_adult_body, Depth: 2, Preserve: true}
+    935c3afa101f51c0bd4e4b89e3d664a0: {Name: scale_rat_adult_robe, Depth: 2, Preserve: true}

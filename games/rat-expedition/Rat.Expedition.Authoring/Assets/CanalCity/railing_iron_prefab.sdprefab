@@ -1,0 +1,22 @@
+!PrefabAsset
+Id: b10bbbcc-e623-5e03-9e43-e022df35901d
+SerializedVersion: {Stride: 3.1.0.1}
+Tags: []
+Hierarchy:
+    RootParts:
+        - ref!! 72127128-a7ef-55a7-a5e8-1cb9a4f02807
+    Parts:
+        -   Entity:
+                Id: 72127128-a7ef-55a7-a5e8-1cb9a4f02807
+                Name: railing_iron
+                Components:
+                    b6b04b2044cc58749d517ff405dd6ad0: !TransformComponent
+                        Id: bfe11bed-9373-5f06-870e-4c9a403c5da8
+                        Position: {X: 0, Y: 0, Z: 0}
+                        Rotation: {X: 0, Y: 0, Z: 0, W: 1}
+                        Scale: {X: 1, Y: 1, Z: 1}
+                        Children: {}
+                    e74e5be0e953522998e669e7e13bb49d: !ModelComponent
+                        Id: cef25698-18b8-5b33-823b-37be029be7a6
+                        Model: e9f865f3-44d6-5d5d-971f-070d54429ddb:CanalCity/railing_iron
+                        Materials: {}

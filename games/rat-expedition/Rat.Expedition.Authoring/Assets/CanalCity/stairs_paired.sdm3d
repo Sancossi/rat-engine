@@ -1,0 +1,35 @@
+!Model
+Id: fecdea16-c6d8-58b7-9aea-cefcb892b2fb
+SerializedVersion: {Stride: 2.0.0.0}
+Tags: []
+Source: !file ../../Resources/CanalCity/models/stairs_paired.fbx
+ScaleImport: 1
+PivotPosition: {X: 0, Y: 0, Z: 0}
+MergeMeshes: false
+DeduplicateMaterials: true
+Skeleton: 47046795-f211-5b91-80d2-ec35c2b31817:CanalCity/stairs_paired_skeleton
+Materials:
+    715d94baaf13541b9afcf26f3f4b62b9:
+        Name: CC_brass
+        MaterialInstance:
+            Material: 044d9c32-b62a-55a1-bc9d-e462f7eb449d:CanalCity/brass
+    7a9e8ce9845258faa1882e86fe84e156:
+        Name: CC_stone_dark
+        MaterialInstance:
+            Material: eca81495-50ad-5979-a404-a4421a8ab9ea:CanalCity/stone_dark
+    63668b5e54935f6b8148d27418738547:
+        Name: CC_oak
+        MaterialInstance:
+            Material: 9bb88c92-c6d3-5212-a751-867db9ff3086:CanalCity/oak
+    8a073be4745b5ac5ac99a8130fd88092:
+        Name: CC_stone_light
+        MaterialInstance:
+            Material: f49abda4-b809-5777-bc4c-9a42640c4c4f:CanalCity/stone_light
+    f12d75656c0453ce88dd7487e798a6bc:
+        Name: CC_stone
+        MaterialInstance:
+            Material: 9f251351-c844-541a-a7a1-43bf563ef2c7:CanalCity/stone
+    3394100ea2b159ffb6e2768748e5cb3e:
+        Name: CC_iron
+        MaterialInstance:
+            Material: cdd4b95a-4244-5c9c-9fd6-2b076cdee59f:CanalCity/iron

@@ -1,0 +1,1146 @@
+{
+  "status": "passed",
+  "qualification": "isolated compiled native preview, not A1/game/editor acceptance",
+  "resolution": {
+    "width": 1280,
+    "height": 720
+  },
+  "modelCount": 12,
+  "prefabCount": 12,
+  "clipCount": 2,
+  "models": [
+    {
+      "id": "bridge_arch",
+      "meshes": 21,
+      "materials": 7,
+      "dimensionsMetres": [
+        8.02,
+        4.9999995,
+        3.54
+      ],
+      "boundsMin": [
+        -1.0100002,
+        -1.1920929E-07,
+        -7.7700005
+      ],
+      "boundsMax": [
+        7.01,
+        4.9999995,
+        -4.2300005
+      ],
+      "nodes": [
+        {
+          "index": 0,
+          "Name": "RootNode",
+          "ParentIndex": -1
+        },
+        {
+          "index": 1,
+          "Name": "Root",
+          "ParentIndex": 0
+        },
+        {
+          "index": 2,
+          "Name": "bridge_arch_abutments",
+          "ParentIndex": 1
+        },
+        {
+          "index": 3,
+          "Name": "bridge_arch_arch",
+          "ParentIndex": 1
+        },
+        {
+          "index": 4,
+          "Name": "bridge_arch_banner",
+          "ParentIndex": 1
+        },
+        {
+          "index": 5,
+          "Name": "bridge_arch_deck",
+          "ParentIndex": 1
+        },
+        {
+          "index": 6,
+          "Name": "bridge_arch_ironwork",
+          "ParentIndex": 1
+        },
+        {
+          "index": 7,
+          "Name": "bridge_arch_lamp",
+          "ParentIndex": 1
+        },
+        {
+          "index": 8,
+          "Name": "bridge_arch_posts",
+          "ParentIndex": 1
+        },
+        {
+          "index": 9,
+          "Name": "bridge_arch_structure",
+          "ParentIndex": 1
+        }
+      ],
+      "meshNodes": [
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ]
+    },
+    {
+      "id": "canal_wall",
+      "meshes": 15,
+      "materials": 6,
+      "dimensionsMetres": [
+        7.9850006,
+        4.499999,
+        4.2299995
+      ],
+      "boundsMin": [
+        -10.9925,
+        -2.3841858E-07,
+        -8
+      ],
+      "boundsMax": [
+        -3.0075,
+        4.499999,
+        -3.7700007
+      ],
+      "nodes": [
+        {
+          "index": 0,
+          "Name": "RootNode",
+          "ParentIndex": -1
+        },
+        {
+          "index": 1,
+          "Name": "Root",
+          "ParentIndex": 0
+        },
+        {
+          "index": 2,
+          "Name": "canal_wall_deck",
+          "ParentIndex": 1
+        },
+        {
+          "index": 3,
+          "Name": "canal_wall_ironwork",
+          "ParentIndex": 1
+        },
+        {
+          "index": 4,
+          "Name": "canal_wall_lamp",
+          "ParentIndex": 1
+        },
+        {
+          "index": 5,
+          "Name": "canal_wall_posts",
+          "ParentIndex": 1
+        },
+        {
+          "index": 6,
+          "Name": "canal_wall_structure",
+          "ParentIndex": 1
+        }
+      ],
+      "meshNodes": [
+        2,
+        3,
+        4,
+        5,
+        6
+      ]
+    },
+    {
+      "id": "door_standard",
+      "meshes": 6,
+      "materials": 6,
+      "dimensionsMetres": [
+        2.4,
+        3.278387,
+        0.76558876
+      ],
+      "boundsMin": [
+        -0.20000005,
+        -2.9802322E-08,
+        3.2899995
+      ],
+      "boundsMax": [
+        2.2,
+        3.278387,
+        4.0555882
+      ],
+      "nodes": [
+        {
+          "index": 0,
+          "Name": "RootNode",
+          "ParentIndex": -1
+        },
+        {
+          "index": 1,
+          "Name": "Root",
+          "ParentIndex": 0
+        },
+        {
+          "index": 2,
+          "Name": "door_hinge.001",
+          "ParentIndex": 1
+        },
+        {
+          "index": 3,
+          "Name": "door_standard_leaf",
+          "ParentIndex": 2
+        },
+        {
+          "index": 4,
+          "Name": "door_standard_frame",
+          "ParentIndex": 1
+        }
+      ],
+      "meshNodes": [
+        3,
+        4
+      ]
+    },
+    {
+      "id": "lantern_amber",
+      "meshes": 3,
+      "materials": 3,
+      "dimensionsMetres": [
+        0.3606224,
+        0.7499999,
+        0.3606224
+      ],
+      "boundsMin": [
+        10.819689,
+        -2.9802322E-08,
+        3.3196888
+      ],
+      "boundsMax": [
+        11.180311,
+        0.7499999,
+        3.6803112
+      ],
+      "nodes": [
+        {
+          "index": 0,
+          "Name": "RootNode",
+          "ParentIndex": -1
+        },
+        {
+          "index": 1,
+          "Name": "Root",
+          "ParentIndex": 0
+        },
+        {
+          "index": 2,
+          "Name": "lantern_amber_lamp",
+          "ParentIndex": 1
+        }
+      ],
+      "meshNodes": [
+        2
+      ]
+    },
+    {
+      "id": "railing_high",
+      "meshes": 5,
+      "materials": 2,
+      "dimensionsMetres": [
+        2.0200005,
+        1.4991031,
+        0.15999985
+      ],
+      "boundsMin": [
+        6.99,
+        0,
+        3.4199998
+      ],
+      "boundsMax": [
+        9.01,
+        1.4991031,
+        3.5799997
+      ],
+      "nodes": [
+        {
+          "index": 0,
+          "Name": "RootNode",
+          "ParentIndex": -1
+        },
+        {
+          "index": 1,
+          "Name": "Root",
+          "ParentIndex": 0
+        },
+        {
+          "index": 2,
+          "Name": "railing_high_ironwork",
+          "ParentIndex": 1
+        },
+        {
+          "index": 3,
+          "Name": "railing_high_posts",
+          "ParentIndex": 1
+        },
+        {
+          "index": 4,
+          "Name": "railing_high_structure",
+          "ParentIndex": 1
+        }
+      ],
+      "meshNodes": [
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "id": "railing_iron",
+      "meshes": 5,
+      "materials": 2,
+      "dimensionsMetres": [
+        2.0200002,
+        0.9991031,
+        0.15999985
+      ],
+      "boundsMin": [
+        3.99,
+        0,
+        3.42
+      ],
+      "boundsMax": [
+        6.01,
+        0.9991031,
+        3.58
+      ],
+      "nodes": [
+        {
+          "index": 0,
+          "Name": "RootNode",
+          "ParentIndex": -1
+        },
+        {
+          "index": 1,
+          "Name": "Root",
+          "ParentIndex": 0
+        },
+        {
+          "index": 2,
+          "Name": "railing_iron_ironwork",
+          "ParentIndex": 1
+        },
+        {
+          "index": 3,
+          "Name": "railing_iron_posts",
+          "ParentIndex": 1
+        },
+        {
+          "index": 4,
+          "Name": "railing_iron_structure",
+          "ParentIndex": 1
+        }
+      ],
+      "meshNodes": [
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "id": "scale_rat_adult",
+      "meshes": 8,
+      "materials": 7,
+      "dimensionsMetres": [
+        1.6420636,
+        2.7999995,
+        1.4488487
+      ],
+      "boundsMin": [
+        6.412,
+        0,
+        7.48355
+      ],
+      "boundsMax": [
+        8.054064,
+        2.7999995,
+        8.932399
+      ],
+      "nodes": [
+        {
+          "index": 0,
+          "Name": "RootNode",
+          "ParentIndex": -1
+        },
+        {
+          "index": 1,
+          "Name": "Root",
+          "ParentIndex": 0
+        },
+        {
+          "index": 2,
+          "Name": "scale_rat_adult_accessories",
+          "ParentIndex": 1
+        },
+        {
+          "index": 3,
+          "Name": "scale_rat_adult_body",
+          "ParentIndex": 1
+        },
+        {
+          "index": 4,
+          "Name": "scale_rat_adult_robe",
+          "ParentIndex": 1
+        }
+      ],
+      "meshNodes": [
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "id": "scale_rat_high",
+      "meshes": 10,
+      "materials": 8,
+      "dimensionsMetres": [
+        2.345807,
+        3.9999993,
+        2.0697856
+      ],
+      "boundsMin": [
+        9.16,
+        0,
+        7.262214
+      ],
+      "boundsMax": [
+        11.505807,
+        3.9999993,
+        9.332
+      ],
+      "nodes": [
+        {
+          "index": 0,
+          "Name": "RootNode",
+          "ParentIndex": -1
+        },
+        {
+          "index": 1,
+          "Name": "Root",
+          "ParentIndex": 0
+        },
+        {
+          "index": 2,
+          "Name": "scale_rat_high_accessories",
+          "ParentIndex": 1
+        },
+        {
+          "index": 3,
+          "Name": "scale_rat_high_body",
+          "ParentIndex": 1
+        },
+        {
+          "index": 4,
+          "Name": "scale_rat_high_robe",
+          "ParentIndex": 1
+        }
+      ],
+      "meshNodes": [
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "id": "scale_rat_medium",
+      "meshes": 8,
+      "materials": 7,
+      "dimensionsMetres": [
+        1.0556126,
+        1.7999996,
+        0.9314027
+      ],
+      "boundsMin": [
+        4.622,
+        0,
+        7.667997
+      ],
+      "boundsMax": [
+        5.677613,
+        1.7999996,
+        8.5994
+      ],
+      "nodes": [
+        {
+          "index": 0,
+          "Name": "RootNode",
+          "ParentIndex": -1
+        },
+        {
+          "index": 1,
+          "Name": "Root",
+          "ParentIndex": 0
+        },
+        {
+          "index": 2,
+          "Name": "scale_rat_medium_accessories",
+          "ParentIndex": 1
+        },
+        {
+          "index": 3,
+          "Name": "scale_rat_medium_body",
+          "ParentIndex": 1
+        },
+        {
+          "index": 4,
+          "Name": "scale_rat_medium_robe",
+          "ParentIndex": 1
+        }
+      ],
+      "meshNodes": [
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "id": "scale_rat_small",
+      "meshes": 8,
+      "materials": 7,
+      "dimensionsMetres": [
+        0.7037418,
+        1.1999998,
+        0.62093544
+      ],
+      "boundsMin": [
+        2.748,
+        0,
+        7.7786646
+      ],
+      "boundsMax": [
+        3.4517417,
+        1.1999998,
+        8.3996
+      ],
+      "nodes": [
+        {
+          "index": 0,
+          "Name": "RootNode",
+          "ParentIndex": -1
+        },
+        {
+          "index": 1,
+          "Name": "Root",
+          "ParentIndex": 0
+        },
+        {
+          "index": 2,
+          "Name": "scale_rat_small_accessories",
+          "ParentIndex": 1
+        },
+        {
+          "index": 3,
+          "Name": "scale_rat_small_body",
+          "ParentIndex": 1
+        },
+        {
+          "index": 4,
+          "Name": "scale_rat_small_robe",
+          "ParentIndex": 1
+        }
+      ],
+      "meshNodes": [
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "id": "stairs_medium",
+      "meshes": 9,
+      "materials": 5,
+      "dimensionsMetres": [
+        2.3999996,
+        3.3010097,
+        4.4849997
+      ],
+      "boundsMin": [
+        -9.2,
+        -5.9604645E-07,
+        0.52500045
+      ],
+      "boundsMax": [
+        -6.8,
+        3.3010092,
+        5.01
+      ],
+      "nodes": [
+        {
+          "index": 0,
+          "Name": "RootNode",
+          "ParentIndex": -1
+        },
+        {
+          "index": 1,
+          "Name": "Root",
+          "ParentIndex": 0
+        },
+        {
+          "index": 2,
+          "Name": "stairs_medium_ironwork",
+          "ParentIndex": 1
+        },
+        {
+          "index": 3,
+          "Name": "stairs_medium_posts",
+          "ParentIndex": 1
+        },
+        {
+          "index": 4,
+          "Name": "stairs_medium_stair_mass",
+          "ParentIndex": 1
+        },
+        {
+          "index": 5,
+          "Name": "stairs_medium_structure",
+          "ParentIndex": 1
+        },
+        {
+          "index": 6,
+          "Name": "stairs_medium_treads",
+          "ParentIndex": 1
+        }
+      ],
+      "meshNodes": [
+        2,
+        3,
+        4,
+        5,
+        6
+      ]
+    },
+    {
+      "id": "stairs_paired",
+      "meshes": 11,
+      "materials": 6,
+      "dimensionsMetres": [
+        2.4600003,
+        3.3510103,
+        4.49
+      ],
+      "boundsMin": [
+        -5.26,
+        -5.9604645E-07,
+        0.52000046
+      ],
+      "boundsMax": [
+        -2.8,
+        3.3510098,
+        5.01
+      ],
+      "nodes": [
+        {
+          "index": 0,
+          "Name": "RootNode",
+          "ParentIndex": -1
+        },
+        {
+          "index": 1,
+          "Name": "Root",
+          "ParentIndex": 0
+        },
+        {
+          "index": 2,
+          "Name": "stairs_paired_ironwork",
+          "ParentIndex": 1
+        },
+        {
+          "index": 3,
+          "Name": "stairs_paired_overlay_support",
+          "ParentIndex": 1
+        },
+        {
+          "index": 4,
+          "Name": "stairs_paired_overlay_treads",
+          "ParentIndex": 1
+        },
+        {
+          "index": 5,
+          "Name": "stairs_paired_posts",
+          "ParentIndex": 1
+        },
+        {
+          "index": 6,
+          "Name": "stairs_paired_stair_mass",
+          "ParentIndex": 1
+        },
+        {
+          "index": 7,
+          "Name": "stairs_paired_structure",
+          "ParentIndex": 1
+        },
+        {
+          "index": 8,
+          "Name": "stairs_paired_treads",
+          "ParentIndex": 1
+        }
+      ],
+      "meshNodes": [
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ]
+    }
+  ],
+  "poses": [
+    {
+      "name": "door-closed",
+      "clip": "open",
+      "timeSeconds": 0,
+      "durationSeconds": 2,
+      "hingeIndex": 2,
+      "localRotation": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "localTranslation": [
+        -0.008,
+        -0.0034,
+        0
+      ],
+      "worldHinge": [
+        100,
+        0,
+        0,
+        0,
+        0,
+        -1.1920928E-05,
+        -99.999985,
+        0,
+        0,
+        99.999985,
+        -1.1920928E-05,
+        0,
+        0.19999999,
+        4.0531155E-08,
+        3.84,
+        1
+      ],
+      "worldLeaf": [
+        100,
+        0,
+        0,
+        0,
+        0,
+        -1.1920928E-05,
+        -99.999985,
+        0,
+        0,
+        99.999985,
+        -1.1920928E-05,
+        0,
+        0.19999999,
+        4.0531155E-08,
+        3.84,
+        1
+      ],
+      "worldFrame": [
+        100,
+        0,
+        0,
+        0,
+        0,
+        -1.1920928E-05,
+        -99.999985,
+        0,
+        0,
+        99.999985,
+        -1.1920928E-05,
+        0,
+        1,
+        0,
+        3.5,
+        1
+      ]
+    },
+    {
+      "name": "door-middle",
+      "clip": "open",
+      "timeSeconds": 1,
+      "durationSeconds": 2,
+      "hingeIndex": 2,
+      "localRotation": [
+        0,
+        0,
+        -0.4226183,
+        0.90630776
+      ],
+      "localTranslation": [
+        -0.008,
+        -0.0034,
+        0
+      ],
+      "worldHinge": [
+        64.278755,
+        9.131962E-06,
+        76.60444,
+        0,
+        76.60445,
+        -7.662625E-06,
+        -64.27875,
+        0,
+        0,
+        99.999985,
+        -1.1920928E-05,
+        0,
+        0.19999999,
+        4.0531155E-08,
+        3.84,
+        1
+      ],
+      "worldLeaf": [
+        64.278755,
+        9.131962E-06,
+        76.60444,
+        0,
+        76.60445,
+        -7.662625E-06,
+        -64.27875,
+        0,
+        0,
+        99.999985,
+        -1.1920928E-05,
+        0,
+        0.19999999,
+        4.0531155E-08,
+        3.84,
+        1
+      ],
+      "worldFrame": [
+        100,
+        0,
+        0,
+        0,
+        0,
+        -1.1920928E-05,
+        -99.999985,
+        0,
+        0,
+        99.999985,
+        -1.1920928E-05,
+        0,
+        1,
+        0,
+        3.5,
+        1
+      ]
+    },
+    {
+      "name": "door-open",
+      "clip": "open",
+      "timeSeconds": 2,
+      "durationSeconds": 2,
+      "hingeIndex": 2,
+      "localRotation": [
+        0,
+        0,
+        -0.7660444,
+        0.6427877
+      ],
+      "localTranslation": [
+        -0.008,
+        -0.0034,
+        0
+      ],
+      "worldHinge": [
+        -17.364798,
+        1.1739821E-05,
+        98.48075,
+        0,
+        98.48077,
+        2.0700452E-06,
+        17.364796,
+        0,
+        0,
+        99.999985,
+        -1.1920928E-05,
+        0,
+        0.19999999,
+        4.0531155E-08,
+        3.84,
+        1
+      ],
+      "worldLeaf": [
+        -17.3648,
+        1.1739823E-05,
+        98.48077,
+        0,
+        98.48078,
+        2.0700454E-06,
+        17.364798,
+        0,
+        0,
+        99.999985,
+        -1.1920928E-05,
+        0,
+        0.2,
+        4.0531148E-08,
+        3.84,
+        1
+      ],
+      "worldFrame": [
+        100,
+        0,
+        0,
+        0,
+        0,
+        -1.1920928E-05,
+        -99.999985,
+        0,
+        0,
+        99.999985,
+        -1.1920928E-05,
+        0,
+        1,
+        0,
+        3.5,
+        1
+      ]
+    },
+    {
+      "name": "close-start",
+      "clip": "close",
+      "timeSeconds": 0,
+      "durationSeconds": 2,
+      "hingeIndex": 2,
+      "localRotation": [
+        0,
+        0,
+        -0.7660444,
+        0.6427877
+      ],
+      "localTranslation": [
+        -0.008,
+        -0.0034,
+        0
+      ],
+      "worldHinge": [
+        -17.364798,
+        1.1739821E-05,
+        98.48075,
+        0,
+        98.48077,
+        2.0700452E-06,
+        17.364796,
+        0,
+        0,
+        99.999985,
+        -1.1920928E-05,
+        0,
+        0.19999999,
+        4.0531155E-08,
+        3.84,
+        1
+      ],
+      "worldLeaf": [
+        -17.3648,
+        1.1739823E-05,
+        98.48077,
+        0,
+        98.48078,
+        2.0700454E-06,
+        17.364798,
+        0,
+        0,
+        99.999985,
+        -1.1920928E-05,
+        0,
+        0.2,
+        4.0531148E-08,
+        3.84,
+        1
+      ],
+      "worldFrame": [
+        100,
+        0,
+        0,
+        0,
+        0,
+        -1.1920928E-05,
+        -99.999985,
+        0,
+        0,
+        99.999985,
+        -1.1920928E-05,
+        0,
+        1,
+        0,
+        3.5,
+        1
+      ]
+    },
+    {
+      "name": "close-middle",
+      "clip": "close",
+      "timeSeconds": 1,
+      "durationSeconds": 2,
+      "hingeIndex": 2,
+      "localRotation": [
+        0,
+        0,
+        -0.4226183,
+        0.90630776
+      ],
+      "localTranslation": [
+        -0.008,
+        -0.0034,
+        0
+      ],
+      "worldHinge": [
+        64.278755,
+        9.131962E-06,
+        76.60444,
+        0,
+        76.60445,
+        -7.662625E-06,
+        -64.27875,
+        0,
+        0,
+        99.999985,
+        -1.1920928E-05,
+        0,
+        0.19999999,
+        4.0531155E-08,
+        3.84,
+        1
+      ],
+      "worldLeaf": [
+        64.278755,
+        9.131962E-06,
+        76.60444,
+        0,
+        76.60445,
+        -7.662625E-06,
+        -64.27875,
+        0,
+        0,
+        99.999985,
+        -1.1920928E-05,
+        0,
+        0.19999999,
+        4.0531155E-08,
+        3.84,
+        1
+      ],
+      "worldFrame": [
+        100,
+        0,
+        0,
+        0,
+        0,
+        -1.1920928E-05,
+        -99.999985,
+        0,
+        0,
+        99.999985,
+        -1.1920928E-05,
+        0,
+        1,
+        0,
+        3.5,
+        1
+      ]
+    },
+    {
+      "name": "close-end",
+      "clip": "close",
+      "timeSeconds": 2,
+      "durationSeconds": 2,
+      "hingeIndex": 2,
+      "localRotation": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "localTranslation": [
+        -0.008,
+        -0.0034,
+        0
+      ],
+      "worldHinge": [
+        100,
+        0,
+        0,
+        0,
+        0,
+        -1.1920928E-05,
+        -99.999985,
+        0,
+        0,
+        99.999985,
+        -1.1920928E-05,
+        0,
+        0.19999999,
+        4.0531155E-08,
+        3.84,
+        1
+      ],
+      "worldLeaf": [
+        100,
+        0,
+        0,
+        0,
+        0,
+        -1.1920928E-05,
+        -99.999985,
+        0,
+        0,
+        99.999985,
+        -1.1920928E-05,
+        0,
+        0.19999999,
+        4.0531155E-08,
+        3.84,
+        1
+      ],
+      "worldFrame": [
+        100,
+        0,
+        0,
+        0,
+        0,
+        -1.1920928E-05,
+        -99.999985,
+        0,
+        0,
+        99.999985,
+        -1.1920928E-05,
+        0,
+        1,
+        0,
+        3.5,
+        1
+      ]
+    }
+  ],
+  "relativeHingeAnglesDegrees": {
+    "door-closed": 0,
+    "door-middle": 50.000008171239934,
+    "door-open": 99.99998724839052,
+    "close-start": 99.99998724839052,
+    "close-middle": 50.000008171239934,
+    "close-end": 0
+  },
+  "stride": "4.4.0.0",
+  "graphics": "Direct3D11"
+}

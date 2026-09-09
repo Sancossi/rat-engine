@@ -1,0 +1,8 @@
+!ProceduralModelAsset
+Id: 5f049f01-784e-59fb-bf9f-400fe9e78b60
+SerializedVersion: {Stride: 2.0.0.0}
+Tags: []
+Type: !CubeProceduralModel
+    Size: {X: 34, Y: 0.2, Z: 26}
+    MaterialInstance:
+        Material: eca81495-50ad-5979-a404-a4421a8ab9ea:CanalCity/stone_dark

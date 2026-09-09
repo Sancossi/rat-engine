@@ -1,0 +1,22 @@
+!PrefabAsset
+Id: 171b7ae2-9bc3-5429-b9a2-3ea62a157b6b
+SerializedVersion: {Stride: 3.1.0.1}
+Tags: []
+Hierarchy:
+    RootParts:
+        - ref!! 86e6b82a-576e-5d11-a7d4-b962c296237d
+    Parts:
+        -   Entity:
+                Id: 86e6b82a-576e-5d11-a7d4-b962c296237d
+                Name: lantern_amber
+                Components:
+                    0302c7ba8fed57b299030d745eff9a44: !TransformComponent
+                        Id: 246debad-b928-52d0-8156-0b96a2ff652d
+                        Position: {X: 0, Y: 0, Z: 0}
+                        Rotation: {X: 0, Y: 0, Z: 0, W: 1}
+                        Scale: {X: 1, Y: 1, Z: 1}
+                        Children: {}
+                    e93c5356c131507789233eea5b41624e: !ModelComponent
+                        Id: 2d57c8f4-cea5-56fc-8e8b-534caf563e6e
+                        Model: 03021514-18ab-5b03-a6b3-80ad2201b372:CanalCity/lantern_amber
+                        Materials: {}

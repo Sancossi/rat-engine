@@ -1,0 +1,12 @@
+!Animation
+Id: 767d0213-346e-5bfe-a394-0e7dcd593851
+SerializedVersion: {Stride: 2.0.0.0}
+Tags: []
+Source: !file ../../Resources/CanalCity/animations/door_open.fbx
+AnimationStack: 0
+ClipDuration: {Enabled: false}
+RepeatMode: PlayOnceHold
+Type: !StandardAnimationAssetType {}
+Skeleton: 7ff53a4b-174b-5a74-9191-0e90f84c58f3:CanalCity/door_standard_skeleton
+RootMotion: false
+PreviewModel: 9b09e4d0-4c3c-5e13-8901-335306d3cc20:CanalCity/door_standard

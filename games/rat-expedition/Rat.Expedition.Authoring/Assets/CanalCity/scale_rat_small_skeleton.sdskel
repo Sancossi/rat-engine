@@ -1,0 +1,13 @@
+!Skeleton
+Id: 62772c79-5696-5cf8-80dd-5e777a662333
+SerializedVersion: {Stride: 2.0.0.0}
+Tags: []
+Source: !file ../../Resources/CanalCity/models/scale_rat_small.fbx
+ScaleImport: 1
+PivotPosition: {X: 0, Y: 0, Z: 0}
+Nodes:
+    354299b5878257a589abd497c9af9174: {Name: RootNode, Depth: 0, Preserve: true}
+    9a26ca73c9f257f5bb60ffe978e8063a: {Name: Root, Depth: 1, Preserve: true}
+    244bddf0979d5cf895f5d394e6672334: {Name: scale_rat_small_accessories, Depth: 2, Preserve: true}
+    585b6cb57a595cac9016a297d2f54437: {Name: scale_rat_small_body, Depth: 2, Preserve: true}
+    598d6ce9bd4d5387a5cd623198a6a325: {Name: scale_rat_small_robe, Depth: 2, Preserve: true}

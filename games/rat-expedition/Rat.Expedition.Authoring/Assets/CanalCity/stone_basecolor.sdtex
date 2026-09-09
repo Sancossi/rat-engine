@@ -1,0 +1,9 @@
+!Texture
+Id: 43bf09e4-97ea-54ac-8fcb-d4bfb652d653
+SerializedVersion: {Stride: 2.0.0.0}
+Tags: []
+Source: !file ../../Resources/CanalCity/textures/stone_basecolor.png
+Type: !ColorTextureType {}
+IsStreamable: false
+IsCompressed: false
+GenerateMipmaps: true

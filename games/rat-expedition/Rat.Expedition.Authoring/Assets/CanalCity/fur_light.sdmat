@@ -1,0 +1,24 @@
+!MaterialAsset
+Id: c8854575-f11b-5ce6-b534-62ca8e2991b8
+SerializedVersion: {Stride: 2.0.0.0}
+Tags: []
+Attributes:
+    Surface: !MaterialNormalMapFeature
+        NormalMap: !ComputeTextureColor
+            Texture: 25ce7aea-c2a3-561d-9729-97e925815f44:CanalCity/fur_light_normal
+    MicroSurface: !MaterialGlossinessMapFeature
+        GlossinessMap: !ComputeTextureScalar
+            Texture: f4ef958b-da94-5579-bf4d-637817cec9d1:CanalCity/fur_light_roughness
+        Invert: true
+    Diffuse: !MaterialDiffuseMapFeature
+        DiffuseMap: !ComputeTextureColor
+            Texture: c1cdd510-1ddb-52db-92b4-5defe721f288:CanalCity/fur_light_basecolor
+    Specular: !MaterialMetalnessMapFeature
+        MetalnessMap: !ComputeTextureScalar
+            Texture: 47639491-89f3-503a-b2f8-ab098159994a:CanalCity/fur_light_metallic
+    DiffuseModel: !MaterialDiffuseLambertModelFeature {}
+    SpecularModel: !MaterialSpecularMicrofacetModelFeature
+        Fresnel: !MaterialSpecularMicrofacetFresnelSchlick {}
+        Visibility: !MaterialSpecularMicrofacetVisibilitySmithSchlickGGX {}
+        NormalDistribution: !MaterialSpecularMicrofacetNormalDistributionGGX {}
+Layers: {}

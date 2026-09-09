@@ -1,0 +1,9 @@
+!Texture
+Id: 5f9edbea-f64d-515a-a744-4e036de4406e
+SerializedVersion: {Stride: 2.0.0.0}
+Tags: []
+Source: !file ../../Resources/CanalCity/textures/amber_roughness.png
+Type: !GrayscaleTextureType {}
+IsStreamable: false
+IsCompressed: false
+GenerateMipmaps: true
