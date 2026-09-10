@@ -59,10 +59,8 @@ public static class NativeVisualResolver
             {
                 var binding=entity.Get<NativeVisualComponent>();var model=entity.Get<ModelComponent>();
                 if(model is null)throw NativeSceneAdapter.Error(selectedUrl!,entity,"Model","native visual requires ModelComponent");
-                if(!entity.Transform.WorldMatrix.Decompose(out var scale,out Quaternion rotation,out var position)||
-                    !NativeSceneAdapter.Finite(position)||!NativeSceneAdapter.Finite(scale)||
-                    !float.IsFinite(rotation.X)||!float.IsFinite(rotation.Y)||!float.IsFinite(rotation.Z)||!float.IsFinite(rotation.W))
-                    throw NativeSceneAdapter.Error(selectedUrl!,entity,"Transform","native visual world transform must be finite and decomposable");
+                if(!TryGetSupportedWorldTransform(entity.Transform.WorldMatrix,out var scale,out var rotation,out var position))
+                    throw NativeSceneAdapter.Error(selectedUrl!,entity,"Transform","native visual world transform must be finite, nondegenerate TRS without shear");
                 if(binding.SkeletonNodes is null)throw NativeSceneAdapter.Error(selectedUrl!,entity,"SkeletonNodes","collection is required");
                 if(binding.GeometryId!=Guid.Empty&&(!owned.TryGetValue(binding.GeometryId,out var geometry)||geometry.Get<GeometryComponent>() is null))
                     throw NativeSceneAdapter.Error(selectedUrl!,entity,"GeometryId",$"'{binding.GeometryId}' is missing or not Expedition geometry");
@@ -77,5 +75,22 @@ public static class NativeVisualResolver
             foreach(var scene in loaded.AsEnumerable().Reverse())content.Unload(scene);
             throw;
         }
+    }
+    public static bool TryGetSupportedWorldTransform(Matrix world,out Vector3 scale,out Quaternion rotation,out Vector3 position)
+    {
+        if(!world.Decompose(out scale,out rotation,out position)||!NativeSceneAdapter.Finite(position)||!NativeSceneAdapter.Finite(scale)||
+            !float.IsFinite(rotation.X)||!float.IsFinite(rotation.Y)||!float.IsFinite(rotation.Z)||!float.IsFinite(rotation.W)||
+            MathF.Abs(scale.X)<1e-5f||MathF.Abs(scale.Y)<1e-5f||MathF.Abs(scale.Z)<1e-5f)
+            return false;
+        rotation.Normalize();
+        var reconstructed=Matrix.Scaling(scale)*Matrix.RotationQuaternion(rotation)*Matrix.Translation(position);
+        ReadOnlySpan<float> actual=[world.M11,world.M12,world.M13,world.M14,world.M21,world.M22,world.M23,world.M24,
+            world.M31,world.M32,world.M33,world.M34,world.M41,world.M42,world.M43,world.M44];
+        ReadOnlySpan<float> expected=[reconstructed.M11,reconstructed.M12,reconstructed.M13,reconstructed.M14,
+            reconstructed.M21,reconstructed.M22,reconstructed.M23,reconstructed.M24,reconstructed.M31,reconstructed.M32,
+            reconstructed.M33,reconstructed.M34,reconstructed.M41,reconstructed.M42,reconstructed.M43,reconstructed.M44];
+        for(int i=0;i<actual.Length;i++)
+            if(!float.IsFinite(actual[i])||MathF.Abs(actual[i]-expected[i])>1e-4f*MathF.Max(1,MathF.Abs(actual[i])))return false;
+        return true;
     }
 }

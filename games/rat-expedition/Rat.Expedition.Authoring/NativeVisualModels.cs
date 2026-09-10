@@ -6,6 +6,9 @@ namespace Rat.Expedition.Authoring;
 
 public static class NativeVisualModels
 {
+    public static void ApplyVisibility(ModelComponent component,bool authoredEnabled,bool occluded)
+        =>component.Enabled=authoredEnabled&&!occluded;
+
     public static ModelComponent Create(ModelComponent source,IReadOnlyList<string>? selectors,string asset)
     {
         if(source.Model is null)throw new InvalidDataException($"Asset '{asset}': native visual requires a Model reference.");

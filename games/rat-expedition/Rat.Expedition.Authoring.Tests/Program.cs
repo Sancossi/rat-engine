@@ -107,6 +107,39 @@ Check("native visual invalid material slot fails before presentation",()=>{
     model.Meshes.Add(new(){Name="bad",NodeIndex=0,MaterialIndex=2});
     Reject(()=>NativeVisualModels.Create(new(model),[],"fixture"),"material index");
 });
+Check("native visual preview rebuilds after invalid selector undo",()=>{
+    var model=new Model{Skeleton=new Skeleton{Nodes=[new(){Name="Root",ParentIndex=-1},new(){Name="deck",ParentIndex=0}]}};
+    model.Materials.Add(new(new Material()));model.Meshes.Add(new(){Name="deck",NodeIndex=1,MaterialIndex=0});
+    var source=new ModelComponent(model);var binding=new NativeVisualComponent{SkeletonNodes=["deck"]};
+    var entity=new Entity("Preview fixture"){source,binding};var state=new NativeVisualPreviewProcessor.Preview();
+    Require(NativeVisualPreviewProcessor.Refresh(binding,state) is null&&source.Model!=model&&source.Model.Meshes.Count==1);
+    var firstSubset=source.Model;binding.SkeletonNodes=["absent"];
+    Require(NativeVisualPreviewProcessor.Refresh(binding,state)?.Contains("absent",StringComparison.Ordinal)==true&&source.Model==model);
+    binding.SkeletonNodes=["deck"];
+    Require(NativeVisualPreviewProcessor.Refresh(binding,state) is null&&source.Model!=model&&source.Model!=firstSubset&&source.Model.Meshes.Count==1);
+});
+Check("native visual visibility preserves authored disabled state across occlusion cycles",()=>{
+    foreach(bool authored in new[]{true,false}){
+        var component=new ModelComponent{Enabled=authored};
+        NativeVisualModels.ApplyVisibility(component,authored,false);Require(component.Enabled==authored);
+        NativeVisualModels.ApplyVisibility(component,authored,true);Require(!component.Enabled);
+        NativeVisualModels.ApplyVisibility(component,authored,false);Require(component.Enabled==authored);
+    }
+});
+Check("native visual world transform rejects degeneracy and shear but accepts nested TRS",()=>{
+    var parent=new Entity("Parent");parent.Transform.Position=new(1,2,3);parent.Transform.Scale=new(2);
+    parent.Transform.Rotation=Quaternion.RotationY(.25f);var child=new Entity("Child");child.Transform.Position=new(.5f,0,-1);
+    child.Transform.Scale=new(.5f);parent.Transform.Children.Add(child.Transform);parent.Transform.UpdateWorldMatrix();child.Transform.UpdateWorldMatrix();
+    Require(NativeVisualResolver.TryGetSupportedWorldTransform(child.Transform.WorldMatrix,out var scale,out _,out var position)&&
+        MathF.Abs(scale.X-1)<.0001f&&NativeSceneAdapter.Finite(position));
+    Require(!NativeVisualResolver.TryGetSupportedWorldTransform(Matrix.Scaling(1,0,1),out _,out _,out _));
+    var shear=Matrix.Identity;shear.M12=.25f;
+    Require(!NativeVisualResolver.TryGetSupportedWorldTransform(shear,out _,out _,out _));
+    var nonuniform=new Entity("Nonuniform");nonuniform.Transform.Scale=new(2,1,1);var rotated=new Entity("Rotated");
+    rotated.Transform.Rotation=Quaternion.RotationZ(.4f);nonuniform.Transform.Children.Add(rotated.Transform);
+    nonuniform.Transform.UpdateWorldMatrix();rotated.Transform.UpdateWorldMatrix();
+    Require(!NativeVisualResolver.TryGetSupportedWorldTransform(rotated.Transform.WorldMatrix,out _,out _,out _));
+});
 Check("candidate source callback failure retains active world and position",()=>{
     var f=Fixture();var portal=new Entity("Return gate"){new PortalComponent{TargetScene=new("Fixture")}};
     portal.Transform.Position=f.Spawn.Transform.Position+new Vector3(1.2f,0,0);f.Scene.Entities.Add(portal);

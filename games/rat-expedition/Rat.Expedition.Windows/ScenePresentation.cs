@@ -20,6 +20,7 @@ namespace Rat.Expedition.Windows;
 internal sealed class ScenePresentation : IDisposable
 {
     private readonly List<Stride.Graphics.Buffer> buffers=[];
+    private readonly Dictionary<ModelComponent,bool> authoredModelEnabled=[];
     private NativeVisualLease? native;
     public SceneInstance Instance {get;private set;}=null!;
     public CameraComponent Camera {get;private set;}=null!;
@@ -61,6 +62,7 @@ internal sealed class ScenePresentation : IDisposable
                 if(mesh.Draw.IndexBuffer is not null)buffers.Add(mesh.Draw.IndexBuffer.Buffer);
             }
             var component=new ModelComponent(model);Models.Add(id,[component]);
+            authoredModelEnabled.Add(component,component.Enabled);
             var entity=new Entity(id){component};entity.Transform.Position=position;scene.Entities.Add(entity);
         }
         foreach(var box in definition.AllSolids.Concat(definition.Decorations).Concat(LadderDecorations(definition)).Where(box=>!replaced.Contains(box.Id)))
@@ -75,6 +77,7 @@ internal sealed class ScenePresentation : IDisposable
             var entity=new Entity("native-"+visual.Id){visual.Model};
             entity.Transform.Position=visual.Position;entity.Transform.Rotation=visual.Rotation;entity.Transform.Scale=visual.Scale;
             scene.Entities.Add(entity);
+            authoredModelEnabled.Add(visual.Model,visual.Model.Enabled);
             foreach(var id in visual.GeometryIds)
             {
                 if(!Models.TryGetValue(id,out var models))Models.Add(id,models=[]);
@@ -105,7 +108,8 @@ internal sealed class ScenePresentation : IDisposable
         foreach(var model in Models.Values.SelectMany(m=>m).Distinct())
         {
             var ids=Models.Where(pair=>pair.Value.Contains(model)).Select(pair=>pair.Key).ToHashSet(StringComparer.Ordinal);
-            model.Enabled=!definition.OcclusionGroups.Any(group=>hidden.Contains(group.Id)&&group.Members.Any(ids.Contains));
+            bool occluded=definition.OcclusionGroups.Any(group=>hidden.Contains(group.Id)&&group.Members.Any(ids.Contains));
+            NativeVisualModels.ApplyVisibility(model,authoredModelEnabled[model],occluded);
         }
     }
     private static IEnumerable<WorldBox> LadderDecorations(SceneDefinition definition)

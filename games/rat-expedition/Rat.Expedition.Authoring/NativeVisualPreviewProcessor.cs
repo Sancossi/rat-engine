@@ -29,32 +29,42 @@ public sealed class NativeVisualPreviewProcessor : EntityProcessor<NativeVisualC
     {
         foreach(var pair in ComponentDatas)
         {
-            var binding=pair.Key;var data=pair.Value;var component=binding.Entity.Get<ModelComponent>();
-            try
-            {
-                if(component is null)throw NativeSceneAdapter.Error("editor preview",binding.Entity,"Model","native visual requires ModelComponent");
-                if(data.Component!=component){data.Component=component;data.Original=component.Model;data.Generated=null;data.Selection=null;data.SourceSignature=null;}
-                else if(component.Model!=data.Generated&&component.Model!=data.Original){data.Original=component.Model;data.Generated=null;data.Selection=null;data.SourceSignature=null;}
-                var selection=string.Join("\0",binding.SkeletonNodes??[]);
-                string signature=Signature(data.Original);
-                if(data.Selection!=selection||data.SourceSignature!=signature)
-                {
-                    component.Model=data.Original;
-                    data.Generated=NativeVisualModels.Create(component,binding.SkeletonNodes,"editor preview").Model;
-                    component.Model=data.Generated;
-                    data.Selection=selection;
-                    data.SourceSignature=signature;
-                }
-                data.Error=null;
-            }
-            catch(Exception error)
-            {
-                if(component is not null&&data.Original is not null)component.Model=data.Original;
-                if(data.Error!=error.Message)GlobalLogger.GetLogger("Expedition authoring").Warning(error.Message);
-                data.Error=error.Message;
-            }
+            var binding=pair.Key;var data=pair.Value;
+            string? previous=data.Error;string? error=Refresh(binding,data);
+            if(error is not null&&previous!=error)GlobalLogger.GetLogger("Expedition authoring").Warning(error);
         }
     }
+    // Public for the small authoring regression harness; Draw uses this exact path.
+    public static string? Refresh(NativeVisualComponent binding,Preview data)
+    {
+        var component=binding.Entity.Get<ModelComponent>();
+        try
+        {
+            if(component is null)throw NativeSceneAdapter.Error("editor preview",binding.Entity,"Model","native visual requires ModelComponent");
+            if(data.Component!=component){data.Component=component;data.Original=component.Model;Invalidate(data);}
+            else if(component.Model!=data.Generated&&component.Model!=data.Original){data.Original=component.Model;Invalidate(data);}
+            var selection=string.Join("\0",binding.SkeletonNodes??[]);
+            string signature=Signature(data.Original);
+            if(data.Selection!=selection||data.SourceSignature!=signature)
+            {
+                component.Model=data.Original;
+                data.Generated=NativeVisualModels.Create(component,binding.SkeletonNodes,"editor preview").Model;
+                component.Model=data.Generated;
+                data.Selection=selection;
+                data.SourceSignature=signature;
+            }
+            return data.Error=null;
+        }
+        catch(Exception error)
+        {
+            if(component is not null&&data.Original is not null)component.Model=data.Original;
+            // A failed edit must not retain the successful selector/signature cache.
+            // Undoing to valid authoring data will therefore rebuild the subset.
+            Invalidate(data);data.Error=error.Message;return error.Message;
+        }
+    }
+    private static void Invalidate(Preview data)
+    {data.Generated=null;data.Selection=null;data.SourceSignature=null;}
     private static string Signature(Model? model)
     {
         if(model is null)return "null";
