@@ -1,0 +1,17 @@
+!Skeleton
+Id: 47046795-f211-5b91-80d2-ec35c2b31817
+SerializedVersion: {Stride: 2.0.0.0}
+Tags: []
+Source: !file ../../Resources/CanalCity/models/stairs_paired.fbx
+ScaleImport: 1
+PivotPosition: {X: 0, Y: 0, Z: 0}
+Nodes:
+    86148c277d7b573487c2dcb4ebff4008: {Name: RootNode, Depth: 0, Preserve: true}
+    37faa46d9f385eaaba35c598b1b9a576: {Name: Root, Depth: 1, Preserve: true}
+    43646f0eb72157fcab062359132da4a8: {Name: stairs_paired_ironwork, Depth: 2, Preserve: true}
+    9454aca69e335844ab10729a86cfdf0f: {Name: stairs_paired_overlay_support, Depth: 2, Preserve: true}
+    081b1e314d4f53c4b0724479f79c9c5b: {Name: stairs_paired_overlay_treads, Depth: 2, Preserve: true}
+    73c1b719d0f659d4ac7e7209e4cd3ce3: {Name: stairs_paired_posts, Depth: 2, Preserve: true}
+    f1393b6537e35552b5e2bd7de0654890: {Name: stairs_paired_stair_mass, Depth: 2, Preserve: true}
+    d235c1b67c8b547bb8b0ddafea25c7ca: {Name: stairs_paired_structure, Depth: 2, Preserve: true}
+    b5ac2e4de7685c62a0a38bf56edafda2: {Name: stairs_paired_treads, Depth: 2, Preserve: true}

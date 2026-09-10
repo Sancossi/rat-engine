@@ -1,0 +1,23 @@
+!Model
+Id: 03021514-18ab-5b03-a6b3-80ad2201b372
+SerializedVersion: {Stride: 2.0.0.0}
+Tags: []
+Source: !file ../../Resources/CanalCity/models/lantern_amber.fbx
+ScaleImport: 1
+PivotPosition: {X: 0, Y: 0, Z: 0}
+MergeMeshes: false
+DeduplicateMaterials: true
+Skeleton: e14e7e2e-0ec0-5366-8918-1576fdf6a31f:CanalCity/lantern_amber_skeleton
+Materials:
+    d5eff9c6a4d85f5282e45eca188366f8:
+        Name: CC_iron
+        MaterialInstance:
+            Material: cdd4b95a-4244-5c9c-9fd6-2b076cdee59f:CanalCity/iron
+    c3c42ebbcbe15474978498acc4560e7a:
+        Name: CC_brass
+        MaterialInstance:
+            Material: 044d9c32-b62a-55a1-bc9d-e462f7eb449d:CanalCity/brass
+    8a911ba40df75fd0b57a4c821003d3c4:
+        Name: CC_amber
+        MaterialInstance:
+            Material: 1c5d6ae1-6c8d-5500-8fb9-eb9bb3f04a13:CanalCity/amber

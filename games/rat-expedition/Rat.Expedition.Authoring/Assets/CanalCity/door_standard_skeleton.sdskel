@@ -1,0 +1,13 @@
+!Skeleton
+Id: 7ff53a4b-174b-5a74-9191-0e90f84c58f3
+SerializedVersion: {Stride: 2.0.0.0}
+Tags: []
+Source: !file ../../Resources/CanalCity/models/door_standard.fbx
+ScaleImport: 1
+PivotPosition: {X: 0, Y: 0, Z: 0}
+Nodes:
+    a179bf1125f358b1b1d526d9a0930c6f: {Name: RootNode, Depth: 0, Preserve: true}
+    84032fd43e1c515bbcb66212369fc2d5: {Name: Root, Depth: 1, Preserve: true}
+    eab8b4f4846950baa351e1b9cbe7d500: {Name: door_hinge.001, Depth: 2, Preserve: true}
+    7c7f418c17c155bfa97d54214f2f340f: {Name: door_standard_leaf, Depth: 3, Preserve: true}
+    27c5c6ecf10b57b3b2140cd1e3a3e54e: {Name: door_standard_frame, Depth: 2, Preserve: true}

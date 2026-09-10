@@ -1,0 +1,39 @@
+!Model
+Id: a30f543c-60fb-5b1a-87b8-51b81a8d8d9e
+SerializedVersion: {Stride: 2.0.0.0}
+Tags: []
+Source: !file ../../Resources/CanalCity/models/scale_rat_adult.fbx
+ScaleImport: 1
+PivotPosition: {X: 0, Y: 0, Z: 0}
+MergeMeshes: false
+DeduplicateMaterials: true
+Skeleton: d37c2ceb-269a-547a-b643-f00ce36004c8:CanalCity/scale_rat_adult_skeleton
+Materials:
+    290151182044508f90983b4abeac44ee:
+        Name: CC_ear
+        MaterialInstance:
+            Material: 826427a8-b86e-5f88-bc33-ac1e93f4e573:CanalCity/ear
+    0489e912e37a5903a12bd570fe9488f4:
+        Name: CC_fur
+        MaterialInstance:
+            Material: 4bd25012-f988-5efe-a260-715347978925:CanalCity/fur
+    bd8da38d59bf5f7980523a71eeaee96d:
+        Name: CC_fur_light
+        MaterialInstance:
+            Material: c8854575-f11b-5ce6-b534-62ca8e2991b8:CanalCity/fur_light
+    ff6112303c1c5ad8b4bc9480c3d528cc:
+        Name: CC_iron
+        MaterialInstance:
+            Material: cdd4b95a-4244-5c9c-9fd6-2b076cdee59f:CanalCity/iron
+    1fe4a199cf995fc397689bdfde264924:
+        Name: CC_stone_light
+        MaterialInstance:
+            Material: f49abda4-b809-5777-bc4c-9a42640c4c4f:CanalCity/stone_light
+    7e0b86d8da3c52aeb68bbd600a27748d:
+        Name: CC_burgundy
+        MaterialInstance:
+            Material: c5bc43db-007d-526f-9ebd-edd80ef394e7:CanalCity/burgundy
+    1ec33daecb4c53eda46090be7e2fc8bc:
+        Name: CC_brass
+        MaterialInstance:
+            Material: 044d9c32-b62a-55a1-bc9d-e462f7eb449d:CanalCity/brass

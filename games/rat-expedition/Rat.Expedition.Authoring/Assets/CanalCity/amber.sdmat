@@ -1,0 +1,29 @@
+!MaterialAsset
+Id: 1c5d6ae1-6c8d-5500-8fb9-eb9bb3f04a13
+SerializedVersion: {Stride: 2.0.0.0}
+Tags: []
+Attributes:
+    Surface: !MaterialNormalMapFeature
+        NormalMap: !ComputeTextureColor
+            Texture: 5f5e8da0-6ce5-5ef5-9c84-c3c5c8daa13f:CanalCity/amber_normal
+    MicroSurface: !MaterialGlossinessMapFeature
+        GlossinessMap: !ComputeTextureScalar
+            Texture: 5f9edbea-f64d-515a-a744-4e036de4406e:CanalCity/amber_roughness
+        Invert: true
+    Diffuse: !MaterialDiffuseMapFeature
+        DiffuseMap: !ComputeTextureColor
+            Texture: dc33d5d8-3f89-595c-a33b-e1e61aa8b96f:CanalCity/amber_basecolor
+    Specular: !MaterialMetalnessMapFeature
+        MetalnessMap: !ComputeTextureScalar
+            Texture: 256e5e9b-83b1-5a49-85dd-7cd7c64320fc:CanalCity/amber_metallic
+    DiffuseModel: !MaterialDiffuseLambertModelFeature {}
+    SpecularModel: !MaterialSpecularMicrofacetModelFeature
+        Fresnel: !MaterialSpecularMicrofacetFresnelSchlick {}
+        Visibility: !MaterialSpecularMicrofacetVisibilitySmithSchlickGGX {}
+        NormalDistribution: !MaterialSpecularMicrofacetNormalDistributionGGX {}
+    Emissive: !MaterialEmissiveMapFeature
+        EmissiveMap: !ComputeTextureColor
+            Texture: 88a2fe42-4c66-5766-9f17-bf7e7330bd63:CanalCity/amber_emission
+        Intensity: !ComputeFloat
+            Value: 4
+Layers: {}

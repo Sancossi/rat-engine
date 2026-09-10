@@ -1,0 +1,15 @@
+!Skeleton
+Id: f58357bf-a3b2-5293-a899-77f8db592a74
+SerializedVersion: {Stride: 2.0.0.0}
+Tags: []
+Source: !file ../../Resources/CanalCity/models/stairs_medium.fbx
+ScaleImport: 1
+PivotPosition: {X: 0, Y: 0, Z: 0}
+Nodes:
+    129fb7bf12e552ab95f4697a2a44995b: {Name: RootNode, Depth: 0, Preserve: true}
+    db0ef960cf3452e8a45bf772a79759ee: {Name: Root, Depth: 1, Preserve: true}
+    a2fb4a4dd1a05327a3d8ebc398d24398: {Name: stairs_medium_ironwork, Depth: 2, Preserve: true}
+    e03a711097d65785bd40c0ea9a9e6ee1: {Name: stairs_medium_posts, Depth: 2, Preserve: true}
+    a27547f1c3935584ac727e7f485db95a: {Name: stairs_medium_stair_mass, Depth: 2, Preserve: true}
+    6b08a3980e8f55408714393c5eead6b5: {Name: stairs_medium_structure, Depth: 2, Preserve: true}
+    cc6ffee308e05d45a95043166acd26e1: {Name: stairs_medium_treads, Depth: 2, Preserve: true}

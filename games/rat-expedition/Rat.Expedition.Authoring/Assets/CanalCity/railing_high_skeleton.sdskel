@@ -1,0 +1,13 @@
+!Skeleton
+Id: c607ba2c-8ac0-5459-8ac3-18d2412b5f8d
+SerializedVersion: {Stride: 2.0.0.0}
+Tags: []
+Source: !file ../../Resources/CanalCity/models/railing_high.fbx
+ScaleImport: 1
+PivotPosition: {X: 0, Y: 0, Z: 0}
+Nodes:
+    cfea23bb8638501991d03c7568152c7c: {Name: RootNode, Depth: 0, Preserve: true}
+    84e87640e7e45f67bd77dbaace2efcda: {Name: Root, Depth: 1, Preserve: true}
+    610013eb667f50298f291f655c20f773: {Name: railing_high_ironwork, Depth: 2, Preserve: true}
+    179348d2d14f573fb6e49489b85aee9a: {Name: railing_high_posts, Depth: 2, Preserve: true}
+    db61819a9c7854d5a15291e273121484: {Name: railing_high_structure, Depth: 2, Preserve: true}

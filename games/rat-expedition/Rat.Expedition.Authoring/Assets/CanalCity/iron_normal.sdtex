@@ -1,0 +1,9 @@
+!Texture
+Id: 8407811a-0adf-525d-b9ef-ac06480c5009
+SerializedVersion: {Stride: 2.0.0.0}
+Tags: []
+Source: !file ../../Resources/CanalCity/textures/iron_normal.png
+Type: !NormalMapTextureType {}
+IsStreamable: false
+IsCompressed: false
+GenerateMipmaps: true

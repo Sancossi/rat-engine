@@ -1,0 +1,9 @@
+!Texture
+Id: 76c55165-83fc-514b-9063-5012a8693523
+SerializedVersion: {Stride: 2.0.0.0}
+Tags: []
+Source: !file ../../Resources/CanalCity/textures/iron_metallic.png
+Type: !GrayscaleTextureType {}
+IsStreamable: false
+IsCompressed: false
+GenerateMipmaps: true

@@ -1,0 +1,9 @@
+!Texture
+Id: b9097404-0e2b-5147-9cc6-2aade7ac8348
+SerializedVersion: {Stride: 2.0.0.0}
+Tags: []
+Source: !file ../../Resources/CanalCity/textures/fur_normal.png
+Type: !NormalMapTextureType {}
+IsStreamable: false
+IsCompressed: false
+GenerateMipmaps: true

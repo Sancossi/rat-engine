@@ -1,0 +1,22 @@
+!PrefabAsset
+Id: d3bec4e5-270f-56e9-87ce-92cee358627d
+SerializedVersion: {Stride: 3.1.0.1}
+Tags: []
+Hierarchy:
+    RootParts:
+        - ref!! a44d45d9-7155-5c76-9fc4-1c233a6e598d
+    Parts:
+        -   Entity:
+                Id: a44d45d9-7155-5c76-9fc4-1c233a6e598d
+                Name: canal_wall
+                Components:
+                    fe9d32dc7ac0552b80a20d1bc883d38b: !TransformComponent
+                        Id: 16c427ee-858c-5e3c-ac4d-32f09c1b6c49
+                        Position: {X: 0, Y: 0, Z: 0}
+                        Rotation: {X: 0, Y: 0, Z: 0, W: 1}
+                        Scale: {X: 1, Y: 1, Z: 1}
+                        Children: {}
+                    7cdc325b9be8574ca40e9d90cc1181f3: !ModelComponent
+                        Id: d1968a28-1bba-54d6-9dc0-72270ff4d5f7
+                        Model: 092d2bf8-c678-52e4-aaca-b475fa1f4787:CanalCity/canal_wall
+                        Materials: {}

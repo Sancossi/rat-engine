@@ -1,0 +1,22 @@
+!PrefabAsset
+Id: bae67434-1d9e-57b1-aeb2-ccde1376e089
+SerializedVersion: {Stride: 3.1.0.1}
+Tags: []
+Hierarchy:
+    RootParts:
+        - ref!! b1fe3078-7bbd-5df1-9c5c-6ba494a08050
+    Parts:
+        -   Entity:
+                Id: b1fe3078-7bbd-5df1-9c5c-6ba494a08050
+                Name: scale_rat_small
+                Components:
+                    f915ffc79eb25ef5915703f8f6d66c3c: !TransformComponent
+                        Id: 447fbd57-8fd1-575c-b483-9834e6df30ec
+                        Position: {X: 0, Y: 0, Z: 0}
+                        Rotation: {X: 0, Y: 0, Z: 0, W: 1}
+                        Scale: {X: 1, Y: 1, Z: 1}
+                        Children: {}
+                    c78765174d2c5f0aaba4e844972ac968: !ModelComponent
+                        Id: 2e97d4aa-38e0-500d-bc5b-a5908ffc6ff6
+                        Model: 7448773b-726b-5826-953e-dff37bbbec91:CanalCity/scale_rat_small
+                        Materials: {}

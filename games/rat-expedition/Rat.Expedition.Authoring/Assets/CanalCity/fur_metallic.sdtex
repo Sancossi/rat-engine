@@ -1,0 +1,9 @@
+!Texture
+Id: 885b9f69-2d50-50ea-ad1c-8c115688e8aa
+SerializedVersion: {Stride: 2.0.0.0}
+Tags: []
+Source: !file ../../Resources/CanalCity/textures/fur_metallic.png
+Type: !GrayscaleTextureType {}
+IsStreamable: false
+IsCompressed: false
+GenerateMipmaps: true

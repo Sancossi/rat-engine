@@ -1,0 +1,22 @@
+!PrefabAsset
+Id: db63cf8b-ef9e-58ca-96c8-dcf82cb857b3
+SerializedVersion: {Stride: 3.1.0.1}
+Tags: []
+Hierarchy:
+    RootParts:
+        - ref!! 3730c328-9986-504d-bcd2-66d62cdc2b34
+    Parts:
+        -   Entity:
+                Id: 3730c328-9986-504d-bcd2-66d62cdc2b34
+                Name: stairs_medium
+                Components:
+                    22200fa7ff5959e987da4b3b9adb1f94: !TransformComponent
+                        Id: a9db50b9-383c-5bb4-bf35-1e5a3ab7fa03
+                        Position: {X: 0, Y: 0, Z: 0}
+                        Rotation: {X: 0, Y: 0, Z: 0, W: 1}
+                        Scale: {X: 1, Y: 1, Z: 1}
+                        Children: {}
+                    fa3cb850d04b54b0b49a0a52c76198aa: !ModelComponent
+                        Id: db3a40aa-ac19-558d-ab85-3d01f8bbc4b8
+                        Model: 2345f4da-9ab5-517c-a4be-676148662b8e:CanalCity/stairs_medium
+                        Materials: {}

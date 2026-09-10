@@ -1,0 +1,25 @@
+!Package
+SerializedVersion: {Assets: 3.1.0.0}
+Meta:
+    Name: Canal City Preview
+    Version: 0.1.0
+    Authors: []
+    Owners: []
+    Dependencies: null
+AssetFolders: []
+ResourceFolders: []
+RootAssets:
+    - 32e0a064-11e8-5608-863e-18deeb1cd12c:CanalCity/PreviewScene
+    - a30e11b5-7374-5adb-8776-59b6d3059f55:CanalCity/PreviewCompositor
+    - 4be9296a-a0b8-5c1b-8e8e-50418a07f8ad:CanalCity/bridge_arch_prefab
+    - d3bec4e5-270f-56e9-87ce-92cee358627d:CanalCity/canal_wall_prefab
+    - 58128478-2100-52fb-a2be-7400f72e48b4:CanalCity/door_standard_prefab
+    - 171b7ae2-9bc3-5429-b9a2-3ea62a157b6b:CanalCity/lantern_amber_prefab
+    - d7746b67-0553-5a5e-bdde-60a5343adbc3:CanalCity/railing_high_prefab
+    - b10bbbcc-e623-5e03-9e43-e022df35901d:CanalCity/railing_iron_prefab
+    - e69bb5c2-6905-5200-8b61-2e598c4bf51d:CanalCity/scale_rat_adult_prefab
+    - 23f919bd-3ba7-5b23-93c4-1e1fcd49fe6a:CanalCity/scale_rat_high_prefab
+    - 73b91356-26f3-569d-a336-affdbd83861f:CanalCity/scale_rat_medium_prefab
+    - bae67434-1d9e-57b1-aeb2-ccde1376e089:CanalCity/scale_rat_small_prefab
+    - db63cf8b-ef9e-58ca-96c8-dcf82cb857b3:CanalCity/stairs_medium_prefab
+    - 6065f68b-2ae5-50eb-ae76-4892d46d717a:CanalCity/stairs_paired_prefab

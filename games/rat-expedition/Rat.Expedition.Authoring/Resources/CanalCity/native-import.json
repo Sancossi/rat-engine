@@ -1,0 +1,1260 @@
+{
+  "qualification": "Stride ThreeDAssetImporter.GetEntityInfo and Import",
+  "version": "4.4.0.0",
+  "files": [
+    {
+      "file": "animations/door_close.fbx",
+      "sha256": "ad0e8fefc8b8239fce6623fed05926b3f86554fef5d8fdb88fb4b7fd9a857fde",
+      "materials": [
+        "CC_oak",
+        "CC_iron",
+        "CC_brass",
+        "CC_stone_dark",
+        "CC_stone",
+        "CC_stone_light"
+      ],
+      "meshes": [
+        {
+          "MeshName": "Doorleaf.001_1",
+          "MaterialName": "CC_oak",
+          "NodeName": "door_standard_leaf"
+        },
+        {
+          "MeshName": "Doorleaf.001_2",
+          "MaterialName": "CC_iron",
+          "NodeName": "door_standard_leaf"
+        },
+        {
+          "MeshName": "Doorleaf.001_3",
+          "MaterialName": "CC_brass",
+          "NodeName": "door_standard_leaf"
+        },
+        {
+          "MeshName": "Ashlar_00.112_1",
+          "MaterialName": "CC_stone_dark",
+          "NodeName": "door_standard_frame"
+        },
+        {
+          "MeshName": "Ashlar_00.112_2",
+          "MaterialName": "CC_stone",
+          "NodeName": "door_standard_frame"
+        },
+        {
+          "MeshName": "Ashlar_00.112_3",
+          "MaterialName": "CC_stone_light",
+          "NodeName": "door_standard_frame"
+        }
+      ],
+      "nodes": [
+        {
+          "Name": "RootNode",
+          "Depth": 0,
+          "Preserve": true
+        },
+        {
+          "Name": "Root",
+          "Depth": 1,
+          "Preserve": true
+        },
+        {
+          "Name": "door_hinge.001",
+          "Depth": 2,
+          "Preserve": true
+        },
+        {
+          "Name": "door_standard_leaf",
+          "Depth": 3,
+          "Preserve": true
+        },
+        {
+          "Name": "door_standard_frame",
+          "Depth": 2,
+          "Preserve": true
+        }
+      ],
+      "animations": [
+        {
+          "AnimationStack": 0,
+          "start": 0,
+          "end": 2
+        }
+      ]
+    },
+    {
+      "file": "animations/door_open.fbx",
+      "sha256": "d333bd7f106bd2af39edbbbdcb9e69368ce6651790495020edb582a826d98890",
+      "materials": [
+        "CC_oak",
+        "CC_iron",
+        "CC_brass",
+        "CC_stone_dark",
+        "CC_stone",
+        "CC_stone_light"
+      ],
+      "meshes": [
+        {
+          "MeshName": "Doorleaf.001_1",
+          "MaterialName": "CC_oak",
+          "NodeName": "door_standard_leaf"
+        },
+        {
+          "MeshName": "Doorleaf.001_2",
+          "MaterialName": "CC_iron",
+          "NodeName": "door_standard_leaf"
+        },
+        {
+          "MeshName": "Doorleaf.001_3",
+          "MaterialName": "CC_brass",
+          "NodeName": "door_standard_leaf"
+        },
+        {
+          "MeshName": "Ashlar_00.112_1",
+          "MaterialName": "CC_stone_dark",
+          "NodeName": "door_standard_frame"
+        },
+        {
+          "MeshName": "Ashlar_00.112_2",
+          "MaterialName": "CC_stone",
+          "NodeName": "door_standard_frame"
+        },
+        {
+          "MeshName": "Ashlar_00.112_3",
+          "MaterialName": "CC_stone_light",
+          "NodeName": "door_standard_frame"
+        }
+      ],
+      "nodes": [
+        {
+          "Name": "RootNode",
+          "Depth": 0,
+          "Preserve": true
+        },
+        {
+          "Name": "Root",
+          "Depth": 1,
+          "Preserve": true
+        },
+        {
+          "Name": "door_hinge.001",
+          "Depth": 2,
+          "Preserve": true
+        },
+        {
+          "Name": "door_standard_leaf",
+          "Depth": 3,
+          "Preserve": true
+        },
+        {
+          "Name": "door_standard_frame",
+          "Depth": 2,
+          "Preserve": true
+        }
+      ],
+      "animations": [
+        {
+          "AnimationStack": 0,
+          "start": 0,
+          "end": 2
+        }
+      ]
+    },
+    {
+      "file": "models/bridge_arch.fbx",
+      "sha256": "0b0b7eca1fabd57c2ccc40cb3498684cc077c950838cd9c5dc9ba8ff23223059",
+      "materials": [
+        "CC_stone",
+        "CC_stone_dark",
+        "CC_stone_light",
+        "CC_burgundy",
+        "CC_brass",
+        "CC_iron",
+        "CC_amber"
+      ],
+      "meshes": [
+        {
+          "MeshName": "Ashlar_00.112_1",
+          "MaterialName": "CC_stone",
+          "NodeName": "bridge_arch_abutments"
+        },
+        {
+          "MeshName": "Ashlar_00.112_2",
+          "MaterialName": "CC_stone_dark",
+          "NodeName": "bridge_arch_abutments"
+        },
+        {
+          "MeshName": "Ashlar_00.112_3",
+          "MaterialName": "CC_stone_light",
+          "NodeName": "bridge_arch_abutments"
+        },
+        {
+          "MeshName": "Radialarchvoussoir.053_1",
+          "MaterialName": "CC_stone",
+          "NodeName": "bridge_arch_arch"
+        },
+        {
+          "MeshName": "Radialarchvoussoir.053_2",
+          "MaterialName": "CC_stone_light",
+          "NodeName": "bridge_arch_arch"
+        },
+        {
+          "MeshName": "Burgundybridgestandard.001_1",
+          "MaterialName": "CC_burgundy",
+          "NodeName": "bridge_arch_banner"
+        },
+        {
+          "MeshName": "Burgundybridgestandard.001_2",
+          "MaterialName": "CC_brass",
+          "NodeName": "bridge_arch_banner"
+        },
+        {
+          "MeshName": "Bridgepaving.096_1",
+          "MaterialName": "CC_stone",
+          "NodeName": "bridge_arch_deck"
+        },
+        {
+          "MeshName": "Bridgepaving.096_2",
+          "MaterialName": "CC_stone_dark",
+          "NodeName": "bridge_arch_deck"
+        },
+        {
+          "MeshName": "Bridgepaving.096_3",
+          "MaterialName": "CC_stone_light",
+          "NodeName": "bridge_arch_deck"
+        },
+        {
+          "MeshName": "Finial.030_1",
+          "MaterialName": "CC_brass",
+          "NodeName": "bridge_arch_ironwork"
+        },
+        {
+          "MeshName": "Finial.030_2",
+          "MaterialName": "CC_iron",
+          "NodeName": "bridge_arch_ironwork"
+        },
+        {
+          "MeshName": "Lanternmoulding.045_1",
+          "MaterialName": "CC_iron",
+          "NodeName": "bridge_arch_lamp"
+        },
+        {
+          "MeshName": "Lanternmoulding.045_2",
+          "MaterialName": "CC_brass",
+          "NodeName": "bridge_arch_lamp"
+        },
+        {
+          "MeshName": "Lanternmoulding.045_3",
+          "MaterialName": "CC_amber",
+          "NodeName": "bridge_arch_lamp"
+        },
+        {
+          "MeshName": "Ashlar_00.144_1",
+          "MaterialName": "CC_stone",
+          "NodeName": "bridge_arch_posts"
+        },
+        {
+          "MeshName": "Ashlar_00.144_2",
+          "MaterialName": "CC_stone_dark",
+          "NodeName": "bridge_arch_posts"
+        },
+        {
+          "MeshName": "Ashlar_00.144_3",
+          "MaterialName": "CC_stone_light",
+          "NodeName": "bridge_arch_posts"
+        },
+        {
+          "MeshName": "Ashlar_00.144_4",
+          "MaterialName": "CC_brass",
+          "NodeName": "bridge_arch_posts"
+        },
+        {
+          "MeshName": "Ironupright.026_1",
+          "MaterialName": "CC_iron",
+          "NodeName": "bridge_arch_structure"
+        },
+        {
+          "MeshName": "Ironupright.026_2",
+          "MaterialName": "CC_brass",
+          "NodeName": "bridge_arch_structure"
+        }
+      ],
+      "nodes": [
+        {
+          "Name": "RootNode",
+          "Depth": 0,
+          "Preserve": true
+        },
+        {
+          "Name": "Root",
+          "Depth": 1,
+          "Preserve": true
+        },
+        {
+          "Name": "bridge_arch_abutments",
+          "Depth": 2,
+          "Preserve": true
+        },
+        {
+          "Name": "bridge_arch_arch",
+          "Depth": 2,
+          "Preserve": true
+        },
+        {
+          "Name": "bridge_arch_banner",
+          "Depth": 2,
+          "Preserve": true
+        },
+        {
+          "Name": "bridge_arch_deck",
+          "Depth": 2,
+          "Preserve": true
+        },
+        {
+          "Name": "bridge_arch_ironwork",
+          "Depth": 2,
+          "Preserve": true
+        },
+        {
+          "Name": "bridge_arch_lamp",
+          "Depth": 2,
+          "Preserve": true
+        },
+        {
+          "Name": "bridge_arch_posts",
+          "Depth": 2,
+          "Preserve": true
+        },
+        {
+          "Name": "bridge_arch_structure",
+          "Depth": 2,
+          "Preserve": true
+        }
+      ],
+      "animations": []
+    },
+    {
+      "file": "models/canal_wall.fbx",
+      "sha256": "16f37cfd5922ca66c36863b4e8085d38d0dd2e43f81aa0c02040c27192b6a11d",
+      "materials": [
+        "CC_stone",
+        "CC_stone_light",
+        "CC_stone_dark",
+        "CC_iron",
+        "CC_brass",
+        "CC_amber"
+      ],
+      "meshes": [
+        {
+          "MeshName": "Quaypaving.128_1",
+          "MaterialName": "CC_stone",
+          "NodeName": "canal_wall_deck"
+        },
+        {
+          "MeshName": "Quaypaving.128_2",
+          "MaterialName": "CC_stone_light",
+          "NodeName": "canal_wall_deck"
+        },
+        {
+          "MeshName": "Quaypaving.128_3",
+          "MaterialName": "CC_stone_dark",
+          "NodeName": "canal_wall_deck"
+        },
+        {
+          "MeshName": "Ringplate.004_1",
+          "MaterialName": "CC_iron",
+          "NodeName": "canal_wall_ironwork"
+        },
+        {
+          "MeshName": "Ringplate.004_2",
+          "MaterialName": "CC_brass",
+          "NodeName": "canal_wall_ironwork"
+        },
+        {
+          "MeshName": "Lanternmoulding.045_1",
+          "MaterialName": "CC_iron",
+          "NodeName": "canal_wall_lamp"
+        },
+        {
+          "MeshName": "Lanternmoulding.045_2",
+          "MaterialName": "CC_brass",
+          "NodeName": "canal_wall_lamp"
+        },
+        {
+          "MeshName": "Lanternmoulding.045_3",
+          "MaterialName": "CC_amber",
+          "NodeName": "canal_wall_lamp"
+        },
+        {
+          "MeshName": "Ashlar_00.136_1",
+          "MaterialName": "CC_stone",
+          "NodeName": "canal_wall_posts"
+        },
+        {
+          "MeshName": "Ashlar_00.136_2",
+          "MaterialName": "CC_stone_dark",
+          "NodeName": "canal_wall_posts"
+        },
+        {
+          "MeshName": "Ashlar_00.136_3",
+          "MaterialName": "CC_stone_light",
+          "NodeName": "canal_wall_posts"
+        },
+        {
+          "MeshName": "Ashlar_00.136_4",
+          "MaterialName": "CC_brass",
+          "NodeName": "canal_wall_posts"
+        },
+        {
+          "MeshName": "Ashlar_00.112_1",
+          "MaterialName": "CC_stone_light",
+          "NodeName": "canal_wall_structure"
+        },
+        {
+          "MeshName": "Ashlar_00.112_2",
+          "MaterialName": "CC_stone",
+          "NodeName": "canal_wall_structure"
+        },
+        {
+          "MeshName": "Ashlar_00.112_3",
+          "MaterialName": "CC_stone_dark",
+          "NodeName": "canal_wall_structure"
+        }
+      ],
+      "nodes": [
+        {
+          "Name": "RootNode",
+          "Depth": 0,
+          "Preserve": true
+        },
+        {
+          "Name": "Root",
+          "Depth": 1,
+          "Preserve": true
+        },
+        {
+          "Name": "canal_wall_deck",
+          "Depth": 2,
+          "Preserve": true
+        },
+        {
+          "Name": "canal_wall_ironwork",
+          "Depth": 2,
+          "Preserve": true
+        },
+        {
+          "Name": "canal_wall_lamp",
+          "Depth": 2,
+          "Preserve": true
+        },
+        {
+          "Name": "canal_wall_posts",
+          "Depth": 2,
+          "Preserve": true
+        },
+        {
+          "Name": "canal_wall_structure",
+          "Depth": 2,
+          "Preserve": true
+        }
+      ],
+      "animations": []
+    },
+    {
+      "file": "models/door_standard.fbx",
+      "sha256": "fc20315bae51d5db74bb016289bb4e9f6df5752eeb25af9a0363e16f56d3128d",
+      "materials": [
+        "CC_oak",
+        "CC_iron",
+        "CC_brass",
+        "CC_stone_dark",
+        "CC_stone",
+        "CC_stone_light"
+      ],
+      "meshes": [
+        {
+          "MeshName": "Doorleaf.001_1",
+          "MaterialName": "CC_oak",
+          "NodeName": "door_standard_leaf"
+        },
+        {
+          "MeshName": "Doorleaf.001_2",
+          "MaterialName": "CC_iron",
+          "NodeName": "door_standard_leaf"
+        },
+        {
+          "MeshName": "Doorleaf.001_3",
+          "MaterialName": "CC_brass",
+          "NodeName": "door_standard_leaf"
+        },
+        {
+          "MeshName": "Ashlar_00.112_1",
+          "MaterialName": "CC_stone_dark",
+          "NodeName": "door_standard_frame"
+        },
+        {
+          "MeshName": "Ashlar_00.112_2",
+          "MaterialName": "CC_stone",
+          "NodeName": "door_standard_frame"
+        },
+        {
+          "MeshName": "Ashlar_00.112_3",
+          "MaterialName": "CC_stone_light",
+          "NodeName": "door_standard_frame"
+        }
+      ],
+      "nodes": [
+        {
+          "Name": "RootNode",
+          "Depth": 0,
+          "Preserve": true
+        },
+        {
+          "Name": "Root",
+          "Depth": 1,
+          "Preserve": true
+        },
+        {
+          "Name": "door_hinge.001",
+          "Depth": 2,
+          "Preserve": true
+        },
+        {
+          "Name": "door_standard_leaf",
+          "Depth": 3,
+          "Preserve": true
+        },
+        {
+          "Name": "door_standard_frame",
+          "Depth": 2,
+          "Preserve": true
+        }
+      ],
+      "animations": []
+    },
+    {
+      "file": "models/lantern_amber.fbx",
+      "sha256": "12b034335950a5333df8dabe9d25b7dbac8c7f72e4121652bc5b100165028349",
+      "materials": [
+        "CC_iron",
+        "CC_brass",
+        "CC_amber"
+      ],
+      "meshes": [
+        {
+          "MeshName": "Lanternmoulding.045_1",
+          "MaterialName": "CC_iron",
+          "NodeName": "lantern_amber_lamp"
+        },
+        {
+          "MeshName": "Lanternmoulding.045_2",
+          "MaterialName": "CC_brass",
+          "NodeName": "lantern_amber_lamp"
+        },
+        {
+          "MeshName": "Lanternmoulding.045_3",
+          "MaterialName": "CC_amber",
+          "NodeName": "lantern_amber_lamp"
+        }
+      ],
+      "nodes": [
+        {
+          "Name": "RootNode",
+          "Depth": 0,
+          "Preserve": true
+        },
+        {
+          "Name": "Root",
+          "Depth": 1,
+          "Preserve": true
+        },
+        {
+          "Name": "lantern_amber_lamp",
+          "Depth": 2,
+          "Preserve": true
+        }
+      ],
+      "animations": []
+    },
+    {
+      "file": "models/railing_high.fbx",
+      "sha256": "9c83b6c7cd367a9b4bb9a62cd335bb0a7125e90467bed0f3aa64e1f4920f824d",
+      "materials": [
+        "CC_brass",
+        "CC_iron"
+      ],
+      "meshes": [
+        {
+          "MeshName": "Finial.030_1",
+          "MaterialName": "CC_brass",
+          "NodeName": "railing_high_ironwork"
+        },
+        {
+          "MeshName": "Finial.030_2",
+          "MaterialName": "CC_iron",
+          "NodeName": "railing_high_ironwork"
+        },
+        {
+          "MeshName": "Postcap.047",
+          "MaterialName": "CC_brass",
+          "NodeName": "railing_high_posts"
+        },
+        {
+          "MeshName": "Ironupright.026_1",
+          "MaterialName": "CC_iron",
+          "NodeName": "railing_high_structure"
+        },
+        {
+          "MeshName": "Ironupright.026_2",
+          "MaterialName": "CC_brass",
+          "NodeName": "railing_high_structure"
+        }
+      ],
+      "nodes": [
+        {
+          "Name": "RootNode",
+          "Depth": 0,
+          "Preserve": true
+        },
+        {
+          "Name": "Root",
+          "Depth": 1,
+          "Preserve": true
+        },
+        {
+          "Name": "railing_high_ironwork",
+          "Depth": 2,
+          "Preserve": true
+        },
+        {
+          "Name": "railing_high_posts",
+          "Depth": 2,
+          "Preserve": true
+        },
+        {
+          "Name": "railing_high_structure",
+          "Depth": 2,
+          "Preserve": true
+        }
+      ],
+      "animations": []
+    },
+    {
+      "file": "models/railing_iron.fbx",
+      "sha256": "e9d3ce05d4f4766a3dab518cc6ec7a9c02c26ef9983e2743fa8aa749b003b181",
+      "materials": [
+        "CC_brass",
+        "CC_iron"
+      ],
+      "meshes": [
+        {
+          "MeshName": "Finial.030_1",
+          "MaterialName": "CC_brass",
+          "NodeName": "railing_iron_ironwork"
+        },
+        {
+          "MeshName": "Finial.030_2",
+          "MaterialName": "CC_iron",
+          "NodeName": "railing_iron_ironwork"
+        },
+        {
+          "MeshName": "Postcap.030",
+          "MaterialName": "CC_brass",
+          "NodeName": "railing_iron_posts"
+        },
+        {
+          "MeshName": "Ironupright.026_1",
+          "MaterialName": "CC_iron",
+          "NodeName": "railing_iron_structure"
+        },
+        {
+          "MeshName": "Ironupright.026_2",
+          "MaterialName": "CC_brass",
+          "NodeName": "railing_iron_structure"
+        }
+      ],
+      "nodes": [
+        {
+          "Name": "RootNode",
+          "Depth": 0,
+          "Preserve": true
+        },
+        {
+          "Name": "Root",
+          "Depth": 1,
+          "Preserve": true
+        },
+        {
+          "Name": "railing_iron_ironwork",
+          "Depth": 2,
+          "Preserve": true
+        },
+        {
+          "Name": "railing_iron_posts",
+          "Depth": 2,
+          "Preserve": true
+        },
+        {
+          "Name": "railing_iron_structure",
+          "Depth": 2,
+          "Preserve": true
+        }
+      ],
+      "animations": []
+    },
+    {
+      "file": "models/scale_rat_adult.fbx",
+      "sha256": "bd142cdbb67bd574cfda63a008b8af909d5111f6539db84923988764074f2f5e",
+      "materials": [
+        "CC_ear",
+        "CC_fur",
+        "CC_fur_light",
+        "CC_iron",
+        "CC_stone_light",
+        "CC_burgundy",
+        "CC_brass"
+      ],
+      "meshes": [
+        {
+          "MeshName": "Rattail.004",
+          "MaterialName": "CC_ear",
+          "NodeName": "scale_rat_adult_accessories"
+        },
+        {
+          "MeshName": "Ratfoot.008_1",
+          "MaterialName": "CC_fur",
+          "NodeName": "scale_rat_adult_body"
+        },
+        {
+          "MeshName": "Ratfoot.008_2",
+          "MaterialName": "CC_fur_light",
+          "NodeName": "scale_rat_adult_body"
+        },
+        {
+          "MeshName": "Ratfoot.008_3",
+          "MaterialName": "CC_iron",
+          "NodeName": "scale_rat_adult_body"
+        },
+        {
+          "MeshName": "Ratfoot.008_4",
+          "MaterialName": "CC_ear",
+          "NodeName": "scale_rat_adult_body"
+        },
+        {
+          "MeshName": "Ratfoot.008_5",
+          "MaterialName": "CC_stone_light",
+          "NodeName": "scale_rat_adult_body"
+        },
+        {
+          "MeshName": "Pleatedtravellingrobe.004_1",
+          "MaterialName": "CC_burgundy",
+          "NodeName": "scale_rat_adult_robe"
+        },
+        {
+          "MeshName": "Pleatedtravellingrobe.004_2",
+          "MaterialName": "CC_brass",
+          "NodeName": "scale_rat_adult_robe"
+        }
+      ],
+      "nodes": [
+        {
+          "Name": "RootNode",
+          "Depth": 0,
+          "Preserve": true
+        },
+        {
+          "Name": "Root",
+          "Depth": 1,
+          "Preserve": true
+        },
+        {
+          "Name": "scale_rat_adult_accessories",
+          "Depth": 2,
+          "Preserve": true
+        },
+        {
+          "Name": "scale_rat_adult_body",
+          "Depth": 2,
+          "Preserve": true
+        },
+        {
+          "Name": "scale_rat_adult_robe",
+          "Depth": 2,
+          "Preserve": true
+        }
+      ],
+      "animations": []
+    },
+    {
+      "file": "models/scale_rat_high.fbx",
+      "sha256": "cb50e9706c0b1a03ae565707e5c4647953ce95009efaa67d0ff6e5b2fddfff42",
+      "materials": [
+        "CC_ear",
+        "CC_oak",
+        "CC_brass",
+        "CC_fur",
+        "CC_fur_light",
+        "CC_iron",
+        "CC_stone_light",
+        "CC_burgundy"
+      ],
+      "meshes": [
+        {
+          "MeshName": "Rattail.004_1",
+          "MaterialName": "CC_ear",
+          "NodeName": "scale_rat_high_accessories"
+        },
+        {
+          "MeshName": "Rattail.004_2",
+          "MaterialName": "CC_oak",
+          "NodeName": "scale_rat_high_accessories"
+        },
+        {
+          "MeshName": "Rattail.004_3",
+          "MaterialName": "CC_brass",
+          "NodeName": "scale_rat_high_accessories"
+        },
+        {
+          "MeshName": "Ratfoot.008_1",
+          "MaterialName": "CC_fur",
+          "NodeName": "scale_rat_high_body"
+        },
+        {
+          "MeshName": "Ratfoot.008_2",
+          "MaterialName": "CC_fur_light",
+          "NodeName": "scale_rat_high_body"
+        },
+        {
+          "MeshName": "Ratfoot.008_3",
+          "MaterialName": "CC_iron",
+          "NodeName": "scale_rat_high_body"
+        },
+        {
+          "MeshName": "Ratfoot.008_4",
+          "MaterialName": "CC_ear",
+          "NodeName": "scale_rat_high_body"
+        },
+        {
+          "MeshName": "Ratfoot.008_5",
+          "MaterialName": "CC_stone_light",
+          "NodeName": "scale_rat_high_body"
+        },
+        {
+          "MeshName": "Pleatedtravellingrobe.004_1",
+          "MaterialName": "CC_burgundy",
+          "NodeName": "scale_rat_high_robe"
+        },
+        {
+          "MeshName": "Pleatedtravellingrobe.004_2",
+          "MaterialName": "CC_brass",
+          "NodeName": "scale_rat_high_robe"
+        }
+      ],
+      "nodes": [
+        {
+          "Name": "RootNode",
+          "Depth": 0,
+          "Preserve": true
+        },
+        {
+          "Name": "Root",
+          "Depth": 1,
+          "Preserve": true
+        },
+        {
+          "Name": "scale_rat_high_accessories",
+          "Depth": 2,
+          "Preserve": true
+        },
+        {
+          "Name": "scale_rat_high_body",
+          "Depth": 2,
+          "Preserve": true
+        },
+        {
+          "Name": "scale_rat_high_robe",
+          "Depth": 2,
+          "Preserve": true
+        }
+      ],
+      "animations": []
+    },
+    {
+      "file": "models/scale_rat_medium.fbx",
+      "sha256": "6d126575a5be9904b72c859ee0b8e5d4b74c270ae6c13f1aa1b3a77327e14998",
+      "materials": [
+        "CC_ear",
+        "CC_fur",
+        "CC_fur_light",
+        "CC_iron",
+        "CC_stone_light",
+        "CC_burgundy",
+        "CC_brass"
+      ],
+      "meshes": [
+        {
+          "MeshName": "Rattail.004",
+          "MaterialName": "CC_ear",
+          "NodeName": "scale_rat_medium_accessories"
+        },
+        {
+          "MeshName": "Ratfoot.008_1",
+          "MaterialName": "CC_fur",
+          "NodeName": "scale_rat_medium_body"
+        },
+        {
+          "MeshName": "Ratfoot.008_2",
+          "MaterialName": "CC_fur_light",
+          "NodeName": "scale_rat_medium_body"
+        },
+        {
+          "MeshName": "Ratfoot.008_3",
+          "MaterialName": "CC_iron",
+          "NodeName": "scale_rat_medium_body"
+        },
+        {
+          "MeshName": "Ratfoot.008_4",
+          "MaterialName": "CC_ear",
+          "NodeName": "scale_rat_medium_body"
+        },
+        {
+          "MeshName": "Ratfoot.008_5",
+          "MaterialName": "CC_stone_light",
+          "NodeName": "scale_rat_medium_body"
+        },
+        {
+          "MeshName": "Pleatedtravellingrobe.004_1",
+          "MaterialName": "CC_burgundy",
+          "NodeName": "scale_rat_medium_robe"
+        },
+        {
+          "MeshName": "Pleatedtravellingrobe.004_2",
+          "MaterialName": "CC_brass",
+          "NodeName": "scale_rat_medium_robe"
+        }
+      ],
+      "nodes": [
+        {
+          "Name": "RootNode",
+          "Depth": 0,
+          "Preserve": true
+        },
+        {
+          "Name": "Root",
+          "Depth": 1,
+          "Preserve": true
+        },
+        {
+          "Name": "scale_rat_medium_accessories",
+          "Depth": 2,
+          "Preserve": true
+        },
+        {
+          "Name": "scale_rat_medium_body",
+          "Depth": 2,
+          "Preserve": true
+        },
+        {
+          "Name": "scale_rat_medium_robe",
+          "Depth": 2,
+          "Preserve": true
+        }
+      ],
+      "animations": []
+    },
+    {
+      "file": "models/scale_rat_small.fbx",
+      "sha256": "e03df9079e0a9ce39397a6b64925e86c80d5ebcece5b07ab3e4b3d527567d319",
+      "materials": [
+        "CC_ear",
+        "CC_fur",
+        "CC_fur_light",
+        "CC_iron",
+        "CC_stone_light",
+        "CC_burgundy",
+        "CC_brass"
+      ],
+      "meshes": [
+        {
+          "MeshName": "Rattail.004",
+          "MaterialName": "CC_ear",
+          "NodeName": "scale_rat_small_accessories"
+        },
+        {
+          "MeshName": "Ratfoot.008_1",
+          "MaterialName": "CC_fur",
+          "NodeName": "scale_rat_small_body"
+        },
+        {
+          "MeshName": "Ratfoot.008_2",
+          "MaterialName": "CC_fur_light",
+          "NodeName": "scale_rat_small_body"
+        },
+        {
+          "MeshName": "Ratfoot.008_3",
+          "MaterialName": "CC_iron",
+          "NodeName": "scale_rat_small_body"
+        },
+        {
+          "MeshName": "Ratfoot.008_4",
+          "MaterialName": "CC_ear",
+          "NodeName": "scale_rat_small_body"
+        },
+        {
+          "MeshName": "Ratfoot.008_5",
+          "MaterialName": "CC_stone_light",
+          "NodeName": "scale_rat_small_body"
+        },
+        {
+          "MeshName": "Pleatedtravellingrobe.004_1",
+          "MaterialName": "CC_burgundy",
+          "NodeName": "scale_rat_small_robe"
+        },
+        {
+          "MeshName": "Pleatedtravellingrobe.004_2",
+          "MaterialName": "CC_brass",
+          "NodeName": "scale_rat_small_robe"
+        }
+      ],
+      "nodes": [
+        {
+          "Name": "RootNode",
+          "Depth": 0,
+          "Preserve": true
+        },
+        {
+          "Name": "Root",
+          "Depth": 1,
+          "Preserve": true
+        },
+        {
+          "Name": "scale_rat_small_accessories",
+          "Depth": 2,
+          "Preserve": true
+        },
+        {
+          "Name": "scale_rat_small_body",
+          "Depth": 2,
+          "Preserve": true
+        },
+        {
+          "Name": "scale_rat_small_robe",
+          "Depth": 2,
+          "Preserve": true
+        }
+      ],
+      "animations": []
+    },
+    {
+      "file": "models/stairs_medium.fbx",
+      "sha256": "f645524f148f55b6f01e93574c4d4db29f070d5abb0273dafe6c158fb057915a",
+      "materials": [
+        "CC_brass",
+        "CC_iron",
+        "CC_stone",
+        "CC_stone_dark",
+        "CC_stone_light"
+      ],
+      "meshes": [
+        {
+          "MeshName": "Finial.030_1",
+          "MaterialName": "CC_brass",
+          "NodeName": "stairs_medium_ironwork"
+        },
+        {
+          "MeshName": "Finial.030_2",
+          "MaterialName": "CC_iron",
+          "NodeName": "stairs_medium_ironwork"
+        },
+        {
+          "MeshName": "Postcap.047",
+          "MaterialName": "CC_brass",
+          "NodeName": "stairs_medium_posts"
+        },
+        {
+          "MeshName": "Ashlar_00.112_1",
+          "MaterialName": "CC_stone",
+          "NodeName": "stairs_medium_stair_mass"
+        },
+        {
+          "MeshName": "Ashlar_00.112_2",
+          "MaterialName": "CC_stone_dark",
+          "NodeName": "stairs_medium_stair_mass"
+        },
+        {
+          "MeshName": "Ashlar_00.112_3",
+          "MaterialName": "CC_stone_light",
+          "NodeName": "stairs_medium_stair_mass"
+        },
+        {
+          "MeshName": "Ironupright.026_1",
+          "MaterialName": "CC_iron",
+          "NodeName": "stairs_medium_structure"
+        },
+        {
+          "MeshName": "Ironupright.026_2",
+          "MaterialName": "CC_brass",
+          "NodeName": "stairs_medium_structure"
+        },
+        {
+          "MeshName": "Easedstairnosing.016",
+          "MaterialName": "CC_stone_light",
+          "NodeName": "stairs_medium_treads"
+        }
+      ],
+      "nodes": [
+        {
+          "Name": "RootNode",
+          "Depth": 0,
+          "Preserve": true
+        },
+        {
+          "Name": "Root",
+          "Depth": 1,
+          "Preserve": true
+        },
+        {
+          "Name": "stairs_medium_ironwork",
+          "Depth": 2,
+          "Preserve": true
+        },
+        {
+          "Name": "stairs_medium_posts",
+          "Depth": 2,
+          "Preserve": true
+        },
+        {
+          "Name": "stairs_medium_stair_mass",
+          "Depth": 2,
+          "Preserve": true
+        },
+        {
+          "Name": "stairs_medium_structure",
+          "Depth": 2,
+          "Preserve": true
+        },
+        {
+          "Name": "stairs_medium_treads",
+          "Depth": 2,
+          "Preserve": true
+        }
+      ],
+      "animations": []
+    },
+    {
+      "file": "models/stairs_paired.fbx",
+      "sha256": "beec00d7c90e4ffbd5d48b5370bae68cf1a5e39746470816c82e215d7d66cc0a",
+      "materials": [
+        "CC_brass",
+        "CC_stone_dark",
+        "CC_oak",
+        "CC_stone_light",
+        "CC_stone",
+        "CC_iron"
+      ],
+      "meshes": [
+        {
+          "MeshName": "Finial.030",
+          "MaterialName": "CC_brass",
+          "NodeName": "stairs_paired_ironwork"
+        },
+        {
+          "MeshName": "Smalllanestonesupport.016",
+          "MaterialName": "CC_stone_dark",
+          "NodeName": "stairs_paired_overlay_support"
+        },
+        {
+          "MeshName": "Overlaywoodentread.016_1",
+          "MaterialName": "CC_oak",
+          "NodeName": "stairs_paired_overlay_treads"
+        },
+        {
+          "MeshName": "Overlaywoodentread.016_2",
+          "MaterialName": "CC_brass",
+          "NodeName": "stairs_paired_overlay_treads"
+        },
+        {
+          "MeshName": "Postcap.047",
+          "MaterialName": "CC_brass",
+          "NodeName": "stairs_paired_posts"
+        },
+        {
+          "MeshName": "Ashlar_00.112_1",
+          "MaterialName": "CC_stone_light",
+          "NodeName": "stairs_paired_stair_mass"
+        },
+        {
+          "MeshName": "Ashlar_00.112_2",
+          "MaterialName": "CC_stone",
+          "NodeName": "stairs_paired_stair_mass"
+        },
+        {
+          "MeshName": "Ashlar_00.112_3",
+          "MaterialName": "CC_stone_dark",
+          "NodeName": "stairs_paired_stair_mass"
+        },
+        {
+          "MeshName": "Ironupright.026_1",
+          "MaterialName": "CC_iron",
+          "NodeName": "stairs_paired_structure"
+        },
+        {
+          "MeshName": "Ironupright.026_2",
+          "MaterialName": "CC_brass",
+          "NodeName": "stairs_paired_structure"
+        },
+        {
+          "MeshName": "Easedstairnosing.016",
+          "MaterialName": "CC_stone_light",
+          "NodeName": "stairs_paired_treads"
+        }
+      ],
+      "nodes": [
+        {
+          "Name": "RootNode",
+          "Depth": 0,
+          "Preserve": true
+        },
+        {
+          "Name": "Root",
+          "Depth": 1,
+          "Preserve": true
+        },
+        {
+          "Name": "stairs_paired_ironwork",
+          "Depth": 2,
+          "Preserve": true
+        },
+        {
+          "Name": "stairs_paired_overlay_support",
+          "Depth": 2,
+          "Preserve": true
+        },
+        {
+          "Name": "stairs_paired_overlay_treads",
+          "Depth": 2,
+          "Preserve": true
+        },
+        {
+          "Name": "stairs_paired_posts",
+          "Depth": 2,
+          "Preserve": true
+        },
+        {
+          "Name": "stairs_paired_stair_mass",
+          "Depth": 2,
+          "Preserve": true
+        },
+        {
+          "Name": "stairs_paired_structure",
+          "Depth": 2,
+          "Preserve": true
+        },
+        {
+          "Name": "stairs_paired_treads",
+          "Depth": 2,
+          "Preserve": true
+        }
+      ],
+      "animations": []
+    }
+  ]
+}

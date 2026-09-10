@@ -1,0 +1,39 @@
+!Model
+Id: 7453c19f-4830-5209-a02e-9828735efc32
+SerializedVersion: {Stride: 2.0.0.0}
+Tags: []
+Source: !file ../../Resources/CanalCity/models/bridge_arch.fbx
+ScaleImport: 1
+PivotPosition: {X: 0, Y: 0, Z: 0}
+MergeMeshes: false
+DeduplicateMaterials: true
+Skeleton: b2db25f5-9694-5c5f-9467-ab755fc91835:CanalCity/bridge_arch_skeleton
+Materials:
+    606f713c076b5b0896e0c6dd787e7c90:
+        Name: CC_stone
+        MaterialInstance:
+            Material: 9f251351-c844-541a-a7a1-43bf563ef2c7:CanalCity/stone
+    fb1cd2bf953b5f5bad0e7ca7fc116ac2:
+        Name: CC_stone_dark
+        MaterialInstance:
+            Material: eca81495-50ad-5979-a404-a4421a8ab9ea:CanalCity/stone_dark
+    e9cd575b99e858ffb2db18274e646a21:
+        Name: CC_stone_light
+        MaterialInstance:
+            Material: f49abda4-b809-5777-bc4c-9a42640c4c4f:CanalCity/stone_light
+    f69b409021165f359ed8e05ca5705edf:
+        Name: CC_burgundy
+        MaterialInstance:
+            Material: c5bc43db-007d-526f-9ebd-edd80ef394e7:CanalCity/burgundy
+    283cab97dabd50298fef2028fc0de817:
+        Name: CC_brass
+        MaterialInstance:
+            Material: 044d9c32-b62a-55a1-bc9d-e462f7eb449d:CanalCity/brass
+    57dee4b7f05e5984934ce0eb569b2150:
+        Name: CC_iron
+        MaterialInstance:
+            Material: cdd4b95a-4244-5c9c-9fd6-2b076cdee59f:CanalCity/iron
+    2244c764b05950a196462ab1a8a0a842:
+        Name: CC_amber
+        MaterialInstance:
+            Material: 1c5d6ae1-6c8d-5500-8fb9-eb9bb3f04a13:CanalCity/amber

@@ -1,0 +1,19 @@
+{
+  "zip": "C:\\5_gamedev\\rat-engine-canal-city\\build\\canal-city\\Rat-CanalCity-NativePreview-notices-win-x64.zip",
+  "sha256": "b04f4e44ec925314fdb1215571ee100bb5facf97c07e5ac34a23c136caf11f4a",
+  "bytes": 88214164,
+  "extracted": "C:\\Users\\bogor\\AppData\\Local\\Temp\\RatCanalCity-Notices-6vaa8ybt",
+  "requiredFiles": [
+    "Content/credits.json",
+    "Content/fonts/OFL.txt",
+    "licenses/Rat-Expedition-LICENSE",
+    "licenses/Stride-LICENSE.md",
+    "licenses/Stride-THIRD-PARTY.md",
+    "licenses/package-inventory.json",
+    "coreclr.dll",
+    "data/db/bundles/default.bundle"
+  ],
+  "packageNotices": 142,
+  "selfContained": true,
+  "rawSourceAssetsPresent": false
+}

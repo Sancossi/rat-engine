@@ -1,0 +1,9 @@
+!Texture
+Id: 5f5e8da0-6ce5-5ef5-9c84-c3c5c8daa13f
+SerializedVersion: {Stride: 2.0.0.0}
+Tags: []
+Source: !file ../../Resources/CanalCity/textures/amber_normal.png
+Type: !NormalMapTextureType {}
+IsStreamable: false
+IsCompressed: false
+GenerateMipmaps: true

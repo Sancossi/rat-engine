@@ -1,0 +1,9 @@
+!Texture
+Id: d39a109b-57a6-5616-a7af-424d55feabda
+SerializedVersion: {Stride: 2.0.0.0}
+Tags: []
+Source: !file ../../Resources/CanalCity/textures/ear_basecolor.png
+Type: !ColorTextureType {}
+IsStreamable: false
+IsCompressed: false
+GenerateMipmaps: true

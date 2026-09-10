@@ -1,0 +1,9 @@
+!Texture
+Id: e543f0f0-05f3-528a-9123-5f87672e921b
+SerializedVersion: {Stride: 2.0.0.0}
+Tags: []
+Source: !file ../../Resources/CanalCity/textures/ear_metallic.png
+Type: !GrayscaleTextureType {}
+IsStreamable: false
+IsCompressed: false
+GenerateMipmaps: true

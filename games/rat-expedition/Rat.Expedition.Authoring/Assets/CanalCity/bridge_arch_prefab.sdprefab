@@ -1,0 +1,22 @@
+!PrefabAsset
+Id: 4be9296a-a0b8-5c1b-8e8e-50418a07f8ad
+SerializedVersion: {Stride: 3.1.0.1}
+Tags: []
+Hierarchy:
+    RootParts:
+        - ref!! 11d71fdc-e451-547f-8597-c9e4b7696ec1
+    Parts:
+        -   Entity:
+                Id: 11d71fdc-e451-547f-8597-c9e4b7696ec1
+                Name: bridge_arch
+                Components:
+                    7598e53b18bb52aa8e04590246bc24fc: !TransformComponent
+                        Id: 7ddb0917-72d1-53fc-962d-c9110616049f
+                        Position: {X: 0, Y: 0, Z: 0}
+                        Rotation: {X: 0, Y: 0, Z: 0, W: 1}
+                        Scale: {X: 1, Y: 1, Z: 1}
+                        Children: {}
+                    8ed5018d87075a5f92b670223d954d26: !ModelComponent
+                        Id: cd9874d2-1320-59dc-a2cd-44dc8a0f2388
+                        Model: 7453c19f-4830-5209-a02e-9828735efc32:CanalCity/bridge_arch
+                        Materials: {}

@@ -1,0 +1,9 @@
+!Texture
+Id: c1cdd510-1ddb-52db-92b4-5defe721f288
+SerializedVersion: {Stride: 2.0.0.0}
+Tags: []
+Source: !file ../../Resources/CanalCity/textures/fur_light_basecolor.png
+Type: !ColorTextureType {}
+IsStreamable: false
+IsCompressed: false
+GenerateMipmaps: true

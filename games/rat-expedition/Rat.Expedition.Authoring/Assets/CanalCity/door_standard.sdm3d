@@ -1,0 +1,35 @@
+!Model
+Id: 9b09e4d0-4c3c-5e13-8901-335306d3cc20
+SerializedVersion: {Stride: 2.0.0.0}
+Tags: []
+Source: !file ../../Resources/CanalCity/models/door_standard.fbx
+ScaleImport: 1
+PivotPosition: {X: 0, Y: 0, Z: 0}
+MergeMeshes: false
+DeduplicateMaterials: true
+Skeleton: 7ff53a4b-174b-5a74-9191-0e90f84c58f3:CanalCity/door_standard_skeleton
+Materials:
+    56f947ff39cc5dbc8542fb49e6da6ddf:
+        Name: CC_oak
+        MaterialInstance:
+            Material: 9bb88c92-c6d3-5212-a751-867db9ff3086:CanalCity/oak
+    eb3853e69bd054b5b36e04257618c4d2:
+        Name: CC_iron
+        MaterialInstance:
+            Material: cdd4b95a-4244-5c9c-9fd6-2b076cdee59f:CanalCity/iron
+    20b82a6e6c5a500e8ee453b3a030aa5f:
+        Name: CC_brass
+        MaterialInstance:
+            Material: 044d9c32-b62a-55a1-bc9d-e462f7eb449d:CanalCity/brass
+    df05e627da8757e6a17bca56b28ce82d:
+        Name: CC_stone_dark
+        MaterialInstance:
+            Material: eca81495-50ad-5979-a404-a4421a8ab9ea:CanalCity/stone_dark
+    8f1bca04a74f5a5e9d4bd8bfdcd2e038:
+        Name: CC_stone
+        MaterialInstance:
+            Material: 9f251351-c844-541a-a7a1-43bf563ef2c7:CanalCity/stone
+    7eca66ff5fe7549d969275360d2fc299:
+        Name: CC_stone_light
+        MaterialInstance:
+            Material: f49abda4-b809-5777-bc4c-9a42640c4c4f:CanalCity/stone_light

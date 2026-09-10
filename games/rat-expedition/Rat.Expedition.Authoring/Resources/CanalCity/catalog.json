@@ -1,0 +1,4241 @@
+{
+  "schema_version": 2,
+  "units": "metres",
+  "grid_m": 1,
+  "detail_grid_m": 0.25,
+  "scale_revision": "Dremma / user sheet 2026-09-09; supersedes d8b513e",
+  "body_height_classes_m": [
+    1.2,
+    1.8,
+    2.8,
+    4.0
+  ],
+  "ordinary_adult_height_m": 2.8,
+  "future_visual_to_game_scale": 0.28571428571428575,
+  "ceiling_guides_m": {
+    "residential": [
+      3,
+      4.2
+    ],
+    "residential_example": 3.6,
+    "public_hall": [
+      5.5,
+      6.5
+    ],
+    "public_example": 6,
+    "cathedral_nave": [
+      12,
+      16
+    ],
+    "nave_example": 14
+  },
+  "growth_guides": [
+    {
+      "stage": "foundation",
+      "storeys": "2-3",
+      "height_m": [
+        6,
+        8
+      ]
+    },
+    {
+      "stage": "development",
+      "storeys": "3-4",
+      "height_m": [
+        8,
+        11
+      ]
+    },
+    {
+      "stage": "new_generations",
+      "storeys": "4-5",
+      "height_m": [
+        11,
+        14
+      ]
+    },
+    {
+      "stage": "mature_quarter",
+      "storeys": "5+",
+      "minimum_height_m": 14
+    }
+  ],
+  "floor_guides_m": {
+    "old_low_house_first": 2.9,
+    "mixed_house": [
+      3,
+      4
+    ],
+    "high_adult_house": [
+      3.2,
+      4.3
+    ],
+    "high_house_roof": 4,
+    "vertical_family_old": [
+      3,
+      3.4
+    ],
+    "vertical_family_new": [
+      4,
+      5
+    ]
+  },
+  "door_guides_m": {
+    "small": [
+      1.2,
+      2.2
+    ],
+    "medium": [
+      1.6,
+      3
+    ],
+    "high": [
+      2.2,
+      4.2
+    ],
+    "ceremonial": [
+      3.5,
+      6
+    ]
+  },
+  "dimension_policy": "Dremma named types win. The high door is2.2x4.2 despite a conflicting3.2 arrow; unnamed3.5x4.2 observation does not replace ceremonial3.5x6. Prior depths and distinct visual variants remain; openings/rises/body/handrail heights differ from decorated bounds.",
+  "reference_source": "Three user-supplied Canal City of Ratfolk concept sheets, dimensioned revisions and latest Dremma scale sheet, conversation 2026-09-09; original bitmap files not available in checkout",
+  "deduplication": "References use sheet:section:variant. Repeated views share a record; substantially different silhouettes/dimensions remain separate variants. Composite scenes use existing parts.",
+  "exclusions": [
+    "Waterfall/flame effects: architectural outfalls and lamp meshes only",
+    "Scale figures are static art tools, not playable 3D characters",
+    "Water levels are illustrative placement guides, not separate fluids"
+  ],
+  "assets": [
+    {
+      "id": "cathedral_wall_plain",
+      "label": "Cathedral wall, base",
+      "stage": 3,
+      "references": [
+        "1:1:base"
+      ],
+      "design_dimensions_m": [
+        4,
+        1,
+        9
+      ],
+      "dimension_basis": "latest dimensioned sheet; null reference axes retain explicitly inferred design targets",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": [],
+      "reference_dimensions_m": [
+        4,
+        1,
+        9
+      ]
+    },
+    {
+      "id": "cathedral_wall_window",
+      "label": "Cathedral wall with window",
+      "stage": 3,
+      "references": [
+        "1:1:window"
+      ],
+      "design_dimensions_m": [
+        4,
+        1,
+        9
+      ],
+      "dimension_basis": "latest dimensioned sheet; null reference axes retain explicitly inferred design targets",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": [],
+      "reference_dimensions_m": [
+        4,
+        1,
+        9
+      ]
+    },
+    {
+      "id": "cathedral_wall_banner",
+      "label": "Cathedral wall with banner",
+      "stage": 3,
+      "references": [
+        "1:1:banner"
+      ],
+      "design_dimensions_m": [
+        4,
+        1,
+        9
+      ],
+      "dimension_basis": "latest dimensioned sheet; null reference axes retain explicitly inferred design targets",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": [],
+      "reference_dimensions_m": [
+        4,
+        1,
+        9
+      ]
+    },
+    {
+      "id": "cathedral_corner",
+      "label": "Cathedral corner",
+      "stage": 3,
+      "references": [
+        "1:1:corner"
+      ],
+      "design_dimensions_m": [
+        2,
+        2,
+        9
+      ],
+      "dimension_basis": "latest dimensioned sheet; null reference axes retain explicitly inferred design targets",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": [],
+      "reference_dimensions_m": [
+        2,
+        2,
+        9
+      ]
+    },
+    {
+      "id": "cathedral_buttress",
+      "label": "Cathedral buttress",
+      "stage": 3,
+      "references": [
+        "1:1:buttress"
+      ],
+      "design_dimensions_m": [
+        2,
+        2,
+        9
+      ],
+      "dimension_basis": "latest dimensioned sheet; null reference axes retain explicitly inferred design targets",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": [],
+      "reference_dimensions_m": [
+        2,
+        2,
+        9
+      ]
+    },
+    {
+      "id": "tower_high",
+      "label": "High cathedral tower",
+      "stage": 3,
+      "references": [
+        "1:2:tower/front/back/plan"
+      ],
+      "design_dimensions_m": [
+        6,
+        6,
+        15
+      ],
+      "dimension_basis": "latest dimensioned sheet; null reference axes retain explicitly inferred design targets",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": [],
+      "reference_dimensions_m": [
+        6,
+        6,
+        15
+      ],
+      "dimension_conflict": "Main/plan: 6x6x15; side view: 4x4x12. Main envelope wins; one asset."
+    },
+    {
+      "id": "bridge_arch",
+      "label": "Arched bridge",
+      "stage": 1,
+      "references": [
+        "1:bridge:main/front"
+      ],
+      "design_dimensions_m": [
+        8,
+        3,
+        5
+      ],
+      "dimension_basis": "latest dimensioned sheet; null reference axes retain explicitly inferred design targets",
+      "source_status": "validated_blender_fbx",
+      "native_status": "pending_A1_qualification",
+      "source": "canal_city_foundation.blend#bridge_arch",
+      "export": "models/bridge_arch.fbx",
+      "materials": [
+        "amber",
+        "brass",
+        "burgundy",
+        "iron",
+        "stone",
+        "stone_dark",
+        "stone_light"
+      ],
+      "animations": [],
+      "planned_clips": [],
+      "reference_dimensions_m": [
+        8,
+        null,
+        5
+      ],
+      "dimension_conflict": "Main overall height 5; front 3 interpreted as walking/arch structure datum. Deck top 3.1 including paving; depth 3 inferred.",
+      "measured_geometry": {
+        "bounds_min_m": [
+          -4.010000228881836,
+          -1.7699999809265137,
+          0.0
+        ],
+        "bounds_max_m": [
+          4.010000228881836,
+          1.7699999809265137,
+          5.0
+        ],
+        "dimensions_m": [
+          8.020000457763672,
+          3.5399999618530273,
+          5.0
+        ],
+        "editable_mesh_objects": 520,
+        "base_triangles": 18656
+      },
+      "walking_surface_height_m": 3.1,
+      "native_preview_status": "validated_isolated_native_preview",
+      "native_preview": {
+        "model": "../../Assets/CanalCity/bridge_arch.sdm3d",
+        "skeleton": "../../Assets/CanalCity/bridge_arch_skeleton.sdskel",
+        "prefab": "../../Assets/CanalCity/bridge_arch_prefab.sdprefab"
+      }
+    },
+    {
+      "id": "bridge_side",
+      "label": "Bridge side segment",
+      "stage": 2,
+      "references": [
+        "1:bridge:side"
+      ],
+      "design_dimensions_m": [
+        1.0,
+        0.5,
+        3.75
+      ],
+      "dimension_basis": "inferred from adjacent reference objects",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": []
+    },
+    {
+      "id": "canal_wall",
+      "label": "Standard canal wall",
+      "stage": 1,
+      "references": [
+        "1:4:main"
+      ],
+      "design_dimensions_m": [
+        8,
+        4,
+        4.5
+      ],
+      "dimension_basis": "latest dimensioned sheet; null reference axes retain explicitly inferred design targets",
+      "source_status": "validated_blender_fbx",
+      "native_status": "pending_A1_qualification",
+      "source": "canal_city_foundation.blend#canal_wall",
+      "export": "models/canal_wall.fbx",
+      "materials": [
+        "amber",
+        "brass",
+        "iron",
+        "stone",
+        "stone_dark",
+        "stone_light"
+      ],
+      "animations": [],
+      "planned_clips": [],
+      "reference_dimensions_m": [
+        8,
+        4,
+        4.5
+      ],
+      "measured_geometry": {
+        "bounds_min_m": [
+          -3.992500066757202,
+          -2.2300000190734863,
+          0.0
+        ],
+        "bounds_max_m": [
+          3.992500066757202,
+          2.0,
+          4.5
+        ],
+        "dimensions_m": [
+          7.985000133514404,
+          4.230000019073486,
+          4.5
+        ],
+        "editable_mesh_objects": 561,
+        "base_triangles": 9276
+      },
+      "walking_surface_height_m": 3.75,
+      "dimension_interpretation": "Provisional: main overall H4.5 includes .75m lamps. Structural platform H3.75. Front rings/anchors project .23m beyond reference structural depth4.",
+      "native_preview_status": "validated_isolated_native_preview",
+      "native_preview": {
+        "model": "../../Assets/CanalCity/canal_wall.sdm3d",
+        "skeleton": "../../Assets/CanalCity/canal_wall_skeleton.sdskel",
+        "prefab": "../../Assets/CanalCity/canal_wall_prefab.sdprefab"
+      }
+    },
+    {
+      "id": "canal_corner",
+      "label": "Canal corner",
+      "stage": 2,
+      "references": [
+        "1:4:corner"
+      ],
+      "design_dimensions_m": [
+        2,
+        4,
+        4.5
+      ],
+      "dimension_basis": "latest dimensioned sheet; null reference axes retain explicitly inferred design targets",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": [],
+      "reference_dimensions_m": [
+        2,
+        4,
+        4.5
+      ]
+    },
+    {
+      "id": "canal_end",
+      "label": "Canal end joint",
+      "stage": 2,
+      "references": [
+        "1:4:end"
+      ],
+      "design_dimensions_m": [
+        2,
+        4,
+        4.5
+      ],
+      "dimension_basis": "latest dimensioned sheet; null reference axes retain explicitly inferred design targets",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": [],
+      "reference_dimensions_m": [
+        2,
+        4,
+        4.5
+      ]
+    },
+    {
+      "id": "mooring_pillar",
+      "label": "Mooring pillar",
+      "stage": 2,
+      "references": [
+        "1:4:pillar",
+        "2:5:mooring_post"
+      ],
+      "design_dimensions_m": [
+        1.5,
+        1.5,
+        4.5
+      ],
+      "dimension_basis": "latest dimensioned sheet; null reference axes retain explicitly inferred design targets",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": [],
+      "reference_dimensions_m": [
+        1.5,
+        1.5,
+        4.5
+      ]
+    },
+    {
+      "id": "stairs_grand",
+      "label": "Grand two-flight staircase",
+      "stage": 2,
+      "references": [
+        "1:stairs:main/front/side/detail"
+      ],
+      "design_dimensions_m": [
+        8,
+        6,
+        4.5
+      ],
+      "dimension_basis": "latest dimensioned sheet; null reference axes retain explicitly inferred design targets",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": [],
+      "reference_dimensions_m": [
+        8,
+        6,
+        4.5
+      ],
+      "dimension_conflict": "Main 8x6x4.5; inset 4x3x2, step .18/.30. Overall envelope wins; pending detailed layout.",
+      "dimension_extent": "walking structure; railings add height"
+    },
+    {
+      "id": "stairs_small",
+      "label": "Main staircase, 6 steps",
+      "stage": 2,
+      "references": [
+        "2:1:small"
+      ],
+      "design_dimensions_m": [
+        2.4,
+        2,
+        1.2
+      ],
+      "dimension_basis": "latest dimensioned sheet; null reference axes retain explicitly inferred design targets; earlier stair family retained as historical style variant, not the current Dremma paired standard",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": [],
+      "reference_dimensions_m": [
+        2.4,
+        2,
+        1.2
+      ],
+      "dimension_conflict": "6 risers and H1.2, D2 win over .40 tread; derived tread 2/6.",
+      "dimension_extent": "walking structure; railings add height"
+    },
+    {
+      "id": "stairs_medium",
+      "label": "Dremma main stone staircase, 8 steps",
+      "stage": 1,
+      "references": [
+        "2:1:medium",
+        "dremma:named_type:stairs_medium"
+      ],
+      "design_dimensions_m": [
+        2.4,
+        4.48,
+        2.4
+      ],
+      "dimension_basis": "Dremma paired standard: 8 rises of .30 and inferred tread .56 give total rise 2.4 and run 4.48; supersedes previous staircase dimensions",
+      "source_status": "validated_blender_fbx",
+      "native_status": "pending_A1_qualification",
+      "source": "canal_city_foundation.blend#stairs_medium",
+      "export": "models/stairs_medium.fbx",
+      "materials": [
+        "brass",
+        "iron",
+        "stone",
+        "stone_dark",
+        "stone_light"
+      ],
+      "animations": [],
+      "planned_clips": [],
+      "reference_dimensions_m": [
+        2.4,
+        null,
+        2.4
+      ],
+      "dimension_extent": "walking structure; railings add height",
+      "previous_dimension_revision": {
+        "checkpoint": "d8b513e",
+        "design_dimensions_m": [
+          2.4,
+          2,
+          1.8
+        ],
+        "conflict": "9 risers and H1.8, D2 win over .40 tread; derived tread 2/9."
+      },
+      "stair_profile": {
+        "steps": 8,
+        "rise_m": 0.3,
+        "tread_m": 0.56,
+        "total_rise_m": 2.4,
+        "total_run_m": 4.48
+      },
+      "measured_geometry": {
+        "bounds_min_m": [
+          -1.2000000476837158,
+          -0.009999999776482582,
+          0.0
+        ],
+        "bounds_max_m": [
+          1.2000000476837158,
+          4.474999904632568,
+          3.3010098934173584
+        ],
+        "dimensions_m": [
+          2.4000000953674316,
+          4.484999904409051,
+          3.3010098934173584
+        ],
+        "editable_mesh_objects": 228,
+        "base_triangles": 3000
+      },
+      "native_preview_status": "validated_isolated_native_preview",
+      "native_preview": {
+        "model": "../../Assets/CanalCity/stairs_medium.sdm3d",
+        "skeleton": "../../Assets/CanalCity/stairs_medium_skeleton.sdskel",
+        "prefab": "../../Assets/CanalCity/stairs_medium_prefab.sdprefab"
+      }
+    },
+    {
+      "id": "stairs_large",
+      "label": "Main staircase, 12 steps",
+      "stage": 2,
+      "references": [
+        "2:1:large",
+        "2:7:orthographic_example",
+        "2:8:large_stair"
+      ],
+      "design_dimensions_m": [
+        2.4,
+        2,
+        2.4
+      ],
+      "dimension_basis": "latest dimensioned sheet; null reference axes retain explicitly inferred design targets; earlier stair family retained as historical style variant, not the current Dremma paired standard",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": [],
+      "reference_dimensions_m": [
+        2.4,
+        2,
+        2.4
+      ],
+      "dimension_conflict": "12 risers and H2.4, D2 win over .40 tread; derived tread 2/12. Main W2.4 wins over orthographic W2.",
+      "dimension_extent": "walking structure; railings add height"
+    },
+    {
+      "id": "house_small_civic",
+      "label": "Small civic house",
+      "stage": 3,
+      "references": [
+        "1:6:small",
+        "dremma:named_type:house_small_civic"
+      ],
+      "design_dimensions_m": [
+        4.5,
+        5,
+        6
+      ],
+      "dimension_basis": "Latest Dremma named type supersedes prior width/height; previous depth retained, no global scaling",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": [],
+      "reference_dimensions_m": [
+        4.5,
+        null,
+        6
+      ],
+      "previous_dimension_revision": {
+        "checkpoint": "d8b513e",
+        "design_dimensions_m": [
+          5,
+          5,
+          6
+        ],
+        "conflict": null
+      },
+      "style_policy": "Retain original silhouette/style variant; use revised named width/height and inherited depth"
+    },
+    {
+      "id": "house_medium_civic",
+      "label": "Medium civic house",
+      "stage": 3,
+      "references": [
+        "1:6:medium",
+        "dremma:named_type:house_medium_civic"
+      ],
+      "design_dimensions_m": [
+        5.5,
+        6,
+        8.5
+      ],
+      "dimension_basis": "Latest Dremma named type supersedes prior width/height; previous depth retained, no global scaling",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": [],
+      "reference_dimensions_m": [
+        5.5,
+        null,
+        8.5
+      ],
+      "previous_dimension_revision": {
+        "checkpoint": "d8b513e",
+        "design_dimensions_m": [
+          6,
+          6,
+          8
+        ],
+        "conflict": null
+      },
+      "style_policy": "Retain original silhouette/style variant; use revised named width/height and inherited depth"
+    },
+    {
+      "id": "house_high_civic",
+      "label": "High civic house with crane",
+      "stage": 3,
+      "references": [
+        "1:6:high",
+        "dremma:named_type:house_high_civic"
+      ],
+      "design_dimensions_m": [
+        6.5,
+        7,
+        11.5
+      ],
+      "dimension_basis": "Latest Dremma named type supersedes prior width/height; previous depth retained, no global scaling",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": [],
+      "reference_dimensions_m": [
+        6.5,
+        null,
+        11.5
+      ],
+      "previous_dimension_revision": {
+        "checkpoint": "d8b513e",
+        "design_dimensions_m": [
+          8,
+          7,
+          10
+        ],
+        "conflict": null
+      },
+      "style_policy": "Retain original silhouette/style variant; use revised named width/height and inherited depth"
+    },
+    {
+      "id": "door_low",
+      "label": "Low residential door",
+      "stage": 3,
+      "references": [
+        "1:7:low",
+        "dremma:named_type:door_low"
+      ],
+      "design_dimensions_m": [
+        1.2,
+        0.3,
+        2.2
+      ],
+      "dimension_basis": "Latest Dremma named type supersedes prior width/height; previous depth retained, no global scaling",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": [
+        "open",
+        "close"
+      ],
+      "reference_dimensions_m": [
+        1.2,
+        null,
+        2.2
+      ],
+      "opening_dimensions_m": [
+        1.2,
+        0.3,
+        2.2
+      ],
+      "dimension_extent": "clear opening; frame increases decorated envelope",
+      "previous_dimension_revision": {
+        "checkpoint": "d8b513e",
+        "design_dimensions_m": [
+          1.2,
+          0.3,
+          2.5
+        ],
+        "conflict": null
+      }
+    },
+    {
+      "id": "door_standard",
+      "label": "Standard gothic door",
+      "stage": 1,
+      "references": [
+        "1:7:standard",
+        "dremma:named_type:door_standard"
+      ],
+      "design_dimensions_m": [
+        1.6,
+        0.4,
+        3
+      ],
+      "dimension_basis": "Latest Dremma named type supersedes prior width/height; previous depth retained, no global scaling",
+      "source_status": "validated_blender_fbx",
+      "native_status": "pending_A1_qualification",
+      "source": "canal_city_foundation.blend#door_standard",
+      "export": "models/door_standard.fbx",
+      "materials": [
+        "brass",
+        "iron",
+        "oak",
+        "stone",
+        "stone_dark",
+        "stone_light"
+      ],
+      "animations": [
+        "animations/door_open.fbx",
+        "animations/door_close.fbx"
+      ],
+      "planned_clips": [
+        "open",
+        "close"
+      ],
+      "reference_dimensions_m": [
+        1.6,
+        null,
+        3
+      ],
+      "opening_dimensions_m": [
+        1.6,
+        0.4,
+        3
+      ],
+      "dimension_extent": "clear opening; frame increases decorated envelope",
+      "previous_dimension_revision": {
+        "checkpoint": "d8b513e",
+        "design_dimensions_m": [
+          1.8,
+          0.4,
+          3.5
+        ],
+        "conflict": null
+      },
+      "measured_geometry": {
+        "bounds_min_m": [
+          -1.2000000476837158,
+          -0.5555884838104248,
+          0.0
+        ],
+        "bounds_max_m": [
+          1.2000000476837158,
+          0.20999999344348907,
+          3.2783877849578857
+        ],
+        "dimensions_m": [
+          2.4000000953674316,
+          0.7655884772539139,
+          3.2783877849578857
+        ],
+        "editable_mesh_objects": 85,
+        "base_triangles": 2296
+      },
+      "native_preview_status": "validated_isolated_native_preview",
+      "native_preview": {
+        "model": "../../Assets/CanalCity/door_standard.sdm3d",
+        "skeleton": "../../Assets/CanalCity/door_standard_skeleton.sdskel",
+        "prefab": "../../Assets/CanalCity/door_standard_prefab.sdprefab"
+      }
+    },
+    {
+      "id": "door_cathedral",
+      "label": "High cathedral door",
+      "stage": 3,
+      "references": [
+        "1:7:high",
+        "dremma:named_type:door_cathedral"
+      ],
+      "design_dimensions_m": [
+        3.5,
+        0.5,
+        6
+      ],
+      "dimension_basis": "Latest Dremma named type supersedes prior width/height; previous depth retained, no global scaling",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": [
+        "open",
+        "close"
+      ],
+      "reference_dimensions_m": [
+        3.5,
+        null,
+        6
+      ],
+      "opening_dimensions_m": [
+        3.5,
+        0.5,
+        6
+      ],
+      "dimension_extent": "clear opening; frame increases decorated envelope",
+      "previous_dimension_revision": {
+        "checkpoint": "d8b513e",
+        "design_dimensions_m": [
+          2.4,
+          0.5,
+          4
+        ],
+        "conflict": null
+      }
+    },
+    {
+      "id": "window_narrow",
+      "label": "Narrow lancet stained glass",
+      "stage": 3,
+      "references": [
+        "1:8:narrow"
+      ],
+      "design_dimensions_m": [
+        1,
+        0.3,
+        3
+      ],
+      "dimension_basis": "latest dimensioned sheet; null reference axes retain explicitly inferred design targets",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": [],
+      "reference_dimensions_m": [
+        1,
+        0.3,
+        3
+      ]
+    },
+    {
+      "id": "window_rose_tall",
+      "label": "Tall rose stained glass",
+      "stage": 3,
+      "references": [
+        "1:8:rose"
+      ],
+      "design_dimensions_m": [
+        2.5,
+        0.3,
+        3.5
+      ],
+      "dimension_basis": "latest dimensioned sheet; null reference axes retain explicitly inferred design targets",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": [],
+      "reference_dimensions_m": [
+        2.5,
+        0.3,
+        3.5
+      ]
+    },
+    {
+      "id": "window_medium",
+      "label": "Medium lancet stained glass",
+      "stage": 3,
+      "references": [
+        "1:8:medium"
+      ],
+      "design_dimensions_m": [
+        1.2,
+        0.3,
+        3
+      ],
+      "dimension_basis": "latest dimensioned sheet; null reference axes retain explicitly inferred design targets",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": [],
+      "reference_dimensions_m": [
+        1.2,
+        0.3,
+        3
+      ]
+    },
+    {
+      "id": "balcony_simple",
+      "label": "Simple balcony",
+      "stage": 2,
+      "references": [
+        "1:9:simple"
+      ],
+      "design_dimensions_m": [
+        3,
+        1.5,
+        3
+      ],
+      "dimension_basis": "latest dimensioned sheet; null reference axes retain explicitly inferred design targets",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": [],
+      "reference_dimensions_m": [
+        3,
+        1.5,
+        3
+      ]
+    },
+    {
+      "id": "balcony_extended",
+      "label": "Extended balcony",
+      "stage": 2,
+      "references": [
+        "1:9:extended"
+      ],
+      "design_dimensions_m": [
+        6,
+        1.5,
+        3
+      ],
+      "dimension_basis": "latest dimensioned sheet; null reference axes retain explicitly inferred design targets",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": [],
+      "reference_dimensions_m": [
+        6,
+        1.5,
+        3
+      ]
+    },
+    {
+      "id": "gallery",
+      "label": "Elevated gallery",
+      "stage": 2,
+      "references": [
+        "1:9:gallery"
+      ],
+      "design_dimensions_m": [
+        6,
+        2,
+        3.5
+      ],
+      "dimension_basis": "latest dimensioned sheet; null reference axes retain explicitly inferred design targets",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": [],
+      "reference_dimensions_m": [
+        6,
+        2,
+        3.5
+      ]
+    },
+    {
+      "id": "lift_platform",
+      "label": "Hoisting platform",
+      "stage": 4,
+      "references": [
+        "1:9:platform"
+      ],
+      "design_dimensions_m": [
+        2,
+        2,
+        4
+      ],
+      "dimension_basis": "latest dimensioned sheet; null reference axes retain explicitly inferred design targets",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": [
+        "lift",
+        "lower"
+      ],
+      "reference_dimensions_m": [
+        2,
+        2,
+        4
+      ]
+    },
+    {
+      "id": "awning_shop",
+      "label": "Shop awning with counter",
+      "stage": 4,
+      "references": [
+        "1:9:shop"
+      ],
+      "design_dimensions_m": [
+        3,
+        2,
+        2.5
+      ],
+      "dimension_basis": "latest dimensioned sheet; null reference axes retain explicitly inferred design targets",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": [
+        "sway"
+      ],
+      "reference_dimensions_m": [
+        3,
+        2,
+        2.5
+      ]
+    },
+    {
+      "id": "canal_arch",
+      "label": "Plain canal arch",
+      "stage": 2,
+      "references": [
+        "1:10:plain",
+        "2:5:arched_drain"
+      ],
+      "design_dimensions_m": [
+        4,
+        4,
+        4
+      ],
+      "dimension_basis": "latest dimensioned sheet; null reference axes retain explicitly inferred design targets",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": [],
+      "reference_dimensions_m": [
+        4,
+        4,
+        4
+      ]
+    },
+    {
+      "id": "canal_grated_arch",
+      "label": "Grated canal arch",
+      "stage": 2,
+      "references": [
+        "1:10:grated",
+        "2:5:drain_grate"
+      ],
+      "design_dimensions_m": [
+        4,
+        4,
+        4
+      ],
+      "dimension_basis": "latest dimensioned sheet; null reference axes retain explicitly inferred design targets",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": [],
+      "reference_dimensions_m": [
+        4,
+        4,
+        4
+      ]
+    },
+    {
+      "id": "canal_sluice",
+      "label": "Lifting sluice gate",
+      "stage": 2,
+      "references": [
+        "1:10:sluice"
+      ],
+      "design_dimensions_m": [
+        5,
+        4,
+        4.5
+      ],
+      "dimension_basis": "latest dimensioned sheet; null reference axes retain explicitly inferred design targets",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": [
+        "open",
+        "close"
+      ],
+      "reference_dimensions_m": [
+        5,
+        4,
+        4.5
+      ]
+    },
+    {
+      "id": "canal_arch_pier",
+      "label": "Canal arch side pier",
+      "stage": 2,
+      "references": [
+        "1:10:side"
+      ],
+      "design_dimensions_m": [
+        2,
+        4,
+        4.5
+      ],
+      "dimension_basis": "latest dimensioned sheet; null reference axes retain explicitly inferred design targets",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": [],
+      "reference_dimensions_m": [
+        2,
+        4,
+        4.5
+      ]
+    },
+    {
+      "id": "scale_rat_small",
+      "label": "Dremma child (1.2m)",
+      "stage": 1,
+      "references": [
+        "1:11:small",
+        "2:8:small",
+        "3:8:small",
+        "dremma:named_type:scale_rat_small"
+      ],
+      "design_dimensions_m": [
+        0.46320000290870667,
+        0.47999999672174454,
+        1.2000000476837158
+      ],
+      "dimension_basis": "Dremma caption fixes standing height; width/depth are observed authored silhouette, excluding staff/tail and not inherited placeholder bounds",
+      "source_status": "validated_blender_fbx",
+      "native_status": "pending_A1_qualification",
+      "source": "canal_city_foundation.blend#scale_rat_small",
+      "export": "models/scale_rat_small.fbx",
+      "materials": [
+        "brass",
+        "burgundy",
+        "ear",
+        "fur",
+        "fur_light",
+        "iron",
+        "stone_light"
+      ],
+      "animations": [],
+      "planned_clips": [],
+      "previous_dimension_revision": {
+        "checkpoint": "d8b513e",
+        "design_dimensions_m": [
+          0.4,
+          0.6,
+          0.9
+        ],
+        "conflict": "Different sheets illustrate .8/1.0; approved canonical figure remains .9 (range midpoint)."
+      },
+      "reference_dimensions_m": [
+        null,
+        null,
+        1.2
+      ],
+      "dimension_extent": "standing feet to uppermost head/ear; accessories excluded",
+      "measured_geometry": {
+        "bounds_min_m": [
+          -0.25200000405311584,
+          -0.39959999918937683,
+          0.0
+        ],
+        "bounds_max_m": [
+          0.4517418444156647,
+          0.22133569419384003,
+          1.2000000476837158
+        ],
+        "dimensions_m": [
+          0.7037418484687805,
+          0.6209356933832169,
+          1.2000000476837158
+        ],
+        "editable_mesh_objects": 29,
+        "base_triangles": 7920
+      },
+      "standing_body_height_m": 1.2,
+      "observed_body_dimensions_m": [
+        0.46320000290870667,
+        0.47999999672174454,
+        1.2000000476837158
+      ],
+      "native_preview_status": "validated_isolated_native_preview",
+      "native_preview": {
+        "model": "../../Assets/CanalCity/scale_rat_small.sdm3d",
+        "skeleton": "../../Assets/CanalCity/scale_rat_small_skeleton.sdskel",
+        "prefab": "../../Assets/CanalCity/scale_rat_small_prefab.sdprefab"
+      }
+    },
+    {
+      "id": "scale_rat_medium",
+      "label": "Small adult / guest (1.8m)",
+      "stage": 1,
+      "references": [
+        "1:11:medium",
+        "2:8:medium",
+        "3:8:medium",
+        "dremma:named_type:scale_rat_medium"
+      ],
+      "design_dimensions_m": [
+        0.6948000192642212,
+        0.7199999839067459,
+        1.7999999523162842
+      ],
+      "dimension_basis": "Dremma caption fixes standing height; width/depth are observed authored silhouette, excluding staff/tail and not inherited placeholder bounds",
+      "source_status": "validated_blender_fbx",
+      "native_status": "pending_A1_qualification",
+      "source": "canal_city_foundation.blend#scale_rat_medium",
+      "export": "models/scale_rat_medium.fbx",
+      "materials": [
+        "brass",
+        "burgundy",
+        "ear",
+        "fur",
+        "fur_light",
+        "iron",
+        "stone_light"
+      ],
+      "animations": [],
+      "planned_clips": [],
+      "previous_dimension_revision": {
+        "checkpoint": "d8b513e",
+        "design_dimensions_m": [
+          0.65,
+          0.8,
+          1.7
+        ],
+        "conflict": "Different sheets illustrate 1.6/1.8; approved canonical figure remains 1.7 (range midpoint)."
+      },
+      "reference_dimensions_m": [
+        null,
+        null,
+        1.8
+      ],
+      "dimension_extent": "standing feet to uppermost head/ear; accessories excluded",
+      "measured_geometry": {
+        "bounds_min_m": [
+          -0.3779999911785126,
+          -0.599399983882904,
+          0.0
+        ],
+        "bounds_max_m": [
+          0.6776127219200134,
+          0.33200353384017944,
+          1.7999999523162842
+        ],
+        "dimensions_m": [
+          1.055612713098526,
+          0.9314035177230835,
+          1.7999999523162842
+        ],
+        "editable_mesh_objects": 29,
+        "base_triangles": 7920
+      },
+      "standing_body_height_m": 1.8,
+      "observed_body_dimensions_m": [
+        0.6948000192642212,
+        0.7199999839067459,
+        1.7999999523162842
+      ],
+      "native_preview_status": "validated_isolated_native_preview",
+      "native_preview": {
+        "model": "../../Assets/CanalCity/scale_rat_medium.sdm3d",
+        "skeleton": "../../Assets/CanalCity/scale_rat_medium_skeleton.sdskel",
+        "prefab": "../../Assets/CanalCity/scale_rat_medium_prefab.sdprefab"
+      }
+    },
+    {
+      "id": "scale_rat_high",
+      "label": "Fully grown Dremma adult (4.0m)",
+      "stage": 1,
+      "references": [
+        "1:11:high",
+        "2:8:high",
+        "3:8:high",
+        "dremma:named_type:scale_rat_high"
+      ],
+      "design_dimensions_m": [
+        1.5440000295639038,
+        1.600000023841858,
+        4.0
+      ],
+      "dimension_basis": "Dremma caption fixes standing height; width/depth are observed authored silhouette, excluding staff/tail and not inherited placeholder bounds",
+      "source_status": "validated_blender_fbx",
+      "native_status": "pending_A1_qualification",
+      "source": "canal_city_foundation.blend#scale_rat_high",
+      "export": "models/scale_rat_high.fbx",
+      "materials": [
+        "brass",
+        "burgundy",
+        "ear",
+        "fur",
+        "fur_light",
+        "iron",
+        "oak",
+        "stone_light"
+      ],
+      "animations": [],
+      "planned_clips": [],
+      "previous_dimension_revision": {
+        "checkpoint": "d8b513e",
+        "design_dimensions_m": [
+          0.85,
+          1.0,
+          2.35
+        ],
+        "conflict": "Different sheets illustrate 2.2/2.4/2.5; approved canonical figure remains 2.35 (range midpoint)."
+      },
+      "reference_dimensions_m": [
+        null,
+        null,
+        4
+      ],
+      "dimension_extent": "standing feet to uppermost head/ear; accessories excluded",
+      "measured_geometry": {
+        "bounds_min_m": [
+          -0.8399999737739563,
+          -1.3320000171661377,
+          0.0
+        ],
+        "bounds_max_m": [
+          1.5058062076568604,
+          0.7377856373786926,
+          4.0
+        ],
+        "dimensions_m": [
+          2.3458061814308167,
+          2.0697856545448303,
+          4.0
+        ],
+        "editable_mesh_objects": 31,
+        "base_triangles": 8388
+      },
+      "standing_body_height_m": 4.0,
+      "observed_body_dimensions_m": [
+        1.5440000295639038,
+        1.600000023841858,
+        4.0
+      ],
+      "native_preview_status": "validated_isolated_native_preview",
+      "native_preview": {
+        "model": "../../Assets/CanalCity/scale_rat_high.sdm3d",
+        "skeleton": "../../Assets/CanalCity/scale_rat_high_skeleton.sdskel",
+        "prefab": "../../Assets/CanalCity/scale_rat_high_prefab.sdprefab"
+      }
+    },
+    {
+      "id": "ladder_wood",
+      "label": "Overlay wooden ladder",
+      "stage": 2,
+      "references": [
+        "2:2:wood/placed/orthographic"
+      ],
+      "design_dimensions_m": [
+        0.8,
+        0.18,
+        2.4
+      ],
+      "dimension_basis": "latest dimensioned sheet; null reference axes retain explicitly inferred design targets",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": [],
+      "reference_dimensions_m": [
+        0.8,
+        null,
+        2.4
+      ]
+    },
+    {
+      "id": "ladder_metal",
+      "label": "Overlay metal ladder",
+      "stage": 2,
+      "references": [
+        "2:2:metal/placed/orthographic"
+      ],
+      "design_dimensions_m": [
+        0.8,
+        0.15,
+        2.4
+      ],
+      "dimension_basis": "latest dimensioned sheet; null reference axes retain explicitly inferred design targets",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": [],
+      "reference_dimensions_m": [
+        0.8,
+        null,
+        2.4
+      ]
+    },
+    {
+      "id": "platform_side",
+      "label": "Side landing",
+      "stage": 2,
+      "references": [
+        "2:3:side"
+      ],
+      "design_dimensions_m": [
+        2,
+        2,
+        1
+      ],
+      "dimension_basis": "latest dimensioned sheet; null reference axes retain explicitly inferred design targets",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": [],
+      "reference_dimensions_m": [
+        2,
+        2,
+        1
+      ]
+    },
+    {
+      "id": "passage_service",
+      "label": "Narrow service passage",
+      "stage": 2,
+      "references": [
+        "2:3:service"
+      ],
+      "design_dimensions_m": [
+        3,
+        1.5,
+        1
+      ],
+      "dimension_basis": "latest dimensioned sheet; null reference axes retain explicitly inferred design targets",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": [],
+      "reference_dimensions_m": [
+        3,
+        1.5,
+        1
+      ]
+    },
+    {
+      "id": "platform_corner",
+      "label": "Corner landing",
+      "stage": 2,
+      "references": [
+        "2:3:corner"
+      ],
+      "design_dimensions_m": [
+        2,
+        2,
+        1
+      ],
+      "dimension_basis": "latest dimensioned sheet; null reference axes retain explicitly inferred design targets",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": [],
+      "reference_dimensions_m": [
+        2,
+        2,
+        1
+      ]
+    },
+    {
+      "id": "platform_cantilever",
+      "label": "Cantilever landing",
+      "stage": 2,
+      "references": [
+        "2:3:cantilever"
+      ],
+      "design_dimensions_m": [
+        2,
+        1.5,
+        1
+      ],
+      "dimension_basis": "latest dimensioned sheet; null reference axes retain explicitly inferred design targets",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": [],
+      "reference_dimensions_m": [
+        2,
+        1.5,
+        1
+      ]
+    },
+    {
+      "id": "passage_stairs",
+      "label": "Passage between stairs",
+      "stage": 2,
+      "references": [
+        "2:3:stairs"
+      ],
+      "design_dimensions_m": [
+        3,
+        1,
+        1
+      ],
+      "dimension_basis": "latest dimensioned sheet; null reference axes retain explicitly inferred design targets",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": [],
+      "reference_dimensions_m": [
+        3,
+        1,
+        1
+      ]
+    },
+    {
+      "id": "passage_suspended",
+      "label": "Suspended passage",
+      "stage": 2,
+      "references": [
+        "2:3:suspended"
+      ],
+      "design_dimensions_m": [
+        3,
+        1.5,
+        1
+      ],
+      "dimension_basis": "latest dimensioned sheet; null reference axes retain explicitly inferred design targets",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": [],
+      "reference_dimensions_m": [
+        3,
+        1.5,
+        1
+      ]
+    },
+    {
+      "id": "parapet_short",
+      "label": "Short masonry parapet",
+      "stage": 2,
+      "references": [
+        "2:4:short"
+      ],
+      "design_dimensions_m": [
+        2,
+        0.5,
+        1
+      ],
+      "dimension_basis": "latest dimensioned sheet; null reference axes retain explicitly inferred design targets",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": [],
+      "reference_dimensions_m": [
+        2,
+        null,
+        1
+      ]
+    },
+    {
+      "id": "parapet_long",
+      "label": "Long masonry parapet",
+      "stage": 2,
+      "references": [
+        "2:4:long"
+      ],
+      "design_dimensions_m": [
+        3,
+        0.5,
+        1
+      ],
+      "dimension_basis": "latest dimensioned sheet; null reference axes retain explicitly inferred design targets",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": [],
+      "reference_dimensions_m": [
+        3,
+        null,
+        1
+      ]
+    },
+    {
+      "id": "railing_iron",
+      "label": "Wrought iron railing",
+      "stage": 1,
+      "references": [
+        "2:4:iron",
+        "dremma:named_type:railing_iron"
+      ],
+      "design_dimensions_m": [
+        2,
+        0.25,
+        1
+      ],
+      "dimension_basis": "Latest Dremma named type supersedes prior width/height; previous depth retained, no global scaling",
+      "source_status": "validated_blender_fbx",
+      "native_status": "pending_A1_qualification",
+      "source": "canal_city_foundation.blend#railing_iron",
+      "export": "models/railing_iron.fbx",
+      "materials": [
+        "brass",
+        "iron"
+      ],
+      "animations": [],
+      "planned_clips": [],
+      "reference_dimensions_m": [
+        2,
+        null,
+        1
+      ],
+      "previous_dimension_revision": {
+        "checkpoint": "d8b513e",
+        "design_dimensions_m": [
+          2,
+          0.25,
+          1
+        ],
+        "conflict": null
+      },
+      "dimension_extent": "handrail upper surface above deck; finials measured separately",
+      "measured_geometry": {
+        "bounds_min_m": [
+          -1.0099999904632568,
+          -0.07999999821186066,
+          0.0
+        ],
+        "bounds_max_m": [
+          1.0099999904632568,
+          0.07999999821186066,
+          0.999103307723999
+        ],
+        "dimensions_m": [
+          2.0199999809265137,
+          0.1599999964237213,
+          0.999103307723999
+        ],
+        "editable_mesh_objects": 35,
+        "base_triangles": 2304
+      },
+      "handrail_height_m": 1,
+      "native_preview_status": "validated_isolated_native_preview",
+      "native_preview": {
+        "model": "../../Assets/CanalCity/railing_iron.sdm3d",
+        "skeleton": "../../Assets/CanalCity/railing_iron_skeleton.sdskel",
+        "prefab": "../../Assets/CanalCity/railing_iron_prefab.sdprefab"
+      }
+    },
+    {
+      "id": "post_lantern",
+      "label": "Post with lantern",
+      "stage": 2,
+      "references": [
+        "2:4:lantern_post"
+      ],
+      "design_dimensions_m": [
+        0.6,
+        0.6,
+        2.0
+      ],
+      "dimension_basis": "latest dimensioned sheet; null reference axes retain explicitly inferred design targets",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": [],
+      "reference_dimensions_m": [
+        0.6,
+        0.6,
+        null
+      ]
+    },
+    {
+      "id": "barrier_chain",
+      "label": "Chain barrier",
+      "stage": 2,
+      "references": [
+        "2:4:chain"
+      ],
+      "design_dimensions_m": [
+        2,
+        0.25,
+        0.8
+      ],
+      "dimension_basis": "latest dimensioned sheet; null reference axes retain explicitly inferred design targets",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": [],
+      "reference_dimensions_m": [
+        2,
+        null,
+        0.8
+      ]
+    },
+    {
+      "id": "mooring_ring",
+      "label": "Mooring ring",
+      "stage": 2,
+      "references": [
+        "2:4:ring"
+      ],
+      "design_dimensions_m": [
+        0.4,
+        0.15,
+        0.6
+      ],
+      "dimension_basis": "latest dimensioned sheet; null reference axes retain explicitly inferred design targets",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": [],
+      "reference_dimensions_m": [
+        0.4,
+        null,
+        0.6
+      ]
+    },
+    {
+      "id": "post_decorative",
+      "label": "Decorative post",
+      "stage": 2,
+      "references": [
+        "2:4:decorative"
+      ],
+      "design_dimensions_m": [
+        0.4,
+        0.3,
+        1
+      ],
+      "dimension_basis": "latest dimensioned sheet; null reference axes retain explicitly inferred design targets",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": [],
+      "reference_dimensions_m": [
+        0.4,
+        null,
+        1
+      ]
+    },
+    {
+      "id": "post_corner",
+      "label": "Corner post",
+      "stage": 2,
+      "references": [
+        "2:4:corner"
+      ],
+      "design_dimensions_m": [
+        0.5,
+        0.5,
+        1
+      ],
+      "dimension_basis": "latest dimensioned sheet; null reference axes retain explicitly inferred design targets",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": [],
+      "reference_dimensions_m": [
+        0.5,
+        null,
+        1
+      ]
+    },
+    {
+      "id": "post_end",
+      "label": "End post",
+      "stage": 2,
+      "references": [
+        "2:4:end"
+      ],
+      "design_dimensions_m": [
+        0.5,
+        0.5,
+        1
+      ],
+      "dimension_basis": "latest dimensioned sheet; null reference axes retain explicitly inferred design targets",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": [],
+      "reference_dimensions_m": [
+        0.5,
+        null,
+        1
+      ]
+    },
+    {
+      "id": "canal_wall_parapet",
+      "label": "Canal edge with parapet",
+      "stage": 2,
+      "references": [
+        "2:5:parapet_edge"
+      ],
+      "design_dimensions_m": [
+        2,
+        2,
+        2.5
+      ],
+      "dimension_basis": "latest dimensioned sheet; null reference axes retain explicitly inferred design targets",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": [],
+      "reference_dimensions_m": [
+        2,
+        2,
+        2.5
+      ]
+    },
+    {
+      "id": "outfall_low",
+      "label": "Low outfall, dry architecture",
+      "stage": 2,
+      "references": [
+        "2:5:low_outfall"
+      ],
+      "design_dimensions_m": [
+        2,
+        1,
+        3
+      ],
+      "dimension_basis": "latest dimensioned sheet; null reference axes retain explicitly inferred design targets",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": [],
+      "reference_dimensions_m": [
+        2,
+        1,
+        3
+      ],
+      "dimension_conflict": "Outer W2 and opening W2 are inconsistent; outer envelope wins, opening must allow jambs."
+    },
+    {
+      "id": "outfall_high",
+      "label": "High outfall, dry architecture",
+      "stage": 2,
+      "references": [
+        "2:5:high_outfall"
+      ],
+      "design_dimensions_m": [
+        2,
+        1,
+        4
+      ],
+      "dimension_basis": "latest dimensioned sheet; null reference axes retain explicitly inferred design targets",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": [],
+      "reference_dimensions_m": [
+        2,
+        1,
+        4
+      ],
+      "dimension_conflict": "Outer W2 and opening W2 are inconsistent; outer envelope wins, opening must allow jambs."
+    },
+    {
+      "id": "ladder_water",
+      "label": "Water access ladder",
+      "stage": 2,
+      "references": [
+        "2:5:water_ladder",
+        "1:4:main_ladder"
+      ],
+      "design_dimensions_m": [
+        0.75,
+        0.25,
+        3.0
+      ],
+      "dimension_basis": "inferred from adjacent reference objects",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": []
+    },
+    {
+      "id": "pier_wood",
+      "label": "Wooden pier",
+      "stage": 2,
+      "references": [
+        "2:5:pier"
+      ],
+      "design_dimensions_m": [
+        3.0,
+        2.0,
+        1.0
+      ],
+      "dimension_basis": "inferred from adjacent reference objects",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": []
+    },
+    {
+      "id": "waterlevel_wall",
+      "label": "Retaining wall with level rings",
+      "stage": 2,
+      "references": [
+        "2:waterlevel:section"
+      ],
+      "design_dimensions_m": [
+        2.0,
+        0.75,
+        4.0
+      ],
+      "dimension_basis": "inferred from adjacent reference objects",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": []
+    },
+    {
+      "id": "waterlevel_marks",
+      "label": "Water level marks",
+      "stage": 2,
+      "references": [
+        "2:waterlevel:marks"
+      ],
+      "design_dimensions_m": [
+        0.4,
+        0.15,
+        3.0
+      ],
+      "dimension_basis": "inferred from adjacent reference objects",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": []
+    },
+    {
+      "id": "crane_port",
+      "label": "Large port crane",
+      "stage": 4,
+      "references": [
+        "2:6:large"
+      ],
+      "design_dimensions_m": [
+        5,
+        1.5,
+        4
+      ],
+      "dimension_basis": "latest dimensioned sheet; null reference axes retain explicitly inferred design targets",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": [
+        "rotate",
+        "lift",
+        "lower"
+      ],
+      "reference_dimensions_m": [
+        5,
+        1.5,
+        4
+      ]
+    },
+    {
+      "id": "crane_wall",
+      "label": "Small wall crane",
+      "stage": 4,
+      "references": [
+        "2:6:small"
+      ],
+      "design_dimensions_m": [
+        3,
+        1,
+        3
+      ],
+      "dimension_basis": "latest dimensioned sheet; null reference axes retain explicitly inferred design targets",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": [
+        "rotate",
+        "lift",
+        "lower"
+      ],
+      "reference_dimensions_m": [
+        3,
+        1,
+        3
+      ]
+    },
+    {
+      "id": "cargo_cage",
+      "label": "Suspended cargo cage",
+      "stage": 4,
+      "references": [
+        "2:6:cage"
+      ],
+      "design_dimensions_m": [
+        1.5,
+        1.5,
+        3
+      ],
+      "dimension_basis": "latest dimensioned sheet; null reference axes retain explicitly inferred design targets",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": [
+        "sway"
+      ],
+      "reference_dimensions_m": [
+        1.5,
+        null,
+        3
+      ]
+    },
+    {
+      "id": "cargo_crate",
+      "label": "Large cargo crate",
+      "stage": 4,
+      "references": [
+        "2:6:crate"
+      ],
+      "design_dimensions_m": [
+        1,
+        1.2,
+        1
+      ],
+      "dimension_basis": "latest dimensioned sheet; null reference axes retain explicitly inferred design targets",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": [],
+      "reference_dimensions_m": [
+        1,
+        1.2,
+        1
+      ]
+    },
+    {
+      "id": "barrel_pallet",
+      "label": "Barrels on pallet",
+      "stage": 4,
+      "references": [
+        "2:6:pallet"
+      ],
+      "design_dimensions_m": [
+        0.6,
+        1.25,
+        0.8
+      ],
+      "dimension_basis": "latest dimensioned sheet; null reference axes retain explicitly inferred design targets",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": [],
+      "reference_dimensions_m": [
+        0.6,
+        null,
+        0.8
+      ]
+    },
+    {
+      "id": "house_small_adapted",
+      "label": "House for small inhabitants",
+      "stage": 3,
+      "references": [
+        "3:1:small",
+        "dremma:named_type:house_small_adapted"
+      ],
+      "design_dimensions_m": [
+        4.5,
+        3.5,
+        6
+      ],
+      "dimension_basis": "Latest Dremma named type supersedes prior width/height; previous depth retained, no global scaling",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": [],
+      "reference_dimensions_m": [
+        4.5,
+        null,
+        6
+      ],
+      "previous_dimension_revision": {
+        "checkpoint": "d8b513e",
+        "design_dimensions_m": [
+          4,
+          3.5,
+          5.5
+        ],
+        "conflict": null
+      },
+      "style_policy": "Retain original silhouette/style variant; use revised named width/height and inherited depth"
+    },
+    {
+      "id": "house_mixed_adapted",
+      "label": "House for mixed population",
+      "stage": 3,
+      "references": [
+        "3:1:medium",
+        "dremma:named_type:house_mixed_adapted"
+      ],
+      "design_dimensions_m": [
+        5.5,
+        4.5,
+        8.5
+      ],
+      "dimension_basis": "Latest Dremma named type supersedes prior width/height; previous depth retained, no global scaling",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": [],
+      "reference_dimensions_m": [
+        5.5,
+        null,
+        8.5
+      ],
+      "previous_dimension_revision": {
+        "checkpoint": "d8b513e",
+        "design_dimensions_m": [
+          5,
+          4.5,
+          7.3
+        ],
+        "conflict": null
+      },
+      "style_policy": "Retain original silhouette/style variant; use revised named width/height and inherited depth"
+    },
+    {
+      "id": "house_high_adapted",
+      "label": "House with tall-inhabitant addition",
+      "stage": 3,
+      "references": [
+        "3:1:high/height_comparison",
+        "dremma:named_type:house_high_adapted"
+      ],
+      "design_dimensions_m": [
+        6.5,
+        5.5,
+        11.5
+      ],
+      "dimension_basis": "Latest Dremma named type supersedes prior width/height; previous depth retained, no global scaling",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": [],
+      "reference_dimensions_m": [
+        6.5,
+        null,
+        11.5
+      ],
+      "previous_dimension_revision": {
+        "checkpoint": "d8b513e",
+        "design_dimensions_m": [
+          6,
+          5.5,
+          9.8
+        ],
+        "conflict": null
+      },
+      "style_policy": "Retain original silhouette/style variant; use revised named width/height and inherited depth"
+    },
+    {
+      "id": "door_small_adapted",
+      "label": "Small adapted door",
+      "stage": 3,
+      "references": [
+        "3:2:small",
+        "dremma:named_type:door_small_adapted"
+      ],
+      "design_dimensions_m": [
+        1.2,
+        0.6,
+        2.2
+      ],
+      "dimension_basis": "Latest Dremma named type supersedes prior width/height; previous depth retained, no global scaling",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": [
+        "open",
+        "close"
+      ],
+      "reference_dimensions_m": [
+        1.2,
+        null,
+        2.2
+      ],
+      "opening_dimensions_m": [
+        1.2,
+        0.6,
+        2.2
+      ],
+      "dimension_extent": "clear opening; frame increases decorated envelope",
+      "previous_dimension_revision": {
+        "checkpoint": "d8b513e",
+        "design_dimensions_m": [
+          0.8,
+          0.6,
+          2
+        ],
+        "conflict": null
+      }
+    },
+    {
+      "id": "door_medium_adapted",
+      "label": "Medium adapted door",
+      "stage": 3,
+      "references": [
+        "3:2:medium",
+        "dremma:named_type:door_medium_adapted"
+      ],
+      "design_dimensions_m": [
+        1.6,
+        0.6,
+        3
+      ],
+      "dimension_basis": "Latest Dremma named type supersedes prior width/height; previous depth retained, no global scaling",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": [
+        "open",
+        "close"
+      ],
+      "reference_dimensions_m": [
+        1.6,
+        null,
+        3
+      ],
+      "opening_dimensions_m": [
+        1.6,
+        0.6,
+        3
+      ],
+      "dimension_extent": "clear opening; frame increases decorated envelope",
+      "previous_dimension_revision": {
+        "checkpoint": "d8b513e",
+        "design_dimensions_m": [
+          1.2,
+          0.6,
+          2.8
+        ],
+        "conflict": null
+      }
+    },
+    {
+      "id": "door_high_adapted",
+      "label": "Tall adapted door",
+      "stage": 3,
+      "references": [
+        "3:2:high",
+        "dremma:named_type:door_high_adapted"
+      ],
+      "design_dimensions_m": [
+        2.2,
+        0.6,
+        4.2
+      ],
+      "dimension_basis": "Latest Dremma named type supersedes prior width/height; previous depth retained, no global scaling",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": [
+        "open",
+        "close"
+      ],
+      "reference_dimensions_m": [
+        2.2,
+        null,
+        4.2
+      ],
+      "opening_dimensions_m": [
+        2.2,
+        0.6,
+        4.2
+      ],
+      "dimension_extent": "clear opening; frame increases decorated envelope",
+      "previous_dimension_revision": {
+        "checkpoint": "d8b513e",
+        "design_dimensions_m": [
+          1.6,
+          0.6,
+          3.6
+        ],
+        "conflict": null
+      }
+    },
+    {
+      "id": "bench",
+      "label": "Bench",
+      "stage": 4,
+      "references": [
+        "3:3:bench"
+      ],
+      "design_dimensions_m": [
+        1.8,
+        0.5,
+        0.9
+      ],
+      "dimension_basis": "latest dimensioned sheet; null reference axes retain explicitly inferred design targets",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": [],
+      "reference_dimensions_m": [
+        1.8,
+        0.5,
+        0.9
+      ]
+    },
+    {
+      "id": "table",
+      "label": "Table",
+      "stage": 4,
+      "references": [
+        "3:3:table",
+        "3:8:furniture_comparison"
+      ],
+      "design_dimensions_m": [
+        1.2,
+        0.7,
+        0.8
+      ],
+      "dimension_basis": "latest dimensioned sheet; null reference axes retain explicitly inferred design targets",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": [],
+      "reference_dimensions_m": [
+        1.2,
+        0.7,
+        0.8
+      ]
+    },
+    {
+      "id": "stool",
+      "label": "Stool",
+      "stage": 4,
+      "references": [
+        "3:3:stool"
+      ],
+      "design_dimensions_m": [
+        0.35,
+        0.35,
+        0.5
+      ],
+      "dimension_basis": "latest dimensioned sheet; null reference axes retain explicitly inferred design targets",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": [],
+      "reference_dimensions_m": [
+        0.35,
+        0.35,
+        null
+      ]
+    },
+    {
+      "id": "altar",
+      "label": "Altar",
+      "stage": 4,
+      "references": [
+        "3:3:altar"
+      ],
+      "design_dimensions_m": [
+        1.2,
+        1,
+        1.8
+      ],
+      "dimension_basis": "latest dimensioned sheet; null reference axes retain explicitly inferred design targets",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": [],
+      "reference_dimensions_m": [
+        1.2,
+        1,
+        1.8
+      ]
+    },
+    {
+      "id": "coffin",
+      "label": "Wooden coffin",
+      "stage": 4,
+      "references": [
+        "3:3:coffin"
+      ],
+      "design_dimensions_m": [
+        2.2,
+        0.8,
+        0.6
+      ],
+      "dimension_basis": "latest dimensioned sheet; null reference axes retain explicitly inferred design targets",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": [],
+      "reference_dimensions_m": [
+        2.2,
+        0.8,
+        0.6
+      ]
+    },
+    {
+      "id": "sarcophagus",
+      "label": "Stone sarcophagus",
+      "stage": 4,
+      "references": [
+        "3:3:sarcophagus"
+      ],
+      "design_dimensions_m": [
+        2.4,
+        1.4,
+        1
+      ],
+      "dimension_basis": "latest dimensioned sheet; null reference axes retain explicitly inferred design targets",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": [],
+      "reference_dimensions_m": [
+        2.4,
+        1.4,
+        1
+      ]
+    },
+    {
+      "id": "bookshelf",
+      "label": "Bookcase",
+      "stage": 4,
+      "references": [
+        "3:3:bookshelf"
+      ],
+      "design_dimensions_m": [
+        1.2,
+        0.4,
+        2
+      ],
+      "dimension_basis": "latest dimensioned sheet; null reference axes retain explicitly inferred design targets",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": [],
+      "reference_dimensions_m": [
+        1.2,
+        0.4,
+        2
+      ]
+    },
+    {
+      "id": "noticeboard",
+      "label": "Notice board",
+      "stage": 4,
+      "references": [
+        "3:3:noticeboard"
+      ],
+      "design_dimensions_m": [
+        1.4,
+        0.3,
+        1.6
+      ],
+      "dimension_basis": "latest dimensioned sheet; null reference axes retain explicitly inferred design targets",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": [],
+      "reference_dimensions_m": [
+        1.4,
+        0.3,
+        1.6
+      ]
+    },
+    {
+      "id": "shrine",
+      "label": "Street shrine",
+      "stage": 4,
+      "references": [
+        "3:3:shrine"
+      ],
+      "design_dimensions_m": [
+        1,
+        0.8,
+        1.8
+      ],
+      "dimension_basis": "latest dimensioned sheet; null reference axes retain explicitly inferred design targets",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": [],
+      "reference_dimensions_m": [
+        1,
+        0.8,
+        1.8
+      ]
+    },
+    {
+      "id": "undertaker_counter",
+      "label": "Undertaker office counter",
+      "stage": 4,
+      "references": [
+        "3:3:office"
+      ],
+      "design_dimensions_m": [
+        2,
+        0.8,
+        1.1
+      ],
+      "dimension_basis": "latest dimensioned sheet; null reference axes retain explicitly inferred design targets",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": [],
+      "reference_dimensions_m": [
+        2,
+        0.8,
+        1.1
+      ]
+    },
+    {
+      "id": "lantern_amber",
+      "label": "Amber lantern",
+      "stage": 1,
+      "references": [
+        "3:3:light/head",
+        "1:4:lamp",
+        "2:4:lamp"
+      ],
+      "design_dimensions_m": [
+        0.35,
+        0.35,
+        0.75
+      ],
+      "dimension_basis": "inferred from adjacent reference objects",
+      "source_status": "validated_blender_fbx",
+      "native_status": "pending_A1_qualification",
+      "source": "canal_city_foundation.blend#lantern_amber",
+      "export": "models/lantern_amber.fbx",
+      "materials": [
+        "amber",
+        "brass",
+        "iron"
+      ],
+      "animations": [],
+      "planned_clips": [],
+      "measured_geometry": {
+        "bounds_min_m": [
+          -0.18031126260757446,
+          -0.18031126260757446,
+          0.0
+        ],
+        "bounds_max_m": [
+          0.18031126260757446,
+          0.18031126260757446,
+          0.75
+        ],
+        "dimensions_m": [
+          0.3606225252151489,
+          0.3606225252151489,
+          0.75
+        ],
+        "editable_mesh_objects": 12,
+        "base_triangles": 224
+      },
+      "native_preview_status": "validated_isolated_native_preview",
+      "native_preview": {
+        "model": "../../Assets/CanalCity/lantern_amber.sdm3d",
+        "skeleton": "../../Assets/CanalCity/lantern_amber_skeleton.sdskel",
+        "prefab": "../../Assets/CanalCity/lantern_amber_prefab.sdprefab"
+      }
+    },
+    {
+      "id": "light_standard",
+      "label": "Standard standing lantern",
+      "stage": 5,
+      "references": [
+        "3:3:light/left"
+      ],
+      "design_dimensions_m": [
+        0.6,
+        0.6,
+        2.5
+      ],
+      "dimension_basis": "latest dimensioned sheet; null reference axes retain explicitly inferred design targets",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": [],
+      "reference_dimensions_m": [
+        0.6,
+        0.6,
+        2.5
+      ]
+    },
+    {
+      "id": "light_high",
+      "label": "Tall standing lantern",
+      "stage": 5,
+      "references": [
+        "3:3:light/middle"
+      ],
+      "design_dimensions_m": [
+        0.6,
+        0.6,
+        2.5
+      ],
+      "dimension_basis": "latest dimensioned sheet; null reference axes retain explicitly inferred design targets",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": [],
+      "reference_dimensions_m": [
+        0.6,
+        0.6,
+        2.5
+      ]
+    },
+    {
+      "id": "light_short",
+      "label": "Short standing lantern",
+      "stage": 5,
+      "references": [
+        "3:3:light/right"
+      ],
+      "design_dimensions_m": [
+        0.6,
+        0.6,
+        2.5
+      ],
+      "dimension_basis": "latest dimensioned sheet; null reference axes retain explicitly inferred design targets",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": [],
+      "reference_dimensions_m": [
+        0.6,
+        0.6,
+        2.5
+      ]
+    },
+    {
+      "id": "awning_fabric",
+      "label": "Separate cloth awning",
+      "stage": 4,
+      "references": [
+        "3:3:awning"
+      ],
+      "design_dimensions_m": [
+        2.5,
+        1,
+        1.8
+      ],
+      "dimension_basis": "latest dimensioned sheet; null reference axes retain explicitly inferred design targets",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": [
+        "sway"
+      ],
+      "reference_dimensions_m": [
+        null,
+        1,
+        1.8
+      ]
+    },
+    {
+      "id": "clothesline",
+      "label": "Clothes line",
+      "stage": 4,
+      "references": [
+        "3:3:clothes"
+      ],
+      "design_dimensions_m": [
+        3,
+        0.3,
+        1.6
+      ],
+      "dimension_basis": "latest dimensioned sheet; null reference axes retain explicitly inferred design targets",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": [
+        "sway"
+      ],
+      "reference_dimensions_m": [
+        3,
+        null,
+        1.6
+      ]
+    },
+    {
+      "id": "barrel",
+      "label": "Barrel",
+      "stage": 4,
+      "references": [
+        "3:3:barrels"
+      ],
+      "design_dimensions_m": [
+        0.65,
+        0.65,
+        1.0
+      ],
+      "dimension_basis": "inferred from adjacent reference objects",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": []
+    },
+    {
+      "id": "crate_small",
+      "label": "Small crate",
+      "stage": 4,
+      "references": [
+        "3:3:crates/small"
+      ],
+      "design_dimensions_m": [
+        0.65,
+        0.65,
+        0.65
+      ],
+      "dimension_basis": "inferred from adjacent reference objects",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": []
+    },
+    {
+      "id": "crate_medium",
+      "label": "Medium crate",
+      "stage": 4,
+      "references": [
+        "3:3:crates/medium"
+      ],
+      "design_dimensions_m": [
+        1.0,
+        0.8,
+        0.8
+      ],
+      "dimension_basis": "inferred from adjacent reference objects",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": []
+    },
+    {
+      "id": "handcart",
+      "label": "Hand cart",
+      "stage": 4,
+      "references": [
+        "3:3:cart"
+      ],
+      "design_dimensions_m": [
+        1.25,
+        3,
+        0.6
+      ],
+      "dimension_basis": "latest dimensioned sheet; null reference axes retain explicitly inferred design targets",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": [],
+      "reference_dimensions_m": [
+        null,
+        3,
+        0.6
+      ]
+    },
+    {
+      "id": "boat",
+      "label": "Canal rowboat",
+      "stage": 4,
+      "references": [
+        "3:3:boat"
+      ],
+      "design_dimensions_m": [
+        1.25,
+        3.5,
+        0.8
+      ],
+      "dimension_basis": "inferred from adjacent reference objects",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": []
+    },
+    {
+      "id": "water_pump",
+      "label": "Water pump",
+      "stage": 4,
+      "references": [
+        "3:3:pump"
+      ],
+      "design_dimensions_m": [
+        0.6,
+        0.8,
+        1.6
+      ],
+      "dimension_basis": "latest dimensioned sheet; null reference axes retain explicitly inferred design targets",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": [],
+      "reference_dimensions_m": [
+        0.6,
+        0.8,
+        1.6
+      ]
+    },
+    {
+      "id": "window_high",
+      "label": "Tall lancet stained glass",
+      "stage": 3,
+      "references": [
+        "3:4:high"
+      ],
+      "design_dimensions_m": [
+        1.2,
+        0.2,
+        3
+      ],
+      "dimension_basis": "latest dimensioned sheet; null reference axes retain explicitly inferred design targets",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": [],
+      "reference_dimensions_m": [
+        1.2,
+        null,
+        3
+      ],
+      "dimension_conflict": "Sheet3 arrow H3 wins over caption H3.5; W1.2."
+    },
+    {
+      "id": "window_rose_square",
+      "label": "Square rose stained glass",
+      "stage": 3,
+      "references": [
+        "3:4:rose"
+      ],
+      "design_dimensions_m": [
+        3,
+        0.2,
+        3
+      ],
+      "dimension_basis": "latest dimensioned sheet; null reference axes retain explicitly inferred design targets",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": [],
+      "reference_dimensions_m": [
+        3,
+        null,
+        3
+      ]
+    },
+    {
+      "id": "window_wide",
+      "label": "Wide lancet stained glass",
+      "stage": 3,
+      "references": [
+        "3:4:wide"
+      ],
+      "design_dimensions_m": [
+        2,
+        0.2,
+        2.5
+      ],
+      "dimension_basis": "latest dimensioned sheet; null reference axes retain explicitly inferred design targets",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": [],
+      "reference_dimensions_m": [
+        2,
+        null,
+        2.5
+      ]
+    },
+    {
+      "id": "gable",
+      "label": "Gothic gable",
+      "stage": 3,
+      "references": [
+        "3:4:gable"
+      ],
+      "design_dimensions_m": [
+        1.5,
+        0.5,
+        2.0
+      ],
+      "dimension_basis": "inferred from adjacent reference objects",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": []
+    },
+    {
+      "id": "bracket_ornate",
+      "label": "Ornate wall bracket",
+      "stage": 3,
+      "references": [
+        "3:4:bracket"
+      ],
+      "design_dimensions_m": [
+        0.5,
+        0.75,
+        1.8
+      ],
+      "dimension_basis": "latest dimensioned sheet; null reference axes retain explicitly inferred design targets",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": [],
+      "reference_dimensions_m": [
+        null,
+        null,
+        1.8
+      ]
+    },
+    {
+      "id": "spire",
+      "label": "Roof spire",
+      "stage": 3,
+      "references": [
+        "3:4:spire"
+      ],
+      "design_dimensions_m": [
+        0.4,
+        0.4,
+        3.4
+      ],
+      "dimension_basis": "latest dimensioned sheet; null reference axes retain explicitly inferred design targets",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": [],
+      "reference_dimensions_m": [
+        null,
+        null,
+        3.4
+      ]
+    },
+    {
+      "id": "weathervane",
+      "label": "Faith weathervane",
+      "stage": 3,
+      "references": [
+        "3:4:weathervane"
+      ],
+      "design_dimensions_m": [
+        0.6,
+        0.15,
+        1.5
+      ],
+      "dimension_basis": "inferred from adjacent reference objects",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": []
+    },
+    {
+      "id": "window_niche",
+      "label": "Window niche",
+      "stage": 3,
+      "references": [
+        "3:4:niche"
+      ],
+      "design_dimensions_m": [
+        1,
+        0.5,
+        1.8
+      ],
+      "dimension_basis": "latest dimensioned sheet; null reference axes retain explicitly inferred design targets",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": [],
+      "reference_dimensions_m": [
+        1,
+        null,
+        1.8
+      ]
+    },
+    {
+      "id": "cornice",
+      "label": "Cornice",
+      "stage": 3,
+      "references": [
+        "3:4:cornice"
+      ],
+      "design_dimensions_m": [
+        1.5,
+        0.5,
+        0.8
+      ],
+      "dimension_basis": "latest dimensioned sheet; null reference axes retain explicitly inferred design targets",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": [],
+      "reference_dimensions_m": [
+        null,
+        null,
+        0.8
+      ]
+    },
+    {
+      "id": "corbel",
+      "label": "Corbel",
+      "stage": 3,
+      "references": [
+        "3:4:corbel"
+      ],
+      "design_dimensions_m": [
+        1.2,
+        0.6,
+        1.2
+      ],
+      "dimension_basis": "latest dimensioned sheet; null reference axes retain explicitly inferred design targets",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": [],
+      "reference_dimensions_m": [
+        1.2,
+        0.6,
+        1.2
+      ]
+    },
+    {
+      "id": "pinnacle",
+      "label": "Pinnacle",
+      "stage": 3,
+      "references": [
+        "3:4:pinnacle"
+      ],
+      "design_dimensions_m": [
+        0.5,
+        0.5,
+        2
+      ],
+      "dimension_basis": "latest dimensioned sheet; null reference axes retain explicitly inferred design targets",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": [],
+      "reference_dimensions_m": [
+        0.5,
+        0.5,
+        2
+      ]
+    },
+    {
+      "id": "statue_repose",
+      "label": "Rat statue, repose",
+      "stage": 5,
+      "references": [
+        "3:5:repose"
+      ],
+      "design_dimensions_m": [
+        1.2,
+        1.2,
+        4
+      ],
+      "dimension_basis": "latest dimensioned sheet; null reference axes retain explicitly inferred design targets",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": [],
+      "reference_dimensions_m": [
+        1.2,
+        1.2,
+        4
+      ]
+    },
+    {
+      "id": "statue_vigil",
+      "label": "Rat statue, vigil",
+      "stage": 5,
+      "references": [
+        "3:5:vigil"
+      ],
+      "design_dimensions_m": [
+        1.2,
+        1.2,
+        4
+      ],
+      "dimension_basis": "latest dimensioned sheet; null reference axes retain explicitly inferred design targets",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": [],
+      "reference_dimensions_m": [
+        1.2,
+        1.2,
+        4
+      ]
+    },
+    {
+      "id": "statue_bowed",
+      "label": "Rat statue, bowed",
+      "stage": 5,
+      "references": [
+        "3:5:bowed"
+      ],
+      "design_dimensions_m": [
+        1.2,
+        1.2,
+        4
+      ],
+      "dimension_basis": "latest dimensioned sheet; null reference axes retain explicitly inferred design targets",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": [],
+      "reference_dimensions_m": [
+        1.2,
+        1.2,
+        4
+      ]
+    },
+    {
+      "id": "mausoleum_front",
+      "label": "Mausoleum entrance module",
+      "stage": 3,
+      "references": [
+        "3:6:front",
+        "dremma:named_type:mausoleum_front"
+      ],
+      "design_dimensions_m": [
+        8,
+        4,
+        4.5
+      ],
+      "dimension_basis": "Latest Dremma named type supersedes prior width/height; previous depth retained, no global scaling",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": [],
+      "reference_dimensions_m": [
+        8,
+        null,
+        4.5
+      ],
+      "previous_dimension_revision": {
+        "checkpoint": "d8b513e",
+        "design_dimensions_m": [
+          6,
+          4,
+          4.5
+        ],
+        "conflict": null
+      }
+    },
+    {
+      "id": "mausoleum_corner",
+      "label": "Mausoleum corner",
+      "stage": 3,
+      "references": [
+        "3:6:corner"
+      ],
+      "design_dimensions_m": [
+        2,
+        2,
+        2.8
+      ],
+      "dimension_basis": "latest dimensioned sheet; null reference axes retain explicitly inferred design targets",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": [],
+      "reference_dimensions_m": [
+        2,
+        2,
+        2.8
+      ]
+    },
+    {
+      "id": "mausoleum_side",
+      "label": "Mausoleum side segment",
+      "stage": 3,
+      "references": [
+        "3:6:side"
+      ],
+      "design_dimensions_m": [
+        2,
+        2,
+        2.8
+      ],
+      "dimension_basis": "latest dimensioned sheet; null reference axes retain explicitly inferred design targets",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": [],
+      "reference_dimensions_m": [
+        2,
+        2,
+        2.8
+      ]
+    },
+    {
+      "id": "crypt_steps",
+      "label": "Crypt entry steps",
+      "stage": 3,
+      "references": [
+        "3:6:steps"
+      ],
+      "design_dimensions_m": [
+        3,
+        2,
+        0.4
+      ],
+      "dimension_basis": "latest dimensioned sheet; null reference axes retain explicitly inferred design targets",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": [],
+      "reference_dimensions_m": [
+        3,
+        2,
+        0.4
+      ]
+    },
+    {
+      "id": "grave_slab",
+      "label": "Grave slab",
+      "stage": 3,
+      "references": [
+        "3:6:slab"
+      ],
+      "design_dimensions_m": [
+        2,
+        1.2,
+        0.4
+      ],
+      "dimension_basis": "latest dimensioned sheet; null reference axes retain explicitly inferred design targets",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": [],
+      "reference_dimensions_m": [
+        2,
+        1.2,
+        0.4
+      ]
+    },
+    {
+      "id": "crypt_arch",
+      "label": "Crypt arch",
+      "stage": 3,
+      "references": [
+        "3:6:arch"
+      ],
+      "design_dimensions_m": [
+        2,
+        1,
+        2.4
+      ],
+      "dimension_basis": "latest dimensioned sheet; null reference axes retain explicitly inferred design targets",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": [],
+      "reference_dimensions_m": [
+        2,
+        1,
+        2.4
+      ]
+    },
+    {
+      "id": "crypt_dome",
+      "label": "Crypt roof dome",
+      "stage": 3,
+      "references": [
+        "3:6:dome"
+      ],
+      "design_dimensions_m": [
+        2,
+        2,
+        3
+      ],
+      "dimension_basis": "latest dimensioned sheet; null reference axes retain explicitly inferred design targets",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": [],
+      "reference_dimensions_m": [
+        2,
+        2,
+        3
+      ]
+    },
+    {
+      "id": "sign_tavern",
+      "label": "Tavern sign",
+      "stage": 5,
+      "references": [
+        "3:7:tavern"
+      ],
+      "design_dimensions_m": [
+        0.8,
+        0.3,
+        1.2
+      ],
+      "dimension_basis": "latest dimensioned sheet; null reference axes retain explicitly inferred design targets",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": [],
+      "reference_dimensions_m": [
+        0.8,
+        null,
+        1.2
+      ]
+    },
+    {
+      "id": "sign_shop",
+      "label": "Shop sign",
+      "stage": 5,
+      "references": [
+        "3:7:shop"
+      ],
+      "design_dimensions_m": [
+        0.6,
+        0.4,
+        1
+      ],
+      "dimension_basis": "latest dimensioned sheet; null reference axes retain explicitly inferred design targets",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": [],
+      "reference_dimensions_m": [
+        0.6,
+        null,
+        1
+      ]
+    },
+    {
+      "id": "sign_undertaker",
+      "label": "Undertaker sign",
+      "stage": 5,
+      "references": [
+        "3:7:undertaker"
+      ],
+      "design_dimensions_m": [
+        0.7,
+        0.3,
+        1.5
+      ],
+      "dimension_basis": "latest dimensioned sheet; null reference axes retain explicitly inferred design targets",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": [],
+      "reference_dimensions_m": [
+        0.7,
+        null,
+        1.5
+      ]
+    },
+    {
+      "id": "sign_temple",
+      "label": "Temple symbol",
+      "stage": 5,
+      "references": [
+        "3:7:temple"
+      ],
+      "design_dimensions_m": [
+        0.8,
+        0.2,
+        1.6
+      ],
+      "dimension_basis": "latest dimensioned sheet; null reference axes retain explicitly inferred design targets",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": [],
+      "reference_dimensions_m": [
+        0.8,
+        null,
+        1.6
+      ]
+    },
+    {
+      "id": "banner_narrow",
+      "label": "Narrow banner",
+      "stage": 5,
+      "references": [
+        "3:7:narrow"
+      ],
+      "design_dimensions_m": [
+        1,
+        0.2,
+        3
+      ],
+      "dimension_basis": "latest dimensioned sheet; null reference axes retain explicitly inferred design targets",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": [
+        "sway"
+      ],
+      "reference_dimensions_m": [
+        1,
+        null,
+        3
+      ]
+    },
+    {
+      "id": "banner_medium",
+      "label": "Medium banner",
+      "stage": 5,
+      "references": [
+        "3:7:medium",
+        "1:1:banner/cloth"
+      ],
+      "design_dimensions_m": [
+        1.5,
+        0.2,
+        4
+      ],
+      "dimension_basis": "latest dimensioned sheet; null reference axes retain explicitly inferred design targets",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": [
+        "sway"
+      ],
+      "reference_dimensions_m": [
+        1.5,
+        null,
+        4
+      ]
+    },
+    {
+      "id": "banner_large",
+      "label": "Large banner",
+      "stage": 5,
+      "references": [
+        "3:7:large"
+      ],
+      "design_dimensions_m": [
+        2,
+        0.2,
+        4
+      ],
+      "dimension_basis": "latest dimensioned sheet; null reference axes retain explicitly inferred design targets",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": [
+        "sway"
+      ],
+      "reference_dimensions_m": [
+        2,
+        null,
+        4
+      ]
+    },
+    {
+      "id": "canal_wall_compact",
+      "label": "Compact canal edge",
+      "stage": 2,
+      "references": [
+        "2:5:standard_edge"
+      ],
+      "design_dimensions_m": [
+        2,
+        2,
+        2
+      ],
+      "dimension_basis": "latest dimensioned sheet; unknown small depths inferred",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": []
+    },
+    {
+      "id": "sluice_compact",
+      "label": "Compact lifting sluice",
+      "stage": 2,
+      "references": [
+        "2:5:sluice"
+      ],
+      "design_dimensions_m": [
+        4,
+        1,
+        3
+      ],
+      "dimension_basis": "latest dimensioned sheet; unknown small depths inferred",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": [
+        "open",
+        "close"
+      ],
+      "dimension_conflict": "Outer W4/H3 also labelled clear opening with 1m pylons. Outer envelope wins; clear aperture must be smaller."
+    },
+    {
+      "id": "ladder_wood_short",
+      "label": "Short wooden overlay ladder",
+      "stage": 2,
+      "references": [
+        "2:2:wood/short"
+      ],
+      "design_dimensions_m": [
+        0.8,
+        0.18,
+        1.2
+      ],
+      "dimension_basis": "latest dimensioned sheet; unknown small depths inferred",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": []
+    },
+    {
+      "id": "ladder_metal_short",
+      "label": "Short metal overlay ladder",
+      "stage": 2,
+      "references": [
+        "2:2:metal/short"
+      ],
+      "design_dimensions_m": [
+        0.8,
+        0.15,
+        1.2
+      ],
+      "dimension_basis": "latest dimensioned sheet; unknown small depths inferred",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": []
+    },
+    {
+      "id": "window_narrow_tall",
+      "label": "Narrow stained glass, tall adaptation",
+      "stage": 3,
+      "references": [
+        "3:4:narrow"
+      ],
+      "design_dimensions_m": [
+        1,
+        0.3,
+        3.5
+      ],
+      "dimension_basis": "latest dimensioned sheet; unknown small depths inferred",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": [],
+      "dimension_conflict": "Arrow H3.5 wins over caption H2.5."
+    },
+    {
+      "id": "market_stall_compact",
+      "label": "Compact market stall",
+      "stage": 4,
+      "references": [
+        "3:3:market_stall"
+      ],
+      "design_dimensions_m": [
+        2,
+        1.2,
+        2.2
+      ],
+      "dimension_basis": "latest dimensioned sheet; unknown small depths inferred",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": []
+    },
+    {
+      "id": "scale_rat_adult",
+      "label": "Ordinary adult Dremma resident",
+      "stage": 1,
+      "references": [
+        "dremma:people:ordinary_adult"
+      ],
+      "design_dimensions_m": [
+        1.0808000564575195,
+        1.1199999898672104,
+        2.799999952316284
+      ],
+      "dimension_basis": "Dremma caption fixes standing height; width/depth are observed authored silhouette, excluding staff/tail and not inherited placeholder bounds",
+      "source_status": "validated_blender_fbx",
+      "native_status": "pending_A1_qualification",
+      "source": "canal_city_foundation.blend#scale_rat_adult",
+      "export": "models/scale_rat_adult.fbx",
+      "materials": [
+        "brass",
+        "burgundy",
+        "ear",
+        "fur",
+        "fur_light",
+        "iron",
+        "stone_light"
+      ],
+      "animations": [],
+      "planned_clips": [],
+      "reference_dimensions_m": [
+        null,
+        null,
+        2.8
+      ],
+      "dimension_extent": "standing feet to uppermost head/ear; accessories excluded",
+      "measured_geometry": {
+        "bounds_min_m": [
+          -0.5879999995231628,
+          -0.9323999881744385,
+          0.0
+        ],
+        "bounds_max_m": [
+          1.0540642738342285,
+          0.5164499878883362,
+          2.799999952316284
+        ],
+        "dimensions_m": [
+          1.6420642733573914,
+          1.4488499760627747,
+          2.799999952316284
+        ],
+        "editable_mesh_objects": 29,
+        "base_triangles": 7920
+      },
+      "standing_body_height_m": 2.8,
+      "observed_body_dimensions_m": [
+        1.0808000564575195,
+        1.1199999898672104,
+        2.799999952316284
+      ],
+      "native_preview_status": "validated_isolated_native_preview",
+      "native_preview": {
+        "model": "../../Assets/CanalCity/scale_rat_adult.sdm3d",
+        "skeleton": "../../Assets/CanalCity/scale_rat_adult_skeleton.sdskel",
+        "prefab": "../../Assets/CanalCity/scale_rat_adult_prefab.sdprefab"
+      }
+    },
+    {
+      "id": "railing_high",
+      "label": "High railing",
+      "stage": 1,
+      "references": [
+        "dremma:railings:high"
+      ],
+      "design_dimensions_m": [
+        2,
+        0.25,
+        1.5
+      ],
+      "dimension_basis": "Dremma named width/height; unlabelled depth is inferred design target",
+      "source_status": "validated_blender_fbx",
+      "native_status": "pending_A1_qualification",
+      "source": "canal_city_foundation.blend#railing_high",
+      "export": "models/railing_high.fbx",
+      "materials": [
+        "brass",
+        "iron"
+      ],
+      "animations": [],
+      "planned_clips": [],
+      "dimension_extent": "handrail upper surface above deck; finials measured separately",
+      "measured_geometry": {
+        "bounds_min_m": [
+          -1.0099999904632568,
+          -0.07999999821186066,
+          0.0
+        ],
+        "bounds_max_m": [
+          1.0099999904632568,
+          0.07999999821186066,
+          1.499103307723999
+        ],
+        "dimensions_m": [
+          2.0199999809265137,
+          0.1599999964237213,
+          1.499103307723999
+        ],
+        "editable_mesh_objects": 43,
+        "base_triangles": 2640
+      },
+      "handrail_height_m": 1.5,
+      "native_preview_status": "validated_isolated_native_preview",
+      "native_preview": {
+        "model": "../../Assets/CanalCity/railing_high.sdm3d",
+        "skeleton": "../../Assets/CanalCity/railing_high_skeleton.sdskel",
+        "prefab": "../../Assets/CanalCity/railing_high_prefab.sdprefab"
+      }
+    },
+    {
+      "id": "stairs_paired",
+      "label": "Paired stone and wooden stairs",
+      "stage": 1,
+      "references": [
+        "dremma:stairs:paired"
+      ],
+      "design_dimensions_m": [
+        2.4,
+        4.48,
+        2.4
+      ],
+      "dimension_basis": "Dremma paired standard: 8 stone rises of .30 and 16 small rises of .15 share total rise 2.4 and run 4.48; chosen small tread .28",
+      "source_status": "validated_blender_fbx",
+      "native_status": "pending_A1_qualification",
+      "source": "canal_city_foundation.blend#stairs_paired",
+      "export": "models/stairs_paired.fbx",
+      "materials": [
+        "brass",
+        "iron",
+        "oak",
+        "stone",
+        "stone_dark",
+        "stone_light"
+      ],
+      "animations": [],
+      "planned_clips": [],
+      "dimension_extent": "walking structure; railings add height and project beyond the walking width",
+      "measured_geometry": {
+        "bounds_min_m": [
+          -1.2599999904632568,
+          -0.009999999776482582,
+          0.0
+        ],
+        "bounds_max_m": [
+          1.2000000476837158,
+          4.480000019073486,
+          3.351010322570801
+        ],
+        "dimensions_m": [
+          2.4600000381469727,
+          4.490000018849969,
+          3.351010322570801
+        ],
+        "editable_mesh_objects": 255,
+        "base_triangles": 3632
+      },
+      "stair_profile": {
+        "stone_steps": 8,
+        "stone_rise_m": 0.3,
+        "stone_tread_m": 0.56,
+        "wood_steps": 16,
+        "wood_rise_m": 0.15,
+        "wood_tread_m": 0.28,
+        "total_rise_m": 2.4,
+        "total_run_m": 4.48,
+        "overlay_total_width_m": 0.8,
+        "overlay_useful_width_m": 0.6
+      },
+      "native_preview_status": "validated_isolated_native_preview",
+      "native_preview": {
+        "model": "../../Assets/CanalCity/stairs_paired.sdm3d",
+        "skeleton": "../../Assets/CanalCity/stairs_paired_skeleton.sdskel",
+        "prefab": "../../Assets/CanalCity/stairs_paired_prefab.sdprefab"
+      }
+    },
+    {
+      "id": "house_vertical_family",
+      "label": "Vertical family house",
+      "stage": 3,
+      "references": [
+        "dremma:houses:vertical_family"
+      ],
+      "design_dimensions_m": [
+        7,
+        6.5,
+        14
+      ],
+      "dimension_basis": "Dremma named width/height; unlabelled depth is inferred design target",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": [],
+      "style_policy": "Retain original silhouette/style variant; use revised named width/height and inherited depth"
+    },
+    {
+      "id": "cathedral_main_facade",
+      "label": "Main cathedral facade",
+      "stage": 3,
+      "references": [
+        "dremma:public:cathedral"
+      ],
+      "design_dimensions_m": [
+        16,
+        1,
+        20
+      ],
+      "dimension_basis": "Dremma named width/height; unlabelled depth is inferred design target",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": []
+    },
+    {
+      "id": "undertaker_workshop",
+      "label": "Undertaker bureau and workshop",
+      "stage": 3,
+      "references": [
+        "dremma:public:workshop"
+      ],
+      "design_dimensions_m": [
+        10,
+        6,
+        11
+      ],
+      "dimension_basis": "Dremma named width/height; unlabelled depth is inferred design target",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": []
+    },
+    {
+      "id": "civic_hall",
+      "label": "Civic hall and gallery",
+      "stage": 3,
+      "references": [
+        "dremma:public:hall"
+      ],
+      "design_dimensions_m": [
+        12,
+        4,
+        6
+      ],
+      "dimension_basis": "Dremma named width/height; unlabelled depth is inferred design target",
+      "source_status": "pending",
+      "native_status": "pending_A1_qualification",
+      "source": null,
+      "export": null,
+      "materials": [],
+      "animations": [],
+      "planned_clips": []
+    }
+  ],
+  "source_validation_report": "validation-report.json",
+  "native_preview_validation_report": "native-preview-validation.json"
+}

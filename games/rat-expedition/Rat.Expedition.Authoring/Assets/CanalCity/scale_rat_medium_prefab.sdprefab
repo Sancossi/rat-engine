@@ -1,0 +1,22 @@
+!PrefabAsset
+Id: 73b91356-26f3-569d-a336-affdbd83861f
+SerializedVersion: {Stride: 3.1.0.1}
+Tags: []
+Hierarchy:
+    RootParts:
+        - ref!! 59e3d7be-164c-5c10-aa5e-0533eaaefd09
+    Parts:
+        -   Entity:
+                Id: 59e3d7be-164c-5c10-aa5e-0533eaaefd09
+                Name: scale_rat_medium
+                Components:
+                    0d1df4c6414b5a139b3fc69dbf0078de: !TransformComponent
+                        Id: 1092aaee-bc8e-5cc1-bceb-46d036942f52
+                        Position: {X: 0, Y: 0, Z: 0}
+                        Rotation: {X: 0, Y: 0, Z: 0, W: 1}
+                        Scale: {X: 1, Y: 1, Z: 1}
+                        Children: {}
+                    ace45546bd075c7b8a09088459024c6c: !ModelComponent
+                        Id: 58add1d8-0f11-5621-9ab6-672c18d4a352
+                        Model: 4fd98ccc-7899-5219-ad1f-a17b1d240473:CanalCity/scale_rat_medium
+                        Materials: {}

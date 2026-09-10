@@ -1,0 +1,22 @@
+!PrefabAsset
+Id: 6065f68b-2ae5-50eb-ae76-4892d46d717a
+SerializedVersion: {Stride: 3.1.0.1}
+Tags: []
+Hierarchy:
+    RootParts:
+        - ref!! 61fd743c-74b0-562e-865d-e73b4f30d231
+    Parts:
+        -   Entity:
+                Id: 61fd743c-74b0-562e-865d-e73b4f30d231
+                Name: stairs_paired
+                Components:
+                    35f28c99b68953239a242b2becea0f4c: !TransformComponent
+                        Id: 30f1a1ef-fc69-5808-ba1f-34178c04be31
+                        Position: {X: 0, Y: 0, Z: 0}
+                        Rotation: {X: 0, Y: 0, Z: 0, W: 1}
+                        Scale: {X: 1, Y: 1, Z: 1}
+                        Children: {}
+                    dbb3711be6f250389743e536018f251d: !ModelComponent
+                        Id: 8b473fdc-6f52-5a37-8fac-2ee9934d7a6b
+                        Model: fecdea16-c6d8-58b7-9aea-cefcb892b2fb:CanalCity/stairs_paired
+                        Materials: {}
