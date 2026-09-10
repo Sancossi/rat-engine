@@ -208,10 +208,9 @@ def build(output):
     bad_visual.native_visual('bad-native-binding','{X: 0, Y: 0, Z: 0}',
         '7453c19f-4830-5209-a02e-9828735efc32:CanalCity/bridge_arch',bad_visual.id('floor'),['absent-node'])
     bad_scene='Scene-bad-native-binding';bad_visual.write(output,bad_scene)
-    # Preserve the production Sluice root identity so a production Core candidate resolves it.
-    bad_path=output/(bad_scene+'.sdscene')
-    bad_path.write_text(bad_path.read_text(encoding='utf8').replace(guid(bad_scene),'70789606-338b-58d8-88ef-86bf53250749',1),encoding='utf8')
-    manifest(output,'bad-native-binding',['70789606-338b-58d8-88ef-86bf53250749:QA/'+bad_scene,
+    # Keep the cloned scene's asset ID unique. Its TraversalScene root entity keeps
+    # the production Sluice identity used to match the already validated candidate.
+    manifest(output,'bad-native-binding',[guid(bad_scene)+':QA/'+bad_scene,
         'a6d301f9-3171-5137-b3c7-4622618bebc5:Courtyard'])
     roots.append(guid('bad-native-binding')+':QA/bad-native-binding')
     package = (GAME/'Rat.Expedition.Authoring/Rat.Expedition.Authoring.sdpkg').read_text(encoding='utf8')

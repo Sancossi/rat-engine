@@ -38,6 +38,10 @@ class NativeFixtureGenerationTests(unittest.TestCase):
                 self.assertIn(node, native)
             bad = (root / 'generated/QA/Scene-bad-native-binding.sdscene').read_text(encoding='utf8')
             self.assertIn('absent-node', bad)
+            self.assertIn('Id: ' + fixtures.guid('Scene-bad-native-binding'), bad)
+            self.assertNotIn('Id: 70789606-338b-58d8-88ef-86bf53250749\n', bad)
+            bad_project = (root / 'generated/QA/bad-native-binding.sdscene').read_text(encoding='utf8')
+            self.assertIn(fixtures.guid('Scene-bad-native-binding') + ':QA/Scene-bad-native-binding', bad_project)
 
     def test_writer_does_not_promote_non_root_entity_to_root(self):
         scene = fixtures.Scene(fixtures.ASSETS / 'Courtyard.sdscene')
