@@ -1,10 +1,10 @@
 ---
 type: task
 area: Game
-status: In review
+status: Done
 task_type: Feature
 sprint: Sprint 19
-review: In review
+review: Approved
 due:
 tags: [task, expedition, stride, art]
 ---
@@ -24,6 +24,8 @@ Acceptance:
 - Проверенные normal/QA ZIP, независимое review, полный Release редактора и публикация каждого принятого среза в main.
 
 ## Resolution
+
+Все три среза приняты. Финальное независимое review `2cec457` — Approved, открытых замечаний нет. Дрёмма — отдельная редактируемая стартовая карта с native библиотекой и двусторонним порталом к Courtyard; Courtyard/Sluice сохранены. Герои 1,8/0,9 м, radius0,45; прежние скорости, FSM и spacing0,7/1,4 сохранены. Открывать `games/rat-expedition/Rat.Expedition.sln`, Authoring → Assets → Dremma; библиотека в CanalCity. [Итоговый отчёт](../../../docs/audits/2026-09-10-dremma-playable-integration.md): Core64/64, Authoring21/21, Python25/25, editor API dirty Save/fresh reopen/reimport, normal/QA ZIP и 42 gates раздельными прогонами одного финального QA пакета. OS gate закрыт фактическими четырьмя режимами и cross-mode сравнением; один uninterrupted standard-verifier PASS не заявляется. Полный Release редактора прошёл; обязательная сборка после закрытия и публикация в main выполняются по standing instruction. Вся A1, оставшийся каталог и другие карточки спринта этим не закрываются.
 
 Verifier-only fix `2cec457` передан на review: focused окно запускается видимым, фактический HWND/PID и результат активации проверяются до прежних assertions. На том же QA пакете все четыре режима прошли раздельно; parent дополнительно выполнил исходные cross-mode проверки частоты/ticks/position (`window-states-combined.json` в QA evidence root): 472 ticks, одна конечная позиция, 54,56–54,96 Hz, shutdown0. Вместе с 38 игровыми сценариями покрыты 42 gates; это не один непрерывный standard-verifier PASS. Поздний combined attempt корректно отклонён после потери foreground на150 кадре и сохранён как отрицательное свидетельство.
 
@@ -78,6 +80,8 @@ Review среза 1 — Needs fixes: P2 в проверке Snapshot. Default JS
 Начат срез 1: перенос библиотеки. В отдельной worktree `C:/5_gamedev/rat-engine-dremma` сохранены обе истории: текущий проект и графическая ветка `c74c6e7`. Исходные рабочие копии не изменены. Дальше срез 2 (масштаб/runtime) и срез 3 (игровой квартал); оставшиеся A1/каталог не закрываются автоматически.
 
 ## Bugs found
+
+Срез 3: изоляция invalid visual binding, сохранение новой source model после invalid metadata, dirty-save/cleanup qualification и устаревшие QA команды исправлены и одобрены. Focused setup verifier исправлен без изменения runtime policy; все четыре OS режима фактически прошли. Поздняя потеря фокуса корректно отклонена тестом и сохранена в отчёте. Открытых дефектов или незакрытых acceptance gates этой интеграции нет.
 
 Срез 2: preview Undo после invalid selector, authored Enabled, shear/degenerate transform, normal/QA build cache, QA asset-ID collision, старый radius в ramp support и smoke observation/oracle исправлены и проверены. Открытых кодовых замечаний среза нет; OS foreground gate перенесён на финальную приёмку, не объявлен пройденным.
 

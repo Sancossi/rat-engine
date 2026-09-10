@@ -2,8 +2,10 @@
 
 Date: 2026-09-10. Implements the final slice of the
 [approved integration plan](../dremma-game-integration-spec.md).
-All required gate assertions have passed across separate invocations of the same
-final QA package. Final acceptance awaits review of the verifier setup correction.
+Accepted: independent review approved `2cec457` and the complete combined evidence
+without material findings. All42 required gates passed across separate invocations
+of the same final QA package. The integration card is Done/Approved; other Sprint19
+cards and the remaining A1/catalogue scope retain their own statuses.
 
 ## Resulting game and authoring behavior
 
