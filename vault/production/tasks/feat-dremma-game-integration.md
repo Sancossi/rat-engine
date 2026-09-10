@@ -1,10 +1,10 @@
 ---
 type: task
 area: Game
-status: In progress
+status: In review
 task_type: Feature
 sprint: Sprint 19
-review: Pending
+review: In review
 due:
 tags: [task, expedition, stride, art]
 ---
@@ -24,6 +24,8 @@ Acceptance:
 - Проверенные normal/QA ZIP, независимое review, полный Release редактора и публикация каждого принятого среза в main.
 
 ## Resolution
+
+Срез 3 передан на независимое review: `fb36d6c`, Dremma — production start с native графикой и порталом к Courtyard; добавлена many-to-one привязка геометрии. Windows/asset build без ошибок, Core 64/64, Authoring 21/21, Python 25/25, vault/PowerShell parse прошли. Targeted GPU маршрут завершён на кадре 953 (`build/dremma-stair-rails-1`): центральный/смещённый проход арки, crouch, лестница/перила, верхний настил и нижний возврат; после shutdown native lease count 0. Ранее прошли 20 Dremma portal legs и отказ повреждённого candidate с сохранением активной Дрёммы. Editor API, door preview, финальные пакеты и OS gate ещё ожидаются.
 
 Срез 2 опубликован в `rat-engine/main`: `7e1513687d268172c8edfade4fae5c89146c08fb`, remote SHA проверен. Начат срез 3: отдельная редактируемая Dremma.sdscene, старт обычной игры в Дрёмме, связь с Courtyard, мост/лестница/нижняя арка, native art и итоговые проверки. Review Pending относится к новому срезу. OS window-state gate из среза 2 остаётся обязательным до закрытия всей карточки.
 
