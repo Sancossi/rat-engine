@@ -54,14 +54,20 @@ internal static class DremmaLibraryQualification
                 var previous=JsonNode.Parse(File.ReadAllText(Path.Combine(runFolder,"result.json")))!;
                 var reopenIds=previous["assets"]!.Deserialize<Dictionary<string,string>>()!;
                 var assets=Resolve(session,reopenIds);
-                var expected=previous["snapshot"]!.ToJsonString();
-                Require(JsonSerializer.Serialize(Snapshot(assets,resourceFolder))==expected,"Fresh editor state differs from the saved Dremma fixture.");
+                var expected=previous["snapshot"]!;
+                var actual=JsonSerializer.SerializeToNode(Snapshot(assets,resourceFolder))!;
+                Require(JsonNode.DeepEquals(actual,expected),"Fresh editor state differs from the saved Dremma fixture.");
+                var changed=expected.DeepClone();
+                var changedPart=changed["sceneParts"]!.AsArray().Select(n=>n!.AsObject()).First(p=>p["baseAssetId"] is not null);
+                var changedPosition=changedPart["position"]!.AsObject();
+                changedPosition["X"]=changedPosition["X"]!.GetValue<float>()+1;
+                Require(!JsonNode.DeepEquals(actual,changed),"Snapshot comparison failed to reject a changed instance X position.");
                 Require(!session.AllAssets.Any(a=>a.IsDirty),"Freshly reopened Dremma fixture is dirty.");
                 File.WriteAllText(StartupHook.ResultPath+".ready.json",JsonSerializer.Serialize(new{assets=reopenIds,processId=Environment.ProcessId}));
                 await WaitFor(StartupHook.ResultPath+".client.json",60,"Fresh-reopen MCP client");
                 var reopenClient=JsonNode.Parse(File.ReadAllText(StartupHook.ResultPath+".client.json"))!;
                 Require(reopenClient["passed"]!.GetValue<bool>(),"Fresh-reopen MCP inspection failed.");
-                result["mcpClient"]=reopenClient;result["snapshot"]=Snapshot(assets,resourceFolder);result["assets"]=reopenIds;result["passed"]=true;
+                result["mcpClient"]=reopenClient;result["snapshot"]=Snapshot(assets,resourceFolder);result["negativeSnapshotPositionOracle"]=true;result["assets"]=reopenIds;result["passed"]=true;
                 session.ServiceProvider.Get<IAssetEditorsManager>().CloseAllEditorWindows(false);session.Destroy();
                 return;
             }
@@ -177,10 +183,12 @@ internal static class DremmaLibraryQualification
             ids=assets.ToDictionary(p=>p.Key,p=>p.Value.Id.ToString()),
             model=new{source=SourceIdentity(assets["Model"],model.Source),sourceHashes=HashValues(model),materials=model.Materials.Select(m=>new{name=m.Name,target=m.MaterialInstance?.Material is { } value?AttachedReferenceManager.GetAttachedReference(value)?.Id.ToString():null}).ToArray()},
             prefabModel=ModelTarget(prefab).ToString(),
-            sceneParts=scene.Hierarchy.Parts.Values.Select(p=>new{entityId=p.Entity.Id,parentId=p.Entity.Transform.Parent?.Entity.Id,baseAssetId=p.Base?.BasePartAsset.Id.ToString(),basePartId=p.Base?.BasePartId,instanceId=p.Base?.InstanceId,position=p.Entity.Transform.Position}).OrderBy(p=>p.entityId).ToArray(),
-            sharedColor=color.Value,texture=new{source=SourceIdentity(assets["Texture"],((TextureAsset)assets["Texture"].Asset).Source),sourceHashes=HashValues(assets["Texture"].Asset),file=Sha256(Path.Combine(resources,"texture-source.png"))},
+            sceneParts=scene.Hierarchy.Parts.Values.Select(p=>new{entityId=p.Entity.Id,parentId=p.Entity.Transform.Parent?.Entity.Id,baseAssetId=p.Base?.BasePartAsset.Id.ToString(),basePartId=p.Base?.BasePartId,instanceId=p.Base?.InstanceId,position=VectorValue(p.Entity.Transform.Position)}).OrderBy(p=>p.entityId).ToArray(),
+            sharedColor=ColorValue(color.Value),texture=new{source=SourceIdentity(assets["Texture"],((TextureAsset)assets["Texture"].Asset).Source),sourceHashes=HashValues(assets["Texture"].Asset),file=Sha256(Path.Combine(resources,"texture-source.png"))},
             sourceModel=Sha256(Path.Combine(resources,"model-source.fbx"))};
     }
+    private static object VectorValue(Vector3 value)=>new{value.X,value.Y,value.Z};
+    private static object ColorValue(Color4 value)=>new{value.R,value.G,value.B,value.A};
     private static string HashText(Asset asset)=>string.Join(";",SourceHashesHelper.GetAllHashes(asset).OrderBy(p=>p.Key.ToString()).Select(p=>$"{p.Key}:{p.Value}"));
     private static string[] HashValues(Asset asset)=>SourceHashesHelper.GetAllHashes(asset).Values.Select(v=>v.ToString()).OrderBy(v=>v,StringComparer.Ordinal).ToArray();
     private static string SourceIdentity(AssetViewModel asset,UFile source)

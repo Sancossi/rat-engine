@@ -74,6 +74,17 @@ async def main():
             async def fixture_snapshot():
                 return {name: await inspect(name) for name in ids}
 
+            def placed_positions(scene):
+                entities = {entity['id']: entity for entity in scene['entities']}
+                positions = set()
+                for part in scene['parts']:
+                    if part['baseAssetId'] != ids['Prefab']:
+                        continue
+                    transform = next(component for component in entities[part['entityId']]['components'] if component['type'] == 'Stride.Engine.TransformComponent')
+                    value = transform['properties']['Position']
+                    positions.add((value['X'], value['Y'], value['Z']))
+                return positions
+
             catalog = (await call('asset_list'))['data']
             catalog_ids = {asset['id'] for asset in catalog['assets']}
             assert set(ids.values()).issubset(catalog_ids)
@@ -91,6 +102,7 @@ async def main():
                 scene = snapshot['Scene']
                 parts = [part for part in scene['parts'] if part['baseAssetId'] == ids['Prefab']]
                 assert len(parts) == 2 and len({part['instanceId'] for part in parts}) == 2
+                assert placed_positions(scene) == {(-3, 0, 0), (3, 0, 0)}
                 assert snapshot['SharedMaterial']['fields']['Value'] == {'R': .2, 'G': .35, 'B': .8, 'A': 1}
                 assert not (await state())['dirtyAssets']
                 evidence['snapshot'] = snapshot
@@ -118,10 +130,15 @@ async def main():
             placed = [part for part in scene['parts'] if part['baseAssetId'] == ids['Prefab']]
             assert len(placed) == 2 and len({part['instanceId'] for part in placed}) == 2
             assert len({part['entityId'] for part in placed}) == 2
+            assert placed_positions(scene) == {(-3, 0, 0), (3, 0, 0)}
             await history('undo')
-            assert len([part for part in (await inspect('Scene'))['parts'] if part['baseAssetId'] == ids['Prefab']]) == 1
+            after_undo = await inspect('Scene')
+            assert len([part for part in after_undo['parts'] if part['baseAssetId'] == ids['Prefab']]) == 1
+            assert placed_positions(after_undo) == {(-3, 0, 0)}
             await history('redo')
-            assert len([part for part in (await inspect('Scene'))['parts'] if part['baseAssetId'] == ids['Prefab']]) == 2
+            after_redo = await inspect('Scene')
+            assert len([part for part in after_redo['parts'] if part['baseAssetId'] == ids['Prefab']]) == 2
+            assert placed_positions(after_redo) == {(-3, 0, 0), (3, 0, 0)}
             await save()
             edit_path.write_text(json.dumps({'passed': True, 'placements': placements}, ensure_ascii=False, indent=2), encoding='utf-8')
             edit_written = True

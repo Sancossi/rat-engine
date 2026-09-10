@@ -17,12 +17,17 @@ MCP SDK. The opt-in qualification assembly added no public tool. Each process
 advertised the accepted 19-tool surface, where import/reimport remain explicitly
 unsupported MCP operations.
 
-Evidence: `build/mcp/dremma-library-20260910-133221-451/`.
+The first run at `build/mcp/dremma-library-20260910-133221-451/` proved the native
+operations, but independent review found that its C# saved-state snapshot used the
+default JSON representation of `Vector3` and `Color4`. That representation retained
+only `IsNormalized` for positions and `{}` for colors, so the fresh-reopen comparison
+did not cover the values it claimed. The corrected replacement evidence is
+`build/mcp/dremma-library-20260910-134227-247/`.
 
 | Evidence | Observed result |
 |---|---|
-| `result.json`, `result.json.client.json` | PASS; PID 59836; 74 MCP calls; native catalogue/edit/place/reimport/Undo/Redo/Save |
-| `reopen.json`, `reopen.json.client.json` | PASS; fresh PID 26544; 31 MCP calls; clean saved assets, IDs, references, instances and source hashes matched |
+| `result.json`, `result.json.client.json` | PASS; PID 40332; 73 MCP calls; native catalogue/edit/place/reimport/Undo/Redo/Save |
+| `reopen.json`, `reopen.json.client.json` | PASS; fresh PID 9896; 30 MCP calls; clean saved assets, IDs, references, instances, values and source hashes matched; changed-position negative oracle passed |
 | `library-integrity.json`, `library-before.json`, `library-after.json` | PASS; all 170 original library files remained byte-identical: 97 native assets plus 73 source/evidence files |
 | `saved-fixture-0/`, `saved-fixture-1/` | Six saved native fixture assets and two changed source copies archived outside Authoring after fresh reopen; no fixture directory remains in `Assets/` or `Resources/` |
 
@@ -39,6 +44,15 @@ changed the shared material color from `(0.8, 0.45, 0.12, 1)` to
 prefab at offsets `(-3, 0, 0)` and `(3, 0, 0)`, then verified distinct entity and
 instance IDs, native base-part links, placement Undo/Redo and session Save. Both
 instances retained the same prefab → model → shared-material chain.
+
+The corrected snapshot serializes explicit `X/Y/Z` and `R/G/B/A` scalars. The MCP
+client now asserts exact root positions `(-3, 0, 0)` and `(3, 0, 0)` before Save,
+one remaining `(-3, 0, 0)` root after placement Undo, both roots after Redo, and
+both roots again after the fresh process reopen. The reopen hook also clones the
+saved snapshot, changes one placed root's X value by `+1`, and requires the same
+deep comparison used for acceptance to reject it. `reopen.json` records
+`negativeSnapshotPositionOracle: true`; both saved snapshots contain the exact
+positions and material color scalars.
 
 ## Real source updates on owned copies
 
