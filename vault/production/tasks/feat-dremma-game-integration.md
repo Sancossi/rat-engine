@@ -1,10 +1,10 @@
 ---
 type: task
 area: Game
-status: In review
+status: In progress
 task_type: Feature
 sprint: Sprint 19
-review: In review
+review: Needs fixes
 due:
 tags: [task, expedition, stride, art]
 ---
@@ -24,6 +24,8 @@ Acceptance:
 - Проверенные normal/QA ZIP, независимое review, полный Release редактора и публикация каждого принятого среза в main.
 
 ## Resolution
+
+Повторное review `50aba40` подтвердило isolation fix, но выявило P2 порядка validation: при invalid binding смена/reimport модели B может быть затёрта старым cached Original A. Перенести validation после отслеживания смены component/model; регрессия A → invalid binding → B → repair должна сохранять B.
 
 P2 isolation исправлен в `50aba40` и передан на повторное review: invalid binding исключается только из собственного suppression, valid replacement остаётся подавленной, unrelated geometry видима; диагностика остаётся у неверной привязки, runtime validation строгая. Authoring 21/21. Первый editor harness остановлен безопасно из-за несовпадения формы JSON Position (служебное IsNormalized); это ещё не успешная editor qualification, исправляется проверка явных XYZ.
 
