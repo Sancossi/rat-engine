@@ -1,10 +1,10 @@
 ---
 type: task
 area: Game
-status: In progress
+status: In review
 task_type: Feature
 sprint: Sprint 19
-review: Pending
+review: In review
 due:
 tags: [task, expedition, stride, art]
 ---
@@ -24,6 +24,8 @@ Acceptance:
 - Проверенные normal/QA ZIP, независимое review, полный Release редактора и публикация каждого принятого среза в main.
 
 ## Resolution
+
+Срез 2 передан на независимое code review: `9b54bd95fffeb39ed5b1076e70c186f01c2d9c4d`. Core 63/63, Authoring 17/17, Python 25/25 и vault прошли. Native visual resolver/lease, editor bindings/subsets и миграция размеров реализованы; предварительный GPU кадр показал библиотечный фонарь в обычном Courtyard. Normal/QA пакеты и полный verifier выполняются параллельно review и остаются обязательными до принятия.
 
 Срез 1 опубликован в `rat-engine/main`: `53d5ed092a69e9c7215ba5d25adce470acd664fe`, remote SHA проверен. Stride main/pin остаётся `c0b9065d6e902b45d4d3a5c656318c70df53a6f3`. Начат срез 2: отдельное владение native visuals в Windows, authoring bindings/occlusion, масштаб тела 1,8/0,9/radius0,45 и камеры, миграция двух прежних карт ×2,25 при неизменных скоростях и FSM. Новая Dremma-сцена — срез 3. Review Pending относится только к новому срезу.
 
