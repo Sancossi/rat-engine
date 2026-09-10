@@ -22,6 +22,8 @@ tags: [sprint, expedition, prototype]
 
 ## Resolution
 
+2026-09-10: новый утверждённый приоритет — [[feat-dremma-game-integration]]: библиотека → масштаб/native runtime → новая стартовая локация. Он разрешает scoped A1 dependency work для уже готовой графики; остальные этапы каталога и вся A1 сохраняют фактические статусы.
+
 2026-09-09: по прямому запросу реализации утверждённого плана добавлен каталог
 Blender → Stride: [[feat-canal-city-01-foundation]] → [[feat-canal-city-02-passages]]
 → [[feat-canal-city-03-architecture]] → [[feat-canal-city-04-mechanisms]]
