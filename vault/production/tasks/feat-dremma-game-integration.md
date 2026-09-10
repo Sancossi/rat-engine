@@ -4,7 +4,7 @@ area: Game
 status: In progress
 task_type: Feature
 sprint: Sprint 19
-review: Approved
+review: Pending
 due:
 tags: [task, expedition, stride, art]
 ---
@@ -24,6 +24,8 @@ Acceptance:
 - Проверенные normal/QA ZIP, независимое review, полный Release редактора и публикация каждого принятого среза в main.
 
 ## Resolution
+
+Срез 2 опубликован в `rat-engine/main`: `7e1513687d268172c8edfade4fae5c89146c08fb`, remote SHA проверен. Начат срез 3: отдельная редактируемая Dremma.sdscene, старт обычной игры в Дрёмме, связь с Courtyard, мост/лестница/нижняя арка, native art и итоговые проверки. Review Pending относится к новому срезу. OS window-state gate из среза 2 остаётся обязательным до закрытия всей карточки.
 
 Срез 2 принят с явно отложенной до финала OS window-state проверкой. Код `e8f965e` и пакетные свидетельства получили независимое Approved; [отчёт](../../../docs/audits/2026-09-10-dremma-scale-native-runtime.md) зафиксирован в `f12a745`. Core 64/64, Authoring 20/20, Python 25/25; финальные 10 affected/remaining QA сценариев прошли, включая 20 portal legs и сохранение активной сцены при отказах. Unaffected prefix предыдущего пакета проверен отдельно; full verifier PASS не заявляется. Normal ZIP проверен parent вне checkout: `C:/rat-expedition-validation/slice2-normal-20260910-155028-215/result.json`, exit 0. Итоговый полный Release редактора: `C:/5_gamedev/stride/logs/rat-foundation/20260910-154754-185/result.json`, 66,65 s, 5 warnings, 0 errors. Pin `c0b9065d` неизменен. Карточка остаётся открытой: срез 3 и финальная OS проверка ещё обязательны.
 
