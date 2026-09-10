@@ -1,10 +1,10 @@
 ---
 type: task
 area: Game
-status: In progress
+status: In review
 task_type: Feature
 sprint: Sprint 19
-review: Needs fixes
+review: In review
 due:
 tags: [task, expedition, stride, art]
 ---
@@ -24,6 +24,8 @@ Acceptance:
 - Проверенные normal/QA ZIP, независимое review, полный Release редактора и публикация каждого принятого среза в main.
 
 ## Resolution
+
+Исправления `d4fb158` переданы на review: ранний mixed capture сохраняет проверку стоящего заднего спутника на скрытом настиле; LocalOcclusion использует TraversalMotor.Radius для ramp support, добавлена регрессия защиты опоры. Core 64/64; пакетные affected и оставшиеся сценарии выполняются.
 
 Остались две проверки среза 2: mixed-companions снимает кадр слишком поздно, когда все уже падают; сохранить исходный смысл теста (падающий лидер и передний спутник видимы, задний ещё стоит на скрываемом верхнем настиле) более ранним наблюдением, не заменять его all-falling oracle. Parent также обнаружил старый radius 0,2 в LocalOcclusion.Supports для ramp при новом физическом radius 0,45; требуется исправление и регрессия защиты опоры.
 
