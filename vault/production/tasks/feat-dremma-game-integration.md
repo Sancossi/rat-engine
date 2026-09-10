@@ -1,10 +1,10 @@
 ---
 type: task
 area: Game
-status: In review
+status: In progress
 task_type: Feature
 sprint: Sprint 19
-review: In review
+review: Needs fixes
 due:
 tags: [task, expedition, stride, art]
 ---
@@ -24,6 +24,8 @@ Acceptance:
 - Проверенные normal/QA ZIP, независимое review, полный Release редактора и публикация каждого принятого среза в main.
 
 ## Resolution
+
+Review `d4fb158` одобрило radius fix/regression, но обнаружило оставшееся неверное требование вертикального интервала 0,7 в mixed observation. Trail spacing измеряется вдоль пути; восстановить проверки высот/режимов разных опор, а точный spacing проверять на существующем прямом grounded segment.
 
 Исправления `d4fb158` переданы на review: ранний mixed capture сохраняет проверку стоящего заднего спутника на скрытом настиле; LocalOcclusion использует TraversalMotor.Radius для ramp support, добавлена регрессия защиты опоры. Core 64/64; пакетные affected и оставшиеся сценарии выполняются.
 
