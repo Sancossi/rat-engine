@@ -99,10 +99,24 @@ cache was seeded only after `restore-authoring-cohort.ps1` verified all 43 requi
 archives against those committed hashes; no global cache clearing, package repack
 or content-hash update occurred.
 
-## Limits
+## Parent acceptance
+
+Independent read-only re-review approved `abfb271cdf6092f29963d69d92cb68be4eb1816b`:
+the sole P2 snapshot gap is fixed; no remaining findings. The accepted evidence is
+`build/mcp/dremma-library-20260910-134227-247/` (73+30 calls,19 tools).
+Parent canonical full Release command `powershell -NoProfile -ExecutionPolicy Bypass
+-File scripts/stride/build.ps1` completed exit0 on clean unchanged engine pin
+`c0b9065d6e902b45d4d3a5c656318c70df53a6f3`, SDK10.0.300,61.41s,5 warnings,0 errors.
+Evidence: `C:/5_gamedev/stride/logs/rat-foundation/20260910-134658-422/result.json`
+and adjacent build.log/build.binlog. Editor:
+`C:/5_gamedev/stride/sources/editor/Stride.GameStudio/bin/Release/net10.0-windows/Stride.GameStudio.exe`.
+Vault/projection checks pass. Accepted library history is published to main under
+the standing instruction; native game resources/scale/location remain next slices.
+
+## Verification limits
 
 These runs prove actual Game Studio/API behavior without screenshots or simulated
 input. They do not prove manual GUI gestures, viewport appearance, compiled game
 resource ownership, executable rendering, gameplay scale, Dremma traversal, a
 clean machine or remote CI. The full Release editor build and independent review
-remain parent acceptance gates for this slice.
+are complete as recorded above.
