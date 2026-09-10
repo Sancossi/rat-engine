@@ -11,6 +11,16 @@ queue. Only an implementation request activates execution below.
 
 ## Execution and review
 
+- Use the project roles in `.codex/agents/`: `rat_explorer` for bounded code and
+  contract research, `rat_implementer` for assigned implementation, and
+  `rat_reviewer` for independent correctness and verification review. Delegate
+  useful independent research and review as needed; simple work may stay with
+  the primary agent unless the execution rules below require delegation.
+- Only the primary agent dispatches subagents; subagents must not delegate
+  further. Keep one implementer writing at a time. Explorers and reviewers are
+  read-only, including MCP and editor state, and return concise findings with
+  file references, evidence, checks performed, and limitations. The primary owns
+  card statuses, acceptance, and publication; see `.codex/README.md` for setup.
 - Use a feature branch and commit coherent, verified slices. Preserve unrelated
   working-tree changes; never stage the whole tree indiscriminately.
 - For a sprint, plan, or multi-step card, delegate to one implementer at a time
