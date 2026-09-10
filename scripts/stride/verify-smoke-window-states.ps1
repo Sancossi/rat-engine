@@ -14,6 +14,7 @@ using System.Runtime.InteropServices;
 public static class RatSmokeWindow {
     [DllImport("user32.dll")] public static extern bool ShowWindowAsync(IntPtr h, int command);
     [DllImport("user32.dll")] public static extern bool SetForegroundWindow(IntPtr h);
+    [DllImport("user32.dll")] public static extern IntPtr GetForegroundWindow();
     [DllImport("user32.dll")] public static extern bool IsIconic(IntPtr h);
     [DllImport("user32.dll")] public static extern uint GetWindowThreadProcessId(IntPtr h, out uint processId);
 }
@@ -27,7 +28,9 @@ foreach ($state in @('focused','unfocused','hidden','minimized')) {
     [IO.Directory]::CreateDirectory($directory) | Out-Null
     $arguments = @('--smoke-route','window-states','--smoke-frames','240','--evidence-dir',$directory)
     $quoted = @($arguments | ForEach-Object { '"' + $_ + '"' })
-    $process = Start-Process -FilePath $Executable -ArgumentList $quoted -WorkingDirectory $WorkingDirectory -WindowStyle Hidden -PassThru
+    $start = @{FilePath=$Executable;ArgumentList=$quoted;WorkingDirectory=$WorkingDirectory;PassThru=$true}
+    if ($state -ne 'focused') { $start.WindowStyle = 'Hidden' }
+    $process = Start-Process @start
     try {
         $deadline = [DateTime]::UtcNow.AddSeconds(30)
         $progressPath = Join-Path $directory 'smoke-progress.json'
@@ -44,8 +47,21 @@ foreach ($state in @('focused','unfocused','hidden','minimized')) {
         [void][RatSmokeWindow]::GetWindowThreadProcessId($handle, [ref]$windowProcessId)
         if ($windowProcessId -ne $process.Id) { throw 'Observed root HWND does not belong to our spawned game.' }
         if ($state -eq 'focused') {
-            [RatSmokeWindow]::ShowWindowAsync($handle, 9) | Out-Null
-            [RatSmokeWindow]::SetForegroundWindow($handle) | Out-Null
+            $showResult = [RatSmokeWindow]::ShowWindowAsync($handle, 9)
+            $setForegroundResult = [RatSmokeWindow]::SetForegroundWindow($handle)
+            $activationSamples = @()
+            $activationDeadline = [DateTime]::UtcNow.AddSeconds(2)
+            do {
+                $foregroundHandle = [RatSmokeWindow]::GetForegroundWindow()
+                [uint32]$foregroundProcessId = 0
+                [void][RatSmokeWindow]::GetWindowThreadProcessId($foregroundHandle, [ref]$foregroundProcessId)
+                $activationSamples += [ordered]@{utc=[DateTime]::UtcNow.ToString('O');hwnd=$foregroundHandle.ToInt64();processId=$foregroundProcessId;isOwned=$foregroundHandle -eq $handle}
+                if ($foregroundHandle -eq $handle) { break }
+                Start-Sleep -Milliseconds 25
+            } while ([DateTime]::UtcNow -lt $activationDeadline)
+            [ordered]@{showWindowAsync=$showResult;setForegroundWindow=$setForegroundResult;ownedHwnd=$handle.ToInt64();ownedProcessId=$process.Id;samples=$activationSamples} |
+                ConvertTo-Json -Depth 5 | Set-Content -LiteralPath (Join-Path $directory 'activation.json') -Encoding UTF8
+            if ($foregroundHandle -ne $handle) { throw 'Own visible window did not become the foreground window within two seconds.' }
         } elseif ($state -eq 'hidden') {
             [RatSmokeWindow]::ShowWindowAsync($handle, 0) | Out-Null
         } else {
