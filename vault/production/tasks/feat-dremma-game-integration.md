@@ -1,10 +1,10 @@
 ---
 type: task
 area: Game
-status: In progress
+status: In review
 task_type: Feature
 sprint: Sprint 19
-review: Needs fixes
+review: In review
 due:
 tags: [task, expedition, stride, art]
 ---
@@ -24,6 +24,8 @@ Acceptance:
 - Проверенные normal/QA ZIP, независимое review, полный Release редактора и публикация каждого принятого среза в main.
 
 ## Resolution
+
+Body route исправлен в `d972d65`: точное сравнение float на scaled upper exit заменено допуском 0,001 только в наблюдении smoke-маршрута. Реальная опора была достигнута, но тест продолжал движение после неё. Скорости, FSM, геометрия и acceptance assertions не изменены; повторное review и пакетный прогон выполняются.
 
 Пакетный прогон выявил незавершённый body route к 2700 кадрам при exit 0; проверка корректно отклонила результат. Причина и исправление маршрута исследуются. GPU 720/1080, оба camera-edge и wheel прошли. OS window-state gate остаётся pending из-за внешнего foreground; reviewer подтвердил неизменность этой логики и допустимость переноса проверки на финальное закрытие при прохождении остальных assertions. Это не full verifier PASS.
 
