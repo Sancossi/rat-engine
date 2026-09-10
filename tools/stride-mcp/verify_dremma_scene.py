@@ -15,6 +15,7 @@ async def main():
     parser.add_argument('--ready', required=True)
     parser.add_argument('--output', required=True)
     parser.add_argument('--baseline')
+    parser.add_argument('--fail-after-save', action='store_true')
     args = parser.parse_args()
     ready = json.loads(Path(args.ready).read_text(encoding='utf-8-sig'))
     evidence = {'passed': False, 'calls': []}
@@ -99,6 +100,9 @@ async def main():
             assert abs(redone_position['Z'] - 12.9) < .0001
             await complete(await call('save_session', {'expectedRevision': (await status())['revision']}))
             assert not (await status())['dirtyAssets']
+            if args.fail_after_save:
+                evidence['controlledFailureAfterSave'] = True
+                raise AssertionError('Controlled failure after the invocation-owned dirty save')
             evidence.update({'identity': identity, 'editedEntityId': wall['id'], 'beforePosition': {key: original[key] for key in ('X','Y','Z')},
                              'editedPosition': {key: changed_position[key] for key in ('X','Y','Z')},
                              'negativePositionOracle': True, 'undoRedo': True, 'savedDirtyEdit': True, 'passed': True})

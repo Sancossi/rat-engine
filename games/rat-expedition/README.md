@@ -30,27 +30,30 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/stride/build-game.ps
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts/stride/verify-game.ps1 -PackageZip "<путь-к-QA-ZIP>"
 ```
 
+These commands build and verify the QA package. A normal production ZIP omits
+`QA/*` assets and is checked with a bounded normal-start run instead.
+
 Камера следует за героем без вращения. Колесо мыши приближает/отдаляет сцену:
 OrthographicSize 10.125–15.75, default 11.25. `--camera-size 10.125` selects the minimum zoom.
 У краёв карты камера останавливает свой центр, сохраняя героя в кадре.
-Диагностика `--smoke-route edges --smoke-frames 1440` обходит края пола;
+Диагностика `--smoke-route edges --smoke-frames 3240 --native-project QA/edges` обходит края пола;
 verifier проверяет кадрирование на отдельном fixture с бортиками, а падение —
 на обычных площадках и верхнем настиле над пустотой.
 `--smoke-route zoom --smoke-frames 360` проверяет пределы колеса и сброс после focus
 callbacks. Это синтетические команды в реальном приложении, не системные события мыши.
 
-`--smoke-route body --smoke-frames 2700` проходит лаз, проверяет отказ вставания,
+`--smoke-route body --smoke-frames 2700 --native-project QA/courtyard-regression` проходит лаз, проверяет отказ вставания,
 поднимается на площадку, ходит по ней и спускается. Сохраняются именованные
 `body-*.png` и FSM milestones. Маршрут подаёт обычные команды; координаты не подменяются.
 Русские подсказки загружаются из поставляемого Noto Sans с OFL.
 Карты находятся в `Rat.Expedition.Authoring/Assets`: `ExpeditionProject.sdscene`
-связывает `Courtyard` и `Sluice`. Native components задают solids/ramps, spawns,
+связывает production `Dremma`, regression `Courtyard` и `Sluice`. Native components задают solids/ramps, spawns,
 лестницы, portals и occlusion; `HideWith` связывает детали выреза. Native Entity.Id
 служит игровым id, DefaultSpawn — явная ссылка. Вид и Core получают геометрию из
 одного authored источника. Старый JSON остаётся только историческим Core fixture
 и не входит в новый ZIP; runtime не использует его как fallback.
 
-`--smoke-route layered --smoke-frames 4050` проверяет рампу в обе стороны,
+`--smoke-route layered --smoke-frames 4050 --native-project QA/courtyard-regression` проверяет рампу в обе стороны,
 одинаковые XZ сверху/снизу, арку, перила и дальнюю стену; `mixed` — спутников на
 разных ярусах; `portals` — десять круговых переходов. `recovery` использует обычное
 падение, `portal-failure` диагностически отклоняет уже подготовленного renderer
