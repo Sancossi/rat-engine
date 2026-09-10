@@ -1,10 +1,10 @@
 ---
 type: task
 area: Game
-status: In review
+status: In progress
 task_type: Feature
 sprint: Sprint 19
-review: In review
+review: Needs fixes
 due:
 tags: [task, expedition, stride, art]
 ---
@@ -24,6 +24,8 @@ Acceptance:
 - Проверенные normal/QA ZIP, независимое review, полный Release редактора и публикация каждого принятого среза в main.
 
 ## Resolution
+
+Review `afce5cd` подтвердило dirty Save Z12,9 → fresh reopen Z12,9 → restore/Save Z13 и семантическую неизменность 61 entity после canonical YAML Save. Найден P2 cleanup: сбой между первым Save и восстановлением оставляет тестовое изменение в production scene. Требуется восстановление собственного изменения при ошибке с защитой от перезаписи посторонних изменений и свидетельством cleanup. Код native preview `262176c` получил Approved. Live docs обновлены в `fa83a14`; все 170 исходных файлов CanalCity побайтно совпадают с источником `c74c6e77`.
 
 Порядок source tracking исправлен в `262176c`, регрессия A → invalid metadata → B → repair сохраняет B; Authoring 21/21. Передано на re-review. Production editor API qualification фактически прошла: `build/mcp/dremma-scene-20260910-164114-924`, 61 scene entities, явные XYZ (wall Z13→12,9), Undo/Redo/Undo, Save clean и fresh reopen с сохранением scene/entity/native-reference IDs; оба собственных editor process завершены. Harness ещё ожидает отдельного коммита/проверки.
 
