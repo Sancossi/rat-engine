@@ -1,10 +1,10 @@
 ---
 type: task
 area: Game
-status: In progress
+status: In review
 task_type: Feature
 sprint: Sprint 19
-review: Needs fixes
+review: In review
 due:
 tags: [task, expedition, stride, art]
 ---
@@ -24,6 +24,8 @@ Acceptance:
 - Проверенные normal/QA ZIP, независимое review, полный Release редактора и публикация каждого принятого среза в main.
 
 ## Resolution
+
+P2 isolation исправлен в `50aba40` и передан на повторное review: invalid binding исключается только из собственного suppression, valid replacement остаётся подавленной, unrelated geometry видима; диагностика остаётся у неверной привязки, runtime validation строгая. Authoring 21/21. Первый editor harness остановлен безопасно из-за несовпадения формы JSON Position (служебное IsNormalized); это ещё не успешная editor qualification, исправляется проверка явных XYZ.
 
 Review `fb36d6c` — Needs fixes, один P2 в GeometryPreviewProcessor: empty/duplicate AdditionalGeometryId одной привязки выбрасывает исключение при проверке каждого collider и выключает preview несвязанных floor/platform. Обрабатывать неверную привязку отдельно с диагностикой, не подавляя чужую геометрию; проверить сохранение видимости unrelated geometry и подавление другой valid replacement. Сцена, исходная геометрия/порталы и целевые GPU свидетельства получили положительную оценку; финальные gates остаются открыты.
 
