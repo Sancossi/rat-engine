@@ -1,10 +1,10 @@
 ---
 type: task
 area: Game
-status: In review
+status: In progress
 task_type: Feature
 sprint: Sprint 19
-review: In review
+review: Needs fixes
 due:
 tags: [task, expedition, stride, art]
 ---
@@ -24,6 +24,8 @@ Acceptance:
 - Проверенные normal/QA ZIP, независимое review, полный Release редактора и публикация каждого принятого среза в main.
 
 ## Resolution
+
+Review среза 1 — Needs fixes: P2 в проверке Snapshot. Default JSON сериализует Vector3 без X/Y/Z и Color4 без RGBA, поэтому сравнение могло пропустить перемещение prefab после reopen. Фактические MCP данные показывают правильные ±3 позиции; это пробел acceptance guard. Исправить явные scalar fields и assertions ожидаемых координат, повторить qualification/review. Прочих замечаний нет. Полный Release до исправления теста прошёл: `C:/5_gamedev/stride/logs/rat-foundation/20260910-133759-234/result.json`, 79.20 s, 5 warnings, 0 errors. Публикация ожидает принятия исправления.
 
 Срез 1 передан на независимое review: `16f130e28dcce946938ad286a3dbdf8a814e5c55`. [Отчёт](../../../docs/audits/2026-09-10-dremma-library-integration.md): два текущих editor processes, 74 + 31 MCP вызов, 19 tools, 97 native assets и 73 Resources; реальный FBX reimport 3→7 material slots, новый PNG/source hash, stable IDs/refs, Undo/Redo/Save/fresh reopen PASS. Все 170 исходных файлов библиотеки неизменны. MCP tests, vault и 25 Python tests PASS. Ожидаются review и полный Release; масштаб/runtime и новая карта ещё не реализованы.
 
