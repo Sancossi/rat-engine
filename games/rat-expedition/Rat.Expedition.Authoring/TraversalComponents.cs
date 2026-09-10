@@ -82,6 +82,9 @@ public sealed class NativeVisualComponent : EntityComponent
     // Stable native entity identities link presentation art to gameplay geometry.
     // Empty is valid for decorative art which has no collision representation.
     [DataMember(10)] public Guid GeometryId {get;set;}
+    // Extra stable identities let one native subset replace several finite
+    // gameplay shapes, such as the conservative pieces beneath a curved arch.
+    [DataMember(15)] public List<Guid> AdditionalGeometryIds {get;set;}=[];
     [DataMember(20)] public bool ReplacesGeometry {get;set;}
     // Empty selects the complete model. Names select every mesh attached to the
     // corresponding imported skeleton nodes while retaining the full skeleton.

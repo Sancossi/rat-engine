@@ -37,7 +37,36 @@ Hierarchy:
         - ref!! c35eba36-1f36-5155-b98c-ca376f45d359
         - ref!! 018dce00-7665-5a24-9203-7c74d00fd5d6
         - ref!! 53b63a99-58f6-4df5-8244-191dd09232c4
+        - ref!! ce37f796-983e-533e-9b89-6d0e5b61abcc
+        - ref!! 385e918a-a818-5a7e-b225-d3e914b1f955
     Parts:
+        -   Entity:
+                Id: ce37f796-983e-533e-9b89-6d0e5b61abcc
+                Name: from-dremma
+                Components:
+                    b4921af2337e50309576c29828244fb8: !TransformComponent
+                        Id: e8ada8f9-281e-504e-8fc1-055f0e35d8bd
+                        Position: {X: -11.25, Y: 0.0, Z: 9.0}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
+                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
+                        Children: {}
+                    bb3006b8aa9b5863a67da629848389ec: !ExpeditionSpawn
+                        Id: 50e2e181-83f6-5a12-b340-00ba3ceedb32
+        -   Entity:
+                Id: 385e918a-a818-5a7e-b225-d3e914b1f955
+                Name: to-dremma
+                Components:
+                    334970b81ebc58cfb70f4fa276892021: !TransformComponent
+                        Id: a57f29f6-398f-5b42-82fa-d47379c0902b
+                        Position: {X: -14.0, Y: 0.0, Z: 9.0}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
+                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
+                        Children: {}
+                    2cf873ccea7658a4bcb006410d56f029: !ExpeditionPortal
+                        Id: ffdd3f74-66f1-585c-ba86-e8da98720890
+                        Size: {X: 2.25, Y: 0.225, Z: 2.25}
+                        TargetScene: d740bf16-9a5c-5844-9eb3-6a9fdbef9c7f:Dremma
+                        TargetSpawnId: 09163b82-8453-57ad-89f8-4a339a4be864
         -   Entity:
                 Id: 53b63a99-58f6-4df5-8244-191dd09232c4
                 Name: Native amber lantern

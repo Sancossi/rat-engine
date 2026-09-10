@@ -30,7 +30,7 @@ try {
         $process = Start-Process -FilePath $exe -ArgumentList $quotedArguments -WorkingDirectory $unrelatedCwd -WindowStyle Hidden -PassThru
         # Smoke caps all window states at 60 Hz. Retain bounded headroom for slow
         # GPU/startup/captures; normal gameplay retains the engine's idle policy.
-        $timeoutMs = if (@('edges','body','layered','mixed','portals') | Where-Object { $Arguments -contains $_ }) { 180000 } else { 30000 }
+        $timeoutMs = if (@('edges','body','layered','mixed','dremma','dremma-portals','portals') | Where-Object { $Arguments -contains $_ }) { 180000 } else { 30000 }
         if (-not $process.WaitForExit($timeoutMs)) {
             Stop-Process -Id $process.Id -ErrorAction SilentlyContinue
             throw "$Name exceeded $($timeoutMs / 1000) seconds; only its spawned process was stopped."
@@ -39,6 +39,10 @@ try {
         Write-Host "$Name exit $code; evidence $evidence"
         if (($ExpectSuccess -and $code -ne 0) -or (-not $ExpectSuccess -and $code -eq 0)) {
             throw "$Name unexpected exit $code. Inspect $evidence"
+        }
+        if ($ExpectSuccess) {
+            $shutdown = Get-Content -LiteralPath (Join-Path $evidence 'shutdown.json') -Raw | ConvertFrom-Json
+            if ($shutdown.activeNativeLeases -ne 0) { throw "$Name retained native content after game shutdown." }
         }
         if (-not $ExpectSuccess -and -not (Test-Path -LiteralPath (Join-Path $evidence 'error.log'))) {
             throw "$Name failed without a readable error log."
@@ -51,7 +55,7 @@ try {
         $results += Invoke-GameScenario $name @('--width', [string]$resolution[0], '--height', [string]$resolution[1]) $true
         $run = Get-Content -LiteralPath (Join-Path $root "$name/run.json") -Raw | ConvertFrom-Json
         if ($run.width -ne $resolution[0] -or $run.height -ne $resolution[1] -or -not $run.adapter -or $run.finalPosition.z -ge 0 -or $run.focusProbePassed -ne $true -or
-            $run.camera.size -ne 11.25 -or $run.nativeVisuals -ne 1 -or $run.nativeMeshes -ne 3 -or $run.nativeMaterialSlots -ne 3 -or $run.activeNativeLeases -ne 1) {
+            $run.scene -ne 'expedition_dremma' -or $run.camera.size -ne 11.25 -or $run.nativeVisuals -ne 14 -or $run.nativeMeshes -ne 97 -or $run.nativeMaterialSlots -ne 79 -or $run.activeNativeLeases -ne 1) {
             throw "$name missing expected GPU dimensions/adapter/behind-wall route evidence."
         }
         foreach ($frame in @('frame-0030.png', 'frame-0180.png', 'frame-0360.png')) {
@@ -61,6 +65,56 @@ try {
             if ($sample.quadLeft -lt 0 -or $sample.quadRight -gt 1 -or $sample.quadTop -lt 0 -or $sample.quadBottom -gt 1 -or $sample.spriteHeightFraction -lt .12) {
                 throw "$name hero framing is outside the screen or too small."
             }
+        }
+    }
+    foreach ($resolution in @(@(1280,720), @(1920,1080))) {
+        $name = "dremma-$($resolution[0])x$($resolution[1])"
+        $results += Invoke-GameScenario $name @('--width',[string]$resolution[0],'--height',[string]$resolution[1],'--smoke-route','dremma','--smoke-frames','2100') $true
+        $run = Get-Content -LiteralPath (Join-Path $root "$name/run.json") -Raw | ConvertFrom-Json
+        if (-not $run.sessionComplete -or $run.scene -ne 'expedition_dremma' -or $run.width -ne $resolution[0] -or $run.height -ne $resolution[1] -or
+            $run.nativeVisuals -ne 14 -or $run.nativeMeshes -ne 97 -or $run.nativeMaterialSlots -ne 79 -or $run.activeNativeLeases -ne 1) {
+            throw "$name did not load the complete native Dremma scene."
+        }
+        $required=@('dremma-plaza','dremma-lower-centre','dremma-lower-south','dremma-arch-standing-blocked','dremma-arch-crouched',
+            'dremma-arch-standing-clear','dremma-stairs-side-blocked','dremma-stairs-low','dremma-stairs-mid','dremma-bridge-west',
+            'dremma-stairs-rail-blocked','dremma-bridge-east','dremma-lower-restored','dremma-complete')
+        foreach($milestone in $required) {
+            $item=@($run.sessionMilestones|Where-Object name -eq $milestone)
+            if($item.Count -ne 1 -or -not (Test-Path -LiteralPath (Join-Path $root "$name/session-$milestone.png"))) { throw "$name missing $milestone." }
+        }
+        $lower=@($run.sessionMilestones|Where-Object name -eq 'dremma-lower-centre')[0]
+        if([Math]::Abs($lower.session.Leader.Position.Y) -gt .001 -or $lower.hidden -notcontains 'bridge-arch-cut' -or
+            $lower.hidden -notcontains 'bridge-deck-cut' -or $lower.hidden -notcontains 'bridge-rail-cut' -or $lower.actorVisible -contains $false) {
+            throw "$name central lower arch passage or local occlusion is incorrect."
+        }
+        $blocked=@($run.sessionMilestones|Where-Object name -eq 'dremma-arch-standing-blocked')[0]
+        if($blocked.session.Leader.Stance -ne 'Standing' -or [Math]::Abs($blocked.session.Leader.Position.X-1.9) -gt .03 -or
+            [Math]::Abs($blocked.session.Leader.Position.Z+2.22) -gt .04 -or [Math]::Abs($blocked.session.Leader.Position.Y) -gt .001) {
+            throw "$name curved arch shoulder did not block the 1.8 m standing body before visible stone."
+        }
+        $crouched=@($run.sessionMilestones|Where-Object name -eq 'dremma-arch-crouched')[0]
+        $clear=@($run.sessionMilestones|Where-Object name -eq 'dremma-arch-standing-clear')[0]
+        if($crouched.session.Leader.Stance -ne 'Crouched' -or $crouched.session.Leader.BodyHeight -ne .9 -or $crouched.session.Leader.Position.Z -lt 2.4 -or
+            $clear.session.Leader.Stance -ne 'Standing' -or $clear.session.Leader.BodyHeight -ne 1.8 -or $clear.session.Leader.Position.Z -lt 2.4) {
+            throw "$name crouched arch shoulder clearance or standing restoration failed."
+        }
+        $side=@($run.sessionMilestones|Where-Object name -eq 'dremma-stairs-side-blocked')[0]
+        if([Math]::Abs($side.session.Leader.Position.X+6.2) -gt .03 -or [Math]::Abs($side.session.Leader.Position.Z-1.65) -gt .04 -or
+            [Math]::Abs($side.session.Leader.Position.Y) -gt .001) { throw "$name allowed ground entry through the solid stair mass." }
+        $stairRail=@($run.sessionMilestones|Where-Object name -eq 'dremma-stairs-rail-blocked')[0]
+        if([Math]::Abs($stairRail.session.Leader.Position.X+6.2) -gt .03 -or $stairRail.session.Leader.Position.Z -lt .5 -or
+            $stairRail.session.Leader.Position.Z -gt .7 -or [Math]::Abs($stairRail.session.Leader.Position.Y-2.1625) -gt .03 -or
+            $stairRail.session.Leader.Mode -ne 'Grounded') { throw "$name crossed a visible native stair handrail." }
+        foreach($expected in @(@('dremma-stairs-low',.7),@('dremma-stairs-mid',2.1625),@('dremma-bridge-west',3.1),@('dremma-bridge-east',3.1),@('dremma-lower-restored',0))) {
+            $item=@($run.sessionMilestones|Where-Object name -eq $expected[0])[0]
+            if([Math]::Abs($item.session.Leader.Position.Y-[double]$expected[1]) -gt .03 -or $item.session.Leader.Mode -ne 'Grounded') { throw "$name wrong support at $($expected[0])." }
+        }
+        $upper=@($run.sessionMilestones|Where-Object name -eq 'dremma-bridge-east')[0]
+        if($upper.hidden -contains 'bridge-deck-cut' -or $upper.actorVisible -contains $false -or
+            [Math]::Abs($upper.session.Leader.Position.X-$upper.companions[0].Position.X-.7) -gt .001 -or
+            [Math]::Abs($upper.session.Leader.Position.X-$upper.companions[1].Position.X-1.4) -gt .001 -or
+            @($upper.companions|Where-Object {[Math]::Abs($_.Position.Y-3.1) -gt .001}).Count -ne 0) {
+            throw "$name did not retain upper support visibility and party spacing."
         }
     }
     # Preserve the previous bounded-edge camera acceptance with authored blockers;
@@ -86,7 +140,7 @@ try {
     if ($wheelRun.focusZoomProbePassed -ne $true) { throw 'Focus regain accepted a stale wheel delta.' }
     foreach ($resolution in @(@(1280,720), @(1920,1080))) {
         $name = "body-$($resolution[0])x$($resolution[1])"
-        $results += Invoke-GameScenario $name @('--width', [string]$resolution[0], '--height', [string]$resolution[1], '--smoke-route', 'body', '--smoke-frames', '2700') $true
+        $results += Invoke-GameScenario $name @('--width', [string]$resolution[0], '--height', [string]$resolution[1], '--smoke-route', 'body', '--smoke-frames', '2700', '--native-project', 'QA/courtyard-regression') $true
         $run = Get-Content -LiteralPath (Join-Path $root "$name/run.json") -Raw | ConvertFrom-Json
         if (-not $run.bodyComplete -or $run.width -ne $resolution[0] -or $run.height -ne $resolution[1] -or $run.ladderPausePassed -ne $true) { throw "$name did not complete the real body route and ladder pause." }
         $pauseStart = @($run.sessionMilestones | Where-Object name -eq 'ladder-pause-start')
@@ -149,7 +203,7 @@ try {
     }
     foreach ($resolution in @(@(1280,720), @(1920,1080))) {
         $name = "layered-$($resolution[0])x$($resolution[1])"
-        $results += Invoke-GameScenario $name @('--width',[string]$resolution[0],'--height',[string]$resolution[1],'--smoke-route','layered','--smoke-frames','4050') $true
+        $results += Invoke-GameScenario $name @('--width',[string]$resolution[0],'--height',[string]$resolution[1],'--smoke-route','layered','--smoke-frames','4050','--native-project','QA/courtyard-regression') $true
         $run = Get-Content -LiteralPath (Join-Path $root "$name/run.json") -Raw | ConvertFrom-Json
         if (-not $run.sessionComplete -or $run.width -ne $resolution[0] -or $run.height -ne $resolution[1]) { throw "$name incomplete layered route." }
         foreach ($milestone in @('arch-empty','ramp-entry','ramp-ascent','ramp-crest','bridge-upper','upper-rail','ramp-descent','bridge-lower','lower-forward','cut-restored','lower-reverse','offcentre-behind-wall')) {
@@ -167,7 +221,7 @@ try {
         $lower = ($run.sessionMilestones | Where-Object name -eq 'bridge-lower').session.Leader.Position
         if ([Math]::Abs($upper.X-$lower.X) -gt .04 -or [Math]::Abs($upper.Z-$lower.Z) -gt .04) { throw "$name did not demonstrate identical XZ on two levels." }
     }
-    $results += Invoke-GameScenario 'mixed-companions' @('--smoke-route','mixed','--smoke-frames','3375') $true
+    $results += Invoke-GameScenario 'mixed-companions' @('--smoke-route','mixed','--smoke-frames','3375','--native-project','QA/courtyard-regression') $true
     $run = Get-Content -LiteralPath (Join-Path $root 'mixed-companions/run.json') -Raw | ConvertFrom-Json
     $mixed = @($run.sessionMilestones | Where-Object name -eq 'mixed-companions')
     # Observe mixed support during the scaled fall: the first companion follows the
@@ -193,7 +247,7 @@ try {
     $leaderZ = $mixedRestored[0].session.Leader.Position.Z
     if ([Math]::Abs($leaderZ - $mixedRestored[0].companions[0].Position.Z - .7) -gt .001 -or
         [Math]::Abs($leaderZ - $mixedRestored[0].companions[1].Position.Z - 1.4) -gt .001) { throw 'GPU route did not retain compact equal spacing.' }
-    $results += Invoke-GameScenario 'portal-roundtrips' @('--smoke-route','portals','--smoke-frames','2700') $true
+    $results += Invoke-GameScenario 'portal-roundtrips' @('--smoke-route','portals','--smoke-frames','2700','--native-project','QA/courtyard-regression') $true
     $run = Get-Content -LiteralPath (Join-Path $root 'portal-roundtrips/run.json') -Raw | ConvertFrom-Json
     if (-not $run.sessionComplete -or $run.portalLegs -ne 20 -or $run.session.WorldRevision -ne 20) { throw 'Did not complete ten round trips.' }
     foreach ($item in $run.sessionMilestones) {
@@ -204,19 +258,48 @@ try {
         if (@($sameScene.ownedBuffers | Select-Object -Unique).Count -ne 1) { throw 'Active scene buffer count changed across transitions.' }
         if ($item.activeNativeLeases -ne 1 -or @($sameScene.nativeVisuals | Select-Object -Unique).Count -ne 1 -or @($sameScene.nativeMeshes | Select-Object -Unique).Count -ne 1) { throw 'Native visual lease/model counts accumulated across transitions.' }
     }
-    $results += Invoke-GameScenario 'renderer-candidate-failure' @('--smoke-route','portal-failure') $true
+    $results += Invoke-GameScenario 'dremma-portal-roundtrips' @('--smoke-route','dremma-portals','--smoke-frames','2100') $true
+    $dremmaPortals = Get-Content -LiteralPath (Join-Path $root 'dremma-portal-roundtrips/run.json') -Raw | ConvertFrom-Json
+    if (-not $dremmaPortals.sessionComplete -or $dremmaPortals.portalLegs -ne 20 -or $dremmaPortals.session.WorldRevision -ne 20 -or
+        $dremmaPortals.scene -ne 'expedition_dremma' -or $dremmaPortals.sessionMilestones.Count -ne 20) {
+        throw 'Dremma and Courtyard did not complete ten native two-way portal round trips.'
+    }
+    foreach ($item in $dremmaPortals.sessionMilestones) {
+        if ($item.hidden.Count -ne 0 -or $item.activeNativeLeases -ne 1 -or
+            $item.companions[0].Position.Y -ne $item.session.Leader.Position.Y) {
+            throw 'Dremma portal did not reset the party, occlusion, or active native lease.'
+        }
+        $expected = if ($item.session.Leader.SceneId -eq 'ba3a1dfd-3bd0-56fc-aa71-5e632ff05e97') {
+            @(14,97,79,8)
+        } elseif ($item.session.Leader.SceneId -eq '83513e47-0a32-54e1-8a67-a95efe621e55') {
+            @(1,3,3,72)
+        } else { throw 'Dremma portal activated an unexpected production scene.' }
+        if ($item.nativeVisuals -ne $expected[0] -or $item.nativeMeshes -ne $expected[1] -or
+            $item.nativeMaterialSlots -ne $expected[2] -or $item.ownedBuffers -ne $expected[3]) {
+            throw 'Dremma portal changed the active scene native resource counts.'
+        }
+    }
+    $results += Invoke-GameScenario 'renderer-candidate-failure' @('--smoke-route','portal-failure','--native-project','QA/courtyard-regression') $true
     $run = Get-Content -LiteralPath (Join-Path $root 'renderer-candidate-failure/run.json') -Raw | ConvertFrom-Json
     if (-not $run.sessionComplete -or $run.session.WorldRevision -ne 0 -or $run.scene -ne 'expedition_courtyard' -or $run.session.Hint -notmatch 'Diagnostic renderer candidate rejected') { throw 'Renderer candidate failure replaced old scene or lost diagnostic.' }
-    $results += Invoke-GameScenario 'native-candidate-failure' @('--smoke-route','native-candidate-failure') $true
+    $results += Invoke-GameScenario 'native-candidate-failure' @('--smoke-route','native-candidate-failure','--native-project','QA/courtyard-regression') $true
     $nativeFailure = Get-Content -LiteralPath (Join-Path $root 'native-candidate-failure/run.json') -Raw | ConvertFrom-Json
     if (-not $nativeFailure.sessionComplete -or $nativeFailure.session.WorldRevision -ne 0 -or $nativeFailure.scene -ne 'expedition_courtyard' -or $nativeFailure.session.Hint -notmatch 'TargetSpawnId') {
         throw 'Invalid compiled native candidate replaced the active world or lost its diagnostic.'
     }
-    $results += Invoke-GameScenario 'native-resource-candidate-failure' @('--smoke-route','native-resource-failure') $true
+    $results += Invoke-GameScenario 'native-resource-candidate-failure' @('--smoke-route','native-resource-failure','--native-project','QA/courtyard-regression') $true
     $resourceFailure = Get-Content -LiteralPath (Join-Path $root 'native-resource-candidate-failure/run.json') -Raw | ConvertFrom-Json
     if (-not $resourceFailure.sessionComplete -or $resourceFailure.session.WorldRevision -ne 0 -or $resourceFailure.scene -ne 'expedition_courtyard' -or
         $resourceFailure.session.Hint -notmatch 'absent-node' -or $resourceFailure.activeNativeLeases -ne 1 -or $resourceFailure.nativeVisuals -ne 1) {
         throw 'Invalid native visual preparation replaced the active scene or leaked a candidate lease.'
+    }
+    $results += Invoke-GameScenario 'dremma-resource-candidate-failure' @('--smoke-route','dremma-resource-failure') $true
+    $dremmaFailure = Get-Content -LiteralPath (Join-Path $root 'dremma-resource-candidate-failure/run.json') -Raw | ConvertFrom-Json
+    if (-not $dremmaFailure.sessionComplete -or $dremmaFailure.session.WorldRevision -ne 0 -or $dremmaFailure.scene -ne 'expedition_dremma' -or
+        $dremmaFailure.session.Hint -notmatch 'absent-node' -or $dremmaFailure.activeNativeLeases -ne 1 -or
+        $dremmaFailure.nativeVisuals -ne 14 -or $dremmaFailure.nativeMeshes -ne 97 -or $dremmaFailure.nativeMaterialSlots -ne 79 -or
+        $dremmaFailure.ownedBuffers -ne 8) {
+        throw 'Invalid Courtyard native resource candidate replaced Dremma or changed its active resource lease.'
     }
     foreach ($fixture in @('courtyard','sluice','upper-void')) {
         $name = "recovery-$fixture"

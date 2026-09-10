@@ -147,7 +147,8 @@ public sealed class ExpeditionGame : Game
     {
         if(bundle is not null) cameraTemplate.OrthographicSize = camera.OrthographicSize;
         retired.EnsureCapacity(retired.Count+1);
-        string visualProject=options.SmokeRoute=="native-resource-failure"&&candidate.Reason==SceneChangeReason.Portal?"QA/bad-native-binding":options.NativeProject;
+        string visualProject=options.SmokeRoute=="native-resource-failure"&&candidate.Reason==SceneChangeReason.Portal?"QA/bad-native-binding":
+            options.SmokeRoute=="dremma-resource-failure"&&candidate.Reason==SceneChangeReason.Portal?"QA/bad-native-binding-courtyard":options.NativeProject;
         var next = ScenePresentation.Prepare(this,candidate,sheet,cameraTemplate,visualProject);
         if(options.SmokeFrames>0&&options.SmokeRoute=="portal-failure"&&candidate.Reason==SceneChangeReason.Portal)
         {
@@ -265,7 +266,7 @@ public sealed class ExpeditionGame : Game
         if (discard) { elapsed = 0; command = command with {Move=System.Numerics.Vector2.Zero}; wheel = 0; discardInputOnNextUpdate = false; }
         if (IsActive || options.SmokeFrames > 0) camera.OrthographicSize = Math.Clamp(camera.OrthographicSize - wheel * 1.125f, 10.125f, 15.75f);
         var sessionCommand = new SessionInput(command.Move,command.CrouchHeld,command.InteractHeld,Input.IsKeyDown(Keys.Escape));
-        if(options.SmokeFrames>0 && options.SmokeRoute is "layered" or "mixed" or "portals" or "portal-failure" or "native-candidate-failure" or "native-resource-failure" or "recovery" && !discard && session.Mode==SessionMode.Explore)
+        if(options.SmokeFrames>0 && options.SmokeRoute is "layered" or "mixed" or "dremma" or "dremma-portals" or "dremma-resource-failure" or "portals" or "portal-failure" or "native-candidate-failure" or "native-resource-failure" or "recovery" && !discard && session.Mode==SessionMode.Explore)
             sessionCommand=sessionRoute.Next(session);
         if(options.SmokeFrames>0 && frames is 121 or 123)sessionCommand=new(System.Numerics.Vector2.Zero);
         if(options.SmokeFrames>0 && frames==122)sessionCommand=new(System.Numerics.Vector2.Zero,PauseHeld:true);

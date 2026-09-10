@@ -62,7 +62,13 @@ foreach ($state in @('focused','unfocused','hidden','minimized')) {
         if ($process.ExitCode -ne 0) { throw "$state smoke failed: $($process.ExitCode)." }
         $run = Get-Content -LiteralPath (Join-Path $directory 'run.json') -Raw | ConvertFrom-Json
         $samples = @($run.smokeTiming.samples | Where-Object { $_.frame -ge 60 })
-        if ($samples.Count -lt 6 -or $run.frames -ne 240 -or $run.focusProbePassed -ne $true) { throw "$state missing progress or deliberate pause probe." }
+        if ($samples.Count -lt 6 -or $run.frames -ne 240 -or $run.focusProbePassed -ne $true -or
+            $run.scene -ne 'expedition_dremma' -or $run.nativeVisuals -ne 14 -or $run.nativeMeshes -ne 97 -or
+            $run.nativeMaterialSlots -ne 79 -or $run.activeNativeLeases -ne 1 -or $run.camera.size -ne 11.25) {
+            throw "$state missing production Dremma progress, native resources, or deliberate pause probe."
+        }
+        $shutdown = Get-Content -LiteralPath (Join-Path $directory 'shutdown.json') -Raw | ConvertFrom-Json
+        if ($shutdown.activeNativeLeases -ne 0) { throw "$state retained native content after game shutdown." }
         foreach ($sample in $samples) {
             $matches = switch ($state) {
                 'focused' { $sample.foreground -and $sample.visible -and -not $sample.isIconic }

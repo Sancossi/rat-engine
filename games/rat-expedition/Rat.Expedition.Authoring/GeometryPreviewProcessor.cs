@@ -57,7 +57,7 @@ public sealed class GeometryPreviewProcessor : EntityProcessor<GeometryComponent
                     data.Model.Model=model;data.Shape=shape;
                 }
                 data.Model.Enabled=!component.Entity.Scene.Entities.SelectMany(e=>Descendants(e)).Any(e=>{
-                    var visual=e.Get<NativeVisualComponent>();return visual is not null&&visual.ReplacesGeometry&&visual.GeometryId==component.Entity.Id;
+                    var visual=e.Get<NativeVisualComponent>();return visual is not null&&visual.ReplacesGeometry&&NativeVisualResolver.LinkedGeometryIds(visual).Contains(component.Entity.Id);
                 });data.Error=null;
             }
             catch(Exception error)

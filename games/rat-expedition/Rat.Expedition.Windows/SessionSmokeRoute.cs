@@ -63,6 +63,69 @@ internal sealed class SessionSmokeRoute(string route)
             }
             return Towards(point.X,point.Z,point.Crouch);
         }
+        if(route=="dremma")
+        {
+            SessionInput Point(float x,float z,bool crouch,string? capture)
+            {
+                if(!Near(x,z))return Towards(x,z,crouch);
+                if(s.Mode==TraversalMode.Falling)return new(Vector2.Zero,crouch);
+                if(++wait<8)return new(Vector2.Zero,crouch);
+                Capture=capture;phase++;wait=0;return new(Vector2.Zero,crouch);
+            }
+            switch(phase)
+            {
+                case 0:return Point(0,5,false,"dremma-plaza");
+                case 1:return Point(0,0,false,"dremma-lower-centre");
+                case 2:return Point(0,-4,false,"dremma-lower-south");
+                case 3:return Point(1.9f,-2.5f,false,null);
+                case 4:
+                    if(wait++<45)return Towards(1.9f,0);
+                    Capture="dremma-arch-standing-blocked";phase++;wait=0;return new(Vector2.Zero);
+                case 5:return Point(1.9f,2.5f,true,"dremma-arch-crouched");
+                case 6:
+                    if(s.Stance!=BodyStance.Standing)return new(Vector2.Zero);
+                    if(++wait<8)return new(Vector2.Zero);
+                    Capture="dremma-arch-standing-clear";phase++;wait=0;return new(Vector2.Zero);
+                case 7:return Point(-6.2f,2.5f,false,null);
+                case 8:
+                    if(wait++<45)return Towards(-6.2f,0);
+                    Capture="dremma-stairs-side-blocked";phase++;wait=0;return new(Vector2.Zero);
+                case 9:return Point(-11.25f,2.5f,false,null);
+                case 10:return Point(-11.25f,0,false,null);
+                case 11:return Point(-9,0,false,"dremma-stairs-low");
+                case 12:return Point(-6.2f,0,false,"dremma-stairs-mid");
+                case 13:
+                    if(wait++<45)return Towards(-6.2f,1.5f);
+                    Capture="dremma-stairs-rail-blocked";phase++;wait=0;return new(Vector2.Zero);
+                case 14:return Point(-6.2f,0,false,null);
+                case 15:return Point(-3.5f,0,false,"dremma-bridge-west");
+                case 16:return Point(3.5f,0,false,"dremma-bridge-east");
+                case 17:return Point(5.5f,0,false,"dremma-lower-restored");
+                case 18:
+                    if(!Near(0,-4))return Towards(0,-4);
+                    Capture="dremma-complete";Complete=true;return new(Vector2.Zero);
+            }
+        }
+        if(route is "dremma-portals" or "dremma-resource-failure")
+        {
+            if(phase==0)
+            {
+                var portal=session.Scene.Portals.OrderBy(p=>Vector2.Distance(new(s.Position.X,s.Position.Z),new(p.Anchor.X,p.Anchor.Z))).First();
+                if(!Near(portal.Anchor.X,portal.Anchor.Z))return Towards(portal.Anchor.X,portal.Anchor.Z);
+                revision=session.WorldRevision;phase=1;return new(Vector2.Zero);
+            }
+            if(phase==1){phase=2;return new(Vector2.Zero,InteractHeld:true);}
+            if(route=="dremma-resource-failure")
+            {
+                if(session.WorldRevision!=revision||session.LastError is null)throw new InvalidOperationException("Failed Dremma resource candidate did not preserve old scene");
+                Capture="dremma-resource-rejected";Complete=true;return new(Vector2.Zero);
+            }
+            if(session.WorldRevision==revision)throw new InvalidOperationException("Dremma portal route did not change scene: "+session.LastError);
+            if(++wait<5)return new(Vector2.Zero,InteractHeld:true);
+            legs++;Capture=$"dremma-portal-{legs:D2}";wait=0;phase=0;
+            if(legs==20)Complete=true;
+            return new(Vector2.Zero);
+        }
         if(route is "portals" or "portal-failure")
         {
             if(phase==0)

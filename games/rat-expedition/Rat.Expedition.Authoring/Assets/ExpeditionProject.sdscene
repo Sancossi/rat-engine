@@ -20,7 +20,8 @@ Hierarchy:
                         Children: {}
                     b7be4e2233e554dd875cb3873417465f: !ExpeditionProject
                         Id: 5d06f282-78d4-5818-a243-36609160cbc4
-                        StartScene: a6d301f9-3171-5137-b3c7-4622618bebc5:Courtyard
+                        StartScene: d740bf16-9a5c-5844-9eb3-6a9fdbef9c7f:Dremma
                         Scenes:
+                            7c36b6b2431357a88a9b6daeb97c95d2: d740bf16-9a5c-5844-9eb3-6a9fdbef9c7f:Dremma
                             b73a893e9ae45c999bb1b1cb878ebab6: a6d301f9-3171-5137-b3c7-4622618bebc5:Courtyard
                             e93b8b8b8a445e3a9bfa0e36988615ed: 70789606-338b-58d8-88ef-86bf53250749:Sluice

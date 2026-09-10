@@ -1,3 +1,4 @@
+using Rat.Expedition.Core;
 using Stride.Core.Mathematics;
 using Stride.Engine;
 using Stride.Rendering;
@@ -6,6 +7,11 @@ namespace Rat.Expedition.Authoring;
 
 public static class NativeVisualModels
 {
+    public static bool IsOccluded(SceneDefinition definition,IEnumerable<string> geometryIds,IReadOnlySet<string> hidden)
+    {
+        var ids=geometryIds.ToHashSet(StringComparer.Ordinal);
+        return definition.OcclusionGroups.Any(group=>hidden.Contains(group.Id)&&group.Members.Any(ids.Contains));
+    }
     public static void ApplyVisibility(ModelComponent component,bool authoredEnabled,bool occluded)
         =>component.Enabled=authoredEnabled&&!occluded;
 

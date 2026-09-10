@@ -108,7 +108,7 @@ internal sealed class ScenePresentation : IDisposable
         foreach(var model in Models.Values.SelectMany(m=>m).Distinct())
         {
             var ids=Models.Where(pair=>pair.Value.Contains(model)).Select(pair=>pair.Key).ToHashSet(StringComparer.Ordinal);
-            bool occluded=definition.OcclusionGroups.Any(group=>hidden.Contains(group.Id)&&group.Members.Any(ids.Contains));
+            bool occluded=NativeVisualModels.IsOccluded(definition,ids,hidden);
             NativeVisualModels.ApplyVisibility(model,authoredModelEnabled[model],occluded);
         }
     }

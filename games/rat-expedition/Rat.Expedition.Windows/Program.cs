@@ -1,3 +1,4 @@
+using Rat.Expedition.Authoring;
 using Rat.Expedition.Core;
 using Rat.Expedition.Windows;
 
@@ -15,9 +16,13 @@ namespace Rat.Expedition.Windows
                 options = GameOptions.Parse(args);
                 AppContext.SetSwitch("Stride.Engine.RemoteEffectCompilerEnabled", false);
                 Directory.CreateDirectory(options.EvidenceDirectory);
-                using var game = new ExpeditionGame(options);
-                game.Run();
-                if (game.FatalError is not null) throw game.FatalError;
+                using (var game = new ExpeditionGame(options))
+                {
+                    game.Run();
+                    if (game.FatalError is not null) throw game.FatalError;
+                }
+                if(options.SmokeFrames>0)
+                    File.WriteAllText(Path.Combine(options.EvidenceDirectory,"shutdown.json"),System.Text.Json.JsonSerializer.Serialize(new {activeNativeLeases=NativeVisualLease.ActiveCount}));
                 return 0;
             }
             catch (Exception error)
@@ -60,7 +65,7 @@ namespace Rat.Expedition.Windows
             }
             if (width < 640 || height < 360 || width > 3840 || height > 2160 || frames < 0 || (frames > 0 && frames < 60) || frames > 7200)
                 throw new ArgumentException("Window must be 640x360..3840x2160; smoke frames 0 or 60..7200.");
-            if (!float.IsFinite(cameraSize) || cameraSize < 10.125f || cameraSize > 15.75f || route is not ("walls" or "edges" or "zoom" or "body" or "layered" or "mixed" or "portals" or "portal-failure" or "native-candidate-failure" or "native-resource-failure" or "recovery" or "window-states"))
+            if (!float.IsFinite(cameraSize) || cameraSize < 10.125f || cameraSize > 15.75f || route is not ("walls" or "edges" or "zoom" or "body" or "layered" or "mixed" or "dremma" or "dremma-portals" or "dremma-resource-failure" or "portals" or "portal-failure" or "native-candidate-failure" or "native-resource-failure" or "recovery" or "window-states"))
                 throw new ArgumentException("Camera size must be 10.125..15.75 and smoke route must be supported.");
             if(nativeProject!="ExpeditionProject" && (frames==0 || !System.Text.RegularExpressions.Regex.IsMatch(nativeProject,@"\AQA/[a-z-]+\z")))
                 throw new ArgumentException("Alternate compiled QA projects require an explicit smoke run and QA/name asset URL.");

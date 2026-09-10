@@ -62,11 +62,13 @@ public static class NativeVisualResolver
                 if(!TryGetSupportedWorldTransform(entity.Transform.WorldMatrix,out var scale,out var rotation,out var position))
                     throw NativeSceneAdapter.Error(selectedUrl!,entity,"Transform","native visual world transform must be finite, nondegenerate TRS without shear");
                 if(binding.SkeletonNodes is null)throw NativeSceneAdapter.Error(selectedUrl!,entity,"SkeletonNodes","collection is required");
-                if(binding.GeometryId!=Guid.Empty&&(!owned.TryGetValue(binding.GeometryId,out var geometry)||geometry.Get<GeometryComponent>() is null))
-                    throw NativeSceneAdapter.Error(selectedUrl!,entity,"GeometryId",$"'{binding.GeometryId}' is missing or not Expedition geometry");
-                if(binding.ReplacesGeometry&&binding.GeometryId==Guid.Empty)throw NativeSceneAdapter.Error(selectedUrl!,entity,"ReplacesGeometry","requires a linked geometry id");
+                var geometryIds=LinkedGeometryIds(binding);
+                foreach(var geometryId in geometryIds)
+                    if(!owned.TryGetValue(geometryId,out var geometry)||geometry.Get<GeometryComponent>() is null)
+                        throw NativeSceneAdapter.Error(selectedUrl!,entity,"GeometryIds",$"'{geometryId}' is missing or not Expedition geometry");
+                if(binding.ReplacesGeometry&&geometryIds.Length==0)throw NativeSceneAdapter.Error(selectedUrl!,entity,"ReplacesGeometry","requires a linked geometry id");
                 visuals.Add(new(entity.Id.ToString(),NativeVisualModels.Create(model,binding.SkeletonNodes,selectedUrl!),position,
-                    rotation,scale,binding.GeometryId==Guid.Empty?[]:[binding.GeometryId.ToString()],binding.ReplacesGeometry));
+                    rotation,scale,geometryIds.Select(id=>id.ToString()).ToArray(),binding.ReplacesGeometry));
             }
             return new(content,loaded,visuals);
         }
@@ -75,6 +77,14 @@ public static class NativeVisualResolver
             foreach(var scene in loaded.AsEnumerable().Reverse())content.Unload(scene);
             throw;
         }
+    }
+    public static Guid[] LinkedGeometryIds(NativeVisualComponent binding)
+    {
+        if(binding.AdditionalGeometryIds is null)throw NativeSceneAdapter.Error("native visual",binding.Entity,"AdditionalGeometryIds","collection is required");
+        var result=(binding.GeometryId==Guid.Empty?Enumerable.Empty<Guid>():[binding.GeometryId]).Concat(binding.AdditionalGeometryIds).ToArray();
+        if(result.Any(id=>id==Guid.Empty))throw NativeSceneAdapter.Error("native visual",binding.Entity,"AdditionalGeometryIds","cannot contain an empty identity");
+        if(result.Distinct().Count()!=result.Length)throw NativeSceneAdapter.Error("native visual",binding.Entity,"GeometryIds","contains a duplicate identity");
+        return result;
     }
     public static bool TryGetSupportedWorldTransform(Matrix world,out Vector3 scale,out Quaternion rotation,out Vector3 position)
     {

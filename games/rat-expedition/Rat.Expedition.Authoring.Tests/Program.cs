@@ -126,6 +126,16 @@ Check("native visual visibility preserves authored disabled state across occlusi
         NativeVisualModels.ApplyVisibility(component,authored,false);Require(component.Enabled==authored);
     }
 });
+Check("native visual links several geometry replacements and aggregates occlusion",()=>{
+    var first=Guid.NewGuid();var second=Guid.NewGuid();
+    var binding=new NativeVisualComponent{GeometryId=first,AdditionalGeometryIds=[second],ReplacesGeometry=true};
+    var entity=new Entity("Arch subset"){binding};
+    Require(NativeVisualResolver.LinkedGeometryIds(binding).SequenceEqual(new[]{first,second}));
+    var fixture=Fixture();var scene=Read(fixture.Scene) with {OcclusionGroups=[new("arch-cut",[second.ToString()])]};
+    Require(NativeVisualModels.IsOccluded(scene,NativeVisualResolver.LinkedGeometryIds(binding).Select(id=>id.ToString()),new HashSet<string>{"arch-cut"}));
+    binding.AdditionalGeometryIds=[second,first];Reject(()=>NativeVisualResolver.LinkedGeometryIds(binding),"duplicate");
+    binding.AdditionalGeometryIds=[Guid.Empty];Reject(()=>NativeVisualResolver.LinkedGeometryIds(binding),"empty");
+});
 Check("native visual world transform rejects degeneracy and shear but accepts nested TRS",()=>{
     var parent=new Entity("Parent");parent.Transform.Position=new(1,2,3);parent.Transform.Scale=new(2);
     parent.Transform.Rotation=Quaternion.RotationY(.25f);var child=new Entity("Child");child.Transform.Position=new(.5f,0,-1);

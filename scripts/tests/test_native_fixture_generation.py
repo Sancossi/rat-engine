@@ -16,7 +16,7 @@ class NativeFixtureGenerationTests(unittest.TestCase):
             root = Path(temporary)
             assets = root / 'Assets'
             assets.mkdir()
-            for name in ('Courtyard', 'Sluice', 'ExpeditionProject'):
+            for name in ('Courtyard', 'Sluice', 'Dremma', 'ExpeditionProject'):
                 text = (fixtures.ASSETS / (name + '.sdscene')).read_text(encoding='utf8')
                 text = text.replace('Name: courtyard-wall', 'Name: A renamed wall')
                 text = text.replace('Name: expedition_courtyard', 'Name: A renamed courtyard')
@@ -42,6 +42,12 @@ class NativeFixtureGenerationTests(unittest.TestCase):
             self.assertNotIn('Id: 70789606-338b-58d8-88ef-86bf53250749\n', bad)
             bad_project = (root / 'generated/QA/bad-native-binding.sdscene').read_text(encoding='utf8')
             self.assertIn(fixtures.guid('Scene-bad-native-binding') + ':QA/Scene-bad-native-binding', bad_project)
+            bad_courtyard = (root / 'generated/QA/Scene-bad-native-binding-courtyard.sdscene').read_text(encoding='utf8')
+            self.assertIn('absent-node', bad_courtyard)
+            self.assertIn('Id: 83513e47-0a32-54e1-8a67-a95efe621e55', bad_courtyard)
+            regression = (root / 'generated/QA/courtyard-regression.sdscene').read_text(encoding='utf8')
+            self.assertIn('StartScene: a6d301f9-3171-5137-b3c7-4622618bebc5:Courtyard', regression)
+            self.assertIn('d740bf16-9a5c-5844-9eb3-6a9fdbef9c7f:Dremma', regression)
 
     def test_writer_does_not_promote_non_root_entity_to_root(self):
         scene = fixtures.Scene(fixtures.ASSETS / 'Courtyard.sdscene')
