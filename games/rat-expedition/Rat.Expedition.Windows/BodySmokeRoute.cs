@@ -45,7 +45,7 @@ internal sealed class BodySmokeRoute
                 return Towards(-4.4f,-.95f);
             case 6:
                 if(!upCaptured && s.Mode==TraversalMode.Climbing && s.Position.Y>.75f*MapScale) {Capture="climb-up";upCaptured=true;}
-                if(s.Mode==TraversalMode.Grounded && s.Position.Y==1.6f*MapScale) {Capture="upper-exit";phase=7;return new(Vector2.Zero,false,true);}
+                if(s.Mode==TraversalMode.Grounded && MathF.Abs(s.Position.Y-1.6f*MapScale)<.001f) {Capture="upper-exit";phase=7;return new(Vector2.Zero,false,true);}
                 return new(new(0,1),true,true);
             case 7:
                 if(++idleFrames>15) {Capture="held-interact-top";phase=8;return new(Vector2.Zero);}
