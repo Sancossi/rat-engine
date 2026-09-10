@@ -135,6 +135,14 @@ Check("native visual links several geometry replacements and aggregates occlusio
     Require(NativeVisualModels.IsOccluded(scene,NativeVisualResolver.LinkedGeometryIds(binding).Select(id=>id.ToString()),new HashSet<string>{"arch-cut"}));
     binding.AdditionalGeometryIds=[second,first];Reject(()=>NativeVisualResolver.LinkedGeometryIds(binding),"duplicate");
     binding.AdditionalGeometryIds=[Guid.Empty];Reject(()=>NativeVisualResolver.LinkedGeometryIds(binding),"empty");
+    var valid=new NativeVisualComponent{GeometryId=second,ReplacesGeometry=true};
+    Require(NativeVisualModels.SuppressesGeometryPreview(valid,second));
+    Require(!NativeVisualModels.SuppressesGeometryPreview(binding,first));
+    var invalid=new NativeVisualComponent{GeometryId=first,AdditionalGeometryIds=[Guid.Empty],ReplacesGeometry=true};
+    var model=new ModelComponent{Model=new Model()};var invalidEntity=new Entity("Invalid visual"){model,invalid};
+    var preview=new NativeVisualPreviewProcessor.Preview();
+    Require(NativeVisualPreviewProcessor.Refresh(invalid,preview)!.Contains("empty",StringComparison.OrdinalIgnoreCase));
+    Require(model.Model is not null&&model.Enabled);
 });
 Check("native visual world transform rejects degeneracy and shear but accepts nested TRS",()=>{
     var parent=new Entity("Parent");parent.Transform.Position=new(1,2,3);parent.Transform.Scale=new(2);

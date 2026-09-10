@@ -7,6 +7,12 @@ namespace Rat.Expedition.Authoring;
 
 public static class NativeVisualModels
 {
+    public static bool SuppressesGeometryPreview(NativeVisualComponent binding,Guid geometryId)
+    {
+        if(!binding.ReplacesGeometry)return false;
+        try{return NativeVisualResolver.LinkedGeometryIds(binding).Contains(geometryId);}
+        catch(InvalidDataException){return false;}
+    }
     public static bool IsOccluded(SceneDefinition definition,IEnumerable<string> geometryIds,IReadOnlySet<string> hidden)
     {
         var ids=geometryIds.ToHashSet(StringComparer.Ordinal);
