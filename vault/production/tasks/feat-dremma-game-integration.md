@@ -1,10 +1,10 @@
 ---
 type: task
 area: Game
-status: In review
+status: In progress
 task_type: Feature
 sprint: Sprint 19
-review: In review
+review: Needs fixes
 due:
 tags: [task, expedition, stride, art]
 ---
@@ -24,6 +24,8 @@ Acceptance:
 - Проверенные normal/QA ZIP, независимое review, полный Release редактора и публикация каждого принятого среза в main.
 
 ## Resolution
+
+Остались две проверки среза 2: mixed-companions снимает кадр слишком поздно, когда все уже падают; сохранить исходный смысл теста (падающий лидер и передний спутник видимы, задний ещё стоит на скрываемом верхнем настиле) более ранним наблюдением, не заменять его all-falling oracle. Parent также обнаружил старый radius 0,2 в LocalOcclusion.Supports для ramp при новом физическом radius 0,45; требуется исправление и регрессия защиты опоры.
 
 Body route исправлен в `d972d65`: точное сравнение float на scaled upper exit заменено допуском 0,001 только в наблюдении smoke-маршрута. Реальная опора была достигнута, но тест продолжал движение после неё. Скорости, FSM, геометрия и acceptance assertions не изменены; повторное review и пакетный прогон выполняются.
 
