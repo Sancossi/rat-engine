@@ -4,7 +4,7 @@ area: Game
 status: In progress
 task_type: Feature
 sprint: Sprint 19
-review: Approved
+review: Pending
 due:
 tags: [task, expedition, stride, art]
 ---
@@ -24,6 +24,8 @@ Acceptance:
 - Проверенные normal/QA ZIP, независимое review, полный Release редактора и публикация каждого принятого среза в main.
 
 ## Resolution
+
+Срез 1 опубликован в `rat-engine/main`: `53d5ed092a69e9c7215ba5d25adce470acd664fe`, remote SHA проверен. Stride main/pin остаётся `c0b9065d6e902b45d4d3a5c656318c70df53a6f3`. Начат срез 2: отдельное владение native visuals в Windows, authoring bindings/occlusion, масштаб тела 1,8/0,9/radius0,45 и камеры, миграция двух прежних карт ×2,25 при неизменных скоростях и FSM. Новая Dremma-сцена — срез 3. Review Pending относится только к новому срезу.
 
 Срез 1 принят: повторное независимое review `abfb271` — Approved, P2 исправлен, открытых замечаний нет. Итоговый parent Release: `C:/5_gamedev/stride/logs/rat-foundation/20260910-134658-422/result.json`, 61.41 s, 5 warnings, 0 errors; editor `C:/5_gamedev/stride/sources/editor/Stride.GameStudio/bin/Release/net10.0-windows/Stride.GameStudio.exe`. Библиотека публикуется в main с сохранением обеих историй. Review Approved относится только к срезу 1; вся карточка остаётся In progress.
 
