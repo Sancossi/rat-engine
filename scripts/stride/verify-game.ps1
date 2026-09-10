@@ -171,7 +171,7 @@ try {
     $run = Get-Content -LiteralPath (Join-Path $root 'mixed-companions/run.json') -Raw | ConvertFrom-Json
     $mixed = @($run.sessionMilestones | Where-Object name -eq 'mixed-companions')
     # Observe mixed support during the scaled fall: the first companion follows the
-    # leader in the air while the rear remains grounded on the hidden upper deck.
+    # leader in the air while the rear feet remain supported by the hidden upper deck.
     if (-not $run.sessionComplete -or $mixed.Count -ne 1 -or $mixed[0].session.Leader.Mode -ne 'Falling' -or
         $mixed[0].session.Leader.Position.Y -le 0 -or $mixed[0].session.Leader.Position.Y -ge 3.6 -or
         $mixed[0].actorVisible[0] -ne $true -or $mixed[0].actorVisible[1] -ne $true -or $mixed[0].actorVisible[2] -ne $false -or
