@@ -2,8 +2,8 @@
 
 Date: 2026-09-10. Implements the final slice of the
 [approved integration plan](../dremma-game-integration-spec.md).
-Acceptance is still pending the final QA run, qualification-cleanup review and
-full Release editor result. This report does not yet close the integration card.
+Acceptance is still pending the final QA run and qualification-cleanup review.
+This report does not yet close the integration card.
 
 ## Resulting game and authoring behavior
 
@@ -81,8 +81,9 @@ directory were preserved.
 | Parent normal-package run `C:/rat-expedition-validation/dremma-normal-20260910-165418-114/result.json` | Extracted outside checkout and launched with unrelated working directory. Owned PID41192 exited0 after360 frames; Dremma14/97/79, camera11.25, shutdown leases0. Actual frame180 inspected: bridge, library objects and the sprite party render together. |
 | Normal package notices | Project/Stride/third-party notices, Content credits, font OFL and package inventory with145 entries present. |
 | Parent repository checks | Vault valid;25 Python tests passed. |
+| Parent full Release editor build | PASS, `C:/5_gamedev/stride/logs/rat-foundation/20260910-170329-337/result.json`;68.21 seconds,5 warnings,0 errors. Exact unchanged pin `c0b9065d6e902b45d4d3a5c656318c70df53a6f3`. Editor: `C:/5_gamedev/stride/sources/editor/Stride.GameStudio/bin/Release/net10.0-windows/Stride.GameStudio.exe`. |
 
-Final QA package, standard verifier, final editor build, projection check and
+Final QA package, standard verifier, projection check and
 publication evidence will be recorded here before acceptance. The normal package
 is a clean committed game build; later harness/documentation-only changes do not
 alter its runtime/content.
