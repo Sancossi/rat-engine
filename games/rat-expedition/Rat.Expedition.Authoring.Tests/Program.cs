@@ -117,6 +117,12 @@ Check("native visual preview rebuilds after invalid selector undo",()=>{
     Require(NativeVisualPreviewProcessor.Refresh(binding,state)?.Contains("absent",StringComparison.Ordinal)==true&&source.Model==model);
     binding.SkeletonNodes=["deck"];
     Require(NativeVisualPreviewProcessor.Refresh(binding,state) is null&&source.Model!=model&&source.Model!=firstSubset&&source.Model.Meshes.Count==1);
+    binding.AdditionalGeometryIds=[Guid.Empty];
+    var replacement=new Model{Skeleton=model.Skeleton};replacement.Materials.Add(new(new Material()));
+    replacement.Meshes.Add(new(){Name="replacement-deck",NodeIndex=1,MaterialIndex=0});source.Model=replacement;
+    Require(NativeVisualPreviewProcessor.Refresh(binding,state)?.Contains("empty",StringComparison.OrdinalIgnoreCase)==true&&source.Model==replacement);
+    binding.AdditionalGeometryIds=[];
+    Require(NativeVisualPreviewProcessor.Refresh(binding,state) is null&&source.Model!=replacement&&source.Model.Meshes.Single().Name=="replacement-deck");
 });
 Check("native visual visibility preserves authored disabled state across occlusion cycles",()=>{
     foreach(bool authored in new[]{true,false}){

@@ -41,9 +41,9 @@ public sealed class NativeVisualPreviewProcessor : EntityProcessor<NativeVisualC
         try
         {
             if(component is null)throw NativeSceneAdapter.Error("editor preview",binding.Entity,"Model","native visual requires ModelComponent");
-            NativeVisualResolver.LinkedGeometryIds(binding);
             if(data.Component!=component){data.Component=component;data.Original=component.Model;Invalidate(data);}
             else if(component.Model!=data.Generated&&component.Model!=data.Original){data.Original=component.Model;Invalidate(data);}
+            NativeVisualResolver.LinkedGeometryIds(binding);
             var selection=string.Join("\0",binding.SkeletonNodes??[]);
             string signature=Signature(data.Original);
             if(data.Selection!=selection||data.SourceSignature!=signature)
