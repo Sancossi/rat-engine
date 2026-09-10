@@ -2,8 +2,8 @@
 
 Date: 2026-09-10. Implements the final slice of the
 [approved integration plan](../dremma-game-integration-spec.md).
-Acceptance is still pending the final QA and OS window-state results.
-This report does not yet close the integration card.
+All required gate assertions have passed across separate invocations of the same
+final QA package. Final acceptance awaits review of the verifier setup correction.
 
 ## Resulting game and authoring behavior
 
@@ -90,18 +90,25 @@ directory were preserved.
 | Parent repository checks | Vault valid;25 Python tests passed. |
 | Parent full Release editor build | PASS, `C:/5_gamedev/stride/logs/rat-foundation/20260910-170329-337/result.json`;68.21 seconds,5 warnings,0 errors. Exact unchanged pin `c0b9065d6e902b45d4d3a5c656318c70df53a6f3`. Editor: `C:/5_gamedev/stride/sources/editor/Stride.GameStudio/bin/Release/net10.0-windows/Stride.GameStudio.exe`. |
 | Final QA ZIP `build/stride-game/20260910-170756-029/rat-expedition-0.1.0-win-x64.zip` | SHA-256 `A0B2EFFDBE0F9E3E3746064437AE2555F8B4CADE5DA6E62642069EA535FD95E9`; manifest commit `8a1be552b2326fa94348d34850e510f25ba88131`, dirty=false, qualification=true, exact engine pin. Core64/64 and Authoring21/21 passed. |
+| Final38 game QA scenarios | PASS, `C:/5_gamedev/rat-expedition-validation/20260910-171117-840/verification.json`, independently approved as partial evidence. Both Dremma resolutions finish at953 with14 milestones; old/new portal routes each complete20 legs; failure/recovery and all successful shutdown-zero assertions pass. |
+| Four OS window modes, separate invocations | PASS, the same evidence root's `window-focused-visible/verification.json` and `window-states-nonfocused/verification.json`. Focused54.85 Hz, unfocused54.96, hidden54.56, minimized54.82; each maintains its actual OS state at frames60–240 and shuts down with zero leases. |
+| Parent cross-mode check | PASS, `window-states-combined.json` in the same root: standard rate ratio1.00744 (limit1.5), all472 ticks, all final position `(1.3500001,0,-0.30854297)` within0.0001. This comparison includes focused as well as the other three modes. |
 
-Final verifier, projection check and publication evidence will be recorded here
-before acceptance. The normal package
-is a clean committed game build; later harness/documentation-only changes do not
-alter its runtime/content.
+The temporary38-scenario harness differs from the committed verifier only by the
+omitted OS preflight invocation. Its exact script and diff, and the two window-mode
+harnesses/diffs, are archived alongside the evidence; temporary repository copies
+were removed. Parent inspected actual normal720p and QA1080p bridge/arch frames.
+The normal and QA packages contain the same production runtime/content; their
+source-commit difference is confined to editor qualification, documentation and
+tracking. Later changes likewise affect only the external verifier and records.
+No rebuild of unchanged runtime/content is represented by those later commits.
 
 ## Scope and verification limits
 
-The prior slice's OS focused/unfocused/hidden/minimized gate remains mandatory
-for final acceptance. Earlier attempts lost foreground to an unrelated user
-application; those failures were not called passes and no unrelated process was
-modified. The final standard verifier must retain its state/timing assertions.
+The prior slice's OS gate is now covered by the four successful mode runs and
+the parent cross-mode comparison. There is no claim of a single uninterrupted
+standard-verifier PASS:38 game scenarios and4 OS modes ran separately on the same
+final package, retaining every required state/timing/result assertion.
 
 The final QA attempt at
 `C:/5_gamedev/rat-expedition-validation/20260910-170923-393/` stopped at the focused
@@ -110,6 +117,16 @@ foreground ownership. Unlike an earlier run, this trace does not prove focus was
 first obtained and then lost. The helper discarded the activation call's return
 value, so OS denial and setup failure need separate diagnosis. The owned process
 exited and reported zero shutdown leases; this attempt is not a verifier PASS.
+
+The bounded follow-up starts its own focused-test window visibly, records both
+activation results, and verifies the actual foreground HWND/PID within two seconds.
+This succeeded at the first poll for owned PID68392 and held foreground through
+frame240. Commit `2cec457ad8340c67df315faf235388dd51703d6e` adopts that setup;
+unfocused/hidden/minimized startup remains hidden and all final assertions remain
+unchanged. A later combined attempt at `window-states-final/focused` obtained its
+own foreground, held it through120, then correctly failed after external focus
+changed at150. That negative evidence is retained; no unrelated app was targeted
+and there was no repeated retry loop. Runtime focus/timing policy did not change.
 
 Evidence is from automated editor/API and GPU runs on this development PC, not
 remote CI, a clean machine or manual keyboard playtesting. Source reimport was
