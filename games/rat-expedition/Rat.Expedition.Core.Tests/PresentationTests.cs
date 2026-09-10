@@ -89,6 +89,16 @@ internal static class PresentationTests
             require(occlusion.Intersects("ramp",new(new(1.8f,.675f,-6.75f),new(1.8f,.675f,6.75f))),"Finite ramp surface missed");
             require(!occlusion.Intersects("deck",new(new(11.25f,9,0),new(11.25f,6.75f,0))),"Ray extended behind actor");
         });
+        check("occlusion ramp support uses the accepted body radius",()=>{
+            var rampScene=scene with {OcclusionGroups=[new("ramp-group",["ramp"])]};
+            var occlusion=new LocalOcclusion(rampScene);var ramp=rampScene.Ramps[0].ToWorld();
+            var feet=new Vector3(4.5f,(float)ramp.TopAt(4.5f+TraversalMotor.Radius,0),0);
+            var ray=new SightSegment(new(1.8f,.675f,-6.75f),new(1.8f,.675f,6.75f));
+            occlusion.Update(leader with {Position=new(11.25f,0,0)},[ray],0);
+            require(occlusion.Hidden.Contains("ramp-group")&&occlusion.HidesCompanion(new(feet,BodyStance.Standing,TraversalMode.Grounded)),"Accepted-radius ramp companion was not linked to its hidden support");
+            occlusion.Update(leader with {Position=feet},[ray],0);
+            require(!occlusion.Hidden.Contains("ramp-group"),"Accepted-radius ramp support was hidden beneath leader");
+        });
         check("occlusion dependency rejects dangling and cyclic attachments",()=>{
             foreach(var groups in new[]{new[]{new OccluderGroup("deck-group",["deck"],"missing")},new[]{new OccluderGroup("deck-group",["deck"],"rail-group"),new OccluderGroup("rail-group",["rail"],"deck-group")}})
             {

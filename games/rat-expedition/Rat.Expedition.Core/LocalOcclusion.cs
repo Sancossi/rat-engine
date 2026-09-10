@@ -42,9 +42,10 @@ public sealed class LocalOcclusion
             var box=scene.AllSolids.FirstOrDefault(b=>b.Id==id);
             if(box is not null&&box.OverlapsFootprint(feet,TraversalMotor.Radius)&&Math.Abs(feet.Y-box.Max.Y)<=BodyCollisionWorld.Epsilon)return true;
             var ramp=scene.Ramps.FirstOrDefault(r=>r.Id==id)?.ToWorld();
-            if(ramp is null||feet.X+.2f<=ramp.Min.X||feet.X-.2f>=ramp.Max.X||feet.Z+.2f<=ramp.Min.Y||feet.Z-.2f>=ramp.Max.Y)continue;
-            double x=Math.Clamp(feet.X+(ramp.Axis==RampAxis.X&&ramp.Slope<0?-.2f:.2f),ramp.Min.X,ramp.Max.X);
-            double z=Math.Clamp(feet.Z+(ramp.Axis==RampAxis.Z&&ramp.Slope<0?-.2f:.2f),ramp.Min.Y,ramp.Max.Y);
+            float radius=TraversalMotor.Radius;
+            if(ramp is null||feet.X+radius<=ramp.Min.X||feet.X-radius>=ramp.Max.X||feet.Z+radius<=ramp.Min.Y||feet.Z-radius>=ramp.Max.Y)continue;
+            double x=Math.Clamp(feet.X+(ramp.Axis==RampAxis.X&&ramp.Slope<0?-radius:radius),ramp.Min.X,ramp.Max.X);
+            double z=Math.Clamp(feet.Z+(ramp.Axis==RampAxis.Z&&ramp.Slope<0?-radius:radius),ramp.Min.Y,ramp.Max.Y);
             if(Math.Abs(feet.Y-ramp.TopAt(x,z))<=BodyCollisionWorld.Epsilon)return true;
         }
         return false;

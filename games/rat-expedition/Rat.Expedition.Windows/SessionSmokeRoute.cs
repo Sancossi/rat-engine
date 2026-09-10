@@ -44,9 +44,9 @@ internal sealed class SessionSmokeRoute(string route)
         if(Complete)return new(Vector2.Zero);
         if(route is "layered" or "mixed")
         {
-            // Retained compact spacing cannot span the scaled 3.6-unit drop plus the
-            // grounded return. Observe the three actors on the same falling path.
-            if(route=="mixed"&&!mixedFallCaptured&&s.Mode==TraversalMode.Falling&&s.Position.Y<2.025f)
+            // Observe the real fall while the leader and first companion have left
+            // the upper deck but the rear companion is still grounded on it.
+            if(route=="mixed"&&!mixedFallCaptured&&s.Mode==TraversalMode.Falling&&s.Position.Y<3.1f)
             {
                 Capture="mixed-companions";mixedFallCaptured=true;
             }
