@@ -1,5 +1,5 @@
 [CmdletBinding()]
-param([string]$CheckoutPath,[string]$SolutionPath,[string]$QualificationResult,[ValidateSet('session','resources','readiness-failure','creation-failure','creation-reopen','actions','actions-reopen','dremma-library','dremma-library-reopen')][string]$QualificationMode='session',[switch]$PassThru,[hashtable]$LaunchOwnership,[ValidateRange(1,60)][int]$ReadinessTimeoutSeconds=60)
+param([string]$CheckoutPath,[string]$SolutionPath,[string]$QualificationResult,[ValidateSet('session','resources','readiness-failure','creation-failure','creation-reopen','actions','actions-reopen','dremma-library','dremma-library-reopen','dremma-scene','dremma-scene-reopen')][string]$QualificationMode='session',[switch]$PassThru,[hashtable]$LaunchOwnership,[ValidateRange(1,60)][int]$ReadinessTimeoutSeconds=60)
 . (Join-Path $PSScriptRoot 'common.ps1')
 . (Join-Path $PSScriptRoot 'mcp-process.ps1')
 if($null -eq $LaunchOwnership){$LaunchOwnership=@{}}
