@@ -1,10 +1,10 @@
 ---
 type: task
 area: Game
-status: In review
+status: In progress
 task_type: Feature
 sprint: Sprint 19
-review: In review
+review: Needs fixes
 due:
 tags: [task, expedition, stride, art]
 ---
@@ -24,6 +24,8 @@ Acceptance:
 - Проверенные normal/QA ZIP, независимое review, полный Release редактора и публикация каждого принятого среза в main.
 
 ## Resolution
+
+Пакетный прогон выявил незавершённый body route к 2700 кадрам при exit 0; проверка корректно отклонила результат. Причина и исправление маршрута исследуются. GPU 720/1080, оба camera-edge и wheel прошли. OS window-state gate остаётся pending из-за внешнего foreground; reviewer подтвердил неизменность этой логики и допустимость переноса проверки на финальное закрытие при прохождении остальных assertions. Это не full verifier PASS.
 
 Исправления трёх P2 переданы на повторное review: `9983c9a`, Authoring 20/20, включая valid → invalid → Undo, enabled/disabled occlusion и zero-scale/shear. Дополнительно build-game очищает только локальные Windows Release outputs перед publish для проверки смешивания normal/QA asset intermediates. Финальные normal/QA пакеты и полный verifier ещё выполняются; принятие не объявлено.
 
