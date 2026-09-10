@@ -2,7 +2,7 @@
 
 Date: 2026-09-10. Implements the final slice of the
 [approved integration plan](../dremma-game-integration-spec.md).
-Acceptance is still pending the final QA run and qualification-cleanup review.
+Acceptance is still pending the final QA and OS window-state results.
 This report does not yet close the integration card.
 
 ## Resulting game and authoring behavior
@@ -55,7 +55,14 @@ not a headless substitute for opening the scene.
 
 The initial clean-save qualification at164114 is superseded by the dirty-save
 run. Review subsequently required guarded restoration when qualification fails
-after Save; final cleanup evidence and approval are still pending below.
+after Save. Fix `8361779630ddf1541e0679325bc27527fe93a44c` received independent
+approval: the expected hash of the single owned edit is computed before launch,
+so unrelated changed bytes are refused. A controlled client failure immediately
+after native Save, before client/qualification completion, restored the original
+SHA in `build/mcp/dremma-scene-20260910-170508-621/cleanup.json`. The complete
+normal sequence passed again at `build/mcp/dremma-scene-20260910-170559-913/`:
+fresh Z12.9, stable61 entity IDs/14 native references, restore/Save Z13, and cleanup
+confirming the original SHA. No invocation temporary scene files remain.
 
 The isolated native preview at
 `build/canal-city/dremma-door-20260910-164416-749/native-preview.json` passed on
@@ -82,9 +89,10 @@ directory were preserved.
 | Normal package notices | Project/Stride/third-party notices, Content credits, font OFL and package inventory with145 entries present. |
 | Parent repository checks | Vault valid;25 Python tests passed. |
 | Parent full Release editor build | PASS, `C:/5_gamedev/stride/logs/rat-foundation/20260910-170329-337/result.json`;68.21 seconds,5 warnings,0 errors. Exact unchanged pin `c0b9065d6e902b45d4d3a5c656318c70df53a6f3`. Editor: `C:/5_gamedev/stride/sources/editor/Stride.GameStudio/bin/Release/net10.0-windows/Stride.GameStudio.exe`. |
+| Final QA ZIP `build/stride-game/20260910-170756-029/rat-expedition-0.1.0-win-x64.zip` | SHA-256 `A0B2EFFDBE0F9E3E3746064437AE2555F8B4CADE5DA6E62642069EA535FD95E9`; manifest commit `8a1be552b2326fa94348d34850e510f25ba88131`, dirty=false, qualification=true, exact engine pin. Core64/64 and Authoring21/21 passed. |
 
-Final QA package, standard verifier, projection check and
-publication evidence will be recorded here before acceptance. The normal package
+Final verifier, projection check and publication evidence will be recorded here
+before acceptance. The normal package
 is a clean committed game build; later harness/documentation-only changes do not
 alter its runtime/content.
 
@@ -94,6 +102,14 @@ The prior slice's OS focused/unfocused/hidden/minimized gate remains mandatory
 for final acceptance. Earlier attempts lost foreground to an unrelated user
 application; those failures were not called passes and no unrelated process was
 modified. The final standard verifier must retain its state/timing assertions.
+
+The final QA attempt at
+`C:/5_gamedev/rat-expedition-validation/20260910-170923-393/` stopped at the focused
+preflight: every observed frame30–240 was visible/non-iconic but lacked OS
+foreground ownership. Unlike an earlier run, this trace does not prove focus was
+first obtained and then lost. The helper discarded the activation call's return
+value, so OS denial and setup failure need separate diagnosis. The owned process
+exited and reported zero shutdown leases; this attempt is not a verifier PASS.
 
 Evidence is from automated editor/API and GPU runs on this development PC, not
 remote CI, a clean machine or manual keyboard playtesting. Source reimport was
