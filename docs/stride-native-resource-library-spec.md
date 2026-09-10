@@ -1,5 +1,7 @@
 # A1.3 — native библиотека ресурсов
 
+> Current runtime placement supersession: the accepted library now renders in the production Dremma scene. Camera default 11.25/range 10.125–15.75 and the current 1.8/0.9/0.45 m body supersede the earlier camera 5.0 and Courtyard placement examples below. See [the current native map contract](stride-native-map-authoring-spec.md#current-dremma-production-extension).
+
 Дата: 2026-09-09. [Карточка A1](../vault/production/tasks/feat-stride-game-studio-authoring.md),
 [полный план](stride-editor-asset-workflow-plan.md), [принятые карты A1.2](stride-native-map-authoring-spec.md).
 Вход: published A1.2 `ff24f314e3d5b3f08f955757b6516c301be65ff4`; Core 63,

@@ -1,5 +1,7 @@
 # P1 — маршрут крысы на Stride
 
+> Current scale supersession: the production Dremma dimensions are body 1.8/0.9 m, radius 0.45 m, camera 11.25 with range 10.125–15.75, and party spacing 0.7/1.4 m. These values supersede the earlier 0.8/0.4/0.2 body examples, old map extents, and camera examples in this historical P1 contract. Movement 3/1.5/1 m/s, gravity, FSM, and fixed tick remain unchanged. See [the current native map contract](stride-native-map-authoring-spec.md#current-dremma-production-extension).
+
 Дата: 2026-09-09. Полный контракт [карточки P1](../vault/production/tasks/expedition-prototype-traversal.md), [GDD A4/A7](../vault/game/GDD.md), [архитектуры](rat-expedition-architecture.md) и [ADR-018](../vault/production/decisions/ADR-018%20Rat%20expedition%20uses%20Stride.md).
 [Прежний C++ контракт](archive/cpp/rat-expedition-traversal-spec-rat-engine-2026-09-08.md) сохранён полностью. Статусы только в vault; прежние C++ проверки не доказывают Stride P1.
 

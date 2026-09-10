@@ -31,7 +31,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/stride/verify-game.p
 ```
 
 Камера следует за героем без вращения. Колесо мыши приближает/отдаляет сцену:
-OrthographicSize 4.5–7, по умолчанию 5.0. `--camera-size 4.5` задаёт начальный zoom.
+OrthographicSize 10.125–15.75, default 11.25. `--camera-size 10.125` selects the minimum zoom.
 У краёв карты камера останавливает свой центр, сохраняя героя в кадре.
 Диагностика `--smoke-route edges --smoke-frames 1440` обходит края пола;
 verifier проверяет кадрирование на отдельном fixture с бортиками, а падение —
@@ -39,7 +39,7 @@ verifier проверяет кадрирование на отдельном fix
 `--smoke-route zoom --smoke-frames 360` проверяет пределы колеса и сброс после focus
 callbacks. Это синтетические команды в реальном приложении, не системные события мыши.
 
-`--smoke-route body --smoke-frames 1200` проходит лаз, проверяет отказ вставания,
+`--smoke-route body --smoke-frames 2700` проходит лаз, проверяет отказ вставания,
 поднимается на площадку, ходит по ней и спускается. Сохраняются именованные
 `body-*.png` и FSM milestones. Маршрут подаёт обычные команды; координаты не подменяются.
 Русские подсказки загружаются из поставляемого Noto Sans с OFL.
@@ -50,7 +50,7 @@ callbacks. Это синтетические команды в реальном 
 одного authored источника. Старый JSON остаётся только историческим Core fixture
 и не входит в новый ZIP; runtime не использует его как fallback.
 
-`--smoke-route layered --smoke-frames 1800` проверяет рампу в обе стороны,
+`--smoke-route layered --smoke-frames 4050` проверяет рампу в обе стороны,
 одинаковые XZ сверху/снизу, арку, перила и дальнюю стену; `mixed` — спутников на
 разных ярусах; `portals` — десять круговых переходов. `recovery` использует обычное
 падение, `portal-failure` диагностически отклоняет уже подготовленного renderer
@@ -130,3 +130,32 @@ Stride поступает из local feed исходной основы; `Stride
 зависимости — из NuGet по lock. Cache `.packages` изолирован на игру. Publish содержит
 runtime, shader database, native DLL, credits и доступные license notices/inventory.
 Сборка сама не очищает caches, не обновляет движок и не публикует релиз в сети.
+
+## Current Dremma production contract
+
+This section supersedes the earlier two-map and camera values in this evolving
+prototype README. Normal startup loads `Assets/Dremma.sdscene` through
+`Assets/ExpeditionProject.sdscene`; the production project references Dremma,
+Courtyard, and Sluice. Dremma and Courtyard have a two-way portal, while the
+existing Courtyard–Sluice portal identities and ordering remain intact.
+
+The hero body is 1.8 m standing, 0.9 m crouched, with radius 0.45 m. Walk,
+crouch, and climb speeds remain 3/1.5/1 m/s; companion spacing remains 0.7/1.4
+m. The orthographic camera defaults to 11.25 and clamps to 10.125–15.75.
+
+Dremma contains editable gameplay geometry and `Expedition native visual`
+bindings for the bridge subsets, end-on stairs, canal wall, static door, scale
+figures, and lanterns. One native visual may replace several linked geometry
+entities through `AdditionalGeometryIds`; those entities remain the collision
+and occlusion source while the shared native model supplies the rendered mesh.
+Open `Rat.Expedition.sln` in Game Studio and edit `Dremma`, `Courtyard`, or
+`Sluice`. The source-art fixture generator does not overwrite manual Dremma.
+
+`--smoke-route dremma` covers the centre arch passage, standing/crouched arch
+shoulder clearance, solid stair mass and handrails, bridge support, party
+spacing, occlusion, and return to the lower floor. `dremma-portals` performs ten
+Dremma–Courtyard round trips. `dremma-resource-failure` rejects an invalid
+native Courtyard candidate while Dremma remains active. Legacy body, layered,
+mixed, portal, and candidate routes select `--native-project
+QA/courtyard-regression`; this reference-only QA manifest starts the actual
+Courtyard and includes all three production scenes.

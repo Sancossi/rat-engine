@@ -64,3 +64,30 @@ Self-contained win-x64 publish запускается без editor, SDK, NuGet,
 Evidence разделяет Core tests, сборку, реальный GPU/adapter, автоматический запуск и ручную проверку. PNG 1280×720/1920×1080 снимаются с настоящего backbuffer; диаграмма и тест без GPU не заменяют кадр. A7 бюджеты не объявляются выполненными до измерений; историческая инвентаризация ПК сохранена в архиве архитектуры.
 
 MCP/удалённые сервисы/изменение Stride этому срезу не нужны. Статусы и следующий разрешённый срез задаёт vault; старую C++ очередь автоматически не продолжать.
+
+## Native Dremma production scene
+
+The current production project starts in the hand-authored native
+`Assets/Dremma.sdscene` and catalogs Dremma, Courtyard, and Sluice. Dremma uses
+the accepted 2.25 world scale for gameplay dimensions while native Canal City
+models retain their original metre scale. The current body is 1.8/0.9 m with a
+0.45 m radius, the camera is 11.25 with a 10.125–15.75 range, and movement,
+gravity, fixed tick, FSM, animation timing, and 0.7/1.4 m party spacing remain
+unchanged.
+
+`NativeVisualComponent` keeps the legacy `GeometryId` and adds optional
+`AdditionalGeometryIds` for one editable model subset to represent several
+finite collision pieces. The bridge arch is one native subset over piers and
+conservative curved-spandrel columns; deck and rails are separate subsets and
+occlusion groups. The stair model similarly replaces the gameplay ramp, solid
+masonry volume, and four thin sloped handrail guards. Runtime validates all
+links, selectors, materials, and supported TRS before activation. It clones
+mesh views while sharing source materials and borrowed draw buffers, applies
+local material overrides without mutating the source model, and releases the
+old representation before unloading its owned content lease.
+
+The reference-only `QA/courtyard-regression` project lets old routes start on
+the actual Courtyard without cloning its production identity. Normal startup
+never selects QA assets and has no JSON world fallback. The detailed current
+layout and editor contract are in
+[the native map authoring specification](stride-native-map-authoring-spec.md#current-dremma-production-extension).

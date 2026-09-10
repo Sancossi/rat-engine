@@ -1,8 +1,9 @@
 # Rat Expedition
 
-Rat Expedition is a Windows game developed in Stride/C#. The current prototype
-has an orthographic courtyard, a sprite character, wall collision, crouching
-through a low passage and ladder traversal. Start with the
+Rat Expedition is a Windows game developed in Stride/C#. The production start is
+the native Dremma city scene, with a traversable bridge, lower arch passage,
+stairs, party movement, and portals to the retained Courtyard and Sluice maps.
+Start with the
 [game and controls](games/rat-expedition/README.md), [game design](vault/game/GDD.md)
 and [pinned Stride source workflow](docs/stride-source-workflow.md).
 
