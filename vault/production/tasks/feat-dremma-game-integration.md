@@ -1,10 +1,10 @@
 ---
 type: task
 area: Game
-status: In review
+status: In progress
 task_type: Feature
 sprint: Sprint 19
-review: In review
+review: Needs fixes
 due:
 tags: [task, expedition, stride, art]
 ---
@@ -24,6 +24,8 @@ Acceptance:
 - Проверенные normal/QA ZIP, независимое review, полный Release редактора и публикация каждого принятого среза в main.
 
 ## Resolution
+
+Review среза 2 (`9b54bd9`) — Needs fixes, три P2: valid → invalid → Undo не восстанавливает subset в preview; occlusion включает authored disabled ModelComponent; flattening вложенной transform принимает вырожденную матрицу/shear. Исправления и проверки этих сценариев обязательны до принятия. Пакетный verifier дополнительно остановился на startup preflight; причина исследуется.
 
 Срез 2 передан на независимое code review: `9b54bd95fffeb39ed5b1076e70c186f01c2d9c4d`. Core 63/63, Authoring 17/17, Python 25/25 и vault прошли. Native visual resolver/lease, editor bindings/subsets и миграция размеров реализованы; предварительный GPU кадр показал библиотечный фонарь в обычном Courtyard. Normal/QA пакеты и полный verifier выполняются параллельно review и остаются обязательными до принятия.
 
