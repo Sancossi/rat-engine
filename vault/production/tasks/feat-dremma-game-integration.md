@@ -1,10 +1,10 @@
 ---
 type: task
 area: Game
-status: In review
+status: In progress
 task_type: Feature
 sprint: Sprint 19
-review: In review
+review: Needs fixes
 due:
 tags: [task, expedition, stride, art]
 ---
@@ -24,6 +24,8 @@ Acceptance:
 - Проверенные normal/QA ZIP, независимое review, полный Release редактора и публикация каждого принятого среза в main.
 
 ## Resolution
+
+Все 38 игровых QA сценариев прошли и получили независимое Approved как partial evidence (`C:/5_gamedev/rat-expedition-validation/20260910-171117-840/verification.json`). Cleanup `8361779` также Approved. Диагностика OS gate выявила проблему setup verifier: focused запускался Hidden, результат активации игнорировался. Отдельный видимый запуск собственного окна прошёл строгие foreground assertions (54,85 Hz); unfocused/hidden/minimized также прошли (54,56–54,96 Hz), одинаковые ticks/position, shutdown leases0. Исправить только подготовку focused окна/диагностику, повторить все четыре режима и передать на review; runtime и пакеты неизменны.
 
 Исправления cleanup и команд QA переданы на re-review: `8361779`. Controlled failure сразу после native Save, до завершения MCP client, восстановил исходный SHA (`build/mcp/dremma-scene-20260910-170508-621`); обычный dirty Save/fresh reopen/restore также прошёл (`170559-913`). Owned hash рассчитан до изменения, посторонние байты не принимаются за собственное изменение. Parent normal ZIP `20260910-165143-941` проверен вне checkout: exit0, Dremma14/97/79, shutdown leases0; Core64/64, Authoring21/21. Полный parent Release `20260910-170329-337`:68,21 s,5 warnings,0 errors. [Отчёт среза3](../../../docs/audits/2026-09-10-dremma-playable-integration.md) получил Approved по имеющимся свидетельствам; финальные QA/OS gates и принятие карточки ещё ожидаются.
 
