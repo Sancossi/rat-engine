@@ -1,10 +1,10 @@
 ---
 type: task
 area: Game
-status: In progress
+status: In review
 task_type: Feature
 sprint: Sprint 19
-review: Needs fixes
+review: In review
 due:
 tags: [task, expedition, stride, art]
 ---
@@ -24,6 +24,8 @@ Acceptance:
 - Проверенные normal/QA ZIP, независимое review, полный Release редактора и публикация каждого принятого среза в main.
 
 ## Resolution
+
+Порядок source tracking исправлен в `262176c`, регрессия A → invalid metadata → B → repair сохраняет B; Authoring 21/21. Передано на re-review. Production editor API qualification фактически прошла: `build/mcp/dremma-scene-20260910-164114-924`, 61 scene entities, явные XYZ (wall Z13→12,9), Undo/Redo/Undo, Save clean и fresh reopen с сохранением scene/entity/native-reference IDs; оба собственных editor process завершены. Harness ещё ожидает отдельного коммита/проверки.
 
 Повторное review `50aba40` подтвердило isolation fix, но выявило P2 порядка validation: при invalid binding смена/reimport модели B может быть затёрта старым cached Original A. Перенести validation после отслеживания смены component/model; регрессия A → invalid binding → B → repair должна сохранять B.
 
