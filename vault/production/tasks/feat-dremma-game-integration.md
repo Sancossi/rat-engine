@@ -1,10 +1,10 @@
 ---
 type: task
 area: Game
-status: In progress
+status: In review
 task_type: Feature
 sprint: Sprint 19
-review: Needs fixes
+review: In review
 due:
 tags: [task, expedition, stride, art]
 ---
@@ -24,6 +24,8 @@ Acceptance:
 - Проверенные normal/QA ZIP, независимое review, полный Release редактора и публикация каждого принятого среза в main.
 
 ## Resolution
+
+Mixed locality исправлен и передан на review в `e8f965e`. Реальный GPU кадр 738 (`build/mixed-release-qualified`): лидер Y2,8643 и первый спутник Y3,5643 Falling/видимы; задний Y3,6 геометрически на верхней опоре и скрыт, bridge-cut/bridge-rail-cut скрыты; маршрут завершён на 839. Его записанный TrailPose.Mode — Falling, что не заменяет геометрическую проверку опоры: требование Grounded отсутствовало в исходном oracle и снято после независимой проверки. Smoke elapsed сохранён 1/30, Core 64/64. Принятие ожидает re-review и оставшиеся пакетные сценарии.
 
 Review `d4fb158` одобрило radius fix/regression, но обнаружило оставшееся неверное требование вертикального интервала 0,7 в mixed observation. Trail spacing измеряется вдоль пути; восстановить проверки высот/режимов разных опор, а точный spacing проверять на существующем прямом grounded segment.
 
