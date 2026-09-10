@@ -1,10 +1,10 @@
 ---
 type: task
 area: Game
-status: In progress
+status: In review
 task_type: Feature
 sprint: Sprint 19
-review: Needs fixes
+review: In review
 due:
 tags: [task, expedition, stride, art]
 ---
@@ -24,6 +24,8 @@ Acceptance:
 - Проверенные normal/QA ZIP, независимое review, полный Release редактора и публикация каждого принятого среза в main.
 
 ## Resolution
+
+Исправления трёх P2 переданы на повторное review: `9983c9a`, Authoring 20/20, включая valid → invalid → Undo, enabled/disabled occlusion и zero-scale/shear. Дополнительно build-game очищает только локальные Windows Release outputs перед publish для проверки смешивания normal/QA asset intermediates. Финальные normal/QA пакеты и полный verifier ещё выполняются; принятие не объявлено.
 
 Review среза 2 (`9b54bd9`) — Needs fixes, три P2: valid → invalid → Undo не восстанавливает subset в preview; occlusion включает authored disabled ModelComponent; flattening вложенной transform принимает вырожденную матрицу/shear. Исправления и проверки этих сценариев обязательны до принятия. Пакетный verifier дополнительно остановился на startup preflight; причина исследуется.
 
