@@ -1,10 +1,10 @@
 ---
 type: task
 area: Game
-status: In progress
+status: In review
 task_type: Feature
 sprint: Sprint 19
-review: Needs fixes
+review: In review
 due:
 tags: [task, expedition, stride, art]
 ---
@@ -24,6 +24,8 @@ Acceptance:
 - Проверенные normal/QA ZIP, независимое review, полный Release редактора и публикация каждого принятого среза в main.
 
 ## Resolution
+
+Verifier-only fix `2cec457` передан на review: focused окно запускается видимым, фактический HWND/PID и результат активации проверяются до прежних assertions. На том же QA пакете все четыре режима прошли раздельно; parent дополнительно выполнил исходные cross-mode проверки частоты/ticks/position (`window-states-combined.json` в QA evidence root): 472 ticks, одна конечная позиция, 54,56–54,96 Hz, shutdown0. Вместе с 38 игровыми сценариями покрыты 42 gates; это не один непрерывный standard-verifier PASS. Поздний combined attempt корректно отклонён после потери foreground на150 кадре и сохранён как отрицательное свидетельство.
 
 Все 38 игровых QA сценариев прошли и получили независимое Approved как partial evidence (`C:/5_gamedev/rat-expedition-validation/20260910-171117-840/verification.json`). Cleanup `8361779` также Approved. Диагностика OS gate выявила проблему setup verifier: focused запускался Hidden, результат активации игнорировался. Отдельный видимый запуск собственного окна прошёл строгие foreground assertions (54,85 Hz); unfocused/hidden/minimized также прошли (54,56–54,96 Hz), одинаковые ticks/position, shutdown leases0. Исправить только подготовку focused окна/диагностику, повторить все четыре режима и передать на review; runtime и пакеты неизменны.
 
