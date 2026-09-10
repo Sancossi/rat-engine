@@ -1,10 +1,10 @@
 ---
 type: task
 area: Game
-status: In review
+status: In progress
 task_type: Feature
 sprint: Sprint 19
-review: In review
+review: Approved
 due:
 tags: [task, expedition, stride, art]
 ---
@@ -24,6 +24,8 @@ Acceptance:
 - Проверенные normal/QA ZIP, независимое review, полный Release редактора и публикация каждого принятого среза в main.
 
 ## Resolution
+
+Срез 2 принят с явно отложенной до финала OS window-state проверкой. Код `e8f965e` и пакетные свидетельства получили независимое Approved; [отчёт](../../../docs/audits/2026-09-10-dremma-scale-native-runtime.md) зафиксирован в `f12a745`. Core 64/64, Authoring 20/20, Python 25/25; финальные 10 affected/remaining QA сценариев прошли, включая 20 portal legs и сохранение активной сцены при отказах. Unaffected prefix предыдущего пакета проверен отдельно; full verifier PASS не заявляется. Normal ZIP проверен parent вне checkout: `C:/rat-expedition-validation/slice2-normal-20260910-155028-215/result.json`, exit 0. Итоговый полный Release редактора: `C:/5_gamedev/stride/logs/rat-foundation/20260910-154754-185/result.json`, 66,65 s, 5 warnings, 0 errors. Pin `c0b9065d` неизменен. Карточка остаётся открытой: срез 3 и финальная OS проверка ещё обязательны.
 
 Mixed locality исправлен и передан на review в `e8f965e`. Реальный GPU кадр 738 (`build/mixed-release-qualified`): лидер Y2,8643 и первый спутник Y3,5643 Falling/видимы; задний Y3,6 геометрически на верхней опоре и скрыт, bridge-cut/bridge-rail-cut скрыты; маршрут завершён на 839. Его записанный TrailPose.Mode — Falling, что не заменяет геометрическую проверку опоры: требование Grounded отсутствовало в исходном oracle и снято после независимой проверки. Smoke elapsed сохранён 1/30, Core 64/64. Принятие ожидает re-review и оставшиеся пакетные сценарии.
 
@@ -56,5 +58,7 @@ Review среза 1 — Needs fixes: P2 в проверке Snapshot. Default JS
 Начат срез 1: перенос библиотеки. В отдельной worktree `C:/5_gamedev/rat-engine-dremma` сохранены обе истории: текущий проект и графическая ветка `c74c6e7`. Исходные рабочие копии не изменены. Дальше срез 2 (масштаб/runtime) и срез 3 (игровой квартал); оставшиеся A1/каталог не закрываются автоматически.
 
 ## Bugs found
+
+Срез 2: preview Undo после invalid selector, authored Enabled, shear/degenerate transform, normal/QA build cache, QA asset-ID collision, старый radius в ramp support и smoke observation/oracle исправлены и проверены. Открытых кодовых замечаний среза нет; OS foreground gate перенесён на финальную приёмку, не объявлен пройденным.
 
 Срез 1: P2 неполной сериализации XYZ/RGBA в acceptance snapshot исправлен в `abfb271`; отрицательный oracle и повторное review прошли. Открытых дефектов принятой библиотеки нет.
