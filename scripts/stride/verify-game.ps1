@@ -50,7 +50,8 @@ try {
         $name = "gpu-$($resolution[0])x$($resolution[1])"
         $results += Invoke-GameScenario $name @('--width', [string]$resolution[0], '--height', [string]$resolution[1]) $true
         $run = Get-Content -LiteralPath (Join-Path $root "$name/run.json") -Raw | ConvertFrom-Json
-        if ($run.width -ne $resolution[0] -or $run.height -ne $resolution[1] -or -not $run.adapter -or $run.finalPosition.z -ge 0 -or $run.focusProbePassed -ne $true) {
+        if ($run.width -ne $resolution[0] -or $run.height -ne $resolution[1] -or -not $run.adapter -or $run.finalPosition.z -ge 0 -or $run.focusProbePassed -ne $true -or
+            $run.camera.size -ne 11.25 -or $run.nativeVisuals -ne 1 -or $run.nativeMeshes -ne 3 -or $run.nativeMaterialSlots -ne 3 -or $run.activeNativeLeases -ne 1) {
             throw "$name missing expected GPU dimensions/adapter/behind-wall route evidence."
         }
         foreach ($frame in @('frame-0030.png', 'frame-0180.png', 'frame-0360.png')) {
@@ -64,9 +65,9 @@ try {
     }
     # Preserve the previous bounded-edge camera acceptance with authored blockers;
     # the default P1.3 map now intentionally permits falling and recovery.
-    foreach ($size in @('4.5', '7')) {
+    foreach ($size in @('10.125', '15.75')) {
         $name = "camera-edges-$size"
-        $results += Invoke-GameScenario $name @('--camera-size', $size, '--smoke-route', 'edges', '--smoke-frames', '1440', '--native-project', 'QA/edges') $true
+        $results += Invoke-GameScenario $name @('--camera-size', $size, '--smoke-route', 'edges', '--smoke-frames', '3240', '--native-project', 'QA/edges') $true
         $run = Get-Content -LiteralPath (Join-Path $root "$name/run.json") -Raw | ConvertFrom-Json
         if ($run.camera.size -ne [double]::Parse($size, [Globalization.CultureInfo]::InvariantCulture) -or $run.cameraSamples.Count -lt 40) { throw "$name missing camera evidence." }
         foreach ($sample in $run.cameraSamples) {
@@ -74,18 +75,18 @@ try {
         }
         $x = $run.cameraSamples | Measure-Object worldX -Minimum -Maximum
         $z = $run.cameraSamples | Measure-Object worldZ -Minimum -Maximum
-        if ($x.Minimum -gt -7.2 -or $x.Maximum -lt 7.7 -or $z.Minimum -gt -5.2 -or $z.Maximum -lt 5.7) { throw "$name did not reach all map edges." }
+        if ($x.Minimum -gt -16.2 -or $x.Maximum -lt 17.325 -or $z.Minimum -gt -11.7 -or $z.Maximum -lt 12.825) { throw "$name did not reach all map edges." }
     }
     $results += Invoke-GameScenario 'camera-wheel' @('--smoke-route', 'zoom') $true
     $wheelRun = Get-Content -LiteralPath (Join-Path $root 'camera-wheel/run.json') -Raw | ConvertFrom-Json
-    foreach ($expected in @(@(60,4.5), @(120,7), @(150,7), @(180,4.5), @(240,7), @(300,5))) {
+    foreach ($expected in @(@(60,10.125), @(120,15.75), @(150,15.75), @(180,10.125), @(240,15.75), @(300,11.25))) {
         $sample = @($wheelRun.cameraSamples | Where-Object frame -eq $expected[0])
         if ($sample.Count -ne 1 -or $sample[0].size -ne $expected[1]) { throw "Wheel clamp/discard failed at frame $($expected[0])." }
     }
     if ($wheelRun.focusZoomProbePassed -ne $true) { throw 'Focus regain accepted a stale wheel delta.' }
     foreach ($resolution in @(@(1280,720), @(1920,1080))) {
         $name = "body-$($resolution[0])x$($resolution[1])"
-        $results += Invoke-GameScenario $name @('--width', [string]$resolution[0], '--height', [string]$resolution[1], '--smoke-route', 'body', '--smoke-frames', '1200') $true
+        $results += Invoke-GameScenario $name @('--width', [string]$resolution[0], '--height', [string]$resolution[1], '--smoke-route', 'body', '--smoke-frames', '2700') $true
         $run = Get-Content -LiteralPath (Join-Path $root "$name/run.json") -Raw | ConvertFrom-Json
         if (-not $run.bodyComplete -or $run.width -ne $resolution[0] -or $run.height -ne $resolution[1] -or $run.ladderPausePassed -ne $true) { throw "$name did not complete the real body route and ladder pause." }
         $pauseStart = @($run.sessionMilestones | Where-Object name -eq 'ladder-pause-start')
@@ -98,12 +99,17 @@ try {
             $item = $item[0]
             $state = if ($milestone -in @('crouched','blocked-stand')) {'Crouched'} elseif ($milestone -in @('climb-up','climb-down')) {'Climbing'} else {'Standing'}
             if ($item.state -ne $state) { throw "$name unexpected FSM state for $milestone." }
-            if ($state -eq 'Crouched' -and $item.height -ne .4) { throw "$name crouched body height mismatch." }
-            if ($state -ne 'Crouched' -and $item.height -ne .8) { throw "$name standing body height mismatch." }
+            if ($state -eq 'Crouched' -and $item.height -ne .9) { throw "$name crouched body height mismatch." }
+            if ($state -ne 'Crouched' -and $item.height -ne 1.8) { throw "$name standing body height mismatch." }
             if ($milestone -eq 'blocked-stand' -and (-not $item.StandBlocked -or $item.Hint -ne 'Здесь нельзя встать')) { throw "$name missing Cyrillic blocked-stand hint." }
-            if ($milestone -in @('upper-exit','held-interact-top','top-walking') -and $item.y -ne 1.6) { throw "$name lost upper support." }
+            if ($milestone -in @('upper-exit','held-interact-top','top-walking') -and $item.y -ne 3.6) { throw "$name lost upper support." }
             if ($milestone -eq 'lower-exit' -and $item.y -ne 0) { throw "$name wrong lower exit." }
         }
+    }
+    $results += Invoke-GameScenario 'native-bridge-subsets' @('--native-project','QA/native-visuals','--smoke-route','zoom') $true
+    $nativeRun = Get-Content -LiteralPath (Join-Path $root 'native-bridge-subsets/run.json') -Raw | ConvertFrom-Json
+    if ($nativeRun.nativeVisuals -ne 4 -or $nativeRun.nativeMeshes -ne 12 -or $nativeRun.nativeMaterialSlots -ne 24 -or $nativeRun.activeNativeLeases -ne 1) {
+        throw 'Compiled bridge deck/ironwork/posts subsets or shared material slots are incorrect.'
     }
     # Accepted finite coordinates where float ULP exceeds rung spacing used to hang
     # scene construction. Verify the actual renderer terminates, without promising
@@ -143,14 +149,14 @@ try {
     }
     foreach ($resolution in @(@(1280,720), @(1920,1080))) {
         $name = "layered-$($resolution[0])x$($resolution[1])"
-        $results += Invoke-GameScenario $name @('--width',[string]$resolution[0],'--height',[string]$resolution[1],'--smoke-route','layered','--smoke-frames','1800') $true
+        $results += Invoke-GameScenario $name @('--width',[string]$resolution[0],'--height',[string]$resolution[1],'--smoke-route','layered','--smoke-frames','4050') $true
         $run = Get-Content -LiteralPath (Join-Path $root "$name/run.json") -Raw | ConvertFrom-Json
         if (-not $run.sessionComplete -or $run.width -ne $resolution[0] -or $run.height -ne $resolution[1]) { throw "$name incomplete layered route." }
         foreach ($milestone in @('arch-empty','ramp-entry','ramp-ascent','ramp-crest','bridge-upper','upper-rail','ramp-descent','bridge-lower','lower-forward','cut-restored','lower-reverse','offcentre-behind-wall')) {
             $item = @($run.sessionMilestones | Where-Object name -eq $milestone)
             if ($item.Count -ne 1 -or -not (Test-Path -LiteralPath (Join-Path $root "$name/session-$milestone.png"))) { throw "$name missing $milestone." }
             $item = $item[0]
-            if ($milestone -in @('bridge-upper','upper-rail') -and ($item.session.Leader.Position.Y -ne 1.6 -or $item.hidden -contains 'bridge-cut')) { throw "$name lost protected upper deck." }
+            if ($milestone -in @('bridge-upper','upper-rail') -and ($item.session.Leader.Position.Y -ne 3.6 -or $item.hidden -contains 'bridge-cut')) { throw "$name lost protected upper deck." }
             if ($milestone -in @('bridge-lower','lower-reverse','offcentre-behind-wall') -and ($item.session.Leader.Position.Y -ne 0 -or $item.hidden -notcontains 'bridge-cut' -or $item.hidden -notcontains 'bridge-rail-cut')) { throw "$name failed local lower cut." }
             if ($milestone -eq 'upper-rail' -and $item.hidden -notcontains 'bridge-rail-cut') { throw "$name rail did not hide independently." }
             if ($milestone -eq 'arch-empty' -and $item.hidden -contains 'arch-cut') { throw "$name hid empty arch." }
@@ -161,21 +167,21 @@ try {
         $lower = ($run.sessionMilestones | Where-Object name -eq 'bridge-lower').session.Leader.Position
         if ([Math]::Abs($upper.X-$lower.X) -gt .04 -or [Math]::Abs($upper.Z-$lower.Z) -gt .04) { throw "$name did not demonstrate identical XZ on two levels." }
     }
-    $results += Invoke-GameScenario 'mixed-companions' @('--smoke-route','mixed','--smoke-frames','1500') $true
+    $results += Invoke-GameScenario 'mixed-companions' @('--smoke-route','mixed','--smoke-frames','3375') $true
     $run = Get-Content -LiteralPath (Join-Path $root 'mixed-companions/run.json') -Raw | ConvertFrom-Json
     $mixed = @($run.sessionMilestones | Where-Object name -eq 'mixed-companions')
-    # A 1.4-unit trail cannot span the full 1.6-unit drop and grounded return.
+    # Retained 1.4-unit trail spacing cannot span the scaled 3.6-unit drop.
     # Observe the actual fall, then the lower route, without increasing game spacing.
     if (-not $run.sessionComplete -or $mixed.Count -ne 1 -or $mixed[0].session.Leader.Mode -ne 'Falling' -or
-        $mixed[0].session.Leader.Position.Y -le 0 -or $mixed[0].session.Leader.Position.Y -ge 1.6 -or
+        $mixed[0].session.Leader.Position.Y -le 0 -or $mixed[0].session.Leader.Position.Y -ge 3.6 -or
         $mixed[0].actorVisible[0] -ne $true -or $mixed[0].actorVisible[1] -ne $true -or $mixed[0].actorVisible[2] -ne $false -or
-        $mixed[0].companions[0].Position.Y -le $mixed[0].session.Leader.Position.Y -or $mixed[0].companions[0].Position.Y -ge 1.6 -or
-        $mixed[0].companions[1].Position.Y -ne 1.6 -or $mixed[0].hidden -notcontains 'bridge-cut' -or $mixed[0].hidden -notcontains 'bridge-rail-cut') {
+        $mixed[0].companions[0].Position.Y -le $mixed[0].session.Leader.Position.Y -or $mixed[0].companions[0].Position.Y -ge 3.6 -or
+        $mixed[0].companions[1].Position.Y -ne 3.6 -or $mixed[0].hidden -notcontains 'bridge-cut' -or $mixed[0].hidden -notcontains 'bridge-rail-cut') {
         throw 'Falling mixed-height companion locality not demonstrated.'
     }
     $mixedLower = @($run.sessionMilestones | Where-Object name -eq 'mixed-lower')
     if ($mixedLower.Count -ne 1 -or $mixedLower[0].session.Leader.Position.Y -ne 0 -or $mixedLower[0].companions[0].Position.Y -ne 0 -or
-        $mixedLower[0].companions[1].Position.Y -ge 1.6 -or $mixedLower[0].actorVisible -contains $false -or $mixedLower[0].hidden -notcontains 'bridge-cut') {
+        $mixedLower[0].companions[1].Position.Y -ge 3.6 -or $mixedLower[0].actorVisible -contains $false -or $mixedLower[0].hidden -notcontains 'bridge-cut') {
         throw 'Lower companions were hidden with the upper deck.'
     }
     $mixedRestored = @($run.sessionMilestones | Where-Object name -eq 'mixed-restored')
@@ -186,7 +192,7 @@ try {
     $leaderZ = $mixedRestored[0].session.Leader.Position.Z
     if ([Math]::Abs($leaderZ - $mixedRestored[0].companions[0].Position.Z - .7) -gt .001 -or
         [Math]::Abs($leaderZ - $mixedRestored[0].companions[1].Position.Z - 1.4) -gt .001) { throw 'GPU route did not retain compact equal spacing.' }
-    $results += Invoke-GameScenario 'portal-roundtrips' @('--smoke-route','portals','--smoke-frames','1800') $true
+    $results += Invoke-GameScenario 'portal-roundtrips' @('--smoke-route','portals','--smoke-frames','2700') $true
     $run = Get-Content -LiteralPath (Join-Path $root 'portal-roundtrips/run.json') -Raw | ConvertFrom-Json
     if (-not $run.sessionComplete -or $run.portalLegs -ne 20 -or $run.session.WorldRevision -ne 20) { throw 'Did not complete ten round trips.' }
     foreach ($item in $run.sessionMilestones) {
@@ -195,6 +201,7 @@ try {
         # Stable active-bundle size plus explicit code ownership review; this is
         # not a GPU allocator/memory profiler and does not itself prove no leaks.
         if (@($sameScene.ownedBuffers | Select-Object -Unique).Count -ne 1) { throw 'Active scene buffer count changed across transitions.' }
+        if ($item.activeNativeLeases -ne 1 -or @($sameScene.nativeVisuals | Select-Object -Unique).Count -ne 1 -or @($sameScene.nativeMeshes | Select-Object -Unique).Count -ne 1) { throw 'Native visual lease/model counts accumulated across transitions.' }
     }
     $results += Invoke-GameScenario 'renderer-candidate-failure' @('--smoke-route','portal-failure') $true
     $run = Get-Content -LiteralPath (Join-Path $root 'renderer-candidate-failure/run.json') -Raw | ConvertFrom-Json
@@ -204,12 +211,18 @@ try {
     if (-not $nativeFailure.sessionComplete -or $nativeFailure.session.WorldRevision -ne 0 -or $nativeFailure.scene -ne 'expedition_courtyard' -or $nativeFailure.session.Hint -notmatch 'TargetSpawnId') {
         throw 'Invalid compiled native candidate replaced the active world or lost its diagnostic.'
     }
+    $results += Invoke-GameScenario 'native-resource-candidate-failure' @('--smoke-route','native-resource-failure') $true
+    $resourceFailure = Get-Content -LiteralPath (Join-Path $root 'native-resource-candidate-failure/run.json') -Raw | ConvertFrom-Json
+    if (-not $resourceFailure.sessionComplete -or $resourceFailure.session.WorldRevision -ne 0 -or $resourceFailure.scene -ne 'expedition_courtyard' -or
+        $resourceFailure.session.Hint -notmatch 'absent-node' -or $resourceFailure.activeNativeLeases -ne 1 -or $resourceFailure.nativeVisuals -ne 1) {
+        throw 'Invalid native visual preparation replaced the active scene or leaked a candidate lease.'
+    }
     foreach ($fixture in @('courtyard','sluice','upper-void')) {
         $name = "recovery-$fixture"
         $project = if ($fixture -eq 'upper-void') {'QA/upper-void'} else {'QA/recovery-'+$fixture}
         $results += Invoke-GameScenario $name @('--native-project',$project,'--smoke-route','recovery') $true
         $run = Get-Content -LiteralPath (Join-Path $root "$name/run.json") -Raw | ConvertFrom-Json
-        $expectedY = if ($fixture -eq 'upper-void') {1.6} else {0}
+        $expectedY = if ($fixture -eq 'upper-void') {3.6} else {0}
         if (-not $run.sessionComplete -or $run.session.WorldRevision -ne 1 -or $run.finalPosition.y -ne $expectedY -or $run.finalSnapshot.State -ne 'Standing' -or $run.hiddenGroups.Count -ne 0) { throw "$name did not restore correct safe layer." }
         foreach ($pose in $run.companions) { if ($pose.Position.Y -ne $expectedY -or [Math]::Abs($pose.Position.X-$run.finalPosition.x) -gt .00001) { throw "$name retained old party history." } }
     }

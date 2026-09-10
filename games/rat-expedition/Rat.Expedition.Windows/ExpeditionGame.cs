@@ -46,7 +46,8 @@ public sealed class ExpeditionGame : Game
     private bool? ladderPausePassed;
     private CameraComponent camera => bundle.Camera;
     private Entity cameraEntity => bundle.CameraEntity;
-    internal static readonly Vector3 CameraOffset = new(12, 14, 12);
+    internal static readonly Vector3 CameraOffset = new(27, 31.5f, 27);
+    internal const float SpritePixelsPerUnit = 60f/2.25f;
     internal static readonly float UprightScale = CameraOffset.Length() / new Vector2(CameraOffset.X, CameraOffset.Z).Length();
     private readonly List<object> cameraSamples = [];
     private readonly BodySmokeRoute bodyRoute = new();
@@ -58,7 +59,7 @@ public sealed class ExpeditionGame : Game
     public ExpeditionGame(GameOptions options)
     {
         this.options = options;
-        sessionRoute=new(options.SmokeRoute=="native-candidate-failure"?"portal-failure":options.SmokeRoute);
+        sessionRoute=new(options.SmokeRoute is "native-candidate-failure" or "native-resource-failure"?"portal-failure":options.SmokeRoute);
         AutoLoadDefaultSettings = false;
         GraphicsDeviceManager.PreferredBackBufferWidth = options.Width;
         GraphicsDeviceManager.PreferredBackBufferHeight = options.Height;
@@ -119,10 +120,10 @@ public sealed class ExpeditionGame : Game
                 source="compiled native assets",asset=options.NativeProject,project.StartScene,scenes=project.Scenes.Values,
                 names=project.Scenes.Values.ToDictionary(s=>s.Id,s=>s.DisplayNames),
                 wallProbes=project.Scenes.Values.ToDictionary(s=>s.Id,s=>new {
-                    oldPositionFree=s.CreateWorld().HasClearance(new(0,0,0),.2f,.8f),
-                    shiftedPositionFree=s.CreateWorld().HasClearance(new(0,0,-1.5f),.2f,.8f),
-                    oldSweep=s.CreateWorld().SweepFraction(new(-3,0,0),new(3,0,0),.2f,.8f),
-                    shiftedSweep=s.CreateWorld().SweepFraction(new(-3,0,-1.5f),new(3,0,-1.5f),.2f,.8f)})
+                    oldPositionFree=s.CreateWorld().HasClearance(new(0,0,0),TraversalMotor.Radius,TraversalMotor.StandingHeight),
+                    shiftedPositionFree=s.CreateWorld().HasClearance(new(0,0,-3.375f),TraversalMotor.Radius,TraversalMotor.StandingHeight),
+                    oldSweep=s.CreateWorld().SweepFraction(new(-6.75f,0,0),new(6.75f,0,0),TraversalMotor.Radius,TraversalMotor.StandingHeight),
+                    shiftedSweep=s.CreateWorld().SweepFraction(new(-6.75f,0,-3.375f),new(6.75f,0,-3.375f),TraversalMotor.Radius,TraversalMotor.StandingHeight)})
             },new JsonSerializerOptions{WriteIndented=true}));
         Window.Title = "Rat Expedition | WASD | Ctrl | E / Enter | Esc: pause | Wheel: zoom";
         var fontSystem = (Stride.Graphics.Font.FontSystem)Font;
@@ -137,7 +138,7 @@ public sealed class ExpeditionGame : Game
         sheet = new SpriteSheet();
         for (int row = 0; row < 4; row++)
         for (int column = 0; column < 2; column++)
-            sheet.Sprites.Add(new Sprite(atlas) { Name = $"rat-{row}-{column}", Region = new RectangleF(column * 32, row * 48, 32, 48), Center = new Vector2(16, 43), PixelsPerUnit = new Vector2(60), IsTransparent = true });
+            sheet.Sprites.Add(new Sprite(atlas) { Name = $"rat-{row}-{column}", Region = new RectangleF(column * 32, row * 48, 32, 48), Center = new Vector2(16, 43), PixelsPerUnit = new Vector2(SpritePixelsPerUnit), IsTransparent = true });
         session = new ExpeditionSession(project, PrepareScene);
         FollowHero();
     }
@@ -146,7 +147,8 @@ public sealed class ExpeditionGame : Game
     {
         if(bundle is not null) cameraTemplate.OrthographicSize = camera.OrthographicSize;
         retired.EnsureCapacity(retired.Count+1);
-        var next = ScenePresentation.Prepare(this,candidate,sheet,cameraTemplate);
+        string visualProject=options.SmokeRoute=="native-resource-failure"&&candidate.Reason==SceneChangeReason.Portal?"QA/bad-native-binding":options.NativeProject;
+        var next = ScenePresentation.Prepare(this,candidate,sheet,cameraTemplate,visualProject);
         if(options.SmokeFrames>0&&options.SmokeRoute=="portal-failure"&&candidate.Reason==SceneChangeReason.Portal)
         {
             next.Dispose();throw new InvalidDataException("Diagnostic renderer candidate rejected after resource preparation.");
@@ -167,11 +169,11 @@ public sealed class ExpeditionGame : Game
     {
         static float ClampAim(float value, float min, float max)
         {
-            float inset = Math.Min(1.5f, (max - min) / 2);
+            float inset = Math.Min(3.375f, (max - min) / 2);
             return Math.Clamp(value, min + inset, max - inset);
         }
         cameraEntity.Transform.Position = CameraOffset + new Vector3(
-            ClampAim(session.Leader.Position.X, definition.Floor.Min.X, definition.Floor.Max.X), session.Leader.Position.Y + .6f,
+            ClampAim(session.Leader.Position.X, definition.Floor.Min.X, definition.Floor.Max.X), session.Leader.Position.Y + 1.35f,
             ClampAim(session.Leader.Position.Z, definition.Floor.Min.Z, definition.Floor.Max.Z));
     }
 
@@ -193,7 +195,7 @@ public sealed class ExpeditionGame : Game
             rays.Add(new(new(near.X,near.Y,near.Z),new(end.X,end.Y,end.Z)));
         }
         bundle.Occlusion.Update(leader,rays,session.Mode==SessionMode.Explore?elapsed:0);
-        foreach(var group in definition.OcclusionGroups)foreach(var id in group.Members)bundle.Models[id].Enabled=!bundle.Occlusion.Hidden.Contains(group.Id);
+        bundle.ApplyOcclusion(definition,bundle.Occlusion.Hidden);
         var companions=session.Trail.Companions;
         for(int i=0;i<companions.Count;i++)
         {
@@ -252,7 +254,7 @@ public sealed class ExpeditionGame : Game
         if (options.SmokeFrames > 0)
             input = frames < 90 ? new(0, 1) : frames < 240 ? new(1, 0) : frames < 300 ? new(0, 1) : frames < 360 ? new(-1, 0) : System.Numerics.Vector2.Zero;
         if (options.SmokeFrames > 0 && options.SmokeRoute == "edges")
-            input = frames < 180 ? new(0, -1) : frames < 420 ? new(1, -1) : frames < 720 ? new(1, 1) : frames < 1080 ? new(-1, 1) : new(-1, -1);
+            input = frames < 405 ? new(0, -1) : frames < 945 ? new(1, -1) : frames < 1620 ? new(1, 1) : frames < 2430 ? new(-1, 1) : new(-1, -1);
         if (options.SmokeFrames > 0 && options.SmokeRoute == "zoom") input = System.Numerics.Vector2.Zero;
         var command = new TraversalInput(input,Input.IsKeyDown(Keys.LeftCtrl)||Input.IsKeyDown(Keys.RightCtrl),Input.IsKeyDown(Keys.E)||Input.IsKeyDown(Keys.Enter));
         if(options.SmokeFrames>0) command = options.SmokeRoute=="body" && session.Mode==SessionMode.Explore ? bodyRoute.Next(session.Leader) : new(input);
@@ -261,13 +263,13 @@ public sealed class ExpeditionGame : Game
         if (options.SmokeFrames > 0) wheel = options.SmokeRoute == "zoom" ? frames switch { 30 or 120 or 150 => 100, 90 or 210 => -100, 270 => 4, _ => 0 } : 0;
         bool discard = discardInputOnNextUpdate;
         if (discard) { elapsed = 0; command = command with {Move=System.Numerics.Vector2.Zero}; wheel = 0; discardInputOnNextUpdate = false; }
-        if (IsActive || options.SmokeFrames > 0) camera.OrthographicSize = Math.Clamp(camera.OrthographicSize - wheel * .5f, 4.5f, 7f);
+        if (IsActive || options.SmokeFrames > 0) camera.OrthographicSize = Math.Clamp(camera.OrthographicSize - wheel * 1.125f, 10.125f, 15.75f);
         var sessionCommand = new SessionInput(command.Move,command.CrouchHeld,command.InteractHeld,Input.IsKeyDown(Keys.Escape));
-        if(options.SmokeFrames>0 && options.SmokeRoute is "layered" or "mixed" or "portals" or "portal-failure" or "native-candidate-failure" or "recovery" && !discard && session.Mode==SessionMode.Explore)
+        if(options.SmokeFrames>0 && options.SmokeRoute is "layered" or "mixed" or "portals" or "portal-failure" or "native-candidate-failure" or "native-resource-failure" or "recovery" && !discard && session.Mode==SessionMode.Explore)
             sessionCommand=sessionRoute.Next(session);
         if(options.SmokeFrames>0 && frames is 121 or 123)sessionCommand=new(System.Numerics.Vector2.Zero);
         if(options.SmokeFrames>0 && frames==122)sessionCommand=new(System.Numerics.Vector2.Zero,PauseHeld:true);
-        if(options.SmokeFrames>0&&options.SmokeRoute=="body"&&session.Leader.Mode==TraversalMode.Climbing&&session.Leader.Position.Y>.75f&&ladderPauseFrame<0)
+        if(options.SmokeFrames>0&&options.SmokeRoute=="body"&&session.Leader.Mode==TraversalMode.Climbing&&session.Leader.Position.Y>1.6875f&&ladderPauseFrame<0)
         {ladderPauseFrame=0;ladderPauseTicks=session.Ticks;}
         if(ladderPauseFrame is >=0 and <16)
             sessionCommand=new(new(0,1),InteractHeld:true,PauseHeld:ladderPauseFrame is 0 or 14);
@@ -304,7 +306,8 @@ public sealed class ExpeditionGame : Game
             using var capture=File.Create(Path.Combine(options.EvidenceDirectory,$"session-{sessionMilestone}.png"));
             GraphicsDevice.Presenter.BackBuffer.Save(GraphicsContext.CommandList,capture,ImageFileType.Png);
             sessionRoute.Milestones.Add(new {name=sessionMilestone,frame=frames,session=session.Snapshot,companions=session.Trail.Companions,
-                hidden=bundle.Occlusion.Hidden.Select(id=>definition.DisplayNames.GetValueOrDefault(id,id)).ToArray(),actorVisible=bundle.Actors.Select(a=>a.Get<SpriteComponent>().Enabled).ToArray(),leaderAnimationFrame=provider.CurrentFrame,ownedBuffers=bundle.BufferCount});
+                hidden=bundle.Occlusion.Hidden.Select(id=>definition.DisplayNames.GetValueOrDefault(id,id)).ToArray(),actorVisible=bundle.Actors.Select(a=>a.Get<SpriteComponent>().Enabled).ToArray(),leaderAnimationFrame=provider.CurrentFrame,ownedBuffers=bundle.BufferCount,
+                nativeVisuals=bundle.NativeVisualCount,nativeMeshes=bundle.NativeMeshCount,nativeMaterialSlots=bundle.NativeMaterialSlotCount,activeNativeLeases=NativeVisualLease.ActiveCount});
             sessionRoute.Capture=null;
         }
         if(options.SmokeFrames>0 && options.SmokeRoute=="body" && bodyRoute.Capture is string milestone)
@@ -319,15 +322,15 @@ public sealed class ExpeditionGame : Game
         {
             var feet = Vector3.TransformCoordinate(new Vector3(session.Leader.Position.X, session.Leader.Position.Y, session.Leader.Position.Z), camera.ViewProjectionMatrix);
             // Full 32x48 quad bounds are conservative, including transparent margins.
-            var corners = new[] { new Vector3(-16f / 60, -5f / 60, 0), new Vector3(16f / 60, -5f / 60, 0),
-                new Vector3(-16f / 60, 43f / 60, 0), new Vector3(16f / 60, 43f / 60, 0) }
+            var corners = new[] { new Vector3(-16f / SpritePixelsPerUnit, -5f / SpritePixelsPerUnit, 0), new Vector3(16f / SpritePixelsPerUnit, -5f / SpritePixelsPerUnit, 0),
+                new Vector3(-16f / SpritePixelsPerUnit, 43f / SpritePixelsPerUnit, 0), new Vector3(16f / SpritePixelsPerUnit, 43f / SpritePixelsPerUnit, 0) }
                 .Select(p => Vector3.TransformCoordinate(Vector3.TransformCoordinate(p, hero!.Transform.WorldMatrix), camera.ViewProjectionMatrix)).ToArray();
             cameraSamples.Add(new { frame = frames, size = camera.OrthographicSize, footX = (feet.X + 1) / 2, footY = (1 - feet.Y) / 2,
                 quadLeft = (1 + corners.Min(p => p.X)) / 2, quadRight = (1 + corners.Max(p => p.X)) / 2,
                 quadTop = (1 - corners.Max(p => p.Y)) / 2, quadBottom = (1 - corners.Min(p => p.Y)) / 2,
                 spriteHeightFraction = (corners.Max(p => p.Y) - corners.Min(p => p.Y)) / 2, worldX = session.Leader.Position.X, worldZ = session.Leader.Position.Z });
         }
-        if (options.SmokeFrames > 0 && (frames == 30 || frames == 180 || frames == options.SmokeFrames || (options.SmokeRoute=="window-states"&&frames%60==0) || (options.SmokeRoute == "edges" && (frames % 360 == 0 || frames == 420))))
+        if (options.SmokeFrames > 0 && (frames == 30 || frames == 180 || frames == options.SmokeFrames || (options.SmokeRoute=="window-states"&&frames%60==0) || (options.SmokeRoute == "edges" && (frames % 810 == 0 || frames == 945))))
         {
             using var stream = File.Create(Path.Combine(options.EvidenceDirectory, $"frame-{frames:D4}.png"));
             GraphicsDevice.Presenter.BackBuffer.Save(GraphicsContext.CommandList, stream, ImageFileType.Png);
@@ -342,13 +345,14 @@ public sealed class ExpeditionGame : Game
                 adapter = GraphicsDevice.Adapter.Description, backend = GraphicsDevice.Platform.ToString(), frames,
                 smokeTiming = new { limitHz=60, drawWhileMinimized=DrawWhileMinimized, vsync=GraphicsDeviceManager.SynchronizeWithVerticalRetrace, samples=smokeWindowEvidence?.Samples },
                 runtime = Environment.Version.ToString(), stride = typeof(Game).Assembly.GetName().Version?.ToString(), samples,
-                camera = new { size = camera.OrthographicSize, minSize = 4.5f, maxSize = 7f, uprightScale = UprightScale, pitchDegrees = MathF.Atan2(14, MathF.Sqrt(288)) * 180 / MathF.PI, aimHeight = .6f, edgeInset = 1.5f }, cameraSamples, route = options.SmokeRoute,
+                camera = new { size = camera.OrthographicSize, minSize = 10.125f, maxSize = 15.75f, uprightScale = UprightScale, pitchDegrees = MathF.Atan2(31.5f, MathF.Sqrt(1458)) * 180 / MathF.PI, aimHeight = 1.35f, edgeInset = 3.375f }, cameraSamples, route = options.SmokeRoute,
                 finalPosition = new { x = session.Leader.Position.X, y = session.Leader.Position.Y, z = session.Leader.Position.Z }, build,
                 bodyComplete=bodyRoute.Complete, bodyMilestones=bodyRoute.Milestones, finalSnapshot=session.Leader, session=session.Snapshot, companions=session.Trail.Companions, hiddenGroups=bundle.Occlusion.Hidden, ownedBuffers=bundle.BufferCount,
+                nativeVisuals=bundle.NativeVisualCount,nativeMeshes=bundle.NativeMeshCount,nativeMaterialSlots=bundle.NativeMaterialSlotCount,activeNativeLeases=NativeVisualLease.ActiveCount,
                 sessionComplete=sessionRoute.Complete,sessionMilestones=sessionRoute.Milestones,portalLegs=sessionRoute.Legs,
                 ladderPausePassed,
                 focusProbePassed, focusZoomProbePassed, focusProbe = "Direct invocation of actual focus callbacks during the automated route; zoom route injects wheel deltas through the same clamp/discard path, not OS input",
-                sourceBaseline = "e2c786a45f69917bf233793f6a097b150e2fe264", check = "automated GPU route, not manual playtest"
+                sourceBaseline = "c0b9065d6e902b45d4d3a5c656318c70df53a6f3", check = "automated GPU route, not manual playtest"
             }, new JsonSerializerOptions { WriteIndented = true, IncludeFields = true, Converters = { new System.Text.Json.Serialization.JsonStringEnumConverter() } }));
             Exit();
         }

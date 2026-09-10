@@ -2,6 +2,7 @@ using Rat.Expedition.Authoring;
 using Rat.Expedition.Core;
 using Stride.Core.Mathematics;
 using Stride.Engine;
+using Stride.Rendering;
 
 int passed=0,failed=0;
 void Check(string name,Action test){try{test();passed++;Console.WriteLine("PASS "+name);}catch(Exception e){failed++;Console.WriteLine("FAIL "+name+": "+e);}}
@@ -85,6 +86,26 @@ Check("native prefab instances receive distinct entity ids and remap local links
     var aIds=new[]{a.Id,a.Transform.Children.Single().Entity.Id};
     var bIds=new[]{b.Id,b.Transform.Children.Single().Entity.Id};
     Require(aIds.Distinct().Count()==2&&bIds.Distinct().Count()==2&&!aIds.Intersect(bIds).Any()&&!aIds.Contains(child.Id)&&!bIds.Contains(child.Id));
+});
+Check("native visual subsets retain shared materials and independent overrides",()=>{
+    var first=new Material();var second=new Material();var local=new Material();
+    var model=new Model{Skeleton=new Skeleton{Nodes=[new(){Name="Root",ParentIndex=-1},new(){Name="deck",ParentIndex=0},new(){Name="posts",ParentIndex=0}]}};
+    model.Materials.Add(new(first));model.Materials.Add(new(second));
+    model.Meshes.Add(new(){Name="deck-a",NodeIndex=1,MaterialIndex=0});
+    model.Meshes.Add(new(){Name="deck-b",NodeIndex=1,MaterialIndex=1});
+    model.Meshes.Add(new(){Name="posts",NodeIndex=2,MaterialIndex=1});
+    var source=new ModelComponent(model);source.Materials.Add(1,local);
+    var deck=NativeVisualModels.Create(source,["deck"],"fixture");
+    var posts=NativeVisualModels.Create(source,["posts"],"fixture");
+    Require(deck.Model.Meshes.Count==2&&posts.Model.Meshes.Count==1&&model.Meshes.Count==3);
+    Require(deck.Model.Skeleton==model.Skeleton&&deck.Model.Materials.Count==2&&ReferenceEquals(deck.Model.Materials[0],model.Materials[0]));
+    Require(deck.Materials[1]==local&&posts.Materials[1]==local&&!ReferenceEquals(deck.Model,posts.Model));
+    Reject(()=>NativeVisualModels.Create(source,["absent"],"fixture"),"selector");
+});
+Check("native visual invalid material slot fails before presentation",()=>{
+    var model=new Model{Skeleton=new Skeleton{Nodes=[new(){Name="Root",ParentIndex=-1}]}};
+    model.Meshes.Add(new(){Name="bad",NodeIndex=0,MaterialIndex=2});
+    Reject(()=>NativeVisualModels.Create(new(model),[],"fixture"),"material index");
 });
 Check("candidate source callback failure retains active world and position",()=>{
     var f=Fixture();var portal=new Entity("Return gate"){new PortalComponent{TargetScene=new("Fixture")}};

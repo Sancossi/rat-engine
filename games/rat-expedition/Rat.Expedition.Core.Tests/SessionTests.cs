@@ -113,17 +113,17 @@ internal static class SessionTests
         });
         check("one shared portal ladder selection filters blocked and upper targets first",()=>{
             var ladder=new LadderDefinition("near-ladder",new(0,0,0),new(0,1.6f,0),new(0,0,.5f),new(0,1.6f,-1),new(0,0,.5f),new(0,1.6f,-1));
-            var scene=a with {Spawn=new(.45f,0,-1),Walls=[new("bar",new(.2f,0,.35f),new(.21f,2,.65f))],
-                Structures=[new("platform",new(-1,1.4f,-2),new(1,1.6f,-.5f)),new("upper",new(.25f,1.4f,.3f),new(.65f,1.6f,.7f))],Ladders=[ladder],
-                Portals=[new("far-portal",new(.25f,-.05f,.3f),new(.7f,.05f,1.3f),new(.45f,0,1),"b","entry"),
-                    new("upper-portal",new(.25f,1.55f,.3f),new(.7f,1.65f,.7f),new(.45f,1.6f,.5f),"b","entry")]};
-            var s=new ExpeditionSession(new("a",[scene,b]));Walk(s,new(.45f,.5f));
+            var scene=a with {Spawn=new(2f,0,-1),Walls=[new("bar",new(.45f,0,.35f),new(.46f,2,.65f))],
+                Structures=[new("platform",new(-1,1.4f,-2),new(1,1.6f,-.5f)),new("upper",new(.6f,1.8f,0),new(1.6f,2f,1))],Ladders=[ladder],
+                Portals=[new("far-portal",new(.7f,-.05f,.3f),new(1.5f,.05f,1.3f),new(1.1f,0,1),"b","entry"),
+                    new("upper-portal",new(.7f,1.95f,.3f),new(1.5f,2.05f,.7f),new(1.1f,2f,.5f),"b","entry")]};
+            var s=new ExpeditionSession(new("a",[scene,b]));Walk(s,new(1.1f,.5f));
             require(s.Leader.ContextId=="far-portal","Wrong-height/blocked target displaced available portal");
             Press(s);require(s.Scene.Id=="b"&&s.Leader.Mode==TraversalMode.Grounded,"One E activated ladder as well as portal");
         });
         check("crouched step-off preserves short body beneath overhang and air steering",()=>{
             var scene=new SceneDefinition(3,"crouch-fall",a.Floor,new(-1.5f,1,0),[],[
-                new("ledge",new(-2,.8f,-1),new(.5f,1,1)),new("roof",new(-.5f,1.6f,-1),new(1.3f,1.8f,1))],[]);
+                new("ledge",new(-2,.8f,-1),new(.5f,1,1)),new("roof",new(-.5f,1.9f,-1),new(1.3f,2.1f,1))],[]);
             var m=new TraversalMotor(scene);var move=Screen(new(1,0));
             for(int i=0;i<400&&m.Mode!=TraversalMode.Falling;i++)m.Advance(dt,new(move,true));
             require(m.Mode==TraversalMode.Falling&&m.Stance==BodyStance.Crouched,"Crouched step-off not reached");
@@ -131,18 +131,18 @@ internal static class SessionTests
             for(int i=0;i<5;i++)
             {
                 m.Advance(dt,new(move));
-                require(m.BodyHeight==.4f&&scene.CreateWorld().HasClearance(m.Position,.2f,m.BodyHeight),"Fall grew into roof or penetrated ledge");
+                require(m.BodyHeight==TraversalMotor.CrouchedHeight&&scene.CreateWorld().HasClearance(m.Position,TraversalMotor.Radius,m.BodyHeight),"Fall grew into roof or penetrated ledge");
             }
             require(m.Position.X>x,"Partial ledge contact froze air control");
         });
         check("motor falls from upper ledge and lands on thin lower deck without tunneling",()=>{
             var scene=new SceneDefinition(3,"fall-deck",a.Floor,new(0,3.2f,0),[],[
-                new("high",new(-1,3,-1),new(.5f,3.2f,1)),new("deck",new(1,1.4f,-1),new(3,1.6f,1))],[]);
+                new("high",new(-1,3,-1),new(.5f,3.2f,1)),new("deck",new(1.5f,1.4f,-1),new(4,1.6f,1))],[]);
             var m=new TraversalMotor(scene);bool fell=false,landed=false;
             for(int i=0;i<180;i++)
             {
                 m.Advance(dt,new(Screen(new(1,0))));fell|=m.Mode==TraversalMode.Falling;
-                require(scene.CreateWorld().HasClearance(m.Position,.2f,m.BodyHeight),"Fall penetrated thin deck");
+                require(scene.CreateWorld().HasClearance(m.Position,TraversalMotor.Radius,m.BodyHeight),"Fall penetrated thin deck");
                 if(fell&&m.Mode==TraversalMode.Grounded){landed=true;break;}
             }
             require(landed&&Math.Abs(m.Position.Y-1.6f)<.0001f,"Failed to land on intermediate deck");
@@ -170,21 +170,21 @@ internal static class SessionTests
         });
         check("nearby ramp portal and ladder accept continuous rising approach",()=>{
             var ramp=new RampDefinition("ramp",new(0,-1),new(4,1),RampAxis.X,0,1.6f,.2f);
-            var scene=a with {Spawn=new(1,.48f,0),Ramps=[ramp],Portals=[new("ramp-portal",new(1.5f,.6f,-.5f),new(2.5f,1.2f,.5f),new(2,.88f,0),"b","entry")]};
+            var scene=a with {Spawn=new(1,.58f,0),Ramps=[ramp],Portals=[new("ramp-portal",new(1.5f,.7f,-.5f),new(2.5f,1.3f,.5f),new(2,.98f,0),"b","entry")]};
             var s=new ExpeditionSession(new("a",[scene,b]));Walk(s,new(1.9f,0));
-            require(Math.Abs(s.Leader.Position.Y-.84f)<.0001f&&s.Leader.ContextId=="ramp-portal","Continuous rising portal approach rejected");
+            require(Math.Abs(s.Leader.Position.Y-.94f)<.0001f&&s.Leader.ContextId=="ramp-portal","Continuous rising portal approach rejected");
             Press(s);require(s.Scene.Id=="b","Ramp portal did not activate");
-            var ladder=new LadderDefinition("ramp-ladder",new(2,.88f,.6f),new(2,2.5f,.6f),new(2,.88f,0),new(2,2.5f,1.6f),new(2,.88f,0),new(2,2.5f,1.6f));
-            scene=scene with {Portals=[],Ladders=[ladder],Structures=[new("platform",new(1,2.3f,1.2f),new(3,2.5f,2.4f))]};
+            var ladder=new LadderDefinition("ramp-ladder",new(2,.98f,.6f),new(2,2.6f,.6f),new(2,.98f,0),new(2,2.6f,1.7f),new(2,.98f,0),new(2,2.6f,1.7f));
+            scene=scene with {Portals=[],Ladders=[ladder],Structures=[new("platform",new(1,2.4f,1.2f),new(3,2.6f,2.4f))]};
             s=new ExpeditionSession(new("a",[scene]));Walk(s,new(1.9f,0));
             require(s.Leader.ContextId=="ramp-ladder","Continuous rising ladder approach rejected");
             Press(s);require(s.Leader.Mode==TraversalMode.Climbing,"Ramp ladder did not capture");
         });
         check("ladder entry follows ramp crest support in both directions at each tick",()=>{
-            foreach(var route in new[]{(StartX:3.6f,StartY:1.52f,EntryX:4f,EntryY:1.6f),(StartX:4f,StartY:1.6f,EntryX:3.6f,EntryY:1.52f)})
+            foreach(var route in new[]{(StartX:3.6f,StartY:1.6f,EntryX:4f,EntryY:1.6f),(StartX:4f,StartY:1.6f,EntryX:3.6f,EntryY:1.6f)})
             {
                 var ladder=new LadderDefinition("crest-ladder",new(route.EntryX,route.EntryY,.6f),new(route.EntryX,3.2f,.6f),
-                    new(route.EntryX,route.EntryY,0),new(route.EntryX,3.2f,1.6f),new(route.EntryX,route.EntryY,0),new(route.EntryX,3.2f,1.6f));
+                    new(route.EntryX,route.EntryY,0),new(route.EntryX,3.2f,1.7f),new(route.EntryX,route.EntryY,0),new(route.EntryX,3.2f,1.7f));
                 var scene=new SceneDefinition(3,"crest",new("floor",new(-5,-.3f,-3),new(10,0,3)),new(route.StartX,route.StartY,0),[],
                     [new("deck",new(4,1.4f,-1),new(8,1.6f,1)),new("platform",new(3,3,1.2f),new(5,3.2f,2.4f))],[ladder])
                     {Ramps=[new("ramp",new(0,-1),new(4,1),RampAxis.X,0,1.6f,.2f)]};
@@ -194,7 +194,7 @@ internal static class SessionTests
                 for(int i=0;i<100&&(m.Mode!=TraversalMode.Climbing||Math.Abs(m.Position.X-route.EntryX)>.00001f);i++)
                 {
                     var before=m.Position;m.Advance(TraversalMotor.StepSeconds,new(Vector2.Zero));
-                    require(world.HasClearance(m.Position,.2f,.8f)&&world.HasSupport(m.Position,.2f),$"Crest approach penetrated/lost support at {m.Position}");
+                    require(world.HasClearance(m.Position,TraversalMotor.Radius,TraversalMotor.StandingHeight)&&world.HasSupport(m.Position,TraversalMotor.Radius),$"Crest approach penetrated/lost support at {m.Position}");
                     require(Vector3.Distance(before,m.Position)<=TraversalMotor.ClimbSpeed*TraversalMotor.StepSeconds+.00001,"Crest capture exceeded climb speed");
                 }
                 require(m.Mode==TraversalMode.Climbing&&Vector3.Distance(m.Position,ladder.BottomEntry.Vector)<.00001f,"Crest approach did not reach entry");

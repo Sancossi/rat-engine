@@ -56,7 +56,9 @@ public sealed class GeometryPreviewProcessor : EntityProcessor<GeometryComponent
                     }
                     data.Model.Model=model;data.Shape=shape;
                 }
-                data.Model.Enabled=true;data.Error=null;
+                data.Model.Enabled=!component.Entity.Scene.Entities.SelectMany(e=>Descendants(e)).Any(e=>{
+                    var visual=e.Get<NativeVisualComponent>();return visual is not null&&visual.ReplacesGeometry&&visual.GeometryId==component.Entity.Id;
+                });data.Error=null;
             }
             catch(Exception error)
             {
@@ -65,5 +67,10 @@ public sealed class GeometryPreviewProcessor : EntityProcessor<GeometryComponent
                 data.Error=error.Message;
             }
         }
+    }
+    private static IEnumerable<Entity> Descendants(Entity root)
+    {
+        yield return root;
+        foreach(var child in root.Transform.Children)foreach(var entity in Descendants(child.Entity))yield return entity;
     }
 }

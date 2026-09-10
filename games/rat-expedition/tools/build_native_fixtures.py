@@ -91,6 +91,31 @@ class Scene:
         self.set(name, 'Position', position)
         self.set(name, 'Size', size)
 
+    def native_visual(self, name, position, model, geometry, selectors, replaces=True):
+        entity_id = guid(name + '-entity')
+        entries = ''.join('                            ' + guid(name + node).replace('-', '') + ': ' + node + '\n' for node in selectors)
+        part = f'''                Id: {entity_id}
+                Name: {name}
+                Components:
+                    {guid(name+'-transform').replace('-', '')}: !TransformComponent
+                        Id: {guid(name+'-transform-id')}
+                        Position: {position}
+                        Rotation: {{X: 0, Y: 0, Z: 0, W: 1}}
+                        Scale: {{X: 1, Y: 1, Z: 1}}
+                        Children: {{}}
+                    {guid(name+'-model').replace('-', '')}: !ModelComponent
+                        Id: {guid(name+'-model-id')}
+                        Model: {model}
+                        Materials: {{}}
+                    {guid(name+'-binding').replace('-', '')}: !ExpeditionNativeVisual
+                        Id: {guid(name+'-binding-id')}
+                        GeometryId: {geometry}
+                        ReplacesGeometry: {str(replaces).lower()}
+                        SkeletonNodes:
+{entries}'''
+        self.parts.append(part)
+        self.roots.append(entity_id)
+
     def write(self, output, name):
         ids = [re.search(r'(?m)^                Id: (.+)$', p)[1] for p in self.parts]
         text = '!SceneAsset\nId: ' + guid(name) + '\nSerializedVersion: {Stride: 3.1.0.1}\nTags: []\nChildrenIds: []\nOffset: {X: 0, Y: 0, Z: 0}\nHierarchy:\n    RootParts:\n'
@@ -112,19 +137,26 @@ def manifest(output, name, scenes):
 def build(output):
     output.mkdir(parents=True, exist_ok=True)
     roots = []
-    cases = ['edges', 'large-y', 'recovery-courtyard', 'recovery-sluice', 'upper-void',
+    cases = ['edges', 'large-y', 'recovery-courtyard', 'recovery-sluice', 'upper-void', 'native-visuals',
              'invalid-size', 'missing-spawn', 'blocked-ladder-exit', 'missing-ladder-point',
              'invalid-ramp', 'bad-portal-target', 'bad-occlusion-parent', 'invalid-rotation', 'invalid-scale']
     for case in cases:
         scene = Scene(ASSETS / ('Sluice.sdscene' if case == 'recovery-sluice' else 'Courtyard.sdscene'))
         if case == 'edges':
-            scene.box('edge-test-east', '{X: 8.25, Y: 1, Z: .25}', '{X: .5, Y: 2, Z: 12.5}')
-            scene.box('edge-test-south', '{X: .25, Y: 1, Z: 6.25}', '{X: 16.5, Y: 2, Z: .5}')
-        elif case == 'invalid-size': scene.set('courtyard-wall', 'Size', '{X: 0, Y: 1.8, Z: .5}')
+            scene.box('edge-test-east', '{X: 18.5625, Y: 2.25, Z: .5625}', '{X: 1.125, Y: 4.5, Z: 28.125}')
+            scene.box('edge-test-south', '{X: .5625, Y: 2.25, Z: 14.0625}', '{X: 37.125, Y: 4.5, Z: 1.125}')
+        elif case == 'native-visuals':
+            model='7453c19f-4830-5209-a02e-9828735efc32:CanalCity/bridge_arch'
+            geometry=scene.id('bridge-deck')
+            position='{X: 3.375, Y: 0, Z: 5}'
+            scene.native_visual('native-bridge-deck',position,model,geometry,['bridge_arch_deck'])
+            scene.native_visual('native-bridge-ironwork',position,model,geometry,['bridge_arch_ironwork'])
+            scene.native_visual('native-bridge-posts',position,model,geometry,['bridge_arch_posts'])
+        elif case == 'invalid-size': scene.set('courtyard-wall', 'Size', '{X: 0, Y: 4.05, Z: 1.125}')
         elif case == 'missing-spawn': scene.set('expedition_courtyard', 'DefaultSpawn', 'null')
-        elif case == 'blocked-ladder-exit': scene.set('courtyard-ladder/topExit', 'Position', '{X: 5, Y: 1.6, Z: 0}')
+        elif case == 'blocked-ladder-exit': scene.set('courtyard-ladder/topExit', 'Position', '{X: 11.25, Y: 3.6, Z: 0}')
         elif case == 'missing-ladder-point': scene.set('courtyard-ladder', 'Top', 'null')
-        elif case == 'invalid-ramp': scene.set('bridge-ramp', 'Size', '{X: 0, Y: .2, Z: 1.2}')
+        elif case == 'invalid-ramp': scene.set('bridge-ramp', 'Size', '{X: 0, Y: .45, Z: 2.7}')
         elif case == 'bad-portal-target': scene.set('to-sluice', 'TargetSpawnId', guid('absent spawn'))
         elif case == 'bad-occlusion-parent': scene.set('bridge-rail-cut', 'HideWith', 'ref!! ' + scene.id('entry'))
         elif case == 'invalid-rotation': scene.set('courtyard-wall', 'Rotation', '{X: 0, Y: .1, Z: 0, W: .995}')
@@ -132,24 +164,24 @@ def build(output):
         elif case.startswith('recovery-'): scene.without('!ExpeditionPortal')
         elif case == 'upper-void':
             scene.keep({'expedition_courtyard', 'floor', 'entry', 'upper-platform'})
-            scene.set('floor', 'Position', '{X: -2, Y: -.15, Z: 0}')
-            scene.set('floor', 'Size', '{X: 4, Y: .3, Z: 12}')
-            scene.set('upper-platform', 'Position', '{X: 2.5, Y: 1.5, Z: 2}')
-            scene.set('upper-platform', 'Size', '{X: 3, Y: .2, Z: 2}')
-            scene.set('entry', 'Position', '{X: 2.5, Y: 1.6, Z: 2}')
+            scene.set('floor', 'Position', '{X: -4.5, Y: -.3375, Z: 0}')
+            scene.set('floor', 'Size', '{X: 9, Y: .675, Z: 27}')
+            scene.set('upper-platform', 'Position', '{X: 5.625, Y: 3.375, Z: 4.5}')
+            scene.set('upper-platform', 'Size', '{X: 6.75, Y: .45, Z: 4.5}')
+            scene.set('entry', 'Position', '{X: 5.625, Y: 3.6, Z: 4.5}')
         elif case == 'large-y':
             scene.keep({'expedition_courtyard', 'floor', 'entry', 'upper-platform', 'courtyard-ladder'} |
                        {scene.name(p) for p in scene.parts if scene.name(p).startswith('courtyard-ladder/')})
             # Float ULP .5 here; use exactly representable one-unit-thick boxes.
             scene.set('floor', 'Position', '{X: 0, Y: 4194303.5, Z: 0}')
-            scene.set('floor', 'Size', '{X: 16, Y: 1, Z: 12}')
-            scene.set('entry', 'Position', '{X: 1.5, Y: 4194304, Z: 3}')
-            scene.set('upper-platform', 'Position', '{X: -4.4, Y: 4194305.5, Z: -3}')
-            scene.set('upper-platform', 'Size', '{X: 2.8, Y: 1, Z: 2}')
+            scene.set('floor', 'Size', '{X: 36, Y: 1, Z: 27}')
+            scene.set('entry', 'Position', '{X: 3.375, Y: 4194304, Z: 6.75}')
+            scene.set('upper-platform', 'Position', '{X: -9.9, Y: 4194307.5, Z: -6.75}')
+            scene.set('upper-platform', 'Size', '{X: 6.3, Y: 1, Z: 4.5}')
             for point in ('bottom','bottomEntry','bottomExit','top','topEntry','topExit'):
                 part=scene.part('courtyard-ladder/' + point)
                 position=re.search(r'(?m)^                        Position: (.+)$',part)[1]
-                scene.set('courtyard-ladder/'+point,'Position',re.sub(r'Y: [^,}]+', 'Y: '+('4194306' if point.startswith('top') else '4194304'),position))
+                scene.set('courtyard-ladder/'+point,'Position',re.sub(r'Y: [^,}]+', 'Y: '+('4194308' if point.startswith('top') else '4194304'),position))
         scene_name = 'Scene-' + case
         scene.write(output, scene_name)
         # Keep normal companion scene refs available for production portal validation.
@@ -171,6 +203,17 @@ def build(output):
                                  'StartScene: a6d301f9-3171-5137-b3c7-4622618bebc5:Courtyard')
     path.write_text(text,encoding='utf8')
     roots.append(guid(missing)+':QA/'+missing)
+    # Core candidate remains valid; its visual preparation fails independently.
+    bad_visual=Scene(ASSETS/'Sluice.sdscene')
+    bad_visual.native_visual('bad-native-binding','{X: 0, Y: 0, Z: 0}',
+        '7453c19f-4830-5209-a02e-9828735efc32:CanalCity/bridge_arch',bad_visual.id('floor'),['absent-node'])
+    bad_scene='Scene-bad-native-binding';bad_visual.write(output,bad_scene)
+    # Preserve the production Sluice root identity so a production Core candidate resolves it.
+    bad_path=output/(bad_scene+'.sdscene')
+    bad_path.write_text(bad_path.read_text(encoding='utf8').replace(guid(bad_scene),'70789606-338b-58d8-88ef-86bf53250749',1),encoding='utf8')
+    manifest(output,'bad-native-binding',['70789606-338b-58d8-88ef-86bf53250749:QA/'+bad_scene,
+        'a6d301f9-3171-5137-b3c7-4622618bebc5:Courtyard'])
+    roots.append(guid('bad-native-binding')+':QA/bad-native-binding')
     package = (GAME/'Rat.Expedition.Authoring/Rat.Expedition.Authoring.sdpkg').read_text(encoding='utf8')
     package = package.replace('Path: !dir Assets', 'Path: !dir ' + ASSETS.as_posix())
     package = package.replace('ResourceFolders:', '    - Path: !dir ' + output.parent.as_posix() + '\nResourceFolders:')

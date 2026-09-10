@@ -4,23 +4,23 @@
   "floor": {
     "id": "floor",
     "min": {
-      "x": -4,
-      "y": -0.3,
-      "z": -4
+      "x": -9.0,
+      "y": -0.675,
+      "z": -9.0
     },
     "max": {
-      "x": 4,
-      "y": 0,
-      "z": 4
+      "x": 9.0,
+      "y": 0.0,
+      "z": 9.0
     }
   },
   "spawns": [
     {
       "id": "entry",
       "position": {
-        "x": 0,
-        "y": 0,
-        "z": 2
+        "x": 0.0,
+        "y": 0.0,
+        "z": 4.5
       }
     }
   ],
@@ -28,14 +28,14 @@
     {
       "id": "north-wall",
       "min": {
-        "x": -4,
-        "y": 0,
-        "z": -4
+        "x": -9.0,
+        "y": 0.0,
+        "z": -9.0
       },
       "max": {
-        "x": 4,
-        "y": 1.2,
-        "z": -3.7
+        "x": 9.0,
+        "y": 2.7,
+        "z": -8.325
       }
     }
   ],
@@ -46,25 +46,25 @@
     {
       "id": "to-courtyard",
       "min": {
-        "x": -2.5,
-        "y": -0.05,
-        "z": 1.5
+        "x": -5.625,
+        "y": -0.1125,
+        "z": 3.375
       },
       "max": {
-        "x": -1.5,
-        "y": 0.05,
-        "z": 2.5
+        "x": -3.375,
+        "y": 0.1125,
+        "z": 5.625
       },
       "anchor": {
-        "x": -2,
-        "y": 0,
-        "z": 2
+        "x": -4.5,
+        "y": 0.0,
+        "z": 4.5
       },
       "targetScene": "expedition_courtyard",
       "targetSpawn": "from-sluice"
     }
   ],
-  "recoveryThreshold": -2,
+  "recoveryThreshold": -4.5,
   "occlusionGroups": [],
   "decorations": []
 }

@@ -30,8 +30,14 @@ class NativeFixtureGenerationTests(unittest.TestCase):
             invalid = fixtures.Scene(root / 'generated/QA/Scene-invalid-size.sdscene')
             wall = invalid.part('courtyard-wall')
             self.assertIn('Name: A renamed wall', wall)
-            self.assertIn('Size: {X: 0, Y: 1.8, Z: .5}', wall)
+            self.assertIn('Size: {X: 0, Y: 4.05, Z: 1.125}', wall)
             self.assertTrue((root / 'generated/Rat.Expedition.Qualification.sdpkg').is_file())
+            native = (root / 'generated/QA/Scene-native-visuals.sdscene').read_text(encoding='utf8')
+            self.assertEqual(native.count('!ExpeditionNativeVisual'), 4)  # production lantern plus three bridge subsets
+            for node in ('bridge_arch_deck', 'bridge_arch_ironwork', 'bridge_arch_posts'):
+                self.assertIn(node, native)
+            bad = (root / 'generated/QA/Scene-bad-native-binding.sdscene').read_text(encoding='utf8')
+            self.assertIn('absent-node', bad)
 
     def test_writer_does_not_promote_non_root_entity_to_root(self):
         scene = fixtures.Scene(fixtures.ASSETS / 'Courtyard.sdscene')

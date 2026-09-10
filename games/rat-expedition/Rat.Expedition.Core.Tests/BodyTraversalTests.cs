@@ -20,23 +20,23 @@ internal static class BodyTraversalTests
         { try { invalid.Validate(); } catch(InvalidDataException) { return; } throw new Exception("Invalid traversal fixture accepted"); }
 
         check("crouch changes body before sweep and blocked stand clears only after full exit",()=>{
-            var low = scene with {Spawn=new(0,0,2),Structures=[new("roof",new(-2,.6f,-.5f),new(2,.8f,.5f))],Ladders=[]};
+            var low = scene with {Spawn=new(0,0,2),Structures=[new("roof",new(-2,1.35f,-.5f),new(2,1.8f,.5f))],Ladders=[]};
             var motor = new TraversalMotor(low);
             Frames(motor,new(Screen(new(0,-1))),120);
-            require(motor.Position.Z>=.699f && motor.Stance==BodyStance.Standing,"Standing entered low passage");
-            Frames(motor,new(Screen(new(0,-1)),true),28);
+            require(motor.Position.Z>=.949f && motor.Stance==BodyStance.Standing,"Standing entered low passage");
+            Frames(motor,new(Screen(new(0,-1)),true),40);
             require(motor.Position.Z<.1f && motor.Stance==BodyStance.Crouched,"Crouching did not permit passage");
             Frames(motor,new(Vector2.Zero),10);
             require(motor.StandBlocked && motor.Snapshot.Hint=="Здесь нельзя встать","Unsafe stand not rejected/explained");
             Frames(motor,new(Screen(new(0,-1))),60);
-            require(motor.Position.Z<-.7f && motor.Stance==BodyStance.Standing && !motor.StandBlocked,"Automatic safe stand failed");
+            require(motor.Position.Z<-.95f && motor.Stance==BodyStance.Standing && !motor.StandBlocked,"Automatic safe stand failed");
         });
         check("crouched speed is half walk and wall contact keeps sliding over repeated ticks",()=>{
             var plain=scene with {Structures=[],Ladders=[]};
             var a=new TraversalMotor(plain); var b=new TraversalMotor(plain);
             Frames(a,new(Screen(new(1,0))),60); Frames(b,new(Screen(new(1,0)),true),60);
             require(Math.Abs(a.Position.X-3)<.001 && Math.Abs(b.Position.X-1.5f)<.001,"Stance speeds wrong");
-            var wall=plain with {Walls=[new("wall",new(.3f,0,-4),new(.4f,2,4))]};
+            var wall=plain with {Walls=[new("wall",new(.55f,0,-4),new(.65f,2,4))]};
             var m=new TraversalMotor(wall); Frames(m,new(Screen(Vector2.Normalize(new(1,-1)))),120);
             require(m.Position.X<.101f && m.Position.Z<-3,"Contact epsilon froze sliding");
         });
@@ -53,7 +53,7 @@ internal static class BodyTraversalTests
         });
         check("top walking preserves upper Y until step-off then falls onto lower floor",()=>{
             var m=new TraversalMotor(scene with {Spawn=ladder.TopEntry});
-            Frames(m,new(Screen(new(1,0))),12);
+            Frames(m,new(Screen(new(1,0))),8);
             require(m.Position.Y==1.6f&&m.Mode==TraversalMode.Grounded,"Top walking changed floor before edge");
             bool fell=false;
             for(int i=0;i<60;i++){Frames(m,new(Screen(new(1,0))),1);fell|=m.Mode==TraversalMode.Falling;}
@@ -89,9 +89,9 @@ internal static class BodyTraversalTests
             Reject(scene with {Ladders=[ladder with {Id="platform"}]});
         });
         check("context rejects nearer blocked capture before choosing farther accessible ladder",()=>{
-            var accessible=new LadderDefinition("accessible",new(.45f,0,1.5f),new(.45f,1.6f,1.5f),new(.45f,0,1),new(.45f,1.6f,2.5f),new(.45f,0,1),new(.45f,1.6f,2.5f));
-            var fixture=scene with {Spawn=new(.45f,0,.5f),Walls=[new("capture-wall",new(.2f,0,.35f),new(.21f,2,.65f))],
-                Structures=[platform,new("far-platform",new(-.5f,1.4f,2),new(1.5f,1.6f,3))],Ladders=[ladder,accessible]};
+            var accessible=new LadderDefinition("accessible",new(1.1f,0,1.5f),new(1.1f,1.6f,1.5f),new(1.1f,0,1),new(1.1f,1.6f,2.5f),new(1.1f,0,1),new(1.1f,1.6f,2.5f));
+            var fixture=scene with {Spawn=new(1.1f,0,.5f),Walls=[new("capture-wall",new(.45f,0,.35f),new(.46f,2,.65f))],
+                Structures=[platform,new("far-platform",new(.5f,1.4f,2),new(1.7f,1.6f,3))],Ladders=[ladder,accessible]};
             var m=new TraversalMotor(fixture);
             require(m.Snapshot.ContextId=="accessible","Blocked nearer context displaced accessible one");
             Frames(m,new(Vector2.Zero,false,true),1);

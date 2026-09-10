@@ -28,7 +28,8 @@ internal sealed class SessionSmokeRoute(string route)
      (4.5f,-3.6f,0,false,"lower-forward"),(5.5f,-3.6f,0,false,"cut-restored"),
      (4.5f,-3.6f,0,false,null),(2.5f,-3.6f,0,false,"lower-reverse"),
      (2.5f,-5.15f,0,false,"offcentre-behind-wall")];
-        return route=="mixed"?points.Take(10).Concat(new (float,float,float,bool,string?)[]{(2.5f,-4.6f,0,false,null),(2.5f,-3.6f,0,false,"mixed-lower"),(2.5f,-2.3f,0,false,"mixed-restored")}).ToArray():points;
+        (float X,float Z,float Y,bool Crouch,string? Capture)[] selected=route=="mixed"?points.Take(10).Concat(new (float,float,float,bool,string?)[]{(2.5f,-4.6f,0,false,null),(2.5f,-3.6f,0,false,"mixed-lower"),(2.5f,-2.3f,0,false,"mixed-restored")}).ToArray():points;
+        return selected.Select(p=>(p.X*2.25f,p.Z*2.25f,p.Y*2.25f,p.Crouch,p.Capture)).ToArray();
     }
     public SessionInput Next(ExpeditionSession session)
     {
@@ -43,9 +44,9 @@ internal sealed class SessionSmokeRoute(string route)
         if(Complete)return new(Vector2.Zero);
         if(route is "layered" or "mixed")
         {
-            // Compact spacing cannot span the entire 1.6-unit drop plus the
+            // Retained compact spacing cannot span the scaled 3.6-unit drop plus the
             // grounded return. Observe the real fall before the rear leaves deck.
-            if(route=="mixed"&&!mixedFallCaptured&&s.Mode==TraversalMode.Falling&&s.Position.Y<.9f)
+            if(route=="mixed"&&!mixedFallCaptured&&s.Mode==TraversalMode.Falling&&s.Position.Y<2.025f)
             {
                 Capture="mixed-companions";mixedFallCaptured=true;
             }
@@ -65,7 +66,7 @@ internal sealed class SessionSmokeRoute(string route)
             if(phase==0)
             {
                 // Route around the courtyard pillar before approaching the first portal.
-                if(legs==0&&!Near(5.5f,4))return Towards(5.5f,4);
+                if(legs==0&&!Near(12.375f,9))return Towards(12.375f,9);
                 phase=1;return new(Vector2.Zero);
             }
             if(phase==1)
@@ -94,7 +95,7 @@ internal sealed class SessionSmokeRoute(string route)
             if(phase==0){revision=session.WorldRevision;phase=1;}
             if(session.WorldRevision>revision){Capture="recovered";Complete=true;return new(Vector2.Zero);}
             if(s.Mode==TraversalMode.Falling&&wait++==0)Capture="falling";
-            return Towards(session.Scene.Floor.Max.X+.8f,session.Scene.Spawn.Z);
+            return Towards(session.Scene.Floor.Max.X+1.8f,session.Scene.Spawn.Z);
         }
         return new(Vector2.Zero);
     }

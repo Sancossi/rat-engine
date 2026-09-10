@@ -4,7 +4,7 @@ namespace Rat.Expedition.Core;
 
 public sealed class TraversalMotor
 {
-    public const float Radius = 0.2f, StandingHeight = .8f, CrouchedHeight = .4f;
+    public const float Radius = 0.45f, StandingHeight = 1.8f, CrouchedHeight = .9f;
     public const float Speed = 3, CrouchSpeed = 1.5f, ClimbSpeed = 1;
     public const double StepSeconds = 1.0 / 120;
     public const int MaximumCatchUpSteps = 12;

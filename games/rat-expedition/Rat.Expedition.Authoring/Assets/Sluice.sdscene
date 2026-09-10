@@ -19,13 +19,13 @@ Hierarchy:
                 Components:
                     c39a118b93cd500f812613e6f9cd5c38: !TransformComponent
                         Id: b4bb1e3f-3376-52ec-a4d0-259f152d769a
-                        Position: {X: -2.0, Y: 0.0, Z: 2.0}
+                        Position: {X: -4.5, Y: 0.0, Z: 4.5}
                         Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
                         Scale: {X: 1.0, Y: 1.0, Z: 1.0}
                         Children: {}
                     a18df2ab6d595446886bed8c3065b52f: !ExpeditionPortal
                         Id: 657b080c-35f0-5c9a-938c-0a4e6abec506
-                        Size: {X: 1.0, Y: 0.1, Z: 1.0}
+                        Size: {X: 2.25, Y: 0.225, Z: 2.25}
                         TargetScene: a6d301f9-3171-5137-b3c7-4622618bebc5:Courtyard
                         TargetSpawnId: d185ae4a-8177-59e0-9b03-49a9ad2148d5
         -   Entity:
@@ -41,21 +41,21 @@ Hierarchy:
                     ee6e3396c8a15754b1d70f4d5b3cb308: !ExpeditionScene
                         Id: b1847105-9abe-5f89-a6d2-63f4ddbb44a8
                         DefaultSpawn: ref!! 7da1e56d-f030-5649-a49d-81cd712f7f97
-                        RecoveryThreshold: -2.0
+                        RecoveryThreshold: -4.5
         -   Entity:
                 Id: 51033aa7-68cf-5e4a-aff7-e9e769142a88
                 Name: north-wall
                 Components:
                     abbf7dfb611150bab761bc94902a4bd7: !TransformComponent
                         Id: f0255e13-da01-597c-800d-8cad2ffbf3a0
-                        Position: {X: 0.0, Y: 0.6, Z: -3.85}
+                        Position: {X: 0.0, Y: 1.35, Z: -8.6625}
                         Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
                         Scale: {X: 1.0, Y: 1.0, Z: 1.0}
                         Children: {}
                     5156aa7d1f0c56808eab0fde6c666f94: !ExpeditionGeometry
                         Id: c1e82a60-21b8-57ed-a6be-9755188ed1ff
                         Role: Wall
-                        Size: {X: 8.0, Y: 1.2, Z: 0.3}
+                        Size: {X: 18.0, Y: 2.7, Z: 0.675}
                         Axis: X
                         Rise: 1.0
         -   Entity:
@@ -64,14 +64,14 @@ Hierarchy:
                 Components:
                     6271704b260e5ed594c41e360768c723: !TransformComponent
                         Id: 21e706a9-3cb2-5031-a6ea-5847f96f89fd
-                        Position: {X: 0.0, Y: -0.15, Z: 0.0}
+                        Position: {X: 0.0, Y: -0.3375, Z: 0.0}
                         Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
                         Scale: {X: 1.0, Y: 1.0, Z: 1.0}
                         Children: {}
                     25f1540ce5fc55a59f47016b586c9999: !ExpeditionGeometry
                         Id: 435e5513-4ad6-5b10-9520-3e686630f9f1
                         Role: Floor
-                        Size: {X: 8.0, Y: 0.3, Z: 8.0}
+                        Size: {X: 18.0, Y: 0.675, Z: 18.0}
                         Axis: X
                         Rise: 1.0
         -   Entity:
@@ -80,7 +80,7 @@ Hierarchy:
                 Components:
                     a0d2f5f275cc586ca707a9e644984fd9: !TransformComponent
                         Id: 8e2a6e62-51b5-56bf-ae3c-191d60a00cd4
-                        Position: {X: 0.0, Y: 0.0, Z: 2.0}
+                        Position: {X: 0.0, Y: 0.0, Z: 4.5}
                         Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
                         Scale: {X: 1.0, Y: 1.0, Z: 1.0}
                         Children: {}

@@ -36,7 +36,27 @@ Hierarchy:
         - ref!! d1ab8473-07bf-573d-9c4b-23342392c4c5
         - ref!! c35eba36-1f36-5155-b98c-ca376f45d359
         - ref!! 018dce00-7665-5a24-9203-7c74d00fd5d6
+        - ref!! 53b63a99-58f6-4df5-8244-191dd09232c4
     Parts:
+        -   Entity:
+                Id: 53b63a99-58f6-4df5-8244-191dd09232c4
+                Name: Native amber lantern
+                Components:
+                    5514664619c142e59ae7d91b98d483f8: !TransformComponent
+                        Id: 4d0c9421-5e8a-470c-85ad-53e1c15085d7
+                        Position: {X: -3.0, Y: 0.0, Z: 5.0}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
+                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
+                        Children: {}
+                    0864b6c0adb4485bac495593f176dc5e: !ModelComponent
+                        Id: c78ad528-f377-4b26-a4d6-c46bef4cdb97
+                        Model: 03021514-18ab-5b03-a6b3-80ad2201b372:CanalCity/lantern_amber
+                        Materials: {}
+                    8dd155a19fcf4082b62fe240c2a20289: !ExpeditionNativeVisual
+                        Id: 3d586728-eaa5-4893-b924-2f0c0a3a50b6
+                        GeometryId: 00000000-0000-0000-0000-000000000000
+                        ReplacesGeometry: false
+                        SkeletonNodes: {}
         -   Entity:
                 Id: 018dce00-7665-5a24-9203-7c74d00fd5d6
                 Name: Editor ambient
@@ -59,7 +79,7 @@ Hierarchy:
                 Components:
                     32c0c841b41857e89fd0de682fc56758: !TransformComponent
                         Id: 80ff3fc1-01cb-590b-982e-8923e72dea71
-                        Position: {X: -4.4, Y: 1.6, Z: -2.6}
+                        Position: {X: -9.9, Y: 3.6, Z: -5.85}
                         Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
                         Scale: {X: 1.0, Y: 1.0, Z: 1.0}
                         Children: {}
@@ -69,14 +89,14 @@ Hierarchy:
                 Components:
                     591480a466585da6b19f7d6a364d51fd: !TransformComponent
                         Id: 4c063825-4d37-57da-a992-0cb37d75bd55
-                        Position: {X: 1.2, Y: 0.7, Z: -3.925}
+                        Position: {X: 2.7, Y: 1.575, Z: -8.83125}
                         Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
                         Scale: {X: 1.0, Y: 1.0, Z: 1.0}
                         Children: {}
                     662a740db67b59a1a8aa01c4d2410736: !ExpeditionGeometry
                         Id: 4f012029-0b25-57c9-8aa6-a9f2cd52f523
                         Role: Structure
-                        Size: {X: 0.2, Y: 1.4, Z: 0.15}
+                        Size: {X: 0.45, Y: 3.15, Z: 0.3375}
                         Axis: X
                         Rise: 1.0
         -   Entity:
@@ -85,7 +105,7 @@ Hierarchy:
                 Components:
                     1618cda90ccd54aa9a61f3a1871aad0d: !TransformComponent
                         Id: 02cce771-0b5a-5edf-9096-0870d5c44352
-                        Position: {X: 1.5, Y: 0.0, Z: 3.0}
+                        Position: {X: 3.375, Y: 0.0, Z: 6.75}
                         Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
                         Scale: {X: 1.0, Y: 1.0, Z: 1.0}
                         Children: {}
@@ -97,14 +117,14 @@ Hierarchy:
                 Components:
                     dda7971da3e45f8d99dfd2a48538b4f1: !TransformComponent
                         Id: c8c09d77-fa0f-54bb-8d51-e334c942909f
-                        Position: {X: 0.25, Y: 0.6, Z: -5.75}
+                        Position: {X: 0.5625, Y: 1.35, Z: -12.9375}
                         Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
                         Scale: {X: 1.0, Y: 1.0, Z: 1.0}
                         Children: {}
                     fc50e9d57ef85bc7b295aba080e1eb9d: !ExpeditionGeometry
                         Id: 9eca5b79-0bf2-59d5-8656-c7eebc262de7
                         Role: Wall
-                        Size: {X: 15.5, Y: 1.2, Z: 0.5}
+                        Size: {X: 34.875, Y: 2.7, Z: 1.125}
                         Axis: X
                         Rise: 1.0
         -   Entity:
@@ -130,7 +150,7 @@ Hierarchy:
                 Components:
                     b4542bed8ab459ac8ee1db3668061bd3: !TransformComponent
                         Id: 57d800a2-8d8e-56c2-a611-d3ecc968e71f
-                        Position: {X: -4.4, Y: 0.0, Z: -0.95}
+                        Position: {X: -9.9, Y: 0.0, Z: -2.1375}
                         Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
                         Scale: {X: 1.0, Y: 1.0, Z: 1.0}
                         Children: {}
@@ -140,14 +160,14 @@ Hierarchy:
                 Components:
                     9565b9bd0cad589e9d85641b513e4030: !TransformComponent
                         Id: d311e37a-232f-5218-bd52-a51ddf40b38c
-                        Position: {X: 4.5, Y: 0.75, Z: 1.5}
+                        Position: {X: 10.125, Y: 1.6875, Z: 3.375}
                         Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
                         Scale: {X: 1.0, Y: 1.0, Z: 1.0}
                         Children: {}
                     5011fde2c19b5865b808f89804b1f0dd: !ExpeditionGeometry
                         Id: 08aa2250-9add-5135-9b46-8ff779c5af16
                         Role: Wall
-                        Size: {X: 1.0, Y: 1.5, Z: 1.0}
+                        Size: {X: 2.25, Y: 3.375, Z: 2.25}
                         Axis: X
                         Rise: 1.0
         -   Entity:
@@ -156,14 +176,14 @@ Hierarchy:
                 Components:
                     fb7b9b72df9b5f16a4f0a3eae49e1214: !TransformComponent
                         Id: 03c9e03f-f070-578e-961a-e7e8df8b3a82
-                        Position: {X: 3.0, Y: 1.5, Z: -3.4}
+                        Position: {X: 6.75, Y: 3.375, Z: -7.65}
                         Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
                         Scale: {X: 1.0, Y: 1.0, Z: 1.0}
                         Children: {}
                     d9402477941b56d7b1d5d4a5661e8167: !ExpeditionGeometry
                         Id: 9056f1b4-1671-5c57-a97f-e8d9d61de6fe
                         Role: Structure
-                        Size: {X: 4.0, Y: 0.2, Z: 1.2}
+                        Size: {X: 9.0, Y: 0.45, Z: 2.7}
                         Axis: X
                         Rise: 1.0
         -   Entity:
@@ -172,14 +192,14 @@ Hierarchy:
                 Components:
                     94dc25e6441253fdb0b0ea31d75baa66: !TransformComponent
                         Id: a2500cde-9473-52b8-9737-670726386354
-                        Position: {X: 3.0, Y: 1.8, Z: -2.75}
+                        Position: {X: 6.75, Y: 4.05, Z: -6.1875}
                         Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
                         Scale: {X: 1.0, Y: 1.0, Z: 1.0}
                         Children: {}
                     a08452b9fce35ec09d333a9b8391192c: !ExpeditionGeometry
                         Id: ca89d0eb-5b7c-51dd-8a5c-86812aa88d46
                         Role: Structure
-                        Size: {X: 4.0, Y: 0.4, Z: 0.1}
+                        Size: {X: 9.0, Y: 0.9, Z: 0.225}
                         Axis: X
                         Rise: 1.0
         -   Entity:
@@ -188,14 +208,14 @@ Hierarchy:
                 Components:
                     51096ae922c25fc8a441e91008defc0d: !TransformComponent
                         Id: 6923d20e-7169-53b6-9d69-775824e72e98
-                        Position: {X: 0.0, Y: 0.9, Z: 0.0}
+                        Position: {X: 0.0, Y: 2.025, Z: 0.0}
                         Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
                         Scale: {X: 1.0, Y: 1.0, Z: 1.0}
                         Children: {}
                     2ee685ae8bee54ccb7a17d318e864f6e: !ExpeditionGeometry
                         Id: 2583caa3-81f8-5dba-8733-dd1481710ff9
                         Role: Wall
-                        Size: {X: 4.0, Y: 1.8, Z: 0.5}
+                        Size: {X: 9.0, Y: 4.05, Z: 1.125}
                         Axis: X
                         Rise: 1.0
         -   Entity:
@@ -222,14 +242,14 @@ Hierarchy:
                 Components:
                     35309eb43d7d53eb80a1322b321a13d4: !TransformComponent
                         Id: 532340cd-de78-517f-b199-6acbc997c89f
-                        Position: {X: -5.1, Y: 0.4, Z: 1.45}
+                        Position: {X: -11.475, Y: 0.9, Z: 3.2625}
                         Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
                         Scale: {X: 1.0, Y: 1.0, Z: 1.0}
                         Children: {}
                     edac5a71e34f53b0a94775a0aa6e97e1: !ExpeditionGeometry
                         Id: 13f54914-8619-5745-8614-5b8fa458ecca
                         Role: Structure
-                        Size: {X: 0.2, Y: 0.8, Z: 0.5}
+                        Size: {X: 0.45, Y: 1.8, Z: 1.125}
                         Axis: X
                         Rise: 1.0
         -   Entity:
@@ -238,14 +258,14 @@ Hierarchy:
                 Components:
                     89be04c61bb8547d93d47ac96a20bfab: !TransformComponent
                         Id: c0c3f127-bfd9-5c60-8474-714241147280
-                        Position: {X: 3.15, Y: 1.75, Z: -3.65}
+                        Position: {X: 7.0875, Y: 3.9375, Z: -8.2125}
                         Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
                         Scale: {X: 1.0, Y: 1.0, Z: 1.0}
                         Children: {}
                     a802308016635fed89679982ad4b9d42: !ExpeditionGeometry
                         Id: 832427f7-c54c-5565-bdff-4f9014a3b21c
                         Role: Decoration
-                        Size: {X: 0.3, Y: 0.3, Z: 0.3}
+                        Size: {X: 0.675, Y: 0.675, Z: 0.675}
                         Axis: X
                         Rise: 1.0
         -   Entity:
@@ -254,14 +274,14 @@ Hierarchy:
                 Components:
                     e37561791b0a5314b8d81d11ceb14794: !TransformComponent
                         Id: c110ade2-4c27-5be2-b30f-b32723a8631c
-                        Position: {X: -4.0, Y: 0.7, Z: 1.45}
+                        Position: {X: -9.0, Y: 1.575, Z: 3.2625}
                         Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
                         Scale: {X: 1.0, Y: 1.0, Z: 1.0}
                         Children: {}
                     6feacfe089b656009b07539f8db22b19: !ExpeditionGeometry
                         Id: b4995683-589f-59f8-a117-418376d9bbf4
                         Role: Structure
-                        Size: {X: 2.0, Y: 0.2, Z: 0.5}
+                        Size: {X: 4.5, Y: 0.45, Z: 1.125}
                         Axis: X
                         Rise: 1.0
         -   Entity:
@@ -277,20 +297,20 @@ Hierarchy:
                     adedfc5808055a5bbc879c61d8b96291: !ExpeditionScene
                         Id: 7822225b-50de-5540-9044-625b55e3b4f0
                         DefaultSpawn: ref!! 0afba030-34f8-5fa1-9173-1135966f8e68
-                        RecoveryThreshold: -2.0
+                        RecoveryThreshold: -4.5
         -   Entity:
                 Id: 8fb5a79f-3fb4-5a3e-955f-319cb346520a
                 Name: to-sluice
                 Components:
                     9d4d7899264b5f2ebc9a072a69382f9d: !TransformComponent
                         Id: 6f55be9d-ffba-58b7-ba26-40bf2a43d5f2
-                        Position: {X: 6.7, Y: 0.0, Z: 4.0}
+                        Position: {X: 15.075, Y: 0.0, Z: 9.0}
                         Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
                         Scale: {X: 1.0, Y: 1.0, Z: 1.0}
                         Children: {}
                     c50aa03f77af5c9ab769e46c4ed594f1: !ExpeditionPortal
                         Id: 0bf42d08-b2e1-5a95-a0e9-218797a15f23
-                        Size: {X: 1.0, Y: 0.1, Z: 1.0}
+                        Size: {X: 2.25, Y: 0.225, Z: 2.25}
                         TargetScene: 70789606-338b-58d8-88ef-86bf53250749:Sluice
                         TargetSpawnId: 7da1e56d-f030-5649-a49d-81cd712f7f97
         -   Entity:
@@ -299,14 +319,14 @@ Hierarchy:
                 Components:
                     213fa9a85246524d962dfc53358e01f2: !TransformComponent
                         Id: a401ec1d-0d58-5065-a890-6f7fbc613ccd
-                        Position: {X: -7.75, Y: 0.6, Z: 0.0}
+                        Position: {X: -17.4375, Y: 1.35, Z: 0.0}
                         Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
                         Scale: {X: 1.0, Y: 1.0, Z: 1.0}
                         Children: {}
                     e6cba9cdba145cd98624df94a8a071a8: !ExpeditionGeometry
                         Id: a87851df-3dca-535f-a83e-c1644973a9e4
                         Role: Wall
-                        Size: {X: 0.5, Y: 1.2, Z: 12.0}
+                        Size: {X: 1.125, Y: 2.7, Z: 27.0}
                         Axis: X
                         Rise: 1.0
         -   Entity:
@@ -330,7 +350,7 @@ Hierarchy:
                 Components:
                     aaa739717c80570d859e1ab55b0469cc: !TransformComponent
                         Id: 0e210fe3-880a-5abb-90f3-15a66122bb5e
-                        Position: {X: -4.4, Y: 1.6, Z: -1.65}
+                        Position: {X: -9.9, Y: 3.6, Z: -3.7125}
                         Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
                         Scale: {X: 1.0, Y: 1.0, Z: 1.0}
                         Children: {}
@@ -340,14 +360,14 @@ Hierarchy:
                 Components:
                     5f53cfd921e25249a8f98ab6bbff27cb: !TransformComponent
                         Id: 1b0e8805-3b6f-551f-9024-4b1ab4a0ba48
-                        Position: {X: -2.9, Y: 0.4, Z: 1.45}
+                        Position: {X: -6.525, Y: 0.9, Z: 3.2625}
                         Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
                         Scale: {X: 1.0, Y: 1.0, Z: 1.0}
                         Children: {}
                     b335d6fe7d6a5fe78092403b2f38a649: !ExpeditionGeometry
                         Id: 66ff2a4f-d9a2-51b8-b4df-b1d690bd1cc4
                         Role: Structure
-                        Size: {X: 0.2, Y: 0.8, Z: 0.5}
+                        Size: {X: 0.45, Y: 1.8, Z: 1.125}
                         Axis: X
                         Rise: 1.0
         -   Entity:
@@ -356,7 +376,7 @@ Hierarchy:
                 Components:
                     f1285aaa62225bb0988e06441bdb4e1d: !TransformComponent
                         Id: a5f150e2-593c-5f81-9a81-d2d93cc69ff8
-                        Position: {X: -4.4, Y: 0.0, Z: -1.65}
+                        Position: {X: -9.9, Y: 0.0, Z: -3.7125}
                         Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
                         Scale: {X: 1.0, Y: 1.0, Z: 1.0}
                         Children: {}
@@ -381,7 +401,7 @@ Hierarchy:
                 Components:
                     efe1dcdc0aa85764b4b22cccdf33140b: !TransformComponent
                         Id: ebed6c26-f818-54de-a29b-2938485658a5
-                        Position: {X: 5.5, Y: 0.0, Z: 4.0}
+                        Position: {X: 12.375, Y: 0.0, Z: 9.0}
                         Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
                         Scale: {X: 1.0, Y: 1.0, Z: 1.0}
                         Children: {}
@@ -409,14 +429,14 @@ Hierarchy:
                 Components:
                     8b76dce6b6b45fceb7ca5885c6a3ed50: !TransformComponent
                         Id: f0ce2c17-be3c-51da-9df3-64c1fcb61c72
-                        Position: {X: 0.0, Y: -0.15, Z: 0.0}
+                        Position: {X: 0.0, Y: -0.3375, Z: 0.0}
                         Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
                         Scale: {X: 1.0, Y: 1.0, Z: 1.0}
                         Children: {}
                     69a3f0fb1b985a3e98dc7d0a58aa8a79: !ExpeditionGeometry
                         Id: 95aff770-c19c-5435-82ce-ddda32edca80
                         Role: Floor
-                        Size: {X: 16.0, Y: 0.3, Z: 12.0}
+                        Size: {X: 36.0, Y: 0.675, Z: 27.0}
                         Axis: X
                         Rise: 1.0
         -   Entity:
@@ -425,7 +445,7 @@ Hierarchy:
                 Components:
                     aed844aa3e7059438062ae7abd1c6ee4: !TransformComponent
                         Id: 8228d8f3-6db7-5c9e-8906-6df8fb66a88d
-                        Position: {X: -4.4, Y: 0.0, Z: -0.95}
+                        Position: {X: -9.9, Y: 0.0, Z: -2.1375}
                         Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
                         Scale: {X: 1.0, Y: 1.0, Z: 1.0}
                         Children: {}
@@ -435,7 +455,7 @@ Hierarchy:
                 Components:
                     2a1362cdc18452009ea7167fb02b64a1: !TransformComponent
                         Id: b7424df3-115f-5c04-9dad-ffcadbf0c82d
-                        Position: {X: -4.4, Y: 1.6, Z: -2.6}
+                        Position: {X: -9.9, Y: 3.6, Z: -5.85}
                         Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
                         Scale: {X: 1.0, Y: 1.0, Z: 1.0}
                         Children: {}
@@ -445,14 +465,14 @@ Hierarchy:
                 Components:
                     484cf076383c59c6bb76e4f1a8f4bee1: !TransformComponent
                         Id: 4553c6f1-c320-5001-9a73-b17edd8ba8c4
-                        Position: {X: -4.4, Y: 1.5, Z: -3.0}
+                        Position: {X: -9.9, Y: 3.375, Z: -6.75}
                         Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
                         Scale: {X: 1.0, Y: 1.0, Z: 1.0}
                         Children: {}
                     fdbceca2d163583092a3bd56182235d7: !ExpeditionGeometry
                         Id: f6e8e3af-f393-557e-94c0-40193ae69a01
                         Role: Structure
-                        Size: {X: 2.8, Y: 0.2, Z: 2.0}
+                        Size: {X: 6.3, Y: 0.45, Z: 4.5}
                         Axis: X
                         Rise: 1.0
         -   Entity:
@@ -461,13 +481,13 @@ Hierarchy:
                 Components:
                     327756fa1c0d5537b58a2baec3044ba1: !TransformComponent
                         Id: 7b9fa0ab-1d7b-58e6-92d0-78bad4eeff86
-                        Position: {X: -3.0, Y: 0.0, Z: -4.0}
+                        Position: {X: -6.75, Y: 0.0, Z: -9.0}
                         Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
                         Scale: {X: 1.0, Y: 1.0, Z: 1.0}
                         Children: {}
                     18b4deb5a3a15f6d8702de1204c022d6: !ExpeditionGeometry
                         Id: 8b2cbd7d-2ea4-5273-bc7d-e9013a1d2266
                         Role: Ramp
-                        Size: {X: 4.0, Y: 0.2, Z: 1.2}
+                        Size: {X: 9.0, Y: 0.45, Z: 2.7}
                         Axis: X
-                        Rise: 1.6
+                        Rise: 3.6

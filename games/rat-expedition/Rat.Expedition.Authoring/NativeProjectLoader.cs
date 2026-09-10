@@ -7,6 +7,12 @@ namespace Rat.Expedition.Authoring;
 
 public sealed class NativeProjectLoader(IServiceRegistry services,string projectAsset="ExpeditionProject")
 {
+    public static string ResolveContentUrl(string url)
+    {
+        if(!url.StartsWith('/'))return url;
+        int separator=url.IndexOf('/',1);
+        return separator<0?url:url[(separator+1)..];
+    }
     public ExpeditionProject Load()
     {
         var initial=Read();
@@ -28,7 +34,7 @@ public sealed class NativeProjectLoader(IServiceRegistry services,string project
             foreach(var reference in settings.Scenes)
             {
                 if(reference is null||string.IsNullOrWhiteSpace(reference.Url)||scenes.ContainsKey(reference.Url))throw new InvalidDataException("ExpeditionProject has empty/duplicate scene reference.");
-                var scene=content.Load<Scene>(reference.Url);loaded.Add(scene);scenes.Add(reference.Url,scene);
+                var scene=content.Load<Scene>(ResolveContentUrl(reference.Url));loaded.Add(scene);scenes.Add(reference.Url,scene);
             }
             if(!scenes.ContainsKey(settings.StartScene.Url))throw new InvalidDataException("ExpeditionProject StartScene is absent from Scenes.");
             var definitions=scenes.ToDictionary(p=>p.Key,p=>NativeSceneAdapter.Convert(p.Value,p.Key,scenes));

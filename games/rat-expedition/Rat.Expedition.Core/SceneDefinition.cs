@@ -106,7 +106,7 @@ public sealed record SceneDefinition(int SchemaVersion,string Id,WorldBox Floor,
             foreach(var p in new[]{ladder.BottomEntry,ladder.TopEntry,ladder.BottomExit,ladder.TopExit})
                 if(!Safe(p))throw new InvalidDataException($"Ladder '{ladder.Id}' entry/exit needs standing support/clearance.");
             foreach(var (from,to) in new[]{(ladder.Bottom,ladder.Top),(ladder.BottomEntry,ladder.Bottom),(ladder.TopEntry,ladder.Top),(ladder.Bottom,ladder.BottomExit),(ladder.Top,ladder.TopExit)})
-                if(Vector3.Distance(from.Vector,to.Vector)>(from.Y==to.Y?1.5f:10f)||world.SweepFraction(from.Vector,to.Vector,TraversalMotor.Radius,TraversalMotor.StandingHeight)<1)
+                if(Vector3.Distance(from.Vector,to.Vector)>(from.Y==to.Y?3.375f:22.5f)||world.SweepFraction(from.Vector,to.Vector,TraversalMotor.Radius,TraversalMotor.StandingHeight)<1)
                     throw new InvalidDataException($"Ladder '{ladder.Id}' corridor/entry/exit is blocked or too long.");
         }
         foreach(var portal in Portals)

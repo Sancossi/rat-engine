@@ -73,3 +73,17 @@ public sealed class OcclusionComponent : EntityComponent
     [DataMember(10)] public List<Entity> Members {get;set;}=[];
     [DataMember(20)] public Entity? HideWith {get;set;}
 }
+
+[DataContract("ExpeditionNativeVisual")]
+[Display("Expedition native visual")]
+[DefaultEntityComponentProcessor(typeof(NativeVisualPreviewProcessor), ExecutionMode = ExecutionMode.Editor)]
+public sealed class NativeVisualComponent : EntityComponent
+{
+    // Stable native entity identities link presentation art to gameplay geometry.
+    // Empty is valid for decorative art which has no collision representation.
+    [DataMember(10)] public Guid GeometryId {get;set;}
+    [DataMember(20)] public bool ReplacesGeometry {get;set;}
+    // Empty selects the complete model. Names select every mesh attached to the
+    // corresponding imported skeleton nodes while retaining the full skeleton.
+    [DataMember(30)] public List<string> SkeletonNodes {get;set;}=[];
+}
