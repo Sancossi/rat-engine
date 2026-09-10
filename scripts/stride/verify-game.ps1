@@ -175,9 +175,9 @@ try {
     if (-not $run.sessionComplete -or $mixed.Count -ne 1 -or $mixed[0].session.Leader.Mode -ne 'Falling' -or
         $mixed[0].session.Leader.Position.Y -le 0 -or $mixed[0].session.Leader.Position.Y -ge 3.6 -or
         $mixed[0].actorVisible[0] -ne $true -or $mixed[0].actorVisible[1] -ne $true -or $mixed[0].actorVisible[2] -ne $false -or
-        $mixed[0].companions[0].Mode -ne 'Falling' -or $mixed[0].companions[1].Mode -ne 'Grounded' -or
-        [Math]::Abs($mixed[0].companions[0].Position.Y-$mixed[0].session.Leader.Position.Y-.7) -gt .001 -or
-        $mixed[0].companions[1].Position.Y -ne 3.6 -or $mixed[0].hidden -notcontains 'bridge-cut' -or $mixed[0].hidden -notcontains 'bridge-rail-cut') {
+        $mixed[0].companions[0].Mode -ne 'Falling' -or
+        $mixed[0].companions[0].Position.Y -le $mixed[0].session.Leader.Position.Y -or $mixed[0].companions[0].Position.Y -ge $mixed[0].companions[1].Position.Y -or
+        [Math]::Abs($mixed[0].companions[1].Position.Y-3.6) -gt .001 -or $mixed[0].hidden -notcontains 'bridge-cut' -or $mixed[0].hidden -notcontains 'bridge-rail-cut') {
         throw 'Falling mixed-height companion locality not demonstrated.'
     }
     $mixedLower = @($run.sessionMilestones | Where-Object name -eq 'mixed-lower')

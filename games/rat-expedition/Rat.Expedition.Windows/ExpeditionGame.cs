@@ -287,6 +287,7 @@ public sealed class ExpeditionGame : Game
         if (hero is not null) { hero.Transform.Position = new(session.Leader.Position.X, session.Leader.Position.Y, session.Leader.Position.Z); hero.Transform.Scale = new(1,UprightScale*(session.Leader.Stance==BodyStance.Crouched?.5f:1),1); }
         FollowHero();
         UpdatePartyAndOcclusion((session.Ticks-ticksBeforeFocus)*TraversalMotor.StepSeconds);
+        if(options.SmokeFrames>0)sessionRoute.Observe(session,bundle.Occlusion);
         input = sessionCommand.Move;
         if (session.Mode==SessionMode.Explore && input.LengthSquared() > 0) provider.CurrentFrame = frames / 12 % 2 + (Math.Abs(input.X) > Math.Abs(input.Y) ? (input.X > 0 ? 4 : 2) : input.Y > 0 ? 6 : 0);
         if (options.SmokeFrames > 0 && frames % 30 == 0) samples.Add(new { frame = frames, x = session.Leader.Position.X, y = session.Leader.Position.Y, z = session.Leader.Position.Z, session.Ticks, snapshot=session.Leader });

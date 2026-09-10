@@ -8,7 +8,7 @@ internal sealed class SessionSmokeRoute(string route)
 {
     private int phase,wait,legs;
     private long revision;
-    private bool mixedFallCaptured;
+    private bool mixedFallCaptured,mixedFallHolding,mixedFallDone;
     public string? Capture {get;set;}
     public bool Complete {get;private set;}
     public List<object> Milestones {get;}=[];
@@ -44,11 +44,13 @@ internal sealed class SessionSmokeRoute(string route)
         if(Complete)return new(Vector2.Zero);
         if(route is "layered" or "mixed")
         {
-            // Observe the real fall while the leader and first companion have left
-            // the upper deck but the rear companion is still grounded on it.
-            if(route=="mixed"&&!mixedFallCaptured&&s.Mode==TraversalMode.Falling&&s.Position.Y<3.1f)
+            if(route=="mixed"&&phase==10&&!mixedFallDone)
             {
-                Capture="mixed-companions";mixedFallCaptured=true;
+                // Stop driving horizontally after leaving the upper deck. The
+                // resulting vertical trail keeps the rear companion supported
+                // while the leader and first companion fall below the deck.
+                if(s.Mode==TraversalMode.Falling&&s.Position.Y<3.6f){mixedFallHolding=true;return new(Vector2.Zero);}
+                if(mixedFallHolding)mixedFallDone=true;
             }
             if(phase>=layered.Length){Complete=true;return new(Vector2.Zero);}
             var point=layered[phase];
@@ -98,5 +100,19 @@ internal sealed class SessionSmokeRoute(string route)
             return Towards(session.Scene.Floor.Max.X+1.8f,session.Scene.Spawn.Z);
         }
         return new(Vector2.Zero);
+    }
+
+    public void Observe(ExpeditionSession session,LocalOcclusion occlusion)
+    {
+        if(route!="mixed"||mixedFallCaptured)return;
+        var s=session.Leader;
+        var companions=session.Trail.Companions;
+        if(s.Mode==TraversalMode.Falling&&companions[0].Mode==TraversalMode.Falling&&
+            s.Position.Y>0&&s.Position.Y<companions[0].Position.Y&&companions[0].Position.Y<companions[1].Position.Y&&
+            Math.Abs(companions[1].Position.Y-3.6f)<.001f&&
+            !occlusion.HidesCompanion(companions[0])&&occlusion.HidesCompanion(companions[1]))
+        {
+            Capture="mixed-companions";mixedFallCaptured=true;
+        }
     }
 }
