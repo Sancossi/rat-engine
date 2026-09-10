@@ -52,6 +52,12 @@ try {
         Invoke-GameDotnet 'core-tests' @('run', '--project', $tests, '-c', 'Release', '--no-restore')
         Invoke-GameDotnet 'restore-authoring-tests' @('restore', $authoringTests, '--configfile', $configPath, '--locked-mode')
         Invoke-GameDotnet 'authoring-tests' @('run', '--project', $authoringTests, '-c', 'Release', '--no-restore')
+        # Stride's asset compiler caches the active .sdpkg path beneath the app's
+        # Release intermediates. A normal publish followed by a qualification
+        # publish can otherwise emit aliases for the QA package while retaining an
+        # incomplete production bundle. Clean only this project's build outputs;
+        # package caches and the pinned engine feed remain untouched.
+        Invoke-GameDotnet 'clean-publish' @('clean', $app, '-c', 'Release', '-r', 'win-x64')
         # Derived native fixtures use the same compiler as production maps, in an
         # isolated package; no QA assets or second metadata source in the editor project.
         $assetArguments = @()
