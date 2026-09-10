@@ -1,10 +1,10 @@
 ---
 type: task
 area: Game
-status: In progress
+status: In review
 task_type: Feature
 sprint: Sprint 19
-review: Pending
+review: In review
 due:
 tags: [task, expedition, stride, art]
 ---
@@ -24,6 +24,8 @@ Acceptance:
 - Проверенные normal/QA ZIP, независимое review, полный Release редактора и публикация каждого принятого среза в main.
 
 ## Resolution
+
+Срез 1 передан на независимое review: `16f130e28dcce946938ad286a3dbdf8a814e5c55`. [Отчёт](../../../docs/audits/2026-09-10-dremma-library-integration.md): два текущих editor processes, 74 + 31 MCP вызов, 19 tools, 97 native assets и 73 Resources; реальный FBX reimport 3→7 material slots, новый PNG/source hash, stable IDs/refs, Undo/Redo/Save/fresh reopen PASS. Все 170 исходных файлов библиотеки неизменны. MCP tests, vault и 25 Python tests PASS. Ожидаются review и полный Release; масштаб/runtime и новая карта ещё не реализованы.
 
 Начат срез 1: перенос библиотеки. В отдельной worktree `C:/5_gamedev/rat-engine-dremma` сохранены обе истории: текущий проект и графическая ветка `c74c6e7`. Исходные рабочие копии не изменены. Дальше срез 2 (масштаб/runtime) и срез 3 (игровой квартал); оставшиеся A1/каталог не закрываются автоматически.
 
