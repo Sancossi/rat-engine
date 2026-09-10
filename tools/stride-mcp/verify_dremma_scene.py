@@ -60,8 +60,22 @@ async def main():
             if args.baseline:
                 baseline = json.loads(Path(args.baseline).read_text(encoding='utf-8-sig'))
                 assert identity == baseline['identity']
+                wall = next(entity for entity in current['entities'] if entity['name'] == 'canal-wall')
+                transform = next(component for component in wall['components'] if component['type'] == 'Stride.Engine.TransformComponent')
+                persisted = transform['properties']['Position']
+                assert (persisted['X'], persisted['Y'], persisted['Z']) == (0, 0, 12.9)
+                address = {'sceneId': ready['sceneId'], 'entityId': wall['id'], 'componentId': transform['id'], 'property': 'Position'}
+                await call('entity_set_property', dict(address, value={'X': 0, 'Y': 0, 'Z': 13}, expectedRevision=(await status())['revision']))
+                await complete(await call('save_session', {'expectedRevision': (await status())['revision']}))
                 assert not (await status())['dirtyAssets']
-                evidence.update({'identity': identity, 'freshReopen': True, 'passed': True})
+                restored = await snapshot()
+                restored_wall = next(entity for entity in restored['entities'] if entity['id'] == wall['id'])
+                restored_position = next(component for component in restored_wall['components'] if component['id'] == transform['id'])['properties']['Position']
+                assert (restored_position['X'], restored_position['Y'], restored_position['Z']) == (0, 0, 13)
+                evidence.update({'identity': identity, 'freshReopen': True,
+                                 'persistedEditedPosition': {key: persisted[key] for key in ('X','Y','Z')},
+                                 'restoredPosition': {key: restored_position[key] for key in ('X','Y','Z')},
+                                 'restoredAndSaved': True, 'passed': True})
                 return
 
             wall = next(entity for entity in current['entities'] if entity['name'] == 'canal-wall')
@@ -79,17 +93,15 @@ async def main():
             await call('editor_undo', {'expectedRevision': state['revision'], 'expectedTransactionId': state['undoTransactionId']})
             state = await status()
             await call('editor_redo', {'expectedRevision': state['revision'], 'expectedTransactionId': state['redoTransactionId']})
-            state = await status()
-            await call('editor_undo', {'expectedRevision': state['revision'], 'expectedTransactionId': state['undoTransactionId']})
-            restored = await snapshot()
-            restored_wall = next(entity for entity in restored['entities'] if entity['id'] == wall['id'])
-            restored_position = next(component for component in restored_wall['components'] if component['id'] == transform['id'])['properties']['Position']
-            assert (restored_position['X'], restored_position['Y'], restored_position['Z']) == (0, 0, 13)
+            redone = await snapshot()
+            redone_wall = next(entity for entity in redone['entities'] if entity['id'] == wall['id'])
+            redone_position = next(component for component in redone_wall['components'] if component['id'] == transform['id'])['properties']['Position']
+            assert abs(redone_position['Z'] - 12.9) < .0001
             await complete(await call('save_session', {'expectedRevision': (await status())['revision']}))
             assert not (await status())['dirtyAssets']
             evidence.update({'identity': identity, 'editedEntityId': wall['id'], 'beforePosition': {key: original[key] for key in ('X','Y','Z')},
                              'editedPosition': {key: changed_position[key] for key in ('X','Y','Z')},
-                             'negativePositionOracle': True, 'undoRedo': True, 'saved': True, 'passed': True})
+                             'negativePositionOracle': True, 'undoRedo': True, 'savedDirtyEdit': True, 'passed': True})
     except Exception as error:
         evidence['error'] = repr(error)
         raise

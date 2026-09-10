@@ -69,227 +69,183 @@ Hierarchy:
         - ref!! 88ef0634-f687-5361-867a-2a4f5ea11483
     Parts:
         -   Entity:
-                Id: b1376555-8bba-5820-8295-c5ba44f86772
-                Name: plaza-start
+                Id: 0045ac87-adc5-59d2-91ec-b629c371ca93
+                Name: scale-figure-high
                 Components:
-                    5b4691c317035af98212d50c18f5c4fd: !TransformComponent
-                        Id: 1a8de8ef-9c10-555a-b315-15f18347ae03
-                        Position: {X: 0, Y: 0, Z: 8}
-                        Rotation: {X: 0, Y: 0, Z: 0, W: 1}
+                    3f9630a10a6a56b79fc341db9ca69b60: !TransformComponent
+                        Id: 5868ee91-0351-54e3-bdf1-766f115661c5
+                        Position: {X: -2.0, Y: 0.0, Z: 8.5}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
                         Scale: {X: 1.0, Y: 1.0, Z: 1.0}
                         Children: {}
-                    ede0964aa27d566481f8527f43a3e52e: !ExpeditionSpawn
-                        Id: 6abd0762-0337-5e09-94f9-7410b6b3d954
+                    f47a2e205a705bb495ac4d068649eb9e: !ModelComponent
+                        Id: f4d70aba-dc6a-5bd4-85b6-83589cbcc552
+                        Model: 639579c9-1b93-5bef-b2e2-24901d59ec90:CanalCity/scale_rat_high
+                        Materials: {}
+                    054cc50d198f5070a453b1c40fcad599: !ExpeditionNativeVisual
+                        Id: 727f477c-8770-52a8-b054-484de73d6195
+                        GeometryId: 00000000-0000-0000-0000-000000000000
+                        AdditionalGeometryIds: {}
+                        ReplacesGeometry: false
+                        SkeletonNodes: {}
         -   Entity:
-                Id: 09163b82-8453-57ad-89f8-4a339a4be864
-                Name: from-courtyard
+                Id: 0315ae51-0048-5441-b3a9-03c52a7b4a1b
+                Name: scale-figure-adult
                 Components:
-                    9c449100352354aa9e790c41bc6acf66: !TransformComponent
-                        Id: e97e1a48-5ae8-5743-b22d-38771ff87e31
-                        Position: {X: 6, Y: 0, Z: 5}
-                        Rotation: {X: 0, Y: 0, Z: 0, W: 1}
+                    e12f598e1d2f577ab29867254c895a02: !TransformComponent
+                        Id: cf3984ae-065a-53d4-bb77-147ac8f122e3
+                        Position: {X: -5.0, Y: 0.0, Z: 8.5}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
                         Scale: {X: 1.0, Y: 1.0, Z: 1.0}
                         Children: {}
-                    b4b67abc2ba95fcda24988623a35aa0a: !ExpeditionSpawn
-                        Id: a7f33e4c-652b-5ede-aefb-a5d880da949d
-        -   Entity:
-                Id: ba3a1dfd-3bd0-56fc-aa71-5e632ff05e97
-                Name: expedition_dremma
-                Components:
-                    276421c0234759479ddb9730a31ace5a: !TransformComponent
-                        Id: a6a4c612-27ca-5121-b7a2-eb2688dc9a0b
-                        Position: {X: 0, Y: 0, Z: 0}
-                        Rotation: {X: 0, Y: 0, Z: 0, W: 1}
-                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
-                        Children: {}
-                    0a7aa7c6934f5d74bac4a89a16658fcc: !ExpeditionScene
-                        Id: ae72e2b0-b796-532a-8f9f-43312915502b
-                        DefaultSpawn: ref!! b1376555-8bba-5820-8295-c5ba44f86772
-                        RecoveryThreshold: -2.0
-        -   Entity:
-                Id: 9d767c5d-92e5-5ef9-aaad-68a4af88e75e
-                Name: dremma-floor
-                Components:
-                    bb6ac5572a6d5fd5a29ff73ce49125a0: !TransformComponent
-                        Id: 219ebcb1-8ca5-59e2-97f0-bd042a8e64fd
-                        Position: {X: -1, Y: -0.1, Z: 0}
-                        Rotation: {X: 0, Y: 0, Z: 0, W: 1}
-                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
-                        Children: {}
-                    6835d2ed6bb458a888c63372826d08df: !ExpeditionGeometry
-                        Id: 71e302fe-aeaa-594d-9e19-f3fdd327193a
-                        Role: Floor
-                        Size: {X: 26, Y: 0.2, Z: 20}
-                        Axis: X
-                        Rise: 1.0
+                    a0fa9bc6ff335808bc8773e5355bd55a: !ModelComponent
+                        Id: 1ffce653-d7f1-5327-8e5b-dc641fba1635
+                        Model: a30f543c-60fb-5b1a-87b8-51b81a8d8d9e:CanalCity/scale_rat_adult
+                        Materials: {}
+                    b4219556a436560780a4ae8b7da15219: !ExpeditionNativeVisual
+                        Id: d9f55da3-2122-5029-9894-24fb2a3cc15c
+                        GeometryId: 00000000-0000-0000-0000-000000000000
+                        AdditionalGeometryIds: {}
+                        ReplacesGeometry: false
+                        SkeletonNodes: {}
         -   Entity:
                 Id: 04876d10-fd44-5667-8e1b-6834cb236ffa
                 Name: bridge-deck
                 Components:
                     905cc94ce14a57a0916f41dbfc760826: !TransformComponent
                         Id: f476f898-f5ea-5da8-a20c-cb05a67d70a1
-                        Position: {X: 0, Y: 3.0, Z: 0}
-                        Rotation: {X: 0, Y: 0, Z: 0, W: 1}
+                        Position: {X: 0.0, Y: 3.0, Z: 0.0}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
                         Scale: {X: 1.0, Y: 1.0, Z: 1.0}
                         Children: {}
                     6ea118aa26df5dd18088881686e9c0df: !ExpeditionGeometry
                         Id: fd207a78-7ab7-5034-adac-a6bd5c083385
                         Role: Structure
-                        Size: {X: 8, Y: 0.2, Z: 3}
+                        Size: {X: 8.0, Y: 0.2, Z: 3.0}
                         Axis: X
                         Rise: 1.0
         -   Entity:
-                Id: 9b7aa3d5-17a3-57e1-9961-b841f9ffaa0e
-                Name: bridge-pier-west
+                Id: 055de0af-98e9-53a8-a73a-62e955d82a00
+                Name: bridge-arch-cut
                 Components:
-                    279b895378325793ae3a2df544e31e20: !TransformComponent
-                        Id: 53ce7abd-87a2-54b4-b412-6daced4d5047
-                        Position: {X: -3.305, Y: 1.45, Z: 0}
-                        Rotation: {X: 0, Y: 0, Z: 0, W: 1}
+                    1366edf0dcda5e7e877e24b3cebbabf6: !TransformComponent
+                        Id: 350a55e2-3f66-5ee7-8154-66f0bfafd32b
+                        Position: {X: 0.0, Y: 0.0, Z: 0.0}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
                         Scale: {X: 1.0, Y: 1.0, Z: 1.0}
                         Children: {}
-                    1f3977eac78a5dc09bc5849640909450: !ExpeditionGeometry
-                        Id: d8932cd7-3887-592e-be7e-af0aeaa8b3d5
-                        Role: Structure
-                        Size: {X: 1.41, Y: 2.9, Z: 3.54}
-                        Axis: X
-                        Rise: 1.0
+                    94b72a63450e50a9b3d1a7664674aee9: !ExpeditionOcclusion
+                        Id: eb2459d5-2c1d-52d4-9499-103a4a2d7252
+                        Members:
+                            546f4dbbc9e758dca45b0ac324abc964: ref!! 9b7aa3d5-17a3-57e1-9961-b841f9ffaa0e
+                            e4e0c7f3344d5371885cb9e998e3780f: ref!! 91bb90c8-a298-5e2e-943a-0eac1304225a
+                            a7f07422b7855f489f484eacc74fce6a: ref!! a26d5c4d-5cb2-5798-82e3-863540694373
+                            ac5abe9a6115584b9f5052bde3497c9f: ref!! 4caf7942-7c03-5bf7-837a-1e17a65e96c1
+                            34a510f98afd5e6ab5d41c5a6c31ae28: ref!! fae231f7-0481-5bd6-b789-8eb27ca4ed03
+                            f437ba69007a51a9beb7015093f452b0: ref!! a9c5d03c-ac1e-565c-874e-6967b8966386
+                            6d9ea680a7585e87b3129ec3e33d19f4: ref!! b659656a-9976-562c-b4fa-86e40ae2c0ec
+                            9166935876765193b4f9c7bfd90c9139: ref!! 22a2e18f-8327-5a07-b517-29051744f41a
+                            fe5322d56be0545cbefb5cafd9953248: ref!! b69c82fb-1f33-50d9-9f22-ddbe321a15ff
+                            2041a7df92885a5cb54f98d1f0aef2ef: ref!! 0be9f798-e326-5287-846e-7cd117ca7a5b
+                            4ca145d517e2579895a07fd0ac9a195f: ref!! 8c8e0167-ac47-5cb9-a8c6-bfed1f46fee9
+                            73378cecf4d256a2a0b8899d2514f3d4: ref!! f10a7bc6-c91a-5835-8c6f-2ce1e6c048be
+                            42ebfd098b57564a9a6ec457091ff60b: ref!! 422397b7-451a-5543-96cf-b5d8e3e6dc35
+                            5062988c97d6550e8c43496f1445743b: ref!! 9c0481c4-4e6c-54b5-8a09-30a2272fb351
+                            ab1711b81dd2547188a97f8b83b34905: ref!! 4d5f04b5-c985-5091-b6d6-283cd039a866
+                            cbd3eb91950a583ba7cc722ff241f037: ref!! 8a2ab5aa-8855-5c6b-afa9-ba71f0fa62e0
+                            b37e655d7d56542d8b428af7cc7ee51d: ref!! 6b5d0cdb-6cce-5d63-8a83-5a1adbf43834
+                            bda139fc23ad5cfaa3963904629e9874: ref!! a4639e84-ecdf-5971-8273-8de4c22d8ddb
+                            641baf5911e654108734fb30a27b65a7: ref!! 6e4c2c78-3394-5b4e-9caf-fdaff7169617
+                            32d09f526b105dc78e64418d9d86523a: ref!! 6bc10ea4-7454-5aec-a3be-c7c7a054a22a
+                            50996a95be5758a4b55682df94b6eeec: ref!! 4ce90360-124d-5db1-a38a-0b5787cf14c9
+                            c26766f33bfb57e893d0cf91890fa508: ref!! 3032a0ce-19c4-541f-8735-87291e09f534
+                            b1b9f91c8c7451558c4db46e42577eca: ref!! d63a2a00-1f83-5898-aecb-7070c9b7a3cb
+                            ac81fd8817ca52f994e279ab1dd8b4f7: ref!! 68ef1cfa-3db9-53a7-bbd6-51ca3dc8955b
+                            cbf1abe5486b5c6b81e0fe0d856907ef: ref!! 85be1968-6f10-5520-bc4c-9a0db9a636ae
+                            67f84a03a6025679be12b9c5ef49e502: ref!! 4eee772a-8949-5997-8ed6-2c6d9741b049
+                            a24232ca536456de807079323f07fcc3: ref!! dfcbb154-59fb-5b64-9641-ae251bd5f738
+                            7251372bc9a651b8a4b180604a9c8164: ref!! 726cbbf3-b53d-51df-a80c-f9b886a24372
+                        HideWith: null
         -   Entity:
-                Id: 91bb90c8-a298-5e2e-943a-0eac1304225a
-                Name: bridge-pier-east
+                Id: 05fd7858-55ee-563f-940d-6f678adaa5ce
+                Name: scale-figure-medium
                 Components:
-                    eae1da7683fc56c8a3929272e26ee549: !TransformComponent
-                        Id: d60df575-32b7-5449-8bf3-0a005ca520c2
-                        Position: {X: 3.305, Y: 1.45, Z: 0}
-                        Rotation: {X: 0, Y: 0, Z: 0, W: 1}
+                    a3575bde07335ac0afc90c841b397a57: !TransformComponent
+                        Id: 90eef1d0-bcc2-5911-99dd-b8226877b9c4
+                        Position: {X: -8.0, Y: 0.0, Z: 8.5}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
                         Scale: {X: 1.0, Y: 1.0, Z: 1.0}
                         Children: {}
-                    6db71a854a7c5ecfb5aa6f0efc00f395: !ExpeditionGeometry
-                        Id: 88e1bd49-d380-51e1-a67c-675db0c5d130
-                        Role: Structure
-                        Size: {X: 1.41, Y: 2.9, Z: 3.54}
-                        Axis: X
-                        Rise: 1.0
+                    406993fee254530ab9f9f9f6cfb04ea8: !ModelComponent
+                        Id: b21b4ea3-9829-5fbb-a405-cfa86daac3f1
+                        Model: 4fd98ccc-7899-5219-ad1f-a17b1d240473:CanalCity/scale_rat_medium
+                        Materials: {}
+                    f3ec80a2c7de5c7ea1a34c7dea36a5db: !ExpeditionNativeVisual
+                        Id: 6ad8684b-55af-5cc7-b9ae-314fb18f2a04
+                        GeometryId: 00000000-0000-0000-0000-000000000000
+                        AdditionalGeometryIds: {}
+                        ReplacesGeometry: false
+                        SkeletonNodes: {}
         -   Entity:
-                Id: a26d5c4d-5cb2-5798-82e3-863540694373
-                Name: bridge-arch-spandrel-01
+                Id: 08a98d34-93d5-5d6c-b666-d5efad9e516d
+                Name: stairs-rail-north-lower
                 Components:
-                    06b35b026b295d5b9760cd21b3446e6f: !TransformComponent
-                        Id: ddb908b1-97b7-5663-9fa8-c488141931b0
-                        Position: {X: -2.5, Y: 1.45, Z: 0}
-                        Rotation: {X: 0, Y: 0, Z: 0, W: 1}
+                    4662c5a004d952cf85cc417a36bd9950: !TransformComponent
+                        Id: 0489b044-e118-5298-867c-5efcdc1c03a2
+                        Position: {X: -8.28, Y: 1.42, Z: -1.18}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
                         Scale: {X: 1.0, Y: 1.0, Z: 1.0}
                         Children: {}
-                    c7a37753097e5eb3bba25268f61d5b67: !ExpeditionGeometry
-                        Id: ec04775a-5b27-5a05-825b-663acdd1efb2
-                        Role: Structure
-                        Size: {X: 0.2, Y: 2.9, Z: 3.54}
+                    cb489d02a61d51078c837c0756a26e64: !ExpeditionGeometry
+                        Id: 1c30e25e-49e6-5af3-be42-1ba4079f9d73
+                        Role: Ramp
+                        Size: {X: 4.0, Y: 0.12, Z: 0.12}
                         Axis: X
-                        Rise: 1.0
+                        Rise: 2.1
         -   Entity:
-                Id: 4caf7942-7c03-5bf7-837a-1e17a65e96c1
-                Name: bridge-arch-spandrel-02
+                Id: 09163b82-8453-57ad-89f8-4a339a4be864
+                Name: from-courtyard
                 Components:
-                    03725b147d0b5a18b45822054fb35880: !TransformComponent
-                        Id: ff81c4e9-7b02-579d-9087-7f426b679b11
-                        Position: {X: -2.3, Y: 1.94, Z: 0}
-                        Rotation: {X: 0, Y: 0, Z: 0, W: 1}
+                    9c449100352354aa9e790c41bc6acf66: !TransformComponent
+                        Id: e97e1a48-5ae8-5743-b22d-38771ff87e31
+                        Position: {X: 6.0, Y: 0.0, Z: 5.0}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
                         Scale: {X: 1.0, Y: 1.0, Z: 1.0}
                         Children: {}
-                    5790963a4aef553e828fcabed395c406: !ExpeditionGeometry
-                        Id: 08bcabb3-1bfa-5443-baed-08f41991c76e
-                        Role: Structure
-                        Size: {X: 0.2, Y: 1.92, Z: 3.54}
-                        Axis: X
-                        Rise: 1.0
+                    b4b67abc2ba95fcda24988623a35aa0a: !ExpeditionSpawn
+                        Id: a7f33e4c-652b-5ede-aefb-a5d880da949d
         -   Entity:
-                Id: fae231f7-0481-5bd6-b789-8eb27ca4ed03
-                Name: bridge-arch-spandrel-03
+                Id: 0a126d41-7f9a-5780-88cb-a1313330f3dd
+                Name: native-stairs
                 Components:
-                    a3a213d5032458aba9c439a9580d9c98: !TransformComponent
-                        Id: c696877f-885f-5939-86c7-a444392f9ae5
-                        Position: {X: -2.1, Y: 2.1328, Z: 0}
-                        Rotation: {X: 0, Y: 0, Z: 0, W: 1}
+                    450c8b5fd45c59848e7e0d8ef82901b0: !TransformComponent
+                        Id: 93119479-ed00-54e8-8f47-e11bf74dcd16
+                        Position: {X: -8.48, Y: 0.7, Z: 0.0}
+                        Rotation: {X: 0.0, Y: -0.70710677, Z: 0.0, W: 0.70710677}
                         Scale: {X: 1.0, Y: 1.0, Z: 1.0}
                         Children: {}
-                    64d40fa3f3cb51c4a31c6dfc76d495c3: !ExpeditionGeometry
-                        Id: ca93eee7-3f52-5651-899b-e5d2353ad24b
-                        Role: Structure
-                        Size: {X: 0.2, Y: 1.5344, Z: 3.54}
-                        Axis: X
-                        Rise: 1.0
-        -   Entity:
-                Id: a9c5d03c-ac1e-565c-874e-6967b8966386
-                Name: bridge-arch-spandrel-04
-                Components:
-                    91f2067a3bbc51d890b35988c60aec81: !TransformComponent
-                        Id: ac6a1859-d653-5f09-8e73-983b561a6cce
-                        Position: {X: -1.9, Y: 2.2707, Z: 0}
-                        Rotation: {X: 0, Y: 0, Z: 0, W: 1}
-                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
-                        Children: {}
-                    e1a195e41cfc530c8eb6619a947c4c69: !ExpeditionGeometry
-                        Id: 50f5e1ed-57ae-57da-973b-d30cb708b96f
-                        Role: Structure
-                        Size: {X: 0.2, Y: 1.2587, Z: 3.54}
-                        Axis: X
-                        Rise: 1.0
-        -   Entity:
-                Id: b659656a-9976-562c-b4fa-86e40ae2c0ec
-                Name: bridge-arch-spandrel-05
-                Components:
-                    ce5b6769bbba53ea9c91aaa90323e0b1: !TransformComponent
-                        Id: 47bc71e3-0451-54b4-a702-c987268c6ddf
-                        Position: {X: -1.7, Y: 2.3781, Z: 0}
-                        Rotation: {X: 0, Y: 0, Z: 0, W: 1}
-                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
-                        Children: {}
-                    d4b16c099ee058adbe825e938753bb9a: !ExpeditionGeometry
-                        Id: 7a4f6762-f724-5b77-85fd-42234e715862
-                        Role: Structure
-                        Size: {X: 0.2, Y: 1.0438, Z: 3.54}
-                        Axis: X
-                        Rise: 1.0
-        -   Entity:
-                Id: 22a2e18f-8327-5a07-b517-29051744f41a
-                Name: bridge-arch-spandrel-06
-                Components:
-                    02870ffdccad56b9904d18b599f04cbc: !TransformComponent
-                        Id: b63bc89d-b064-5187-bfc3-c92872f37efd
-                        Position: {X: -1.5, Y: 2.4647, Z: 0}
-                        Rotation: {X: 0, Y: 0, Z: 0, W: 1}
-                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
-                        Children: {}
-                    14923fb197d650169596b078174b9b90: !ExpeditionGeometry
-                        Id: f8d1c6db-a5d3-52fa-987f-fa3dbcdf82d1
-                        Role: Structure
-                        Size: {X: 0.2, Y: 0.8706, Z: 3.54}
-                        Axis: X
-                        Rise: 1.0
-        -   Entity:
-                Id: b69c82fb-1f33-50d9-9f22-ddbe321a15ff
-                Name: bridge-arch-spandrel-07
-                Components:
-                    929e5d95f37a5b88bb9cfbbb833152ad: !TransformComponent
-                        Id: 197cc717-4648-5293-9e3b-1ecdcc76890c
-                        Position: {X: -1.3, Y: 2.5354, Z: 0}
-                        Rotation: {X: 0, Y: 0, Z: 0, W: 1}
-                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
-                        Children: {}
-                    9dce69f69854538893303b2cd875ba5d: !ExpeditionGeometry
-                        Id: 5ffd57d3-ceff-53f6-bee0-3408e4ea67f8
-                        Role: Structure
-                        Size: {X: 0.2, Y: 0.7291, Z: 3.54}
-                        Axis: X
-                        Rise: 1.0
+                    62d2349d17af53e68dc4592b8250c5ff: !ModelComponent
+                        Id: 63844db9-43ef-543e-85dd-7bb7a4dc3f3a
+                        Model: 2345f4da-9ab5-517c-a4be-676148662b8e:CanalCity/stairs_medium
+                        Materials: {}
+                    cbc2b9fa1fc2569d9fedd675e9ef77c0: !ExpeditionNativeVisual
+                        Id: 818c838c-912a-520b-9078-38e89f9b0fd3
+                        GeometryId: 4dfb387c-0e33-566e-af43-dc7805aea882
+                        AdditionalGeometryIds:
+                            e0b5f46fed905669a80e0fbeef54de7f: 08a98d34-93d5-5d6c-b666-d5efad9e516d
+                            0a6e34e945835f35b8d1bd69d5b408ba: a1886377-177d-50d3-9758-bcd481c81ac2
+                            cde24ce8dbb45deea1a1fd3539b51df8: d21609b6-b989-52b0-9426-201bdf447114
+                            039a95feb6ec5b74a989d429945df175: 1a61fe90-ad99-52ef-a18e-8d8d2ddb8589
+                        ReplacesGeometry: true
+                        SkeletonNodes: {}
         -   Entity:
                 Id: 0be9f798-e326-5287-846e-7cd117ca7a5b
                 Name: bridge-arch-spandrel-08
                 Components:
                     87584640ccf355b4886c7bfd90a2f4a1: !TransformComponent
                         Id: e94cc58b-40f5-57d1-ac1c-a32e2d75ee90
-                        Position: {X: -1.1, Y: 2.5933, Z: 0}
-                        Rotation: {X: 0, Y: 0, Z: 0, W: 1}
+                        Position: {X: -1.1, Y: 2.5933, Z: 0.0}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
                         Scale: {X: 1.0, Y: 1.0, Z: 1.0}
                         Children: {}
                     018f4fbacdfb5a74bc722dee8ab290bd: !ExpeditionGeometry
@@ -299,189 +255,188 @@ Hierarchy:
                         Axis: X
                         Rise: 1.0
         -   Entity:
-                Id: 8c8e0167-ac47-5cb9-a8c6-bfed1f46fee9
-                Name: bridge-arch-spandrel-09
+                Id: 0d832e77-2930-5002-9c1e-3a8ce8b2eda0
+                Name: lantern-01
                 Components:
-                    2ef7dec6a4ca5b13ad90c8742cfe9893: !TransformComponent
-                        Id: 6f5264f6-e22d-556e-93c3-4cbd3eff22c1
-                        Position: {X: -0.9, Y: 2.64, Z: 0}
-                        Rotation: {X: 0, Y: 0, Z: 0, W: 1}
+                    80bc527156cf56bf980a0fe174af49d4: !TransformComponent
+                        Id: ebdd6a49-1bb6-5832-97ca-1569be25dff2
+                        Position: {X: -10.0, Y: 0.0, Z: 5.0}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
                         Scale: {X: 1.0, Y: 1.0, Z: 1.0}
                         Children: {}
-                    04ce1396a1b55ef1b95e22a9153a885c: !ExpeditionGeometry
-                        Id: 360039c4-fc16-52d8-bd52-978728e8ff81
+                    d8887d9740855a02bbf477d958a39098: !ModelComponent
+                        Id: cfbd94f5-d031-59ec-aab9-dc567137a9f1
+                        Model: 03021514-18ab-5b03-a6b3-80ad2201b372:CanalCity/lantern_amber
+                        Materials: {}
+                    b91825fca9fe5428bc9819ff0b74783a: !ExpeditionNativeVisual
+                        Id: adc7e025-d2ef-52f5-b453-f6d23cd67e95
+                        GeometryId: 00000000-0000-0000-0000-000000000000
+                        AdditionalGeometryIds: {}
+                        ReplacesGeometry: false
+                        SkeletonNodes: {}
+        -   Entity:
+                Id: 18f27c78-35ab-57dd-84b1-90305ffd2b3b
+                Name: bridge-deck-cut
+                Components:
+                    5a514bba75e354acb5319f31dbaf0a45: !TransformComponent
+                        Id: 6fca432b-e913-57b4-a545-7d6a2a1faaa3
+                        Position: {X: 0.0, Y: 0.0, Z: 0.0}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
+                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
+                        Children: {}
+                    dd4621f9d11953808327cef2f3eed9f1: !ExpeditionOcclusion
+                        Id: 7fd5dba8-989c-5583-a312-5df20cf62d05
+                        Members:
+                            70630c5b43db50649dec7214dc372f16: ref!! 04876d10-fd44-5667-8e1b-6834cb236ffa
+                        HideWith: null
+        -   Entity:
+                Id: 1a61fe90-ad99-52ef-a18e-8d8d2ddb8589
+                Name: stairs-rail-south-upper
+                Components:
+                    2926263bff695a69a5c9e63e2c20e6d1: !TransformComponent
+                        Id: c9d3a87b-bd41-5372-8181-34756c8c7843
+                        Position: {X: -8.28, Y: 1.72, Z: 1.06}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
+                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
+                        Children: {}
+                    04ffea1a7f485a139e36cf6aa74dc484: !ExpeditionGeometry
+                        Id: 2f9cc35e-eba3-5e3d-a7a0-7b6e345b1975
+                        Role: Ramp
+                        Size: {X: 4.0, Y: 0.12, Z: 0.12}
+                        Axis: X
+                        Rise: 2.1
+        -   Entity:
+                Id: 1b7a1d7e-b792-5b36-8aa7-6620fd55e824
+                Name: bridge-rail-north
+                Components:
+                    d8bd955caa83533fa65506700bbf09ec: !TransformComponent
+                        Id: 077e6f14-1a98-51d6-bbd4-a0e4c752d0b4
+                        Position: {X: 0.0, Y: 3.55, Z: -1.6}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
+                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
+                        Children: {}
+                    dccd76467cf25823989398ff7e7c39a4: !ExpeditionGeometry
+                        Id: 4c8cd257-d199-523b-8b4a-facca88a2c1a
                         Role: Structure
-                        Size: {X: 0.2, Y: 0.52, Z: 3.54}
+                        Size: {X: 8.0, Y: 0.9, Z: 0.2}
                         Axis: X
                         Rise: 1.0
         -   Entity:
-                Id: f10a7bc6-c91a-5835-8c6f-2ce1e6c048be
-                Name: bridge-arch-spandrel-10
+                Id: 1e4218a5-80f0-5ade-afd1-9edd8c1dfb6c
+                Name: bridge-rail-cut
                 Components:
-                    e293f990d7465fa9b96db3080ed1e99f: !TransformComponent
-                        Id: eb23cbdd-62eb-56e6-8bc7-b44dc82d317d
-                        Position: {X: -0.7, Y: 2.6769, Z: 0}
-                        Rotation: {X: 0, Y: 0, Z: 0, W: 1}
+                    00a04f741269514b90af842fbe59cc3c: !TransformComponent
+                        Id: 27530f9f-a4fd-554d-865f-9af7a8d090aa
+                        Position: {X: 0.0, Y: 0.0, Z: 0.0}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
                         Scale: {X: 1.0, Y: 1.0, Z: 1.0}
                         Children: {}
-                    8293aa80615f5f1cac11b6d062126125: !ExpeditionGeometry
-                        Id: 1895beae-2340-523e-ab62-69715e55e895
+                    646369803bd851d5b0918a94fa62e5c7: !ExpeditionOcclusion
+                        Id: 2adeee79-d89b-59f2-a07e-9527476be5f8
+                        Members:
+                            d721382d20165f20a7924b81f583f564: ref!! 1b7a1d7e-b792-5b36-8aa7-6620fd55e824
+                            700997720e635fbab353db85e66bf3ec: ref!! 95c5d307-fa59-5261-aba1-5c677e77c6a4
+                        HideWith: ref!! 18f27c78-35ab-57dd-84b1-90305ffd2b3b
+        -   Entity:
+                Id: 2243eba5-c668-5c0b-8c49-20b853685a30
+                Name: to-courtyard
+                Components:
+                    32a4a55b508d5bdc8f13a41c881cba76: !TransformComponent
+                        Id: fdadda17-3dbd-5316-9166-8a851aa0a88e
+                        Position: {X: 8.0, Y: 0.0, Z: 5.0}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
+                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
+                        Children: {}
+                    ca9d8e4226765f19abba529aa71c8b24: !ExpeditionPortal
+                        Id: 99b2a3fb-4619-57fc-8b1a-9e3b43262542
+                        Size: {X: 1.5, Y: 0.2, Z: 1.5}
+                        TargetScene: a6d301f9-3171-5137-b3c7-4622618bebc5:Courtyard
+                        TargetSpawnId: ce37f796-983e-533e-9b89-6d0e5b61abcc
+        -   Entity:
+                Id: 22a2e18f-8327-5a07-b517-29051744f41a
+                Name: bridge-arch-spandrel-06
+                Components:
+                    02870ffdccad56b9904d18b599f04cbc: !TransformComponent
+                        Id: b63bc89d-b064-5187-bfc3-c92872f37efd
+                        Position: {X: -1.5, Y: 2.4647, Z: 0.0}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
+                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
+                        Children: {}
+                    14923fb197d650169596b078174b9b90: !ExpeditionGeometry
+                        Id: f8d1c6db-a5d3-52fa-987f-fa3dbcdf82d1
                         Role: Structure
-                        Size: {X: 0.2, Y: 0.4461, Z: 3.54}
+                        Size: {X: 0.2, Y: 0.8706, Z: 3.54}
                         Axis: X
                         Rise: 1.0
         -   Entity:
-                Id: 422397b7-451a-5543-96cf-b5d8e3e6dc35
-                Name: bridge-arch-spandrel-11
+                Id: 2355c392-5eb0-5d25-848f-b10f29f969ea
+                Name: lantern-02
                 Components:
-                    a4290cda4073549b9c0960ec719b5a07: !TransformComponent
-                        Id: 82ed7a71-1283-5a08-a191-14c0517db4b0
-                        Position: {X: -0.5, Y: 2.7049, Z: 0}
-                        Rotation: {X: 0, Y: 0, Z: 0, W: 1}
+                    11feb16500315030bdb65d09311cbd65: !TransformComponent
+                        Id: 4f7020cc-c5b1-5c7d-b8e1-2eb13f8498f1
+                        Position: {X: -5.0, Y: 0.0, Z: 5.0}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
                         Scale: {X: 1.0, Y: 1.0, Z: 1.0}
                         Children: {}
-                    32246c9a50e259b8b833e5bc99fcc47c: !ExpeditionGeometry
-                        Id: c3a520c9-15eb-5888-b32f-42a9afa3418a
-                        Role: Structure
-                        Size: {X: 0.2, Y: 0.3902, Z: 3.54}
-                        Axis: X
-                        Rise: 1.0
+                    6ff030ebb4b954af8f7ec5340acf3626: !ModelComponent
+                        Id: 40164775-759b-593c-887b-1b0be02219a6
+                        Model: 03021514-18ab-5b03-a6b3-80ad2201b372:CanalCity/lantern_amber
+                        Materials: {}
+                    c868b806e21b5762aae16a25b51cc717: !ExpeditionNativeVisual
+                        Id: f1716054-3bab-52f1-9f33-f11a8000e6ab
+                        GeometryId: 00000000-0000-0000-0000-000000000000
+                        AdditionalGeometryIds: {}
+                        ReplacesGeometry: false
+                        SkeletonNodes: {}
         -   Entity:
-                Id: 9c0481c4-4e6c-54b5-8a09-30a2272fb351
-                Name: bridge-arch-spandrel-12
+                Id: 24a56481-9a18-59b9-8254-eea5a65ec0b3
+                Name: lantern-04
                 Components:
-                    25aa71d4403e5146af2aeb89f67f0f96: !TransformComponent
-                        Id: e2ba8838-f25c-5262-b546-0ebd2bc6b0fc
-                        Position: {X: -0.3, Y: 2.7245, Z: 0}
-                        Rotation: {X: 0, Y: 0, Z: 0, W: 1}
+                    ec4772cfb0665796a16bb462d7769d05: !TransformComponent
+                        Id: 2cced8ba-d4ee-58b3-bdc6-e17420481a42
+                        Position: {X: 10.0, Y: 0.0, Z: -5.0}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
                         Scale: {X: 1.0, Y: 1.0, Z: 1.0}
                         Children: {}
-                    bf6eae408dea56249ea0c19d4b07b6f2: !ExpeditionGeometry
-                        Id: 7839ebfd-3ba9-5f46-8e86-c08174126735
-                        Role: Structure
-                        Size: {X: 0.2, Y: 0.351, Z: 3.54}
-                        Axis: X
-                        Rise: 1.0
+                    70f2197bc0085f4da1defc81d2c90c7e: !ModelComponent
+                        Id: 140ecb1d-1fac-5cbf-8172-420cb796d227
+                        Model: 03021514-18ab-5b03-a6b3-80ad2201b372:CanalCity/lantern_amber
+                        Materials: {}
+                    70936c55b8075a118a54ff8616eaabe3: !ExpeditionNativeVisual
+                        Id: 91e09fdc-13ca-56ea-a699-181cd35785f9
+                        GeometryId: 00000000-0000-0000-0000-000000000000
+                        AdditionalGeometryIds: {}
+                        ReplacesGeometry: false
+                        SkeletonNodes: {}
         -   Entity:
-                Id: 4d5f04b5-c985-5091-b6d6-283cd039a866
-                Name: bridge-arch-spandrel-13
+                Id: 2df8b058-6242-5bc9-9fa5-ce8c7ebe0a6b
+                Name: native-bridge-deck
                 Components:
-                    131d619fc31b56f1bbf3711eef4ffda2: !TransformComponent
-                        Id: 0d4d9357-70ea-554d-8b55-77a4b5c7234e
-                        Position: {X: -0.1, Y: 2.7361, Z: 0}
-                        Rotation: {X: 0, Y: 0, Z: 0, W: 1}
+                    9d30e5b762bd5380ae77cd2fd062466d: !TransformComponent
+                        Id: b3822475-3a0f-5375-af2f-2b47c79fc301
+                        Position: {X: 0.0, Y: 0.0, Z: 0.0}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
                         Scale: {X: 1.0, Y: 1.0, Z: 1.0}
                         Children: {}
-                    3a0231f972005492bf73d4faaf4b0488: !ExpeditionGeometry
-                        Id: bde60b40-be73-503d-b8d5-a9bd5a5782cf
-                        Role: Structure
-                        Size: {X: 0.2, Y: 0.3277, Z: 3.54}
-                        Axis: X
-                        Rise: 1.0
-        -   Entity:
-                Id: 8a2ab5aa-8855-5c6b-afa9-ba71f0fa62e0
-                Name: bridge-arch-spandrel-14
-                Components:
-                    1caf136f7d625196b48c1cbf4bbbc99b: !TransformComponent
-                        Id: bb87cbe1-eb57-51d7-bdb7-8c505f045d13
-                        Position: {X: 0.1, Y: 2.7361, Z: 0}
-                        Rotation: {X: 0, Y: 0, Z: 0, W: 1}
-                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
-                        Children: {}
-                    addade6d19e852eaad9ed4e444439f95: !ExpeditionGeometry
-                        Id: 0a67e4aa-73fa-5253-bac1-ef8728d26826
-                        Role: Structure
-                        Size: {X: 0.2, Y: 0.3277, Z: 3.54}
-                        Axis: X
-                        Rise: 1.0
-        -   Entity:
-                Id: 6b5d0cdb-6cce-5d63-8a83-5a1adbf43834
-                Name: bridge-arch-spandrel-15
-                Components:
-                    c87028a0c0a659f98d9da1eb54e30916: !TransformComponent
-                        Id: b0c63fd1-3a37-53c0-b232-3f160b8a990a
-                        Position: {X: 0.3, Y: 2.7245, Z: 0}
-                        Rotation: {X: 0, Y: 0, Z: 0, W: 1}
-                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
-                        Children: {}
-                    a791d497146953d0a53ff0d42f14b001: !ExpeditionGeometry
-                        Id: ceecedac-3d6b-5e39-af47-7ee499cee101
-                        Role: Structure
-                        Size: {X: 0.2, Y: 0.351, Z: 3.54}
-                        Axis: X
-                        Rise: 1.0
-        -   Entity:
-                Id: a4639e84-ecdf-5971-8273-8de4c22d8ddb
-                Name: bridge-arch-spandrel-16
-                Components:
-                    121b44788cdd52cb9af0c2471e88f350: !TransformComponent
-                        Id: b91162a5-ce3c-5c20-b2c3-f193967b4f2c
-                        Position: {X: 0.5, Y: 2.7049, Z: 0}
-                        Rotation: {X: 0, Y: 0, Z: 0, W: 1}
-                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
-                        Children: {}
-                    6f3b076ef3a454a7ba2fd3850550c4ae: !ExpeditionGeometry
-                        Id: 3f4debf8-3637-582b-8acc-65681eb0e3c5
-                        Role: Structure
-                        Size: {X: 0.2, Y: 0.3902, Z: 3.54}
-                        Axis: X
-                        Rise: 1.0
-        -   Entity:
-                Id: 6e4c2c78-3394-5b4e-9caf-fdaff7169617
-                Name: bridge-arch-spandrel-17
-                Components:
-                    4c74b03690775bd6b4b8979bd80e2242: !TransformComponent
-                        Id: a8754c47-6101-50ec-9859-e8f42126831f
-                        Position: {X: 0.7, Y: 2.6769, Z: 0}
-                        Rotation: {X: 0, Y: 0, Z: 0, W: 1}
-                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
-                        Children: {}
-                    1a2a929424065bd8add27893ad208739: !ExpeditionGeometry
-                        Id: 8709fe1a-d2d3-50eb-a04f-b712467b3018
-                        Role: Structure
-                        Size: {X: 0.2, Y: 0.4461, Z: 3.54}
-                        Axis: X
-                        Rise: 1.0
-        -   Entity:
-                Id: 6bc10ea4-7454-5aec-a3be-c7c7a054a22a
-                Name: bridge-arch-spandrel-18
-                Components:
-                    90cbb08e8aa15bd8856d6d1dada60ba7: !TransformComponent
-                        Id: 8f14877e-3a86-529c-91ec-50e5797ef390
-                        Position: {X: 0.9, Y: 2.64, Z: 0}
-                        Rotation: {X: 0, Y: 0, Z: 0, W: 1}
-                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
-                        Children: {}
-                    9ff5207ddb815e009a7ca0f154f67d25: !ExpeditionGeometry
-                        Id: 45f6da58-efe9-5ba8-9ed3-f80479ed10ee
-                        Role: Structure
-                        Size: {X: 0.2, Y: 0.52, Z: 3.54}
-                        Axis: X
-                        Rise: 1.0
-        -   Entity:
-                Id: 4ce90360-124d-5db1-a38a-0b5787cf14c9
-                Name: bridge-arch-spandrel-19
-                Components:
-                    6e68022e1305515e815ebb767605b01e: !TransformComponent
-                        Id: cc757d05-f3d5-5091-9aee-8cb9eb0d6df0
-                        Position: {X: 1.1, Y: 2.5933, Z: 0}
-                        Rotation: {X: 0, Y: 0, Z: 0, W: 1}
-                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
-                        Children: {}
-                    600977f91b9c58378bdf01bf9b9ad940: !ExpeditionGeometry
-                        Id: 7f5e81ff-5778-5211-a212-fcfef5859e1d
-                        Role: Structure
-                        Size: {X: 0.2, Y: 0.6135, Z: 3.54}
-                        Axis: X
-                        Rise: 1.0
+                    a73db1f5ab3f5a14890617c37451e994: !ModelComponent
+                        Id: 7d4283d9-f0e8-5d24-b948-56c8c9dff245
+                        Model: 7453c19f-4830-5209-a02e-9828735efc32:CanalCity/bridge_arch
+                        Materials: {}
+                    d7b43bf438f65be28af702b757c7f318: !ExpeditionNativeVisual
+                        Id: a364667b-5527-5866-be1c-d1db8e0f8e31
+                        GeometryId: 04876d10-fd44-5667-8e1b-6834cb236ffa
+                        AdditionalGeometryIds: {}
+                        ReplacesGeometry: true
+                        SkeletonNodes:
+                            e0e7edaddeac5d9fb22587f49810be95: bridge_arch_deck
         -   Entity:
                 Id: 3032a0ce-19c4-541f-8735-87291e09f534
                 Name: bridge-arch-spandrel-20
                 Components:
                     193ac5fdaca253eda1d256a5304fb1e0: !TransformComponent
                         Id: 55a02af8-d435-533d-a7da-a9e6d64e3839
-                        Position: {X: 1.3, Y: 2.5354, Z: 0}
-                        Rotation: {X: 0, Y: 0, Z: 0, W: 1}
+                        Position: {X: 1.3, Y: 2.5354, Z: 0.0}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
                         Scale: {X: 1.0, Y: 1.0, Z: 1.0}
                         Children: {}
                     494bbaaab1415257a700c76d26373f94: !ExpeditionGeometry
@@ -491,268 +446,69 @@ Hierarchy:
                         Axis: X
                         Rise: 1.0
         -   Entity:
-                Id: d63a2a00-1f83-5898-aecb-7070c9b7a3cb
-                Name: bridge-arch-spandrel-21
+                Id: 3624f4f2-dfdb-51bc-a588-786ea3858e93
+                Name: scale-figure-small
                 Components:
-                    9690cf6b544a5ae4bfcd5d6d5391dc78: !TransformComponent
-                        Id: 7c6959a1-690d-5596-83d6-650e5c1434d9
-                        Position: {X: 1.5, Y: 2.4647, Z: 0}
-                        Rotation: {X: 0, Y: 0, Z: 0, W: 1}
+                    050fcd2db8e1507d8725b24c370da37b: !TransformComponent
+                        Id: 3fb37ed6-897a-5cd6-ad80-4ab3645c2237
+                        Position: {X: -11.0, Y: 0.0, Z: 8.5}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
                         Scale: {X: 1.0, Y: 1.0, Z: 1.0}
                         Children: {}
-                    4b82a02c3c825eb2b34cf087fc4e546a: !ExpeditionGeometry
-                        Id: 0f7eff06-23a0-5b42-9f5f-3931ee22eab9
+                    4c22b59b03635180aecb4064b8571dc3: !ModelComponent
+                        Id: 3a6fca55-fbae-5d5b-9baf-2572a1c78384
+                        Model: 7448773b-726b-5826-953e-dff37bbbec91:CanalCity/scale_rat_small
+                        Materials: {}
+                    c785a23949c155408ac3d84a345e42f3: !ExpeditionNativeVisual
+                        Id: 95c3e485-d901-565d-839c-ec9c45425707
+                        GeometryId: 00000000-0000-0000-0000-000000000000
+                        AdditionalGeometryIds: {}
+                        ReplacesGeometry: false
+                        SkeletonNodes: {}
+        -   Entity:
+                Id: 3c715ad5-47ee-57fa-b8c3-3212bbf7ecb0
+                Name: static-door
+                Components:
+                    439b7c9ddfc45c198c7657417a6bcaf4: !TransformComponent
+                        Id: f7a406e9-0706-5e1c-b9c9-a4f6df5961e8
+                        Position: {X: 8.0, Y: 0.0, Z: 8.0}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
+                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
+                        Children: {}
+                    71ca671dfcb55ac78c25731e765af47b: !ModelComponent
+                        Id: ac8a4785-f4ad-5f91-bf10-f945f6dc2967
+                        Model: 9b09e4d0-4c3c-5e13-8901-335306d3cc20:CanalCity/door_standard
+                        Materials: {}
+                    0f25ced71c7a5497ad668450d5d2cb0e: !ExpeditionNativeVisual
+                        Id: ee889817-5e23-5f95-9a81-42aa67e05cad
+                        GeometryId: 00000000-0000-0000-0000-000000000000
+                        AdditionalGeometryIds: {}
+                        ReplacesGeometry: false
+                        SkeletonNodes: {}
+        -   Entity:
+                Id: 422397b7-451a-5543-96cf-b5d8e3e6dc35
+                Name: bridge-arch-spandrel-11
+                Components:
+                    a4290cda4073549b9c0960ec719b5a07: !TransformComponent
+                        Id: 82ed7a71-1283-5a08-a191-14c0517db4b0
+                        Position: {X: -0.5, Y: 2.7049, Z: 0.0}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
+                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
+                        Children: {}
+                    32246c9a50e259b8b833e5bc99fcc47c: !ExpeditionGeometry
+                        Id: c3a520c9-15eb-5888-b32f-42a9afa3418a
                         Role: Structure
-                        Size: {X: 0.2, Y: 0.8706, Z: 3.54}
+                        Size: {X: 0.2, Y: 0.3902, Z: 3.54}
                         Axis: X
                         Rise: 1.0
-        -   Entity:
-                Id: 68ef1cfa-3db9-53a7-bbd6-51ca3dc8955b
-                Name: bridge-arch-spandrel-22
-                Components:
-                    cabe47b9f6c550a5846d7e2d51fbb2e9: !TransformComponent
-                        Id: b45aa42a-4c7b-5078-b493-60bd37fbcbc6
-                        Position: {X: 1.7, Y: 2.3781, Z: 0}
-                        Rotation: {X: 0, Y: 0, Z: 0, W: 1}
-                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
-                        Children: {}
-                    90b0f25885a95a52ae7f8cef576c039b: !ExpeditionGeometry
-                        Id: 297cbeb4-0edb-5fc5-b14a-fdd32ed0d9ee
-                        Role: Structure
-                        Size: {X: 0.2, Y: 1.0438, Z: 3.54}
-                        Axis: X
-                        Rise: 1.0
-        -   Entity:
-                Id: 85be1968-6f10-5520-bc4c-9a0db9a636ae
-                Name: bridge-arch-spandrel-23
-                Components:
-                    6759fe39490b50d1bf86584bb7bfe507: !TransformComponent
-                        Id: 671211e8-e6c4-586b-9299-3f5056f03e83
-                        Position: {X: 1.9, Y: 2.2707, Z: 0}
-                        Rotation: {X: 0, Y: 0, Z: 0, W: 1}
-                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
-                        Children: {}
-                    5176613e731f5164b9964a6f75a8962c: !ExpeditionGeometry
-                        Id: 8a2d0c28-a445-518c-9cc5-d302f48c6ee0
-                        Role: Structure
-                        Size: {X: 0.2, Y: 1.2587, Z: 3.54}
-                        Axis: X
-                        Rise: 1.0
-        -   Entity:
-                Id: 4eee772a-8949-5997-8ed6-2c6d9741b049
-                Name: bridge-arch-spandrel-24
-                Components:
-                    b32583c4cc2a5efd88eaa39c907b4450: !TransformComponent
-                        Id: 968ea034-1a87-5a6b-8623-562d33f4c68f
-                        Position: {X: 2.1, Y: 2.1328, Z: 0}
-                        Rotation: {X: 0, Y: 0, Z: 0, W: 1}
-                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
-                        Children: {}
-                    20e3928db49157f5a2bad529fe190a75: !ExpeditionGeometry
-                        Id: bde53569-1139-504e-93cf-4e5c8054e3d2
-                        Role: Structure
-                        Size: {X: 0.2, Y: 1.5344, Z: 3.54}
-                        Axis: X
-                        Rise: 1.0
-        -   Entity:
-                Id: dfcbb154-59fb-5b64-9641-ae251bd5f738
-                Name: bridge-arch-spandrel-25
-                Components:
-                    a569e773a0dd5c3ba3cdb671d6030b7d: !TransformComponent
-                        Id: 917c56d5-bdee-599f-b5c8-354771a467ec
-                        Position: {X: 2.3, Y: 1.94, Z: 0}
-                        Rotation: {X: 0, Y: 0, Z: 0, W: 1}
-                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
-                        Children: {}
-                    1c9e8b37c274567fa9d437ea28048513: !ExpeditionGeometry
-                        Id: 6408ff0a-ceea-5768-95d0-9252f9131239
-                        Role: Structure
-                        Size: {X: 0.2, Y: 1.92, Z: 3.54}
-                        Axis: X
-                        Rise: 1.0
-        -   Entity:
-                Id: 726cbbf3-b53d-51df-a80c-f9b886a24372
-                Name: bridge-arch-spandrel-26
-                Components:
-                    a56fc0dc29a95b50bd5e0347a0c0bc2a: !TransformComponent
-                        Id: 1d67d04b-b88e-5f76-93b9-0c42914f2445
-                        Position: {X: 2.5, Y: 1.45, Z: 0}
-                        Rotation: {X: 0, Y: 0, Z: 0, W: 1}
-                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
-                        Children: {}
-                    72752b900e505494be3adc423ce711e7: !ExpeditionGeometry
-                        Id: 3436cf00-2612-597e-ac6e-e5e3fa4e69bc
-                        Role: Structure
-                        Size: {X: 0.2, Y: 2.9, Z: 3.54}
-                        Axis: X
-                        Rise: 1.0
-        -   Entity:
-                Id: 1b7a1d7e-b792-5b36-8aa7-6620fd55e824
-                Name: bridge-rail-north
-                Components:
-                    d8bd955caa83533fa65506700bbf09ec: !TransformComponent
-                        Id: 077e6f14-1a98-51d6-bbd4-a0e4c752d0b4
-                        Position: {X: 0, Y: 3.55, Z: -1.6}
-                        Rotation: {X: 0, Y: 0, Z: 0, W: 1}
-                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
-                        Children: {}
-                    dccd76467cf25823989398ff7e7c39a4: !ExpeditionGeometry
-                        Id: 4c8cd257-d199-523b-8b4a-facca88a2c1a
-                        Role: Structure
-                        Size: {X: 8, Y: 0.9, Z: 0.2}
-                        Axis: X
-                        Rise: 1.0
-        -   Entity:
-                Id: 95c5d307-fa59-5261-aba1-5c677e77c6a4
-                Name: bridge-rail-south
-                Components:
-                    ab760e4f9fd95b9a9246310ecc255332: !TransformComponent
-                        Id: fe7403ee-9fe4-5725-8ce9-628e8f93f2e5
-                        Position: {X: 0, Y: 3.55, Z: 1.6}
-                        Rotation: {X: 0, Y: 0, Z: 0, W: 1}
-                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
-                        Children: {}
-                    596165d719c752649070ee8436355163: !ExpeditionGeometry
-                        Id: 38e48edf-9b8d-5247-9b36-09b93df64a72
-                        Role: Structure
-                        Size: {X: 8, Y: 0.9, Z: 0.2}
-                        Axis: X
-                        Rise: 1.0
-        -   Entity:
-                Id: 77047942-368f-5ccf-a0bd-5ba21d2c9d87
-                Name: stairs-base
-                Components:
-                    50b335ae99c55116af9c188969c60f1f: !TransformComponent
-                        Id: 34c68193-27f5-5bcc-95aa-b557dac37e35
-                        Position: {X: -8.83, Y: 0.35, Z: 0}
-                        Rotation: {X: 0, Y: 0, Z: 0, W: 1}
-                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
-                        Children: {}
-                    239917fda7c956bdbace917f38392639: !ExpeditionGeometry
-                        Id: da6b3c11-85af-55d6-bc40-d8c7c4f3f281
-                        Role: Structure
-                        Size: {X: 0.7, Y: 0.7, Z: 3.4}
-                        Axis: X
-                        Rise: 1.0
-        -   Entity:
-                Id: dff2d5bb-2668-5c97-a895-485c55e2e4aa
-                Name: stairs-low-wedge
-                Components:
-                    c7af95bbcf035369a2b3ab692f5fce85: !TransformComponent
-                        Id: 97ae712e-66dc-56c6-a999-2f7e2649c259
-                        Position: {X: -10.58, Y: 0, Z: -1.7}
-                        Rotation: {X: 0, Y: 0, Z: 0, W: 1}
-                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
-                        Children: {}
-                    ecd95ce69283557780ee06c182ac83fc: !ExpeditionGeometry
-                        Id: 2587d330-f315-5d5b-a4cb-f48de40ba8f9
-                        Role: Ramp
-                        Size: {X: 1.4, Y: 0.2, Z: 3.4}
-                        Axis: X
-                        Rise: 0.7
-        -   Entity:
-                Id: 4dfb387c-0e33-566e-af43-dc7805aea882
-                Name: stairs-ramp
-                Components:
-                    51f3706b4b415fc0ad223685e756748b: !TransformComponent
-                        Id: 8cd923ec-70b0-5fb7-89fb-2d8bd5e26207
-                        Position: {X: -8.48, Y: 0.7, Z: -1.2}
-                        Rotation: {X: 0, Y: 0, Z: 0, W: 1}
-                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
-                        Children: {}
-                    07302aa2a5715847a1a59fc2fb8ac988: !ExpeditionGeometry
-                        Id: 8173193a-8c5f-560f-8bdc-795b888d7b32
-                        Role: Ramp
-                        Size: {X: 4.48, Y: 3.1, Z: 2.4}
-                        Axis: X
-                        Rise: 2.4
-        -   Entity:
-                Id: 08a98d34-93d5-5d6c-b666-d5efad9e516d
-                Name: stairs-rail-north-lower
-                Components:
-                    4662c5a004d952cf85cc417a36bd9950: !TransformComponent
-                        Id: 0489b044-e118-5298-867c-5efcdc1c03a2
-                        Position: {X: -8.28, Y: 1.42, Z: -1.18}
-                        Rotation: {X: 0, Y: 0, Z: 0, W: 1}
-                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
-                        Children: {}
-                    cb489d02a61d51078c837c0756a26e64: !ExpeditionGeometry
-                        Id: 1c30e25e-49e6-5af3-be42-1ba4079f9d73
-                        Role: Ramp
-                        Size: {X: 4, Y: 0.12, Z: 0.12}
-                        Axis: X
-                        Rise: 2.1
-        -   Entity:
-                Id: a1886377-177d-50d3-9758-bcd481c81ac2
-                Name: stairs-rail-south-lower
-                Components:
-                    f52dc55f35a957d79d132e25f0178521: !TransformComponent
-                        Id: 38f5c53b-c650-5410-91c7-0ab43b5a4aea
-                        Position: {X: -8.28, Y: 1.42, Z: 1.06}
-                        Rotation: {X: 0, Y: 0, Z: 0, W: 1}
-                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
-                        Children: {}
-                    0a8964278e78529d83415a83fc12ee58: !ExpeditionGeometry
-                        Id: 2a3498b4-607e-50fa-a95c-47974423f20f
-                        Role: Ramp
-                        Size: {X: 4, Y: 0.12, Z: 0.12}
-                        Axis: X
-                        Rise: 2.1
-        -   Entity:
-                Id: d21609b6-b989-52b0-9426-201bdf447114
-                Name: stairs-rail-north-upper
-                Components:
-                    14c5be909f815fe9a8aa9d6b5cb7670b: !TransformComponent
-                        Id: b5b46003-5e07-57b9-bb67-14af2d7bb0da
-                        Position: {X: -8.28, Y: 1.72, Z: -1.18}
-                        Rotation: {X: 0, Y: 0, Z: 0, W: 1}
-                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
-                        Children: {}
-                    4cb1248d539a5e3cad7ecbc3d8b7a9c2: !ExpeditionGeometry
-                        Id: be15a3fe-a7a2-501b-81af-e60ee4e668fa
-                        Role: Ramp
-                        Size: {X: 4, Y: 0.12, Z: 0.12}
-                        Axis: X
-                        Rise: 2.1
-        -   Entity:
-                Id: 1a61fe90-ad99-52ef-a18e-8d8d2ddb8589
-                Name: stairs-rail-south-upper
-                Components:
-                    2926263bff695a69a5c9e63e2c20e6d1: !TransformComponent
-                        Id: c9d3a87b-bd41-5372-8181-34756c8c7843
-                        Position: {X: -8.28, Y: 1.72, Z: 1.06}
-                        Rotation: {X: 0, Y: 0, Z: 0, W: 1}
-                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
-                        Children: {}
-                    04ffea1a7f485a139e36cf6aa74dc484: !ExpeditionGeometry
-                        Id: 2f9cc35e-eba3-5e3d-a7a0-7b6e345b1975
-                        Role: Ramp
-                        Size: {X: 4, Y: 0.12, Z: 0.12}
-                        Axis: X
-                        Rise: 2.1
-        -   Entity:
-                Id: 2243eba5-c668-5c0b-8c49-20b853685a30
-                Name: to-courtyard
-                Components:
-                    32a4a55b508d5bdc8f13a41c881cba76: !TransformComponent
-                        Id: fdadda17-3dbd-5316-9166-8a851aa0a88e
-                        Position: {X: 8, Y: 0, Z: 5}
-                        Rotation: {X: 0, Y: 0, Z: 0, W: 1}
-                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
-                        Children: {}
-                    ca9d8e4226765f19abba529aa71c8b24: !ExpeditionPortal
-                        Id: 99b2a3fb-4619-57fc-8b1a-9e3b43262542
-                        Size: {X: 1.5, Y: 0.2, Z: 1.5}
-                        TargetScene: a6d301f9-3171-5137-b3c7-4622618bebc5:Courtyard
-                        TargetSpawnId: ce37f796-983e-533e-9b89-6d0e5b61abcc
         -   Entity:
                 Id: 42bb426e-f118-5110-95ef-79727e7c7348
                 Name: native-bridge-arch
                 Components:
                     9f3081543ed253ba90108db24e0e502e: !TransformComponent
                         Id: 57e178fe-4141-5dc0-a9ba-0e205aafea26
-                        Position: {X: 0, Y: 0, Z: 0}
-                        Rotation: {X: 0, Y: 0, Z: 0, W: 1}
+                        Position: {X: 0.0, Y: 0.0, Z: 0.0}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
                         Scale: {X: 1.0, Y: 1.0, Z: 1.0}
                         Children: {}
                     f5981c8e94a256a7bc03f89dcc3daf99: !ModelComponent
@@ -796,34 +552,449 @@ Hierarchy:
                             ced53d6441ed51b3ad3aecb6cbe575a5: bridge_arch_arch
                             0072430a95405158bfee4b6b70c91ae3: bridge_arch_structure
         -   Entity:
-                Id: 2df8b058-6242-5bc9-9fa5-ce8c7ebe0a6b
-                Name: native-bridge-deck
+                Id: 4caf7942-7c03-5bf7-837a-1e17a65e96c1
+                Name: bridge-arch-spandrel-02
                 Components:
-                    9d30e5b762bd5380ae77cd2fd062466d: !TransformComponent
-                        Id: b3822475-3a0f-5375-af2f-2b47c79fc301
-                        Position: {X: 0, Y: 0, Z: 0}
-                        Rotation: {X: 0, Y: 0, Z: 0, W: 1}
+                    03725b147d0b5a18b45822054fb35880: !TransformComponent
+                        Id: ff81c4e9-7b02-579d-9087-7f426b679b11
+                        Position: {X: -2.3, Y: 1.94, Z: 0.0}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
                         Scale: {X: 1.0, Y: 1.0, Z: 1.0}
                         Children: {}
-                    a73db1f5ab3f5a14890617c37451e994: !ModelComponent
-                        Id: 7d4283d9-f0e8-5d24-b948-56c8c9dff245
-                        Model: 7453c19f-4830-5209-a02e-9828735efc32:CanalCity/bridge_arch
+                    5790963a4aef553e828fcabed395c406: !ExpeditionGeometry
+                        Id: 08bcabb3-1bfa-5443-baed-08f41991c76e
+                        Role: Structure
+                        Size: {X: 0.2, Y: 1.92, Z: 3.54}
+                        Axis: X
+                        Rise: 1.0
+        -   Entity:
+                Id: 4ce90360-124d-5db1-a38a-0b5787cf14c9
+                Name: bridge-arch-spandrel-19
+                Components:
+                    6e68022e1305515e815ebb767605b01e: !TransformComponent
+                        Id: cc757d05-f3d5-5091-9aee-8cb9eb0d6df0
+                        Position: {X: 1.1, Y: 2.5933, Z: 0.0}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
+                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
+                        Children: {}
+                    600977f91b9c58378bdf01bf9b9ad940: !ExpeditionGeometry
+                        Id: 7f5e81ff-5778-5211-a212-fcfef5859e1d
+                        Role: Structure
+                        Size: {X: 0.2, Y: 0.6135, Z: 3.54}
+                        Axis: X
+                        Rise: 1.0
+        -   Entity:
+                Id: 4d5f04b5-c985-5091-b6d6-283cd039a866
+                Name: bridge-arch-spandrel-13
+                Components:
+                    131d619fc31b56f1bbf3711eef4ffda2: !TransformComponent
+                        Id: 0d4d9357-70ea-554d-8b55-77a4b5c7234e
+                        Position: {X: -0.1, Y: 2.7361, Z: 0.0}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
+                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
+                        Children: {}
+                    3a0231f972005492bf73d4faaf4b0488: !ExpeditionGeometry
+                        Id: bde60b40-be73-503d-b8d5-a9bd5a5782cf
+                        Role: Structure
+                        Size: {X: 0.2, Y: 0.3277, Z: 3.54}
+                        Axis: X
+                        Rise: 1.0
+        -   Entity:
+                Id: 4dfb387c-0e33-566e-af43-dc7805aea882
+                Name: stairs-ramp
+                Components:
+                    51f3706b4b415fc0ad223685e756748b: !TransformComponent
+                        Id: 8cd923ec-70b0-5fb7-89fb-2d8bd5e26207
+                        Position: {X: -8.48, Y: 0.7, Z: -1.2}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
+                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
+                        Children: {}
+                    07302aa2a5715847a1a59fc2fb8ac988: !ExpeditionGeometry
+                        Id: 8173193a-8c5f-560f-8bdc-795b888d7b32
+                        Role: Ramp
+                        Size: {X: 4.48, Y: 3.1, Z: 2.4}
+                        Axis: X
+                        Rise: 2.4
+        -   Entity:
+                Id: 4eee772a-8949-5997-8ed6-2c6d9741b049
+                Name: bridge-arch-spandrel-24
+                Components:
+                    b32583c4cc2a5efd88eaa39c907b4450: !TransformComponent
+                        Id: 968ea034-1a87-5a6b-8623-562d33f4c68f
+                        Position: {X: 2.1, Y: 2.1328, Z: 0.0}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
+                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
+                        Children: {}
+                    20e3928db49157f5a2bad529fe190a75: !ExpeditionGeometry
+                        Id: bde53569-1139-504e-93cf-4e5c8054e3d2
+                        Role: Structure
+                        Size: {X: 0.2, Y: 1.5344, Z: 3.54}
+                        Axis: X
+                        Rise: 1.0
+        -   Entity:
+                Id: 68ef1cfa-3db9-53a7-bbd6-51ca3dc8955b
+                Name: bridge-arch-spandrel-22
+                Components:
+                    cabe47b9f6c550a5846d7e2d51fbb2e9: !TransformComponent
+                        Id: b45aa42a-4c7b-5078-b493-60bd37fbcbc6
+                        Position: {X: 1.7, Y: 2.3781, Z: 0.0}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
+                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
+                        Children: {}
+                    90b0f25885a95a52ae7f8cef576c039b: !ExpeditionGeometry
+                        Id: 297cbeb4-0edb-5fc5-b14a-fdd32ed0d9ee
+                        Role: Structure
+                        Size: {X: 0.2, Y: 1.0438, Z: 3.54}
+                        Axis: X
+                        Rise: 1.0
+        -   Entity:
+                Id: 6b5d0cdb-6cce-5d63-8a83-5a1adbf43834
+                Name: bridge-arch-spandrel-15
+                Components:
+                    c87028a0c0a659f98d9da1eb54e30916: !TransformComponent
+                        Id: b0c63fd1-3a37-53c0-b232-3f160b8a990a
+                        Position: {X: 0.3, Y: 2.7245, Z: 0.0}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
+                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
+                        Children: {}
+                    a791d497146953d0a53ff0d42f14b001: !ExpeditionGeometry
+                        Id: ceecedac-3d6b-5e39-af47-7ee499cee101
+                        Role: Structure
+                        Size: {X: 0.2, Y: 0.351, Z: 3.54}
+                        Axis: X
+                        Rise: 1.0
+        -   Entity:
+                Id: 6bc10ea4-7454-5aec-a3be-c7c7a054a22a
+                Name: bridge-arch-spandrel-18
+                Components:
+                    90cbb08e8aa15bd8856d6d1dada60ba7: !TransformComponent
+                        Id: 8f14877e-3a86-529c-91ec-50e5797ef390
+                        Position: {X: 0.9, Y: 2.64, Z: 0.0}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
+                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
+                        Children: {}
+                    9ff5207ddb815e009a7ca0f154f67d25: !ExpeditionGeometry
+                        Id: 45f6da58-efe9-5ba8-9ed3-f80479ed10ee
+                        Role: Structure
+                        Size: {X: 0.2, Y: 0.52, Z: 3.54}
+                        Axis: X
+                        Rise: 1.0
+        -   Entity:
+                Id: 6e4c2c78-3394-5b4e-9caf-fdaff7169617
+                Name: bridge-arch-spandrel-17
+                Components:
+                    4c74b03690775bd6b4b8979bd80e2242: !TransformComponent
+                        Id: a8754c47-6101-50ec-9859-e8f42126831f
+                        Position: {X: 0.7, Y: 2.6769, Z: 0.0}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
+                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
+                        Children: {}
+                    1a2a929424065bd8add27893ad208739: !ExpeditionGeometry
+                        Id: 8709fe1a-d2d3-50eb-a04f-b712467b3018
+                        Role: Structure
+                        Size: {X: 0.2, Y: 0.4461, Z: 3.54}
+                        Axis: X
+                        Rise: 1.0
+        -   Entity:
+                Id: 726cbbf3-b53d-51df-a80c-f9b886a24372
+                Name: bridge-arch-spandrel-26
+                Components:
+                    a56fc0dc29a95b50bd5e0347a0c0bc2a: !TransformComponent
+                        Id: 1d67d04b-b88e-5f76-93b9-0c42914f2445
+                        Position: {X: 2.5, Y: 1.45, Z: 0.0}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
+                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
+                        Children: {}
+                    72752b900e505494be3adc423ce711e7: !ExpeditionGeometry
+                        Id: 3436cf00-2612-597e-ac6e-e5e3fa4e69bc
+                        Role: Structure
+                        Size: {X: 0.2, Y: 2.9, Z: 3.54}
+                        Axis: X
+                        Rise: 1.0
+        -   Entity:
+                Id: 77047942-368f-5ccf-a0bd-5ba21d2c9d87
+                Name: stairs-base
+                Components:
+                    50b335ae99c55116af9c188969c60f1f: !TransformComponent
+                        Id: 34c68193-27f5-5bcc-95aa-b557dac37e35
+                        Position: {X: -8.83, Y: 0.35, Z: 0.0}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
+                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
+                        Children: {}
+                    239917fda7c956bdbace917f38392639: !ExpeditionGeometry
+                        Id: da6b3c11-85af-55d6-bc40-d8c7c4f3f281
+                        Role: Structure
+                        Size: {X: 0.7, Y: 0.7, Z: 3.4}
+                        Axis: X
+                        Rise: 1.0
+        -   Entity:
+                Id: 85be1968-6f10-5520-bc4c-9a0db9a636ae
+                Name: bridge-arch-spandrel-23
+                Components:
+                    6759fe39490b50d1bf86584bb7bfe507: !TransformComponent
+                        Id: 671211e8-e6c4-586b-9299-3f5056f03e83
+                        Position: {X: 1.9, Y: 2.2707, Z: 0.0}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
+                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
+                        Children: {}
+                    5176613e731f5164b9964a6f75a8962c: !ExpeditionGeometry
+                        Id: 8a2d0c28-a445-518c-9cc5-d302f48c6ee0
+                        Role: Structure
+                        Size: {X: 0.2, Y: 1.2587, Z: 3.54}
+                        Axis: X
+                        Rise: 1.0
+        -   Entity:
+                Id: 88ef0634-f687-5361-867a-2a4f5ea11483
+                Name: Editor ambient
+                Components:
+                    539200b2d85f55abadda5447032a62ab: !TransformComponent
+                        Id: f59ce1cd-5d68-5dc1-983b-9ae9b3ef219c
+                        Position: {X: 0.0, Y: 0.0, Z: 0.0}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
+                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
+                        Children: {}
+                    3e75be55828254e788b00705c0f1260f: !LightComponent
+                        Id: eedf036c-3921-5bac-834b-bf59f638a669
+                        Type: !LightAmbient
+                            Color: !ColorRgbProvider
+                                Value: {R: 1.0, G: 1.0, B: 1.0}
+                        Intensity: 0.55
+        -   Entity:
+                Id: 8a2ab5aa-8855-5c6b-afa9-ba71f0fa62e0
+                Name: bridge-arch-spandrel-14
+                Components:
+                    1caf136f7d625196b48c1cbf4bbbc99b: !TransformComponent
+                        Id: bb87cbe1-eb57-51d7-bdb7-8c505f045d13
+                        Position: {X: 0.1, Y: 2.7361, Z: 0.0}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
+                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
+                        Children: {}
+                    addade6d19e852eaad9ed4e444439f95: !ExpeditionGeometry
+                        Id: 0a67e4aa-73fa-5253-bac1-ef8728d26826
+                        Role: Structure
+                        Size: {X: 0.2, Y: 0.3277, Z: 3.54}
+                        Axis: X
+                        Rise: 1.0
+        -   Entity:
+                Id: 8c8e0167-ac47-5cb9-a8c6-bfed1f46fee9
+                Name: bridge-arch-spandrel-09
+                Components:
+                    2ef7dec6a4ca5b13ad90c8742cfe9893: !TransformComponent
+                        Id: 6f5264f6-e22d-556e-93c3-4cbd3eff22c1
+                        Position: {X: -0.9, Y: 2.64, Z: 0.0}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
+                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
+                        Children: {}
+                    04ce1396a1b55ef1b95e22a9153a885c: !ExpeditionGeometry
+                        Id: 360039c4-fc16-52d8-bd52-978728e8ff81
+                        Role: Structure
+                        Size: {X: 0.2, Y: 0.52, Z: 3.54}
+                        Axis: X
+                        Rise: 1.0
+        -   Entity:
+                Id: 91bb90c8-a298-5e2e-943a-0eac1304225a
+                Name: bridge-pier-east
+                Components:
+                    eae1da7683fc56c8a3929272e26ee549: !TransformComponent
+                        Id: d60df575-32b7-5449-8bf3-0a005ca520c2
+                        Position: {X: 3.305, Y: 1.45, Z: 0.0}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
+                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
+                        Children: {}
+                    6db71a854a7c5ecfb5aa6f0efc00f395: !ExpeditionGeometry
+                        Id: 88e1bd49-d380-51e1-a67c-675db0c5d130
+                        Role: Structure
+                        Size: {X: 1.41, Y: 2.9, Z: 3.54}
+                        Axis: X
+                        Rise: 1.0
+        -   Entity:
+                Id: 95c5d307-fa59-5261-aba1-5c677e77c6a4
+                Name: bridge-rail-south
+                Components:
+                    ab760e4f9fd95b9a9246310ecc255332: !TransformComponent
+                        Id: fe7403ee-9fe4-5725-8ce9-628e8f93f2e5
+                        Position: {X: 0.0, Y: 3.55, Z: 1.6}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
+                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
+                        Children: {}
+                    596165d719c752649070ee8436355163: !ExpeditionGeometry
+                        Id: 38e48edf-9b8d-5247-9b36-09b93df64a72
+                        Role: Structure
+                        Size: {X: 8.0, Y: 0.9, Z: 0.2}
+                        Axis: X
+                        Rise: 1.0
+        -   Entity:
+                Id: 9b7aa3d5-17a3-57e1-9961-b841f9ffaa0e
+                Name: bridge-pier-west
+                Components:
+                    279b895378325793ae3a2df544e31e20: !TransformComponent
+                        Id: 53ce7abd-87a2-54b4-b412-6daced4d5047
+                        Position: {X: -3.305, Y: 1.45, Z: 0.0}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
+                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
+                        Children: {}
+                    1f3977eac78a5dc09bc5849640909450: !ExpeditionGeometry
+                        Id: d8932cd7-3887-592e-be7e-af0aeaa8b3d5
+                        Role: Structure
+                        Size: {X: 1.41, Y: 2.9, Z: 3.54}
+                        Axis: X
+                        Rise: 1.0
+        -   Entity:
+                Id: 9c0481c4-4e6c-54b5-8a09-30a2272fb351
+                Name: bridge-arch-spandrel-12
+                Components:
+                    25aa71d4403e5146af2aeb89f67f0f96: !TransformComponent
+                        Id: e2ba8838-f25c-5262-b546-0ebd2bc6b0fc
+                        Position: {X: -0.3, Y: 2.7245, Z: 0.0}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
+                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
+                        Children: {}
+                    bf6eae408dea56249ea0c19d4b07b6f2: !ExpeditionGeometry
+                        Id: 7839ebfd-3ba9-5f46-8e86-c08174126735
+                        Role: Structure
+                        Size: {X: 0.2, Y: 0.351, Z: 3.54}
+                        Axis: X
+                        Rise: 1.0
+        -   Entity:
+                Id: 9d767c5d-92e5-5ef9-aaad-68a4af88e75e
+                Name: dremma-floor
+                Components:
+                    bb6ac5572a6d5fd5a29ff73ce49125a0: !TransformComponent
+                        Id: 219ebcb1-8ca5-59e2-97f0-bd042a8e64fd
+                        Position: {X: -1.0, Y: -0.1, Z: 0.0}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
+                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
+                        Children: {}
+                    6835d2ed6bb458a888c63372826d08df: !ExpeditionGeometry
+                        Id: 71e302fe-aeaa-594d-9e19-f3fdd327193a
+                        Role: Floor
+                        Size: {X: 26.0, Y: 0.2, Z: 20.0}
+                        Axis: X
+                        Rise: 1.0
+        -   Entity:
+                Id: a1886377-177d-50d3-9758-bcd481c81ac2
+                Name: stairs-rail-south-lower
+                Components:
+                    f52dc55f35a957d79d132e25f0178521: !TransformComponent
+                        Id: 38f5c53b-c650-5410-91c7-0ab43b5a4aea
+                        Position: {X: -8.28, Y: 1.42, Z: 1.06}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
+                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
+                        Children: {}
+                    0a8964278e78529d83415a83fc12ee58: !ExpeditionGeometry
+                        Id: 2a3498b4-607e-50fa-a95c-47974423f20f
+                        Role: Ramp
+                        Size: {X: 4.0, Y: 0.12, Z: 0.12}
+                        Axis: X
+                        Rise: 2.1
+        -   Entity:
+                Id: a26d5c4d-5cb2-5798-82e3-863540694373
+                Name: bridge-arch-spandrel-01
+                Components:
+                    06b35b026b295d5b9760cd21b3446e6f: !TransformComponent
+                        Id: ddb908b1-97b7-5663-9fa8-c488141931b0
+                        Position: {X: -2.5, Y: 1.45, Z: 0.0}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
+                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
+                        Children: {}
+                    c7a37753097e5eb3bba25268f61d5b67: !ExpeditionGeometry
+                        Id: ec04775a-5b27-5a05-825b-663acdd1efb2
+                        Role: Structure
+                        Size: {X: 0.2, Y: 2.9, Z: 3.54}
+                        Axis: X
+                        Rise: 1.0
+        -   Entity:
+                Id: a2f24080-b550-5222-9510-98b84bd376f7
+                Name: lantern-03
+                Components:
+                    0c463e596874567989177afe59104d4e: !TransformComponent
+                        Id: c045621c-2bdf-5198-b97d-d2cf526d593d
+                        Position: {X: 5.0, Y: 0.0, Z: -5.0}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
+                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
+                        Children: {}
+                    5c464daa2dfa577dbe2d109426a82dec: !ModelComponent
+                        Id: 452e6b84-e157-5637-9a0d-29df954c431e
+                        Model: 03021514-18ab-5b03-a6b3-80ad2201b372:CanalCity/lantern_amber
                         Materials: {}
-                    d7b43bf438f65be28af702b757c7f318: !ExpeditionNativeVisual
-                        Id: a364667b-5527-5866-be1c-d1db8e0f8e31
-                        GeometryId: 04876d10-fd44-5667-8e1b-6834cb236ffa
+                    0b38fe83957a5f79a6b8d2d1214e23e3: !ExpeditionNativeVisual
+                        Id: 8f445662-c9a7-59c1-92b7-5ce2b75b7b4d
+                        GeometryId: 00000000-0000-0000-0000-000000000000
                         AdditionalGeometryIds: {}
-                        ReplacesGeometry: true
-                        SkeletonNodes:
-                            e0e7edaddeac5d9fb22587f49810be95: bridge_arch_deck
+                        ReplacesGeometry: false
+                        SkeletonNodes: {}
+        -   Entity:
+                Id: a4639e84-ecdf-5971-8273-8de4c22d8ddb
+                Name: bridge-arch-spandrel-16
+                Components:
+                    121b44788cdd52cb9af0c2471e88f350: !TransformComponent
+                        Id: b91162a5-ce3c-5c20-b2c3-f193967b4f2c
+                        Position: {X: 0.5, Y: 2.7049, Z: 0.0}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
+                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
+                        Children: {}
+                    6f3b076ef3a454a7ba2fd3850550c4ae: !ExpeditionGeometry
+                        Id: 3f4debf8-3637-582b-8acc-65681eb0e3c5
+                        Role: Structure
+                        Size: {X: 0.2, Y: 0.3902, Z: 3.54}
+                        Axis: X
+                        Rise: 1.0
+        -   Entity:
+                Id: a9c5d03c-ac1e-565c-874e-6967b8966386
+                Name: bridge-arch-spandrel-04
+                Components:
+                    91f2067a3bbc51d890b35988c60aec81: !TransformComponent
+                        Id: ac6a1859-d653-5f09-8e73-983b561a6cce
+                        Position: {X: -1.9, Y: 2.2707, Z: 0.0}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
+                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
+                        Children: {}
+                    e1a195e41cfc530c8eb6619a947c4c69: !ExpeditionGeometry
+                        Id: 50f5e1ed-57ae-57da-973b-d30cb708b96f
+                        Role: Structure
+                        Size: {X: 0.2, Y: 1.2587, Z: 3.54}
+                        Axis: X
+                        Rise: 1.0
+        -   Entity:
+                Id: ab29027c-b4c4-510c-824a-51c031b2b454
+                Name: canal-wall
+                Components:
+                    4184f6b487b15c3193fde07ce66759a6: !TransformComponent
+                        Id: 64e96621-f27a-53fc-bf5f-7cf8a918e70c
+                        Position: {X: 0.0, Y: 0.0, Z: 13.0}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
+                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
+                        Children: {}
+                    4522cb5c78b45848b55111655dad31d7: !ModelComponent
+                        Id: 92b5e880-2510-57c2-bce0-40c4c74f09f3
+                        Model: 092d2bf8-c678-52e4-aaca-b475fa1f4787:CanalCity/canal_wall
+                        Materials: {}
+                    d559aefc33e952bca15a115f40bf70d5: !ExpeditionNativeVisual
+                        Id: 6ce65bc6-900d-5651-81b6-0235894054e9
+                        GeometryId: 00000000-0000-0000-0000-000000000000
+                        AdditionalGeometryIds: {}
+                        ReplacesGeometry: false
+                        SkeletonNodes: {}
+        -   Entity:
+                Id: b1376555-8bba-5820-8295-c5ba44f86772
+                Name: plaza-start
+                Components:
+                    5b4691c317035af98212d50c18f5c4fd: !TransformComponent
+                        Id: 1a8de8ef-9c10-555a-b315-15f18347ae03
+                        Position: {X: 0.0, Y: 0.0, Z: 8.0}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
+                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
+                        Children: {}
+                    ede0964aa27d566481f8527f43a3e52e: !ExpeditionSpawn
+                        Id: 6abd0762-0337-5e09-94f9-7410b6b3d954
         -   Entity:
                 Id: b27fc3db-0faa-5ef2-898f-b1a08daf422d
                 Name: native-bridge-rails
                 Components:
                     c4c7e2e8198f534b867423ab00e42bc4: !TransformComponent
                         Id: 7f10e821-d969-5388-9edc-a85e8ec0ed08
-                        Position: {X: 0, Y: 0, Z: 0}
-                        Rotation: {X: 0, Y: 0, Z: 0, W: 1}
+                        Position: {X: 0.0, Y: 0.0, Z: 0.0}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
                         Scale: {X: 1.0, Y: 1.0, Z: 1.0}
                         Children: {}
                     fe16771857605d8f96fc4b6d26e01f1b: !ModelComponent
@@ -842,315 +1013,144 @@ Hierarchy:
                             a8bef611218955eab196e60ddd0d7a2f: bridge_arch_banner
                             4bcf5636ef285a57bdb029663ca12cfd: bridge_arch_lamp
         -   Entity:
-                Id: 0a126d41-7f9a-5780-88cb-a1313330f3dd
-                Name: native-stairs
+                Id: b659656a-9976-562c-b4fa-86e40ae2c0ec
+                Name: bridge-arch-spandrel-05
                 Components:
-                    450c8b5fd45c59848e7e0d8ef82901b0: !TransformComponent
-                        Id: 93119479-ed00-54e8-8f47-e11bf74dcd16
-                        Position: {X: -8.48, Y: 0.7, Z: 0}
-                        Rotation: {X: 0, Y: -0.70710677, Z: 0, W: 0.70710677}
+                    ce5b6769bbba53ea9c91aaa90323e0b1: !TransformComponent
+                        Id: 47bc71e3-0451-54b4-a702-c987268c6ddf
+                        Position: {X: -1.7, Y: 2.3781, Z: 0.0}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
                         Scale: {X: 1.0, Y: 1.0, Z: 1.0}
                         Children: {}
-                    62d2349d17af53e68dc4592b8250c5ff: !ModelComponent
-                        Id: 63844db9-43ef-543e-85dd-7bb7a4dc3f3a
-                        Model: 2345f4da-9ab5-517c-a4be-676148662b8e:CanalCity/stairs_medium
-                        Materials: {}
-                    cbc2b9fa1fc2569d9fedd675e9ef77c0: !ExpeditionNativeVisual
-                        Id: 818c838c-912a-520b-9078-38e89f9b0fd3
-                        GeometryId: 4dfb387c-0e33-566e-af43-dc7805aea882
-                        AdditionalGeometryIds:
-                            e0b5f46fed905669a80e0fbeef54de7f: 08a98d34-93d5-5d6c-b666-d5efad9e516d
-                            0a6e34e945835f35b8d1bd69d5b408ba: a1886377-177d-50d3-9758-bcd481c81ac2
-                            cde24ce8dbb45deea1a1fd3539b51df8: d21609b6-b989-52b0-9426-201bdf447114
-                            039a95feb6ec5b74a989d429945df175: 1a61fe90-ad99-52ef-a18e-8d8d2ddb8589
-                        ReplacesGeometry: true
-                        SkeletonNodes: {}
+                    d4b16c099ee058adbe825e938753bb9a: !ExpeditionGeometry
+                        Id: 7a4f6762-f724-5b77-85fd-42234e715862
+                        Role: Structure
+                        Size: {X: 0.2, Y: 1.0438, Z: 3.54}
+                        Axis: X
+                        Rise: 1.0
         -   Entity:
-                Id: ab29027c-b4c4-510c-824a-51c031b2b454
-                Name: canal-wall
+                Id: b69c82fb-1f33-50d9-9f22-ddbe321a15ff
+                Name: bridge-arch-spandrel-07
                 Components:
-                    4184f6b487b15c3193fde07ce66759a6: !TransformComponent
-                        Id: 64e96621-f27a-53fc-bf5f-7cf8a918e70c
-                        Position: {X: 0, Y: 0, Z: 13}
-                        Rotation: {X: 0, Y: 0, Z: 0, W: 1}
+                    929e5d95f37a5b88bb9cfbbb833152ad: !TransformComponent
+                        Id: 197cc717-4648-5293-9e3b-1ecdcc76890c
+                        Position: {X: -1.3, Y: 2.5354, Z: 0.0}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
                         Scale: {X: 1.0, Y: 1.0, Z: 1.0}
                         Children: {}
-                    4522cb5c78b45848b55111655dad31d7: !ModelComponent
-                        Id: 92b5e880-2510-57c2-bce0-40c4c74f09f3
-                        Model: 092d2bf8-c678-52e4-aaca-b475fa1f4787:CanalCity/canal_wall
-                        Materials: {}
-                    d559aefc33e952bca15a115f40bf70d5: !ExpeditionNativeVisual
-                        Id: 6ce65bc6-900d-5651-81b6-0235894054e9
-                        GeometryId: 00000000-0000-0000-0000-000000000000
-                        AdditionalGeometryIds: {}
-                        ReplacesGeometry: false
-                        SkeletonNodes: {}
+                    9dce69f69854538893303b2cd875ba5d: !ExpeditionGeometry
+                        Id: 5ffd57d3-ceff-53f6-bee0-3408e4ea67f8
+                        Role: Structure
+                        Size: {X: 0.2, Y: 0.7291, Z: 3.54}
+                        Axis: X
+                        Rise: 1.0
         -   Entity:
-                Id: 3c715ad5-47ee-57fa-b8c3-3212bbf7ecb0
-                Name: static-door
+                Id: ba3a1dfd-3bd0-56fc-aa71-5e632ff05e97
+                Name: expedition_dremma
                 Components:
-                    439b7c9ddfc45c198c7657417a6bcaf4: !TransformComponent
-                        Id: f7a406e9-0706-5e1c-b9c9-a4f6df5961e8
-                        Position: {X: 8, Y: 0, Z: 8}
-                        Rotation: {X: 0, Y: 0, Z: 0, W: 1}
+                    276421c0234759479ddb9730a31ace5a: !TransformComponent
+                        Id: a6a4c612-27ca-5121-b7a2-eb2688dc9a0b
+                        Position: {X: 0.0, Y: 0.0, Z: 0.0}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
                         Scale: {X: 1.0, Y: 1.0, Z: 1.0}
                         Children: {}
-                    71ca671dfcb55ac78c25731e765af47b: !ModelComponent
-                        Id: ac8a4785-f4ad-5f91-bf10-f945f6dc2967
-                        Model: 9b09e4d0-4c3c-5e13-8901-335306d3cc20:CanalCity/door_standard
-                        Materials: {}
-                    0f25ced71c7a5497ad668450d5d2cb0e: !ExpeditionNativeVisual
-                        Id: ee889817-5e23-5f95-9a81-42aa67e05cad
-                        GeometryId: 00000000-0000-0000-0000-000000000000
-                        AdditionalGeometryIds: {}
-                        ReplacesGeometry: false
-                        SkeletonNodes: {}
+                    0a7aa7c6934f5d74bac4a89a16658fcc: !ExpeditionScene
+                        Id: ae72e2b0-b796-532a-8f9f-43312915502b
+                        DefaultSpawn: ref!! b1376555-8bba-5820-8295-c5ba44f86772
+                        RecoveryThreshold: -2.0
         -   Entity:
-                Id: 3624f4f2-dfdb-51bc-a588-786ea3858e93
-                Name: scale-figure-small
+                Id: d21609b6-b989-52b0-9426-201bdf447114
+                Name: stairs-rail-north-upper
                 Components:
-                    050fcd2db8e1507d8725b24c370da37b: !TransformComponent
-                        Id: 3fb37ed6-897a-5cd6-ad80-4ab3645c2237
-                        Position: {X: -11, Y: 0, Z: 8.5}
-                        Rotation: {X: 0, Y: 0, Z: 0, W: 1}
+                    14c5be909f815fe9a8aa9d6b5cb7670b: !TransformComponent
+                        Id: b5b46003-5e07-57b9-bb67-14af2d7bb0da
+                        Position: {X: -8.28, Y: 1.72, Z: -1.18}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
                         Scale: {X: 1.0, Y: 1.0, Z: 1.0}
                         Children: {}
-                    4c22b59b03635180aecb4064b8571dc3: !ModelComponent
-                        Id: 3a6fca55-fbae-5d5b-9baf-2572a1c78384
-                        Model: 7448773b-726b-5826-953e-dff37bbbec91:CanalCity/scale_rat_small
-                        Materials: {}
-                    c785a23949c155408ac3d84a345e42f3: !ExpeditionNativeVisual
-                        Id: 95c3e485-d901-565d-839c-ec9c45425707
-                        GeometryId: 00000000-0000-0000-0000-000000000000
-                        AdditionalGeometryIds: {}
-                        ReplacesGeometry: false
-                        SkeletonNodes: {}
+                    4cb1248d539a5e3cad7ecbc3d8b7a9c2: !ExpeditionGeometry
+                        Id: be15a3fe-a7a2-501b-81af-e60ee4e668fa
+                        Role: Ramp
+                        Size: {X: 4.0, Y: 0.12, Z: 0.12}
+                        Axis: X
+                        Rise: 2.1
         -   Entity:
-                Id: 05fd7858-55ee-563f-940d-6f678adaa5ce
-                Name: scale-figure-medium
+                Id: d63a2a00-1f83-5898-aecb-7070c9b7a3cb
+                Name: bridge-arch-spandrel-21
                 Components:
-                    a3575bde07335ac0afc90c841b397a57: !TransformComponent
-                        Id: 90eef1d0-bcc2-5911-99dd-b8226877b9c4
-                        Position: {X: -8, Y: 0, Z: 8.5}
-                        Rotation: {X: 0, Y: 0, Z: 0, W: 1}
+                    9690cf6b544a5ae4bfcd5d6d5391dc78: !TransformComponent
+                        Id: 7c6959a1-690d-5596-83d6-650e5c1434d9
+                        Position: {X: 1.5, Y: 2.4647, Z: 0.0}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
                         Scale: {X: 1.0, Y: 1.0, Z: 1.0}
                         Children: {}
-                    406993fee254530ab9f9f9f6cfb04ea8: !ModelComponent
-                        Id: b21b4ea3-9829-5fbb-a405-cfa86daac3f1
-                        Model: 4fd98ccc-7899-5219-ad1f-a17b1d240473:CanalCity/scale_rat_medium
-                        Materials: {}
-                    f3ec80a2c7de5c7ea1a34c7dea36a5db: !ExpeditionNativeVisual
-                        Id: 6ad8684b-55af-5cc7-b9ae-314fb18f2a04
-                        GeometryId: 00000000-0000-0000-0000-000000000000
-                        AdditionalGeometryIds: {}
-                        ReplacesGeometry: false
-                        SkeletonNodes: {}
+                    4b82a02c3c825eb2b34cf087fc4e546a: !ExpeditionGeometry
+                        Id: 0f7eff06-23a0-5b42-9f5f-3931ee22eab9
+                        Role: Structure
+                        Size: {X: 0.2, Y: 0.8706, Z: 3.54}
+                        Axis: X
+                        Rise: 1.0
         -   Entity:
-                Id: 0315ae51-0048-5441-b3a9-03c52a7b4a1b
-                Name: scale-figure-adult
+                Id: dfcbb154-59fb-5b64-9641-ae251bd5f738
+                Name: bridge-arch-spandrel-25
                 Components:
-                    e12f598e1d2f577ab29867254c895a02: !TransformComponent
-                        Id: cf3984ae-065a-53d4-bb77-147ac8f122e3
-                        Position: {X: -5, Y: 0, Z: 8.5}
-                        Rotation: {X: 0, Y: 0, Z: 0, W: 1}
+                    a569e773a0dd5c3ba3cdb671d6030b7d: !TransformComponent
+                        Id: 917c56d5-bdee-599f-b5c8-354771a467ec
+                        Position: {X: 2.3, Y: 1.94, Z: 0.0}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
                         Scale: {X: 1.0, Y: 1.0, Z: 1.0}
                         Children: {}
-                    a0fa9bc6ff335808bc8773e5355bd55a: !ModelComponent
-                        Id: 1ffce653-d7f1-5327-8e5b-dc641fba1635
-                        Model: a30f543c-60fb-5b1a-87b8-51b81a8d8d9e:CanalCity/scale_rat_adult
-                        Materials: {}
-                    b4219556a436560780a4ae8b7da15219: !ExpeditionNativeVisual
-                        Id: d9f55da3-2122-5029-9894-24fb2a3cc15c
-                        GeometryId: 00000000-0000-0000-0000-000000000000
-                        AdditionalGeometryIds: {}
-                        ReplacesGeometry: false
-                        SkeletonNodes: {}
+                    1c9e8b37c274567fa9d437ea28048513: !ExpeditionGeometry
+                        Id: 6408ff0a-ceea-5768-95d0-9252f9131239
+                        Role: Structure
+                        Size: {X: 0.2, Y: 1.92, Z: 3.54}
+                        Axis: X
+                        Rise: 1.0
         -   Entity:
-                Id: 0045ac87-adc5-59d2-91ec-b629c371ca93
-                Name: scale-figure-high
+                Id: dff2d5bb-2668-5c97-a895-485c55e2e4aa
+                Name: stairs-low-wedge
                 Components:
-                    3f9630a10a6a56b79fc341db9ca69b60: !TransformComponent
-                        Id: 5868ee91-0351-54e3-bdf1-766f115661c5
-                        Position: {X: -2, Y: 0, Z: 8.5}
-                        Rotation: {X: 0, Y: 0, Z: 0, W: 1}
+                    c7af95bbcf035369a2b3ab692f5fce85: !TransformComponent
+                        Id: 97ae712e-66dc-56c6-a999-2f7e2649c259
+                        Position: {X: -10.58, Y: 0.0, Z: -1.7}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
                         Scale: {X: 1.0, Y: 1.0, Z: 1.0}
                         Children: {}
-                    f47a2e205a705bb495ac4d068649eb9e: !ModelComponent
-                        Id: f4d70aba-dc6a-5bd4-85b6-83589cbcc552
-                        Model: 639579c9-1b93-5bef-b2e2-24901d59ec90:CanalCity/scale_rat_high
-                        Materials: {}
-                    054cc50d198f5070a453b1c40fcad599: !ExpeditionNativeVisual
-                        Id: 727f477c-8770-52a8-b054-484de73d6195
-                        GeometryId: 00000000-0000-0000-0000-000000000000
-                        AdditionalGeometryIds: {}
-                        ReplacesGeometry: false
-                        SkeletonNodes: {}
+                    ecd95ce69283557780ee06c182ac83fc: !ExpeditionGeometry
+                        Id: 2587d330-f315-5d5b-a4cb-f48de40ba8f9
+                        Role: Ramp
+                        Size: {X: 1.4, Y: 0.2, Z: 3.4}
+                        Axis: X
+                        Rise: 0.7
         -   Entity:
-                Id: 0d832e77-2930-5002-9c1e-3a8ce8b2eda0
-                Name: lantern-01
+                Id: f10a7bc6-c91a-5835-8c6f-2ce1e6c048be
+                Name: bridge-arch-spandrel-10
                 Components:
-                    80bc527156cf56bf980a0fe174af49d4: !TransformComponent
-                        Id: ebdd6a49-1bb6-5832-97ca-1569be25dff2
-                        Position: {X: -10, Y: 0, Z: 5}
-                        Rotation: {X: 0, Y: 0, Z: 0, W: 1}
+                    e293f990d7465fa9b96db3080ed1e99f: !TransformComponent
+                        Id: eb23cbdd-62eb-56e6-8bc7-b44dc82d317d
+                        Position: {X: -0.7, Y: 2.6769, Z: 0.0}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
                         Scale: {X: 1.0, Y: 1.0, Z: 1.0}
                         Children: {}
-                    d8887d9740855a02bbf477d958a39098: !ModelComponent
-                        Id: cfbd94f5-d031-59ec-aab9-dc567137a9f1
-                        Model: 03021514-18ab-5b03-a6b3-80ad2201b372:CanalCity/lantern_amber
-                        Materials: {}
-                    b91825fca9fe5428bc9819ff0b74783a: !ExpeditionNativeVisual
-                        Id: adc7e025-d2ef-52f5-b453-f6d23cd67e95
-                        GeometryId: 00000000-0000-0000-0000-000000000000
-                        AdditionalGeometryIds: {}
-                        ReplacesGeometry: false
-                        SkeletonNodes: {}
+                    8293aa80615f5f1cac11b6d062126125: !ExpeditionGeometry
+                        Id: 1895beae-2340-523e-ab62-69715e55e895
+                        Role: Structure
+                        Size: {X: 0.2, Y: 0.4461, Z: 3.54}
+                        Axis: X
+                        Rise: 1.0
         -   Entity:
-                Id: 2355c392-5eb0-5d25-848f-b10f29f969ea
-                Name: lantern-02
+                Id: fae231f7-0481-5bd6-b789-8eb27ca4ed03
+                Name: bridge-arch-spandrel-03
                 Components:
-                    11feb16500315030bdb65d09311cbd65: !TransformComponent
-                        Id: 4f7020cc-c5b1-5c7d-b8e1-2eb13f8498f1
-                        Position: {X: -5, Y: 0, Z: 5}
-                        Rotation: {X: 0, Y: 0, Z: 0, W: 1}
+                    a3a213d5032458aba9c439a9580d9c98: !TransformComponent
+                        Id: c696877f-885f-5939-86c7-a444392f9ae5
+                        Position: {X: -2.1, Y: 2.1328, Z: 0.0}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
                         Scale: {X: 1.0, Y: 1.0, Z: 1.0}
                         Children: {}
-                    6ff030ebb4b954af8f7ec5340acf3626: !ModelComponent
-                        Id: 40164775-759b-593c-887b-1b0be02219a6
-                        Model: 03021514-18ab-5b03-a6b3-80ad2201b372:CanalCity/lantern_amber
-                        Materials: {}
-                    c868b806e21b5762aae16a25b51cc717: !ExpeditionNativeVisual
-                        Id: f1716054-3bab-52f1-9f33-f11a8000e6ab
-                        GeometryId: 00000000-0000-0000-0000-000000000000
-                        AdditionalGeometryIds: {}
-                        ReplacesGeometry: false
-                        SkeletonNodes: {}
-        -   Entity:
-                Id: a2f24080-b550-5222-9510-98b84bd376f7
-                Name: lantern-03
-                Components:
-                    0c463e596874567989177afe59104d4e: !TransformComponent
-                        Id: c045621c-2bdf-5198-b97d-d2cf526d593d
-                        Position: {X: 5, Y: 0, Z: -5}
-                        Rotation: {X: 0, Y: 0, Z: 0, W: 1}
-                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
-                        Children: {}
-                    5c464daa2dfa577dbe2d109426a82dec: !ModelComponent
-                        Id: 452e6b84-e157-5637-9a0d-29df954c431e
-                        Model: 03021514-18ab-5b03-a6b3-80ad2201b372:CanalCity/lantern_amber
-                        Materials: {}
-                    0b38fe83957a5f79a6b8d2d1214e23e3: !ExpeditionNativeVisual
-                        Id: 8f445662-c9a7-59c1-92b7-5ce2b75b7b4d
-                        GeometryId: 00000000-0000-0000-0000-000000000000
-                        AdditionalGeometryIds: {}
-                        ReplacesGeometry: false
-                        SkeletonNodes: {}
-        -   Entity:
-                Id: 24a56481-9a18-59b9-8254-eea5a65ec0b3
-                Name: lantern-04
-                Components:
-                    ec4772cfb0665796a16bb462d7769d05: !TransformComponent
-                        Id: 2cced8ba-d4ee-58b3-bdc6-e17420481a42
-                        Position: {X: 10, Y: 0, Z: -5}
-                        Rotation: {X: 0, Y: 0, Z: 0, W: 1}
-                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
-                        Children: {}
-                    70f2197bc0085f4da1defc81d2c90c7e: !ModelComponent
-                        Id: 140ecb1d-1fac-5cbf-8172-420cb796d227
-                        Model: 03021514-18ab-5b03-a6b3-80ad2201b372:CanalCity/lantern_amber
-                        Materials: {}
-                    70936c55b8075a118a54ff8616eaabe3: !ExpeditionNativeVisual
-                        Id: 91e09fdc-13ca-56ea-a699-181cd35785f9
-                        GeometryId: 00000000-0000-0000-0000-000000000000
-                        AdditionalGeometryIds: {}
-                        ReplacesGeometry: false
-                        SkeletonNodes: {}
-        -   Entity:
-                Id: 055de0af-98e9-53a8-a73a-62e955d82a00
-                Name: bridge-arch-cut
-                Components:
-                    1366edf0dcda5e7e877e24b3cebbabf6: !TransformComponent
-                        Id: 350a55e2-3f66-5ee7-8154-66f0bfafd32b
-                        Position: {X: 0, Y: 0, Z: 0}
-                        Rotation: {X: 0, Y: 0, Z: 0, W: 1}
-                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
-                        Children: {}
-                    94b72a63450e50a9b3d1a7664674aee9: !ExpeditionOcclusion
-                        Id: eb2459d5-2c1d-52d4-9499-103a4a2d7252
-                        Members:
-                            546f4dbbc9e758dca45b0ac324abc964: ref!! 9b7aa3d5-17a3-57e1-9961-b841f9ffaa0e
-                            e4e0c7f3344d5371885cb9e998e3780f: ref!! 91bb90c8-a298-5e2e-943a-0eac1304225a
-                            a7f07422b7855f489f484eacc74fce6a: ref!! a26d5c4d-5cb2-5798-82e3-863540694373
-                            ac5abe9a6115584b9f5052bde3497c9f: ref!! 4caf7942-7c03-5bf7-837a-1e17a65e96c1
-                            34a510f98afd5e6ab5d41c5a6c31ae28: ref!! fae231f7-0481-5bd6-b789-8eb27ca4ed03
-                            f437ba69007a51a9beb7015093f452b0: ref!! a9c5d03c-ac1e-565c-874e-6967b8966386
-                            6d9ea680a7585e87b3129ec3e33d19f4: ref!! b659656a-9976-562c-b4fa-86e40ae2c0ec
-                            9166935876765193b4f9c7bfd90c9139: ref!! 22a2e18f-8327-5a07-b517-29051744f41a
-                            fe5322d56be0545cbefb5cafd9953248: ref!! b69c82fb-1f33-50d9-9f22-ddbe321a15ff
-                            2041a7df92885a5cb54f98d1f0aef2ef: ref!! 0be9f798-e326-5287-846e-7cd117ca7a5b
-                            4ca145d517e2579895a07fd0ac9a195f: ref!! 8c8e0167-ac47-5cb9-a8c6-bfed1f46fee9
-                            73378cecf4d256a2a0b8899d2514f3d4: ref!! f10a7bc6-c91a-5835-8c6f-2ce1e6c048be
-                            42ebfd098b57564a9a6ec457091ff60b: ref!! 422397b7-451a-5543-96cf-b5d8e3e6dc35
-                            5062988c97d6550e8c43496f1445743b: ref!! 9c0481c4-4e6c-54b5-8a09-30a2272fb351
-                            ab1711b81dd2547188a97f8b83b34905: ref!! 4d5f04b5-c985-5091-b6d6-283cd039a866
-                            cbd3eb91950a583ba7cc722ff241f037: ref!! 8a2ab5aa-8855-5c6b-afa9-ba71f0fa62e0
-                            b37e655d7d56542d8b428af7cc7ee51d: ref!! 6b5d0cdb-6cce-5d63-8a83-5a1adbf43834
-                            bda139fc23ad5cfaa3963904629e9874: ref!! a4639e84-ecdf-5971-8273-8de4c22d8ddb
-                            641baf5911e654108734fb30a27b65a7: ref!! 6e4c2c78-3394-5b4e-9caf-fdaff7169617
-                            32d09f526b105dc78e64418d9d86523a: ref!! 6bc10ea4-7454-5aec-a3be-c7c7a054a22a
-                            50996a95be5758a4b55682df94b6eeec: ref!! 4ce90360-124d-5db1-a38a-0b5787cf14c9
-                            c26766f33bfb57e893d0cf91890fa508: ref!! 3032a0ce-19c4-541f-8735-87291e09f534
-                            b1b9f91c8c7451558c4db46e42577eca: ref!! d63a2a00-1f83-5898-aecb-7070c9b7a3cb
-                            ac81fd8817ca52f994e279ab1dd8b4f7: ref!! 68ef1cfa-3db9-53a7-bbd6-51ca3dc8955b
-                            cbf1abe5486b5c6b81e0fe0d856907ef: ref!! 85be1968-6f10-5520-bc4c-9a0db9a636ae
-                            67f84a03a6025679be12b9c5ef49e502: ref!! 4eee772a-8949-5997-8ed6-2c6d9741b049
-                            a24232ca536456de807079323f07fcc3: ref!! dfcbb154-59fb-5b64-9641-ae251bd5f738
-                            7251372bc9a651b8a4b180604a9c8164: ref!! 726cbbf3-b53d-51df-a80c-f9b886a24372
-                        HideWith: null
-        -   Entity:
-                Id: 18f27c78-35ab-57dd-84b1-90305ffd2b3b
-                Name: bridge-deck-cut
-                Components:
-                    5a514bba75e354acb5319f31dbaf0a45: !TransformComponent
-                        Id: 6fca432b-e913-57b4-a545-7d6a2a1faaa3
-                        Position: {X: 0, Y: 0, Z: 0}
-                        Rotation: {X: 0, Y: 0, Z: 0, W: 1}
-                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
-                        Children: {}
-                    dd4621f9d11953808327cef2f3eed9f1: !ExpeditionOcclusion
-                        Id: 7fd5dba8-989c-5583-a312-5df20cf62d05
-                        Members:
-                            70630c5b43db50649dec7214dc372f16: ref!! 04876d10-fd44-5667-8e1b-6834cb236ffa
-                        HideWith: null
-        -   Entity:
-                Id: 1e4218a5-80f0-5ade-afd1-9edd8c1dfb6c
-                Name: bridge-rail-cut
-                Components:
-                    00a04f741269514b90af842fbe59cc3c: !TransformComponent
-                        Id: 27530f9f-a4fd-554d-865f-9af7a8d090aa
-                        Position: {X: 0, Y: 0, Z: 0}
-                        Rotation: {X: 0, Y: 0, Z: 0, W: 1}
-                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
-                        Children: {}
-                    646369803bd851d5b0918a94fa62e5c7: !ExpeditionOcclusion
-                        Id: 2adeee79-d89b-59f2-a07e-9527476be5f8
-                        Members:
-                            d721382d20165f20a7924b81f583f564: ref!! 1b7a1d7e-b792-5b36-8aa7-6620fd55e824
-                            700997720e635fbab353db85e66bf3ec: ref!! 95c5d307-fa59-5261-aba1-5c677e77c6a4
-                        HideWith: ref!! 18f27c78-35ab-57dd-84b1-90305ffd2b3b
-        -   Entity:
-                Id: 88ef0634-f687-5361-867a-2a4f5ea11483
-                Name: Editor ambient
-                Components:
-                    539200b2d85f55abadda5447032a62ab: !TransformComponent
-                        Id: f59ce1cd-5d68-5dc1-983b-9ae9b3ef219c
-                        Position: {X: 0, Y: 0, Z: 0}
-                        Rotation: {X: 0, Y: 0, Z: 0, W: 1}
-                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
-                        Children: {}
-                    3e75be55828254e788b00705c0f1260f: !LightComponent
-                        Id: eedf036c-3921-5bac-834b-bf59f638a669
-                        Type: !LightAmbient
-                            Color: !ColorRgbProvider
-                                Value: {R: 1.0, G: 1.0, B: 1.0}
-                        Intensity: 0.55
+                    64d40fa3f3cb51c4a31c6dfc76d495c3: !ExpeditionGeometry
+                        Id: ca93eee7-3f52-5651-899b-e5d2353ad24b
+                        Role: Structure
+                        Size: {X: 0.2, Y: 1.5344, Z: 3.54}
+                        Axis: X
+                        Rise: 1.0
