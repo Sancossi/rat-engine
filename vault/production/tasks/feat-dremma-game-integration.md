@@ -1,10 +1,10 @@
 ---
 type: task
 area: Game
-status: In review
+status: In progress
 task_type: Feature
 sprint: Sprint 19
-review: In review
+review: Needs fixes
 due:
 tags: [task, expedition, stride, art]
 ---
@@ -24,6 +24,8 @@ Acceptance:
 - Проверенные normal/QA ZIP, независимое review, полный Release редактора и публикация каждого принятого среза в main.
 
 ## Resolution
+
+Review `fb36d6c` — Needs fixes, один P2 в GeometryPreviewProcessor: empty/duplicate AdditionalGeometryId одной привязки выбрасывает исключение при проверке каждого collider и выключает preview несвязанных floor/platform. Обрабатывать неверную привязку отдельно с диагностикой, не подавляя чужую геометрию; проверить сохранение видимости unrelated geometry и подавление другой valid replacement. Сцена, исходная геометрия/порталы и целевые GPU свидетельства получили положительную оценку; финальные gates остаются открыты.
 
 Срез 3 передан на независимое review: `fb36d6c`, Dremma — production start с native графикой и порталом к Courtyard; добавлена many-to-one привязка геометрии. Windows/asset build без ошибок, Core 64/64, Authoring 21/21, Python 25/25, vault/PowerShell parse прошли. Targeted GPU маршрут завершён на кадре 953 (`build/dremma-stair-rails-1`): центральный/смещённый проход арки, crouch, лестница/перила, верхний настил и нижний возврат; после shutdown native lease count 0. Ранее прошли 20 Dremma portal legs и отказ повреждённого candidate с сохранением активной Дрёммы. Editor API, door preview, финальные пакеты и OS gate ещё ожидаются.
 
